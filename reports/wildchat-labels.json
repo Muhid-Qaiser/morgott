@@ -1,0 +1,173 @@
+{
+  "accepted_negative_rows": 2430,
+  "accepted_strata": {
+    "language": {
+      "Arabic": 70,
+      "Chinese": 177,
+      "English": 1154,
+      "French": 158,
+      "German": 118,
+      "Japanese": 49,
+      "Korean": 44,
+      "Other": 209,
+      "Portuguese": 90,
+      "Russian": 199,
+      "Spanish": 162
+    },
+    "length_bucket": {
+      "long": 529,
+      "medium": 656,
+      "short": 778,
+      "very_long": 467
+    },
+    "security_trigger": {
+      "False": 2389,
+      "True": 41
+    },
+    "source_toxic": {
+      "unavailable": 2430
+    },
+    "third_audited": {
+      "False": 2173,
+      "True": 257
+    },
+    "topic": {
+      "code": 349,
+      "creative": 138,
+      "education": 177,
+      "finance": 188,
+      "general": 1162,
+      "health": 160,
+      "relationships": 124,
+      "security": 132
+    }
+  },
+  "agreement": {
+    "agreement_is_not_accuracy": true,
+    "decisions": {
+      "accepted": 2430,
+      "accepted_third_audited": 257,
+      "accepted_two_judge": 2173,
+      "primary_not_unanimous_high_benign": 2561,
+      "third_not_high_benign": 9
+    },
+    "provisional_two_judge_high_benign": 2439,
+    "third_audit_candidates": 266
+  },
+  "calls": {
+    "by_stage": {
+      "primary_a": {
+        "calls": 5000,
+        "confidence": {
+          "high": 3599
+        },
+        "labels": {
+          "benign": 3181,
+          "harmful_non_injection": 63,
+          "injection_or_jailbreak": 355,
+          "unavailable": 1401
+        },
+        "toxicity": {
+          "not_toxic": 3381,
+          "toxic": 106,
+          "uncertain": 112
+        },
+        "unavailable": {
+          "finish_error": 1,
+          "http_4xx": 1392,
+          "http_5xx": 1,
+          "provider_error_envelope": 7
+        }
+      },
+      "primary_b": {
+        "calls": 5000,
+        "confidence": {
+          "high": 3976,
+          "low": 1
+        },
+        "labels": {
+          "benign": 3531,
+          "harmful_non_injection": 154,
+          "injection_or_jailbreak": 291,
+          "unavailable": 1023,
+          "uncertain": 1
+        },
+        "toxicity": {
+          "not_toxic": 3706,
+          "toxic": 265,
+          "uncertain": 6
+        },
+        "unavailable": {
+          "finish_length": 67,
+          "invalid_label_payload": 956
+        }
+      },
+      "third": {
+        "calls": 266,
+        "confidence": {
+          "high": 257,
+          "low": 2,
+          "medium": 7
+        },
+        "labels": {
+          "benign": 261,
+          "uncertain": 5
+        },
+        "toxicity": {
+          "not_toxic": 265,
+          "uncertain": 1
+        },
+        "unavailable": {}
+      }
+    },
+    "cost_credits": 2.5949526475,
+    "latency_ms": {
+      "max": 40569.401,
+      "p50": 970.68,
+      "p95": 2892.589
+    },
+    "tokens": {
+      "completion_tokens": 194727,
+      "prompt_tokens": 5585808,
+      "total_tokens": 5780535
+    },
+    "total": 10266
+  },
+  "generated_at": "2026-07-20T06:17:39+00:00",
+  "metric_status": "weak training labels only; never production FPR",
+  "models": {
+    "primary_a": "mistralai/mistral-small-2603",
+    "primary_b": "qwen/qwen3.5-27b",
+    "third": "anthropic/claude-sonnet-4.6"
+  },
+  "outputs": {
+    "accepted_path": "experiments/wildchat_pseudolabel/outputs/accepted.jsonl",
+    "accepted_sha256": "e3f932b7900af7f8ff70dd84d5b8cabb078780444279bd104f75b926a31c771f",
+    "contain_ignored_local_text": true,
+    "journal_path": "experiments/wildchat_pseudolabel/outputs/judge_journal.jsonl",
+    "journal_sha256": "b2c76934f158f045203729c1495f3f7e4921892ff3c28003d6bee4673cc3bc86"
+  },
+  "prompt_sha256": "addfd7589ba06c6ad2243d69dd7beb54a4d9749c67415c709796bca422c7262b",
+  "prompt_version": "wildchat-weak-label-v1",
+  "protocol": {
+    "audit": "all detector-elevated plus an exact deterministic ceil(10%) of the rest; third calls occur only for provisional benign rows",
+    "audit_seed": "vulsight-wildchat-third-audit-v1",
+    "client_retries": 0,
+    "crash_window_note": "a process crash after a provider response but before journal flush can resend at most one in-flight call per worker on explicit resume",
+    "data_collection": "deny",
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+    "provider_fallback": false,
+    "raw_prompt_response_or_error_persisted": false,
+    "react": false,
+    "reasoning": "disabled and excluded",
+    "temperature": 0,
+    "tools": false,
+    "version": 3,
+    "zdr_required": true
+  },
+  "response_schema_sha256": "a796c4ffb5e14b281076bb97506d7caa505fd3ddab72786153ea1c0c2db60066",
+  "run_fingerprint": "db7a83816b07ff34961ccac4ad5de8608a3c85dacfea5831ec4b7c881adba413",
+  "sample_rows": 5000,
+  "sample_sha256": "29403b1fab97d65f1d0752845e3af836f49300c3b8753446db35f80026d8a8c7",
+  "schema_version": 1
+}

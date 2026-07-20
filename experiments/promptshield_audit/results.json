@@ -1,0 +1,1004 @@
+{
+  "active_corpus_overlap": {
+    "by_promptshield_label": {
+      "0": {
+        "any_fit_overlap_rows": 99,
+        "near_nonexact_rows": 33,
+        "near_nonexact_without_any_normalized_exact_rows": 16,
+        "normalized_exact_rows": 118,
+        "normalized_match_with_opposite_label_rows": 1,
+        "normalized_match_with_same_label_rows": 117,
+        "raw_exact_rows": 0,
+        "rows": 26984
+      },
+      "1": {
+        "any_fit_overlap_rows": 0,
+        "near_nonexact_rows": 2,
+        "near_nonexact_without_any_normalized_exact_rows": 2,
+        "normalized_exact_rows": 0,
+        "normalized_match_with_opposite_label_rows": 0,
+        "normalized_match_with_same_label_rows": 0,
+        "raw_exact_rows": 0,
+        "rows": 16441
+      }
+    },
+    "by_promptshield_split": {
+      "test": {
+        "any_fit_overlap_rows": 97,
+        "near_nonexact_rows": 32,
+        "near_nonexact_without_any_normalized_exact_rows": 15,
+        "normalized_exact_rows": 116,
+        "normalized_match_with_opposite_label_rows": 1,
+        "normalized_match_with_same_label_rows": 115,
+        "raw_exact_rows": 0,
+        "rows": 23516
+      },
+      "train": {
+        "any_fit_overlap_rows": 2,
+        "near_nonexact_rows": 3,
+        "near_nonexact_without_any_normalized_exact_rows": 3,
+        "normalized_exact_rows": 2,
+        "normalized_match_with_opposite_label_rows": 0,
+        "normalized_match_with_same_label_rows": 2,
+        "raw_exact_rows": 0,
+        "rows": 18909
+      },
+      "validation": {
+        "any_fit_overlap_rows": 0,
+        "near_nonexact_rows": 0,
+        "near_nonexact_without_any_normalized_exact_rows": 0,
+        "normalized_exact_rows": 0,
+        "normalized_match_with_opposite_label_rows": 0,
+        "normalized_match_with_same_label_rows": 0,
+        "raw_exact_rows": 0,
+        "rows": 1000
+      }
+    },
+    "by_reference_partition": {
+      "bipia_clean_context": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "bipia_context": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "bipia_payload": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "do_not_answer": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "harmbench": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "indirect_train": {
+        "near_rows": 1,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "jailbreaks_over_time": {
+        "near_rows": 5,
+        "normalized_exact_rows": 10,
+        "raw_exact_rows": 0
+      },
+      "multi_turn": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "nemotron_agentic_ipi": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "notinject": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "oasst1_chat": {
+        "near_rows": 0,
+        "normalized_exact_rows": 7,
+        "raw_exact_rows": 0
+      },
+      "oasst1_position_stress": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "prompt_injections": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "tensor_trust_attack": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "tensor_trust_context": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      },
+      "toxic_chat": {
+        "near_rows": 12,
+        "normalized_exact_rows": 19,
+        "raw_exact_rows": 0
+      },
+      "train": {
+        "near_rows": 21,
+        "normalized_exact_rows": 88,
+        "raw_exact_rows": 0
+      },
+      "xstest": {
+        "near_rows": 0,
+        "normalized_exact_rows": 0,
+        "raw_exact_rows": 0
+      }
+    },
+    "method": {
+      "near": "128-bit SimHash over normalized word unigrams+bigrams; eight 16-bit bands; Hamming <= 6; at least 5 words",
+      "near_excludes_same_normalized_hash": true,
+      "near_is_exhaustive": false,
+      "normalized_exact": "SHA-256 after repository NFKC + casefold + whitespace normalization",
+      "raw_exact": "SHA-256 of the prompt's exact UTF-8 bytes"
+    },
+    "overall": {
+      "any_fit_overlap_rows": 99,
+      "near_nonexact_rows": 35,
+      "near_nonexact_without_any_normalized_exact_rows": 18,
+      "normalized_exact_rows": 118,
+      "normalized_match_with_opposite_label_rows": 1,
+      "normalized_match_with_same_label_rows": 117,
+      "raw_exact_rows": 0,
+      "rows": 43425
+    },
+    "reference": {
+      "fit_partitions": [
+        "indirect_train",
+        "train"
+      ],
+      "partitions": {
+        "bipia_clean_context": 167,
+        "bipia_context": 375,
+        "bipia_payload": 125,
+        "do_not_answer": 937,
+        "harmbench": 400,
+        "indirect_train": 1212,
+        "jailbreaks_over_time": 22096,
+        "multi_turn": 4136,
+        "nemotron_agentic_ipi": 676,
+        "notinject": 339,
+        "oasst1_chat": 1582,
+        "oasst1_position_stress": 500,
+        "prompt_injections": 116,
+        "tensor_trust_attack": 908,
+        "tensor_trust_context": 1346,
+        "toxic_chat": 4703,
+        "train": 35912,
+        "xstest": 450
+      },
+      "processed_directory": "data/processed",
+      "rows": 75980,
+      "unique_normalized_texts": 75973,
+      "unique_raw_texts": 75975
+    }
+  },
+  "counts": {
+    "test": {
+      "negative": 17030,
+      "positive": 6486,
+      "rows": 23516
+    },
+    "train": {
+      "negative": 9457,
+      "positive": 9452,
+      "rows": 18909
+    },
+    "validation": {
+      "negative": 497,
+      "positive": 503,
+      "rows": 1000
+    }
+  },
+  "decision": "evaluation_only_never_training",
+  "generated_at": "2026-07-20T06:59:10+00:00",
+  "lengths": {
+    "distribution": {
+      "test": {
+        "all": {
+          "characters": {
+            "max": 23558,
+            "p50": 426,
+            "p90": 1678,
+            "p95": 2561,
+            "p99": 4879
+          },
+          "rows": 23516,
+          "whitespace_tokens": {
+            "max": 3803,
+            "p50": 67,
+            "p90": 275,
+            "p95": 410,
+            "p99": 794
+          }
+        },
+        "benign_source_label": {
+          "characters": {
+            "max": 23558,
+            "p50": 276,
+            "p90": 1283,
+            "p95": 1744,
+            "p99": 3180
+          },
+          "rows": 17030,
+          "whitespace_tokens": {
+            "max": 3803,
+            "p50": 42,
+            "p90": 206,
+            "p95": 286,
+            "p99": 615
+          }
+        },
+        "injection_source_label": {
+          "characters": {
+            "max": 19453,
+            "p50": 748,
+            "p90": 2824,
+            "p95": 3899,
+            "p99": 7428
+          },
+          "rows": 6486,
+          "whitespace_tokens": {
+            "max": 3306,
+            "p50": 112,
+            "p90": 454,
+            "p95": 627,
+            "p99": 1179
+          }
+        }
+      },
+      "train": {
+        "all": {
+          "characters": {
+            "max": 31102,
+            "p50": 315,
+            "p90": 1294,
+            "p95": 2339,
+            "p99": 4337
+          },
+          "rows": 18909,
+          "whitespace_tokens": {
+            "max": 4778,
+            "p50": 51,
+            "p90": 210,
+            "p95": 388,
+            "p99": 704
+          }
+        },
+        "benign_source_label": {
+          "characters": {
+            "max": 10548,
+            "p50": 125,
+            "p90": 1029,
+            "p95": 2324,
+            "p99": 4619
+          },
+          "rows": 9457,
+          "whitespace_tokens": {
+            "max": 1761,
+            "p50": 20,
+            "p90": 167,
+            "p95": 384,
+            "p99": 771
+          }
+        },
+        "injection_source_label": {
+          "characters": {
+            "max": 31102,
+            "p50": 424,
+            "p90": 1365,
+            "p95": 2354,
+            "p99": 4102
+          },
+          "rows": 9452,
+          "whitespace_tokens": {
+            "max": 4778,
+            "p50": 68,
+            "p90": 222,
+            "p95": 392,
+            "p99": 662
+          }
+        }
+      },
+      "validation": {
+        "all": {
+          "characters": {
+            "max": 11031,
+            "p50": 304,
+            "p90": 1328,
+            "p95": 2328,
+            "p99": 4604
+          },
+          "rows": 1000,
+          "whitespace_tokens": {
+            "max": 1676,
+            "p50": 50,
+            "p90": 216,
+            "p95": 383,
+            "p99": 729
+          }
+        },
+        "benign_source_label": {
+          "characters": {
+            "max": 5899,
+            "p50": 114,
+            "p90": 860,
+            "p95": 2280,
+            "p99": 4814
+          },
+          "rows": 497,
+          "whitespace_tokens": {
+            "max": 1013,
+            "p50": 19,
+            "p90": 154,
+            "p95": 382,
+            "p99": 760
+          }
+        },
+        "injection_source_label": {
+          "characters": {
+            "max": 11031,
+            "p50": 431,
+            "p90": 1431,
+            "p95": 2432,
+            "p99": 4032
+          },
+          "rows": 503,
+          "whitespace_tokens": {
+            "max": 1676,
+            "p50": 69,
+            "p90": 232,
+            "p95": 410,
+            "p99": 640
+          }
+        }
+      }
+    },
+    "locked_character_model": "No input-length truncation is applied.",
+    "neural_truncation_proxy": {
+      "counts": {
+        "test": {
+          "all": {
+            "over_1024": 129,
+            "over_2048": 20,
+            "over_256": 2666,
+            "over_512": 741
+          },
+          "benign_source_label": {
+            "over_1024": 28,
+            "over_2048": 4,
+            "over_256": 1142,
+            "over_512": 220
+          },
+          "injection_source_label": {
+            "over_1024": 101,
+            "over_2048": 16,
+            "over_256": 1524,
+            "over_512": 521
+          }
+        },
+        "train": {
+          "all": {
+            "over_1024": 28,
+            "over_2048": 1,
+            "over_256": 1415,
+            "over_512": 723
+          },
+          "benign_source_label": {
+            "over_1024": 13,
+            "over_2048": 0,
+            "over_256": 700,
+            "over_512": 282
+          },
+          "injection_source_label": {
+            "over_1024": 15,
+            "over_2048": 1,
+            "over_256": 715,
+            "over_512": 441
+          }
+        },
+        "validation": {
+          "all": {
+            "over_1024": 2,
+            "over_2048": 0,
+            "over_256": 71,
+            "over_512": 37
+          },
+          "benign_source_label": {
+            "over_1024": 0,
+            "over_2048": 0,
+            "over_256": 34,
+            "over_512": 15
+          },
+          "injection_source_label": {
+            "over_1024": 2,
+            "over_2048": 0,
+            "over_256": 37,
+            "over_512": 22
+          }
+        }
+      },
+      "unit": "whitespace tokens; not tokenizer-exact"
+    }
+  },
+  "limitations": [
+    "PromptShield provides no row-level source or grouping lineage, so source-held-out and group-held-out metrics cannot be reconstructed.",
+    "The paper reports aggregation from public chat, instruction, and attack datasets; exact and fuzzy overlap can therefore inflate apparent transfer.",
+    "Only the prompt field is evaluated. No source is inferred from prompt content.",
+    "Source label 0 means no prompt injection, not independently established harmlessness; this audit does not treat it as training data.",
+    "Near-overlap is a strict deterministic heuristic and can miss paraphrases or wrapper changes.",
+    "PromptShield was observed before this experiment, so its metrics are exploratory development evidence, not an untouched final test or production FPR claim.",
+    "No human adjudication is assumed; labels remain public source labels."
+  ],
+  "locked_character_control": {
+    "artifact_sha256": "1b866aa43741306259bcec40efbaf479e1a9a6d285839730fcdcf45cba49159b",
+    "baseline_report_sha256": "eadfa2b085d0457fc739c921db56239e7e18ad35c5bd34421585645e2c2b2c15",
+    "microseconds_per_prompt": 688.4294564551803,
+    "profiles": [
+      {
+        "min_validation_precision": 0.8,
+        "role": "precision diagnostic",
+        "test": {
+          "false_negative": 5891,
+          "false_positive": 454,
+          "fpr": 0.026658837345860248,
+          "fpr_95_upper": 0.02918703801773841,
+          "negative": 17030,
+          "positive": 6486,
+          "precision": 0.567206863679695,
+          "recall": 0.09173604687018193,
+          "rows": 23516,
+          "true_negative": 16576,
+          "true_positive": 595
+        },
+        "test_by_whitespace_token_bucket": {
+          "0-64": {
+            "false_negative": 335,
+            "false_positive": 250,
+            "fpr": 0.02268808421816862,
+            "fpr_95_upper": 0.02563927823468668,
+            "negative": 11019,
+            "positive": 376,
+            "precision": 0.140893470790378,
+            "recall": 0.10904255319148937,
+            "rows": 11395,
+            "true_negative": 10769,
+            "true_positive": 41
+          },
+          "129-256": {
+            "false_negative": 952,
+            "false_positive": 41,
+            "fpr": 0.020266930301532378,
+            "fpr_95_upper": 0.027377926891889476,
+            "negative": 2023,
+            "positive": 1036,
+            "precision": 0.672,
+            "recall": 0.08108108108108109,
+            "rows": 3059,
+            "true_negative": 1982,
+            "true_positive": 84
+          },
+          "257-512": {
+            "false_negative": 994,
+            "false_positive": 43,
+            "fpr": 0.046637744034707156,
+            "fpr_95_upper": 0.06223120854429368,
+            "negative": 922,
+            "positive": 1003,
+            "precision": 0.17307692307692307,
+            "recall": 0.00897308075772682,
+            "rows": 1925,
+            "true_negative": 879,
+            "true_positive": 9
+          },
+          "513+": {
+            "false_negative": 511,
+            "false_positive": 5,
+            "fpr": 0.022727272727272728,
+            "fpr_95_upper": 0.052090835949790006,
+            "negative": 220,
+            "positive": 521,
+            "precision": 0.6666666666666666,
+            "recall": 0.019193857965451054,
+            "rows": 741,
+            "true_negative": 215,
+            "true_positive": 10
+          },
+          "65-128": {
+            "false_negative": 3099,
+            "false_positive": 115,
+            "fpr": 0.040407589599437806,
+            "fpr_95_upper": 0.04828332364221491,
+            "negative": 2846,
+            "positive": 3550,
+            "precision": 0.7968197879858657,
+            "recall": 0.12704225352112675,
+            "rows": 6396,
+            "true_negative": 2731,
+            "true_positive": 451
+          }
+        },
+        "test_excluding_active_fit_overlap": {
+          "false_negative": 5891,
+          "false_positive": 451,
+          "fpr": 0.026634382566585957,
+          "fpr_95_upper": 0.029169056588749503,
+          "negative": 16933,
+          "positive": 6486,
+          "precision": 0.5688336520076482,
+          "recall": 0.09173604687018193,
+          "rows": 23419,
+          "true_negative": 16482,
+          "true_positive": 595
+        },
+        "threshold": 0.7370313110312855
+      },
+      {
+        "min_validation_precision": 0.85,
+        "role": "recommended shadow review",
+        "test": {
+          "false_negative": 6292,
+          "false_positive": 240,
+          "fpr": 0.014092777451556078,
+          "fpr_95_upper": 0.015975926227463348,
+          "negative": 17030,
+          "positive": 6486,
+          "precision": 0.4470046082949309,
+          "recall": 0.029910576626580327,
+          "rows": 23516,
+          "true_negative": 16790,
+          "true_positive": 194
+        },
+        "test_by_whitespace_token_bucket": {
+          "0-64": {
+            "false_negative": 352,
+            "false_positive": 155,
+            "fpr": 0.014066612215264543,
+            "fpr_95_upper": 0.016440986190822612,
+            "negative": 11019,
+            "positive": 376,
+            "precision": 0.1340782122905028,
+            "recall": 0.06382978723404255,
+            "rows": 11395,
+            "true_negative": 10864,
+            "true_positive": 24
+          },
+          "129-256": {
+            "false_negative": 1031,
+            "false_positive": 7,
+            "fpr": 0.0034602076124567475,
+            "fpr_95_upper": 0.007125549366903904,
+            "negative": 2023,
+            "positive": 1036,
+            "precision": 0.4166666666666667,
+            "recall": 0.004826254826254826,
+            "rows": 3059,
+            "true_negative": 2016,
+            "true_positive": 5
+          },
+          "257-512": {
+            "false_negative": 1003,
+            "false_positive": 7,
+            "fpr": 0.007592190889370932,
+            "fpr_95_upper": 0.015588291631814329,
+            "negative": 922,
+            "positive": 1003,
+            "precision": 0.0,
+            "recall": 0.0,
+            "rows": 1925,
+            "true_negative": 915,
+            "true_positive": 0
+          },
+          "513+": {
+            "false_negative": 521,
+            "false_positive": 0,
+            "fpr": 0.0,
+            "fpr_95_upper": 0.017162136081943655,
+            "negative": 220,
+            "positive": 521,
+            "precision": 0.0,
+            "recall": 0.0,
+            "rows": 741,
+            "true_negative": 220,
+            "true_positive": 0
+          },
+          "65-128": {
+            "false_negative": 3385,
+            "false_positive": 71,
+            "fpr": 0.024947294448348558,
+            "fpr_95_upper": 0.031349628780330124,
+            "negative": 2846,
+            "positive": 3550,
+            "precision": 0.6991525423728814,
+            "recall": 0.04647887323943662,
+            "rows": 6396,
+            "true_negative": 2775,
+            "true_positive": 165
+          }
+        },
+        "test_excluding_active_fit_overlap": {
+          "false_negative": 6292,
+          "false_positive": 238,
+          "fpr": 0.014055394791236048,
+          "fpr_95_upper": 0.015941953130258132,
+          "negative": 16933,
+          "positive": 6486,
+          "precision": 0.44907407407407407,
+          "recall": 0.029910576626580327,
+          "rows": 23419,
+          "true_negative": 16695,
+          "true_positive": 194
+        },
+        "threshold": 0.8985870324391354
+      },
+      {
+        "min_validation_precision": 0.9,
+        "role": "precision diagnostic",
+        "test": {
+          "false_negative": 6341,
+          "false_positive": 110,
+          "fpr": 0.0064591896652965355,
+          "fpr_95_upper": 0.007778679217773577,
+          "negative": 17030,
+          "positive": 6486,
+          "precision": 0.5686274509803921,
+          "recall": 0.022355843354918286,
+          "rows": 23516,
+          "true_negative": 16920,
+          "true_positive": 145
+        },
+        "test_by_whitespace_token_bucket": {
+          "0-64": {
+            "false_negative": 352,
+            "false_positive": 88,
+            "fpr": 0.007986205644795354,
+            "fpr_95_upper": 0.009828148361565578,
+            "negative": 11019,
+            "positive": 376,
+            "precision": 0.21428571428571427,
+            "recall": 0.06382978723404255,
+            "rows": 11395,
+            "true_negative": 10931,
+            "true_positive": 24
+          },
+          "129-256": {
+            "false_negative": 1036,
+            "false_positive": 7,
+            "fpr": 0.0034602076124567475,
+            "fpr_95_upper": 0.007125549366903904,
+            "negative": 2023,
+            "positive": 1036,
+            "precision": 0.0,
+            "recall": 0.0,
+            "rows": 3059,
+            "true_negative": 2016,
+            "true_positive": 0
+          },
+          "257-512": {
+            "false_negative": 1003,
+            "false_positive": 6,
+            "fpr": 0.006507592190889371,
+            "fpr_95_upper": 0.014124726697053901,
+            "negative": 922,
+            "positive": 1003,
+            "precision": 0.0,
+            "recall": 0.0,
+            "rows": 1925,
+            "true_negative": 916,
+            "true_positive": 0
+          },
+          "513+": {
+            "false_negative": 521,
+            "false_positive": 0,
+            "fpr": 0.0,
+            "fpr_95_upper": 0.017162136081943655,
+            "negative": 220,
+            "positive": 521,
+            "precision": 0.0,
+            "recall": 0.0,
+            "rows": 741,
+            "true_negative": 220,
+            "true_positive": 0
+          },
+          "65-128": {
+            "false_negative": 3429,
+            "false_positive": 9,
+            "fpr": 0.003162333099086437,
+            "fpr_95_upper": 0.005999539020131509,
+            "negative": 2846,
+            "positive": 3550,
+            "precision": 0.9307692307692308,
+            "recall": 0.03408450704225352,
+            "rows": 6396,
+            "true_negative": 2837,
+            "true_positive": 121
+          }
+        },
+        "test_excluding_active_fit_overlap": {
+          "false_negative": 6341,
+          "false_positive": 108,
+          "fpr": 0.006378078308628123,
+          "fpr_95_upper": 0.007694191955227796,
+          "negative": 16933,
+          "positive": 6486,
+          "precision": 0.5731225296442688,
+          "recall": 0.022355843354918286,
+          "rows": 23419,
+          "true_negative": 16825,
+          "true_positive": 145
+        },
+        "threshold": 0.9325411172355178
+      },
+      {
+        "min_validation_precision": 0.95,
+        "role": "precision diagnostic",
+        "test": {
+          "false_negative": 6400,
+          "false_positive": 11,
+          "fpr": 0.0006459189665296535,
+          "fpr_95_upper": 0.0011563576670005277,
+          "negative": 17030,
+          "positive": 6486,
+          "precision": 0.8865979381443299,
+          "recall": 0.013259327782917052,
+          "rows": 23516,
+          "true_negative": 17019,
+          "true_positive": 86
+        },
+        "test_by_whitespace_token_bucket": {
+          "0-64": {
+            "false_negative": 354,
+            "false_positive": 1,
+            "fpr": 9.075233687267448e-05,
+            "fpr_95_upper": 0.0005139343075406347,
+            "negative": 11019,
+            "positive": 376,
+            "precision": 0.9565217391304348,
+            "recall": 0.05851063829787234,
+            "rows": 11395,
+            "true_negative": 11018,
+            "true_positive": 22
+          },
+          "129-256": {
+            "false_negative": 1036,
+            "false_positive": 3,
+            "fpr": 0.0014829461196243204,
+            "fpr_95_upper": 0.004351181818085975,
+            "negative": 2023,
+            "positive": 1036,
+            "precision": 0.0,
+            "recall": 0.0,
+            "rows": 3059,
+            "true_negative": 2020,
+            "true_positive": 0
+          },
+          "257-512": {
+            "false_negative": 1003,
+            "false_positive": 6,
+            "fpr": 0.006507592190889371,
+            "fpr_95_upper": 0.014124726697053901,
+            "negative": 922,
+            "positive": 1003,
+            "precision": 0.0,
+            "recall": 0.0,
+            "rows": 1925,
+            "true_negative": 916,
+            "true_positive": 0
+          },
+          "513+": {
+            "false_negative": 521,
+            "false_positive": 0,
+            "fpr": 0.0,
+            "fpr_95_upper": 0.017162136081943655,
+            "negative": 220,
+            "positive": 521,
+            "precision": 0.0,
+            "recall": 0.0,
+            "rows": 741,
+            "true_negative": 220,
+            "true_positive": 0
+          },
+          "65-128": {
+            "false_negative": 3486,
+            "false_positive": 1,
+            "fpr": 0.00035137034434293746,
+            "fpr_95_upper": 0.001987771545108969,
+            "negative": 2846,
+            "positive": 3550,
+            "precision": 0.9846153846153847,
+            "recall": 0.018028169014084508,
+            "rows": 6396,
+            "true_negative": 2845,
+            "true_positive": 64
+          }
+        },
+        "test_excluding_active_fit_overlap": {
+          "false_negative": 6400,
+          "false_positive": 10,
+          "fpr": 0.0005905628063544557,
+          "fpr_95_upper": 0.0010868569852040657,
+          "negative": 16933,
+          "positive": 6486,
+          "precision": 0.8958333333333334,
+          "recall": 0.013259327782917052,
+          "rows": 23419,
+          "true_negative": 16923,
+          "true_positive": 86
+        },
+        "threshold": 0.9676656982185171
+      }
+    ],
+    "scoring_seconds": 16.189107098000022,
+    "threshold_source": "reports/baseline.json direct_precision_profiles",
+    "thresholds_selected_without_promptshield": true
+  },
+  "neural_results": {
+    "included": false,
+    "reason": "No already-generated PromptShield neural scores exist; no weights or GPU work were used."
+  },
+  "schema_version": 1,
+  "source": {
+    "dataset_url": "https://huggingface.co/datasets/hendzh/PromptShield",
+    "declared_license": "Apache-2.0",
+    "files": {
+      "dataset_card": {
+        "bytes": 1792,
+        "name": "DATASET_CARD.md",
+        "sha256": "d5f36dce4f27d40ae8fda54335d382c74e650485cb4a92c6837602ef84a1a662"
+      },
+      "test": {
+        "bytes": 18288615,
+        "name": "test.json",
+        "positive": 6486,
+        "rows": 23516,
+        "sha256": "526207c2485829d9961407011d7f4cd929569e7f285dc8396b3f385e0608bc70"
+      },
+      "train": {
+        "bytes": 12239651,
+        "name": "train.json",
+        "positive": 9452,
+        "rows": 18909,
+        "sha256": "aa33c3ffcc27bd07c0a233b52f1b8c3cbdb30606ce2412da06a88b5290cdc7b6"
+      },
+      "validation": {
+        "bytes": 645951,
+        "name": "validation.json",
+        "positive": 503,
+        "rows": 1000,
+        "sha256": "1d93d90d57d3ef44ed0c546fbc04d66324436c5fcd32e7fcb940ceed270fbe77"
+      }
+    },
+    "label_semantics": {
+      "0": "source-labelled benign (no prompt injection)",
+      "1": "source-labelled prompt-injection attempt"
+    },
+    "language": "English according to the paper",
+    "license_caveat": "Upstream component licenses were not independently reconciled in this audit.",
+    "paper_reported_composition": {
+      "benign_evaluation": [
+        "LMSYS Chatbot Arena",
+        "databricks-dolly",
+        "Natural Instructions",
+        "Synthetic Python Problems"
+      ],
+      "benign_training": [
+        "UltraChat",
+        "Alpaca",
+        "IFEval"
+      ],
+      "injection_evaluation": [
+        "FourAttacks over databricks-dolly and Synthetic Python Problems",
+        "OpenPromptInject"
+      ],
+      "injection_training": [
+        "FourAttacks over Alpaca",
+        "HackAPrompt"
+      ]
+    },
+    "paper_url": "https://arxiv.org/abs/2501.15145",
+    "requested_name": "NVIDIA/PromptShield",
+    "resolved_public_repo": "hendzh/PromptShield",
+    "revision": "a5234cb1f5cdb256600cab64b8c961195b5e8404",
+    "row_lineage": "Unavailable: files contain no source, conversation, template, or group field.",
+    "schema": {
+      "label": "integer 0 or 1",
+      "prompt": "string"
+    }
+  },
+  "within_source_overlap": {
+    "cross_split": {
+      "train__test": {
+        "near_nonexact_left_rows": 1,
+        "near_nonexact_left_unique_texts": 1,
+        "near_nonexact_pairs": 1,
+        "near_nonexact_right_rows": 1,
+        "near_nonexact_right_unique_texts": 1,
+        "normalized_exact_left_rows": 0,
+        "normalized_exact_right_rows": 0,
+        "normalized_exact_unique_texts": 0,
+        "normalized_label_conflict_texts": 0,
+        "raw_exact_left_rows": 0,
+        "raw_exact_right_rows": 0,
+        "raw_exact_unique_texts": 0
+      },
+      "train__validation": {
+        "near_nonexact_left_rows": 526,
+        "near_nonexact_left_unique_texts": 483,
+        "near_nonexact_pairs": 1270,
+        "near_nonexact_right_rows": 98,
+        "near_nonexact_right_unique_texts": 98,
+        "normalized_exact_left_rows": 25,
+        "normalized_exact_right_rows": 15,
+        "normalized_exact_unique_texts": 14,
+        "normalized_label_conflict_texts": 0,
+        "raw_exact_left_rows": 0,
+        "raw_exact_right_rows": 0,
+        "raw_exact_unique_texts": 0
+      },
+      "validation__test": {
+        "near_nonexact_left_rows": 0,
+        "near_nonexact_left_unique_texts": 0,
+        "near_nonexact_pairs": 0,
+        "near_nonexact_right_rows": 0,
+        "near_nonexact_right_unique_texts": 0,
+        "normalized_exact_left_rows": 0,
+        "normalized_exact_right_rows": 0,
+        "normalized_exact_unique_texts": 0,
+        "normalized_label_conflict_texts": 0,
+        "raw_exact_left_rows": 0,
+        "raw_exact_right_rows": 0,
+        "raw_exact_unique_texts": 0
+      }
+    },
+    "within_split": {
+      "test": {
+        "normalized_duplicate_rows": 171,
+        "normalized_label_conflict_rows": 0,
+        "normalized_label_conflict_texts": 0,
+        "raw_duplicate_rows": 157,
+        "rows": 23516,
+        "unique_normalized": 23345,
+        "unique_raw": 23359
+      },
+      "train": {
+        "normalized_duplicate_rows": 123,
+        "normalized_label_conflict_rows": 0,
+        "normalized_label_conflict_texts": 0,
+        "raw_duplicate_rows": 0,
+        "rows": 18909,
+        "unique_normalized": 18786,
+        "unique_raw": 18909
+      },
+      "validation": {
+        "normalized_duplicate_rows": 2,
+        "normalized_label_conflict_rows": 0,
+        "normalized_label_conflict_texts": 0,
+        "raw_duplicate_rows": 0,
+        "rows": 1000,
+        "unique_normalized": 998,
+        "unique_raw": 1000
+      }
+    }
+  }
+}

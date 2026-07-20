@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "seed": "vulsight-openrouter-review-v1",
+  "size": 100,
+  "expected_sample_sha256": "b27ae82711d694730ccbe2f2c7d4973d8edce9a40b143d8b4ae976caf4e2b2cb",
+  "strata": [
+    {
+      "name": "toxic_chat_attack",
+      "files": ["toxic_chat.jsonl"],
+      "count": 10,
+      "label": 1,
+      "input_channel": "direct_user"
+    },
+    {
+      "name": "prompt_injections_attack",
+      "files": ["prompt_injections.jsonl"],
+      "count": 10,
+      "label": 1,
+      "input_channel": "direct_user"
+    },
+    {
+      "name": "multi_turn_obfuscated_attack",
+      "files": ["multi_turn.jsonl"],
+      "count": 10,
+      "label": 1,
+      "input_channel": "direct_user"
+    },
+    {
+      "name": "bipia_payload_attack",
+      "files": ["bipia_payload.jsonl"],
+      "count": 10,
+      "label": 1,
+      "input_channel": "untrusted_content"
+    },
+    {
+      "name": "bipia_poisoned_context_attack",
+      "files": ["bipia_context.jsonl"],
+      "count": 10,
+      "label": 1,
+      "input_channel": "untrusted_content"
+    },
+    {
+      "name": "notinject_trigger_negative",
+      "files": ["notinject.jsonl"],
+      "count": 10,
+      "label": 0,
+      "input_channel": "direct_user"
+    },
+    {
+      "name": "xstest_hard_negative",
+      "files": ["xstest.jsonl"],
+      "count": 10,
+      "label": 0,
+      "input_channel": "direct_user"
+    },
+    {
+      "name": "oasst_chat_negative",
+      "files": ["oasst1_chat.jsonl"],
+      "count": 10,
+      "label": 0,
+      "input_channel": "direct_user"
+    },
+    {
+      "name": "harmful_nonattack_negative",
+      "files": ["harmbench.jsonl", "do_not_answer.jsonl"],
+      "count": 10,
+      "label": 0,
+      "input_channel": "direct_user"
+    },
+    {
+      "name": "bipia_clean_context_negative",
+      "files": ["bipia_clean_context.jsonl"],
+      "count": 10,
+      "label": 0,
+      "input_channel": "untrusted_content"
+    }
+  ]
+}

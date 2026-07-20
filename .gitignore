@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.env
+.env.*
+!.env.example
+
+# Rebuilt from pinned public sources.
+data/
+
+# Rebuilt by `make benchmark`.
+artifacts/

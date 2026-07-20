@@ -1,0 +1,99 @@
+{
+  "generated_on": "2026-07-20",
+  "hackaprompt": {
+    "access": {
+      "gate": "Hugging Face auto gate requiring contact-information sharing",
+      "unauthenticated_parquet_http_status": 401,
+      "used_hugging_face_token": false,
+      "used_mirror": false
+    },
+    "artifacts": {
+      "README.md": {
+        "bytes": 5555,
+        "git_blob_sha1": "63bdb779825fc7b25fa8a4a347b1a0e0dfb2a89b",
+        "sha256": "627ac0ec7ebfcb5baf93bbc9b80c72a73443846debf06196803aee1138486d2a"
+      },
+      "hackaprompt.parquet": {
+        "bytes": 150419795,
+        "content_sha256": null,
+        "content_sha256_status": "unavailable without accepting the gate",
+        "git_blob_sha1": "82492aaac92010b5383169ea1d8ba9f403368f8c"
+      }
+    },
+    "card_schema": [
+      "level",
+      "user_input",
+      "prompt",
+      "completion",
+      "model",
+      "expected_completion",
+      "token_count",
+      "correct",
+      "error",
+      "score",
+      "dataset",
+      "timestamp"
+    ],
+    "decision": "skip gated data; retain an offline synthetic-tested projection contract only",
+    "forbidden_detector_inputs": [
+      "prompt",
+      "completion",
+      "expected_completion"
+    ],
+    "future_role": "evaluation-only exploratory direct prompt-injection attempts",
+    "label_semantics": {
+      "attack_attempt": "all competition submissions, including correct=false",
+      "attack_success": "correct is a target-model expected-completion match and is not a benign label"
+    },
+    "license": "MIT in dataset-card metadata",
+    "paper": {
+      "pdf_bytes": 4580639,
+      "pdf_sha256": "deaebfb272b7544e5d906ddd58435f73626f47743d83d153f41d4af6a2cc12de",
+      "playground_entries": 589331,
+      "submission_entries": 7332,
+      "submission_prompts": 58257,
+      "url": "https://aclanthology.org/2023.emnlp-main.302/"
+    },
+    "repository": "hackaprompt/hackaprompt-dataset",
+    "revision": "25b87fbedfb86840abaf8cd09af7a029208a971a",
+    "schema_verified_against_parquet": false,
+    "url": "https://huggingface.co/datasets/hackaprompt/hackaprompt-dataset"
+  },
+  "schema_version": 1,
+  "yaklang_llm_prompt_injection": {
+    "artifacts": {
+      "LICENSE": {
+        "bytes": 1065,
+        "git_blob_sha1": "b7e3dbbbce7914e27807a127493cfb1deb02131a",
+        "sha256": "92b640638bf4ca37756dee0284c84c3600e8d17a7fa61ac8c179d79bdb3ef735"
+      },
+      "skills/llm-prompt-injection/JAILBREAK_PATTERNS.md": {
+        "bytes": 9883,
+        "git_blob_sha1": "d322f39b02ad38fa53ec61365704a80fcce1da4d",
+        "sha256": "3713405029c3168d8b751ff8508050c1dc4d7b1d892a1031cfc25d520fcc4b11"
+      },
+      "skills/llm-prompt-injection/SKILL.md": {
+        "bytes": 13052,
+        "git_blob_sha1": "2c795cb3fd539338be769fe60e639966633af589",
+        "sha256": "f145e6ba1d394c91f69d5ce0a23cf49617a9b5bdbee29ffde848b05a265abbad"
+      }
+    },
+    "decision": "taxonomy and stateful-scenario reference only; do not install, vendor, or ingest examples",
+    "integration": {
+      "installed_as_agent_skill": false,
+      "payloads_added_to_training": 0,
+      "raw_files_vendored": false
+    },
+    "license": "MIT",
+    "repository": "yaklang/hack-skills",
+    "revision": "c9a4b9ee8645eb60763eb4eef172f1ecb0a5b3e8",
+    "scenario_gaps_to_model": [
+      "tool-description injection",
+      "tool-output injection",
+      "cross-tool or cross-MCP exfiltration",
+      "Markdown-rendering egress",
+      "stateful multi-turn instruction splitting"
+    ],
+    "url": "https://github.com/yaklang/hack-skills/tree/c9a4b9ee8645eb60763eb4eef172f1ecb0a5b3e8/skills/llm-prompt-injection"
+  }
+}

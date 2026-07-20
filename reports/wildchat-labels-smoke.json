@@ -1,0 +1,100 @@
+{
+  "accepted_negative_rows": 0,
+  "accepted_strata": {
+    "language": {},
+    "length_bucket": {},
+    "security_trigger": {},
+    "source_toxic": {},
+    "third_audited": {},
+    "topic": {}
+  },
+  "agreement": {
+    "agreement_is_not_accuracy": true,
+    "decisions": {
+      "primary_not_unanimous_high_benign": 20
+    },
+    "provisional_two_judge_high_benign": 0,
+    "third_audit_candidates": 0
+  },
+  "calls": {
+    "by_stage": {
+      "primary_a": {
+        "calls": 20,
+        "confidence": {},
+        "labels": {
+          "unavailable": 20
+        },
+        "toxicity": {},
+        "unavailable": {
+          "invalid_response": 20
+        }
+      },
+      "primary_b": {
+        "calls": 20,
+        "confidence": {},
+        "labels": {
+          "unavailable": 20
+        },
+        "toxicity": {},
+        "unavailable": {
+          "http_4xx": 20
+        }
+      },
+      "third": {
+        "calls": 0,
+        "confidence": {},
+        "labels": {},
+        "toxicity": {},
+        "unavailable": {}
+      }
+    },
+    "cost_credits": 0,
+    "latency_ms": {
+      "max": 4916.384,
+      "p50": 2082.704,
+      "p95": 4444.734
+    },
+    "tokens": {
+      "completion_tokens": 0,
+      "prompt_tokens": 0,
+      "total_tokens": 0
+    },
+    "total": 40
+  },
+  "generated_at": "2026-07-20T05:55:13+00:00",
+  "metric_status": "weak training labels only; never production FPR",
+  "models": {
+    "primary_a": "google/gemini-3.5-flash",
+    "primary_b": "mistralai/mistral-large-2512",
+    "third": "anthropic/claude-sonnet-4.6"
+  },
+  "outputs": {
+    "accepted_path": "experiments/wildchat_pseudolabel/outputs/smoke_accepted.jsonl",
+    "accepted_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "contain_ignored_local_text": true,
+    "journal_path": "experiments/wildchat_pseudolabel/outputs/smoke_journal.jsonl",
+    "journal_sha256": "6998363f52b7be14aa30667ace4d9de62eebab5ff90797e1ad2700a7043f0e8d"
+  },
+  "prompt_sha256": "addfd7589ba06c6ad2243d69dd7beb54a4d9749c67415c709796bca422c7262b",
+  "prompt_version": "wildchat-weak-label-v1",
+  "protocol": {
+    "audit": "all detector-elevated plus an exact deterministic ceil(10%) of the rest; third calls occur only for provisional benign rows",
+    "audit_seed": "vulsight-wildchat-third-audit-v1",
+    "client_retries": 0,
+    "crash_window_note": "a process crash after a provider response but before journal flush can resend at most one in-flight call per worker on explicit resume",
+    "data_collection": "deny",
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+    "provider_fallback": false,
+    "raw_prompt_response_or_error_persisted": false,
+    "react": false,
+    "temperature": 0,
+    "tools": false,
+    "version": 2,
+    "zdr_required": true
+  },
+  "response_schema_sha256": "a796c4ffb5e14b281076bb97506d7caa505fd3ddab72786153ea1c0c2db60066",
+  "run_fingerprint": "98f510dd5f3a53aa6d5bee2b15e5049a80333d2ee86f0b3239c5f0678b1b40a5",
+  "sample_rows": 20,
+  "sample_sha256": "a3a4df3b241dd3c9d299ba402bc87921e88b6dee442105778dce1cc35467eea7",
+  "schema_version": 1
+}

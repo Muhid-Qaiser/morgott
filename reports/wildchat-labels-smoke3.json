@@ -1,0 +1,149 @@
+{
+  "accepted_negative_rows": 16,
+  "accepted_strata": {
+    "language": {
+      "Arabic": 1,
+      "Chinese": 1,
+      "English": 7,
+      "French": 2,
+      "German": 1,
+      "Portuguese": 1,
+      "Russian": 1,
+      "Spanish": 2
+    },
+    "length_bucket": {
+      "long": 4,
+      "medium": 4,
+      "short": 4,
+      "very_long": 4
+    },
+    "security_trigger": {
+      "False": 16
+    },
+    "source_toxic": {
+      "unavailable": 16
+    },
+    "third_audited": {
+      "False": 15,
+      "True": 1
+    },
+    "topic": {
+      "code": 3,
+      "education": 2,
+      "general": 9,
+      "health": 1,
+      "security": 1
+    }
+  },
+  "agreement": {
+    "agreement_is_not_accuracy": true,
+    "decisions": {
+      "accepted": 16,
+      "accepted_third_audited": 1,
+      "accepted_two_judge": 15,
+      "primary_not_unanimous_high_benign": 4
+    },
+    "provisional_two_judge_high_benign": 16,
+    "third_audit_candidates": 1
+  },
+  "calls": {
+    "by_stage": {
+      "primary_a": {
+        "calls": 20,
+        "confidence": {
+          "high": 20
+        },
+        "labels": {
+          "benign": 18,
+          "harmful_non_injection": 2
+        },
+        "toxicity": {
+          "not_toxic": 18,
+          "toxic": 2
+        },
+        "unavailable": {}
+      },
+      "primary_b": {
+        "calls": 20,
+        "confidence": {
+          "high": 18
+        },
+        "labels": {
+          "benign": 16,
+          "harmful_non_injection": 2,
+          "unavailable": 2
+        },
+        "toxicity": {
+          "not_toxic": 15,
+          "toxic": 3
+        },
+        "unavailable": {
+          "finish_length": 1,
+          "invalid_label_payload": 1
+        }
+      },
+      "third": {
+        "calls": 1,
+        "confidence": {
+          "high": 1
+        },
+        "labels": {
+          "benign": 1
+        },
+        "toxicity": {
+          "not_toxic": 1
+        },
+        "unavailable": {}
+      }
+    },
+    "cost_credits": 0.011128375,
+    "latency_ms": {
+      "max": 7577.052,
+      "p50": 1331.247,
+      "p95": 3687.326
+    },
+    "tokens": {
+      "completion_tokens": 966,
+      "prompt_tokens": 35315,
+      "total_tokens": 36281
+    },
+    "total": 41
+  },
+  "generated_at": "2026-07-20T06:03:44+00:00",
+  "metric_status": "weak training labels only; never production FPR",
+  "models": {
+    "primary_a": "mistralai/mistral-small-2603",
+    "primary_b": "qwen/qwen3.5-27b",
+    "third": "anthropic/claude-sonnet-4.6"
+  },
+  "outputs": {
+    "accepted_path": "experiments/wildchat_pseudolabel/outputs/smoke3_accepted.jsonl",
+    "accepted_sha256": "10f5043b036c8e892d4c67fcdd930de422802dc4441c9884512d9edea7adab39",
+    "contain_ignored_local_text": true,
+    "journal_path": "experiments/wildchat_pseudolabel/outputs/smoke3_journal.jsonl",
+    "journal_sha256": "0030c5d85f03cac790f65addffd0d35b0ee31f17b8bc778dee24c6423da9f164"
+  },
+  "prompt_sha256": "addfd7589ba06c6ad2243d69dd7beb54a4d9749c67415c709796bca422c7262b",
+  "prompt_version": "wildchat-weak-label-v1",
+  "protocol": {
+    "audit": "all detector-elevated plus an exact deterministic ceil(10%) of the rest; third calls occur only for provisional benign rows",
+    "audit_seed": "vulsight-wildchat-third-audit-v1",
+    "client_retries": 0,
+    "crash_window_note": "a process crash after a provider response but before journal flush can resend at most one in-flight call per worker on explicit resume",
+    "data_collection": "deny",
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+    "provider_fallback": false,
+    "raw_prompt_response_or_error_persisted": false,
+    "react": false,
+    "reasoning": "disabled and excluded",
+    "temperature": 0,
+    "tools": false,
+    "version": 3,
+    "zdr_required": true
+  },
+  "response_schema_sha256": "a796c4ffb5e14b281076bb97506d7caa505fd3ddab72786153ea1c0c2db60066",
+  "run_fingerprint": "858d1f5bb26c4d7d947edafc87645ac3ea8ed1470ec6c925eb08adc174257a21",
+  "sample_rows": 20,
+  "sample_sha256": "4111b7f57cc204762644be2559bfd602d6d7835e76ed8e389e9b8d9fd3538854",
+  "schema_version": 1
+}

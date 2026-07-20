@@ -1,0 +1,158 @@
+{
+  "dataset": "allenai/WildChat-1M",
+  "dataset_bytes": 3360836020,
+  "dataset_revision": "7d6490e462285cf85d91eabea0f9a954fbddcd1f",
+  "dataset_rows": 837989,
+  "detector": {
+    "artifact": "artifacts/guard_bundle.joblib",
+    "artifact_sha256": "1b866aa43741306259bcec40efbaf479e1a9a6d285839730fcdcf45cba49159b",
+    "elevated_rows": 61,
+    "threshold": 0.8985870324391354
+  },
+  "generated_at": "2026-07-20T05:52:45+00:00",
+  "label_status": "not_run",
+  "metric_status": "weak-training-sample; never production FPR",
+  "output": {
+    "contains_local_redacted_text": true,
+    "git_ignored": true,
+    "path": "experiments/wildchat_pseudolabel/outputs/pilot_5k.jsonl",
+    "sha256": "58c004ad9b4b6ff2124f9b0bfc61ff6ef6b91bbb6ce92a225a1c32dd4882f3f0"
+  },
+  "privacy": {
+    "metadata_dropped": [
+      "country",
+      "hashed_ip",
+      "header",
+      "timestamp",
+      "model",
+      "state",
+      "moderation_scores"
+    ],
+    "metadata_retained": [
+      "source_row_index",
+      "conversation_sha256",
+      "user_turn_index"
+    ],
+    "raw_text_in_report": false,
+    "rows_truncated": 142,
+    "rows_with_local_redactions": 316,
+    "source_toxicity_stratum": "unavailable_no_source_variation"
+  },
+  "repository_head_observed": null,
+  "revision_verification": "validated sanitized cache revision and pinned source LFS hashes",
+  "sampling": {
+    "bounded_candidates": 30000,
+    "candidates_per_shard": 10000,
+    "download_retries": 0,
+    "eligible_before_stratification": 23114,
+    "filtered_by_reason": {
+      "exact_reference_overlap": 920,
+      "near_reference_overlap": 4382,
+      "pilot_conversation_duplicate": 10,
+      "pilot_exact_duplicate": 678,
+      "pilot_near_duplicate": 896
+    },
+    "maximum_network_bytes_with_three_attempts": 2269000143,
+    "raw_parquet_lifetime": "one shard at a time in an ephemeral temporary file",
+    "raw_source_persisted": false,
+    "reference_rows_checked": 75304,
+    "rows_without_user_text": 19382,
+    "sampled_rows": 5000,
+    "sanitized_candidate_cache": {
+      "directory": "experiments/wildchat_pseudolabel/outputs/sanitized_shards",
+      "maximum_rows": 30000,
+      "raw_source_metadata_cached": false,
+      "reused_shards": 3,
+      "schema_version": 2,
+      "written_shards": 0
+    },
+    "seed": "vulsight-wildchat-pilot-v1",
+    "selected_shards": [
+      {
+        "cache_reused": true,
+        "index": 0,
+        "path": "data/train-00000-of-00014.parquet",
+        "retained_candidates": 10000,
+        "row_offset": 0,
+        "rows": 59857,
+        "rows_without_user_text": 10230,
+        "sha256": "abec2a13129db8c0e6a2d3a51ff12644873c748205a6fdf6551fbcb34430e51c",
+        "size": 230786095,
+        "source_rows_scanned": 59857,
+        "user_turn_candidates": 49627
+      },
+      {
+        "cache_reused": true,
+        "index": 6,
+        "path": "data/train-00006-of-00014.parquet",
+        "retained_candidates": 10000,
+        "row_offset": 359141,
+        "rows": 59856,
+        "rows_without_user_text": 6100,
+        "sha256": "0bd2fff31c74feb6b44b0397b4e7ab6285dd69ccbe4cc8b5f19c42cdbf691303",
+        "size": 189507683,
+        "source_rows_scanned": 59856,
+        "user_turn_candidates": 53756
+      },
+      {
+        "cache_reused": true,
+        "index": 13,
+        "path": "data/train-00013-of-00014.parquet",
+        "retained_candidates": 10000,
+        "row_offset": 778133,
+        "rows": 59856,
+        "rows_without_user_text": 3052,
+        "sha256": "440be579bf012a6e98d179b8dd0bedd73634e5527f7000c067d19c88b5cefa6c",
+        "size": 336039603,
+        "source_rows_scanned": 59856,
+        "user_turn_candidates": 56804
+      }
+    ],
+    "selected_source_bytes": 756333381,
+    "source_bytes_not_selected": 2604502639,
+    "source_mode": "exact-revision Parquet shards",
+    "source_rows_scanned": 179569,
+    "strategy": "diversity-weighted round robin over joint safe strata",
+    "user_turn_candidates_before_pool_cap": 160187,
+    "verified_parquet_bytes_downloaded_this_run": 0
+  },
+  "schema_version": 2,
+  "strata": {
+    "language": {
+      "Arabic": 148,
+      "Chinese": 323,
+      "English": 2367,
+      "French": 318,
+      "German": 232,
+      "Japanese": 122,
+      "Korean": 76,
+      "Other": 479,
+      "Portuguese": 192,
+      "Russian": 430,
+      "Spanish": 313
+    },
+    "length_bucket": {
+      "long": 1181,
+      "medium": 1382,
+      "short": 1508,
+      "very_long": 929
+    },
+    "security_trigger": {
+      "False": 4787,
+      "True": 213
+    },
+    "source_toxic": {
+      "unavailable": 5000
+    },
+    "topic": {
+      "code": 678,
+      "creative": 380,
+      "education": 360,
+      "finance": 386,
+      "general": 2323,
+      "health": 331,
+      "relationships": 279,
+      "security": 263
+    }
+  }
+}

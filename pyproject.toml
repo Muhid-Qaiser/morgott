@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vulsight-agent-guard"
+version = "0.1.0"
+description = "Reproducible jailbreak detection and agent action-policy POC"
+requires-python = ">=3.11"
+dependencies = [
+  "datasets>=3.6,<5",
+  "scikit-learn>=1.6,<2",
+]
+
+[project.scripts]
+vulsight-guard = "vulsight_guard.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
