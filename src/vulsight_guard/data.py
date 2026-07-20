@@ -113,6 +113,35 @@ def read_jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in handle if line.strip()]
 
 
+def manifest_output_hashes(path: Path) -> dict[str, str]:
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    outputs = manifest.get("outputs") if type(manifest) is dict else None
+    if type(outputs) is not dict or not outputs:
+        raise ValueError("data manifest has no outputs")
+    hashes = {}
+    for name, output in outputs.items():
+        digest = output.get("sha256") if type(output) is dict else None
+        if (
+            type(name) is not str
+            or type(digest) is not str
+            or len(digest) != 64
+            or any(character not in "0123456789abcdef" for character in digest)
+        ):
+            raise ValueError("data manifest has an invalid output hash")
+        hashes[name] = digest
+    return hashes
+
+
+def read_verified_jsonl(path: Path, expected_sha256: str) -> list[dict]:
+    data = path.read_bytes()
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != expected_sha256:
+        raise RuntimeError(
+            f"{path.name} changed: expected {expected_sha256}, got {digest}"
+        )
+    return [json.loads(line) for line in data.splitlines() if line.strip()]
+
+
 def _sample(
     *,
     text: str,

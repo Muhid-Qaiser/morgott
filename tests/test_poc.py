@@ -1,3 +1,5 @@
+import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -5,7 +7,12 @@ from unittest.mock import patch
 
 import numpy as np
 
-from vulsight_guard.data import deduplicate, normalize_text
+from vulsight_guard.data import (
+    deduplicate,
+    manifest_output_hashes,
+    normalize_text,
+    read_verified_jsonl,
+)
 from vulsight_guard.detector import (
     DIRECT_OPERATING_FPR_BUDGETS,
     DIRECT_PRECISION_FLOORS,
@@ -14,6 +21,7 @@ from vulsight_guard.detector import (
     choose_threshold_for_precision,
     scan,
     split_fit_validation,
+    validation_mask,
 )
 from vulsight_guard.policy import (
     REFERENCE_POLICY,
@@ -25,6 +33,26 @@ from vulsight_guard.policy import (
 
 
 class DataTests(unittest.TestCase):
+    def test_manifest_hashes_guard_jsonl_reads(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data = b'{"text":"hello"}\n'
+            source = root / "sample.jsonl"
+            source.write_bytes(data)
+            digest = hashlib.sha256(data).hexdigest()
+            manifest = root / "manifest.json"
+            manifest.write_text(
+                json.dumps({"outputs": {"sample": {"sha256": digest}}}),
+                encoding="utf-8",
+            )
+            hashes = manifest_output_hashes(manifest)
+            self.assertEqual(
+                read_verified_jsonl(source, hashes["sample"]), [{"text": "hello"}]
+            )
+            source.write_bytes(b'{"text":"changed"}\n')
+            with self.assertRaises(RuntimeError):
+                read_verified_jsonl(source, hashes["sample"])
+
     def test_normalization_and_deduplication(self):
         self.assertEqual(
             normalize_text("  ＩＧＮＯＲＥ\n previous  "), "ignore previous"
@@ -52,6 +80,9 @@ class DataTests(unittest.TestCase):
         fit, validation = split_fit_validation(rows)
         locations = {id(row): "fit" if row in fit else "validation" for row in rows}
         self.assertEqual(locations[id(rows[0])], locations[id(rows[1])])
+        self.assertEqual(
+            validation_mask(rows).tolist(), [row in validation for row in rows]
+        )
 
     def test_split_group_keeps_shared_context_together(self):
         rows = [

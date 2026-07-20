@@ -14,10 +14,8 @@ The Yaklang `llm-prompt-injection` skill is integrated only as a pinned taxonomy
 and future scenario-design reference. It is not installed as an agent skill,
 vendored, treated as a labelled corpus, or used to generate training rows.
 
-Machine-readable provenance is in
-[`exploratory_sources.json`](exploratory_sources.json). A small offline adapter
-contract under `experiments/exploratory_sources/` is tested only with synthetic
-rows; it makes no network request and does not activate HackAPrompt.
+The pinned provenance and the decision not to activate HackAPrompt are recorded
+in this audit; no adapter or source data is retained locally.
 
 ## HackAPrompt access and provenance
 

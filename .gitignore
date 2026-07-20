@@ -13,3 +13,10 @@ data/
 
 # Rebuilt by `make benchmark`.
 artifacts/
+
+# Local experiment outputs.
+experiments/**/cache/
+experiments/**/checkpoints/
+experiments/**/data/
+experiments/**/outputs/
+experiments/**/results/

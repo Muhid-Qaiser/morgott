@@ -42,13 +42,25 @@ DIRECT_REVIEW_PRECISION_FLOOR = 0.85
 DIRECT_EXPECTED_ATTACK_PREVALENCES = (0.001, 0.01, 0.05)
 
 
+def validation_mask(rows: list[dict]) -> np.ndarray:
+    return np.asarray(
+        [
+            int.from_bytes(
+                hashlib.sha256(
+                    row.get("split_group_id", row["group_id"]).encode()
+                ).digest()[:2]
+            )
+            % 5
+            == 0
+            for row in rows
+        ]
+    )
+
+
 def split_fit_validation(rows: list[dict]) -> tuple[list[dict], list[dict]]:
-    fit, validation = [], []
-    for row in rows:
-        digest = hashlib.sha256(
-            row.get("split_group_id", row["group_id"]).encode()
-        ).digest()
-        (validation if int.from_bytes(digest[:2]) % 5 == 0 else fit).append(row)
+    selected = validation_mask(rows)
+    fit = [row for row, value in zip(rows, selected, strict=True) if not value]
+    validation = [row for row, value in zip(rows, selected, strict=True) if value]
     return fit, validation
 
 

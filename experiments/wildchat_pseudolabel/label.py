@@ -4,23 +4,27 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import os
 import re
-import socket
-import time
-import urllib.error
-import urllib.request
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Callable
+from urllib.request import Request
+
+from vulsight_guard.openrouter import (
+    ENDPOINT,
+    OPEN_ONCE,
+    build_request as build_openrouter_request,
+    canonical,
+    request_once,
+    sha256,
+)
 
 
-ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 PROMPT_VERSION = "wildchat-weak-label-v1"
 DEFAULT_PRIMARY_A = "mistralai/mistral-small-2603"
 DEFAULT_PRIMARY_B = "qwen/qwen3.5-27b"
@@ -69,26 +73,6 @@ RESPONSE_FORMAT = {
 }
 
 
-class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, *_args, **_kwargs):
-        return None
-
-
-_OPEN_ONCE = urllib.request.build_opener(_NoRedirect()).open
-
-
-def sha256(value: str | bytes) -> str:
-    if isinstance(value, str):
-        value = value.encode("utf-8")
-    return hashlib.sha256(value).hexdigest()
-
-
-def canonical(value: object) -> bytes:
-    return json.dumps(
-        value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
-    ).encode("utf-8")
-
-
 def safe_name(value: object) -> str:
     if not isinstance(value, str) or not value or len(value) > 160:
         return "unknown"
@@ -119,9 +103,7 @@ def validate_label(content: str) -> dict[str, str]:
     return value
 
 
-def build_request(
-    model: str, api_key: str, text: str
-) -> tuple[urllib.request.Request, str]:
+def build_request(model: str, api_key: str, text: str) -> tuple[Request, str]:
     if safe_name(model) != model or "/" not in model:
         raise ValueError("invalid model slug")
     if not api_key:
@@ -153,21 +135,10 @@ def build_request(
         "max_tokens": 128,
         "reasoning": {"effort": "none", "exclude": True},
     }
-    encoded = canonical(body)
-    return (
-        urllib.request.Request(
-            ENDPOINT,
-            data=encoded,
-            method="POST",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "X-OpenRouter-Cache": "false",
-                "X-OpenRouter-Metadata": "enabled",
-                "User-Agent": "vulsight-agent-guard-wildchat/1",
-            },
-        ),
-        sha256(encoded),
+    return build_openrouter_request(
+        body,
+        api_key,
+        "vulsight-agent-guard-wildchat/1",
     )
 
 
@@ -246,62 +217,20 @@ def parse_completion(raw: bytes) -> dict[str, object]:
 
 
 def call_once(
-    request: urllib.request.Request,
+    request: Request,
     timeout: float,
-    opener: Callable[..., object] = _OPEN_ONCE,
+    opener: Callable[..., object] = OPEN_ONCE,
 ) -> dict[str, object]:
-    started = time.perf_counter()
-    try:
-        with opener(request, timeout=timeout) as response:  # type: ignore[attr-defined]
-            raw = response.read(MAX_RESPONSE_BYTES + 1)
-        result = (
-            {
-                "label": "unavailable",
-                "confidence": None,
-                "toxicity": None,
-                "unavailable_reason": "response_too_large",
-                "response_sha256": sha256(raw),
-            }
-            if len(raw) > MAX_RESPONSE_BYTES
-            else parse_completion(raw)
-        )
-    except urllib.error.HTTPError as exc:
-        exc.close()
-        family = exc.code // 100 if isinstance(exc.code, int) else 0
-        result = {
+    raw, transport = request_once(request, timeout, MAX_RESPONSE_BYTES, opener)
+    if raw is None:
+        return {
             "label": "unavailable",
             "confidence": None,
             "toxicity": None,
-            "unavailable_reason": f"http_{family}xx"
-            if family in {4, 5}
-            else "http_error",
-            "response_sha256": None,
+            **transport,
         }
-    except (TimeoutError, socket.timeout):
-        result = {
-            "label": "unavailable",
-            "confidence": None,
-            "toxicity": None,
-            "unavailable_reason": "timeout",
-            "response_sha256": None,
-        }
-    except urllib.error.URLError:
-        result = {
-            "label": "unavailable",
-            "confidence": None,
-            "toxicity": None,
-            "unavailable_reason": "network_error",
-            "response_sha256": None,
-        }
-    except Exception:
-        result = {
-            "label": "unavailable",
-            "confidence": None,
-            "toxicity": None,
-            "unavailable_reason": "client_error",
-            "response_sha256": None,
-        }
-    result["latency_ms"] = round((time.perf_counter() - started) * 1_000, 3)
+    result = parse_completion(raw)
+    result["latency_ms"] = transport["latency_ms"]
     return result
 
 

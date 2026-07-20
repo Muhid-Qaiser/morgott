@@ -411,6 +411,8 @@ its own sake; the security contribution is the prediction/authority split.
   grouping metadata, overlap blocking, and manifest generation.
 - `src/vulsight_guard/detector.py`: cheap sensors, grouped threshold selection,
   evaluation, local artifact, and shadow scanner.
+- `src/vulsight_guard/openrouter.py`: shared no-redirect, one-attempt provider
+  transport; experiment-specific prompts and response validation stay separate.
 - `src/vulsight_guard/policy.py`: deterministic reference monitor and ablation.
 - `tests/`: fast standard-library invariants for the retained POC.
 - `experiments/gpu_baselines/`: E5, PIGuard, and ProtectAI frozen evaluations.
@@ -425,15 +427,13 @@ its own sake; the security contribution is the prediction/authority split.
   source-bound containment audit.
 - `experiments/promptshield_audit/`: isolated public-corpus leakage, length,
   and locked-character evaluation; raw source data is ignored.
-- `experiments/exploratory_sources/`: network-free field/label contracts for
-  gated or reference-only attack sources; no source data is bundled.
 - `reports/baseline.{json,md}`: retained sensor metrics and operating points.
 - `reports/data_manifest.json`: exact data lineage, hashes, counts, and licenses.
 - `reports/label-audit.md`: known source-label noise and interpretation limits.
 - `reports/dataset-selection.md`: why candidates were included, deferred, or
   rejected after reviewing the user's dataset-research list.
-- `reports/hackaprompt-yaklang-audit.md` and `exploratory_sources.json`: pinned
-  access/schema/label/taxonomy decisions for the two deferred sources.
+- `reports/hackaprompt-yaklang-audit.md`: pinned access/schema/label/taxonomy
+  decisions for the two deferred sources; no gated source data is bundled.
 - `reports/model-experiments.md`: consolidated neural/provider decisions when
   present; experiment READMEs/JSON hold full detail.
 - `reports/architecture-research.md`: literature-backed decision map from local

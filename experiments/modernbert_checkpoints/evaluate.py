@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import time
 from datetime import UTC, datetime
@@ -18,12 +17,14 @@ from transformers import (
     AutoTokenizer,
 )
 
+from vulsight_guard.data import manifest_output_hashes, read_verified_jsonl
 from vulsight_guard.detector import (
     DIRECT_PRECISION_FLOORS,
     DIRECT_REVIEW_PRECISION_FLOOR,
     _rates,
     choose_threshold,
     choose_threshold_for_precision,
+    validation_mask,
 )
 
 
@@ -59,25 +60,8 @@ MODELS = {
     },
 }
 
-INPUT_SHA256 = {
-    "train": "7443f2c03ae8c0cfb99c467fd128c18cee35491adb3c0283397feeb17ea64329",
-    "indirect_train": "f0eac3a553a61b32353ede81c636a5943b600cce75fb16d392db2fcb94d6b3b1",
-    "toxic_chat": "c302d863c67cfa154c235d43e9d6591d6bf91f17d8b907d075cb46ffabfb4ef7",
-    "prompt_injections": "fbafd63526aeb293b3fc04354bd8fe497fd01b84553bcb46601209469d7d2fe4",
-    "xstest": "a0d90babdf7a5cbf31be445db8c0222e95e643de42782f5e6b0ec6c85494fb63",
-    "notinject": "768907d738ea4a15fc9dd77f38fb276c012934ccc255d38a68bb939a1dd28a08",
-    "oasst1_chat": "9a823861ab170d8dac1cdc55322fbbe38b34713eb96809dd956c3cb303c12168",
-    "do_not_answer": "490e8adfc0984b0e02a5452ff039db26f2ca7815a78ebb97df691fb0c3ecf256",
-    "harmbench": "caf04d8060a76bca4766bf79b64dc9069b1448ea7cbccb47c7f86b0db10d1d0c",
-    "multi_turn": "5133f893154b597a61d88720e74d44d8a63123c0638a85699cdd03faac93a0d7",
-    "bipia_payload": "f67970508b3c141b277a6118b89a9a4b33e5de6d2ba93708e9c203f4ac6b9b02",
-    "bipia_context": "eb5e104e38aa60ecf5a99da23f304d96d6fcd1d3c0c0613929497e198ab57421",
-    "bipia_clean_context": "4f0e2c5f9385cb4b3cb475f938b084c842703cf7f23da8a080267050f274c913",
-    "oasst1_position_stress": "7477a578a2bc3fbec3fa973514a441f6f3770d8e5bcc367dfeacba5433f53111",
-    "jailbreaks_over_time": "09e4b4b01993a7f24e1ab4e10556f023174dd2264114f2f5deb13df9322e55dc",
-    "tensor_trust_attack": "e648fb3aef4fa3d583ae1364df3e7396037b9b1fc3d66c2551fc50cc170901c0",
-    "tensor_trust_context": "4c4d98adeba64312e4c2643d5727963deb22217b2e9852a0c24d8338d855326a",
-}
+INPUT_SHA256 = manifest_output_hashes(ROOT / "reports/data_manifest.json")
+INPUT_SHA256.pop("nemotron_agentic_ipi")
 
 DEFAULT_DATASETS = tuple(
     name for name in INPUT_SHA256 if name not in {"train", "indirect_train"}
@@ -126,29 +110,7 @@ LOCAL_CALIBRATION_OVERLAP = {
 
 
 def read_rows(name: str) -> list[dict]:
-    path = DATA / f"{name}.jsonl"
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest != INPUT_SHA256[name]:
-        raise RuntimeError(
-            f"{name} changed: expected {INPUT_SHA256[name]}, got {digest}"
-        )
-    with path.open(encoding="utf-8") as handle:
-        return [json.loads(line) for line in handle]
-
-
-def validation_mask(rows: list[dict]) -> np.ndarray:
-    return np.asarray(
-        [
-            int.from_bytes(
-                hashlib.sha256(
-                    row.get("split_group_id", row["group_id"]).encode()
-                ).digest()[:2]
-            )
-            % 5
-            == 0
-            for row in rows
-        ]
-    )
+    return read_verified_jsonl(DATA / f"{name}.jsonl", INPUT_SHA256[name])
 
 
 class Sensor:

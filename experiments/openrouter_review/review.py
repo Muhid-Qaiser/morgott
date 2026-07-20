@@ -4,23 +4,27 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import os
 import re
-import socket
 import statistics
-import time
-import urllib.error
-import urllib.request
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Callable
+from urllib.request import Request
+
+from vulsight_guard.openrouter import (
+    ENDPOINT,
+    OPEN_ONCE,
+    build_request as build_openrouter_request,
+    canonical as _canonical,
+    request_once,
+    sha256 as _sha256,
+)
 
 
-ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 MAX_RESPONSE_BYTES = 64 * 1024
 VERDICTS = {"attack", "benign"}
 SYSTEM_PROMPT = """You are a prompt-injection security classifier, not an assistant.
@@ -60,26 +64,6 @@ _BEARER = re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/-]{8,}=*")
 _KNOWN_TOKEN = re.compile(
     r"\b(?:sk-(?:proj-)?|hf_|gh[pousr]_|xox[baprs]-|AKIA)[A-Za-z0-9_-]{8,}\b"
 )
-
-
-class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, *_args, **_kwargs):
-        return None
-
-
-_OPEN_ONCE = urllib.request.build_opener(_NoRedirect()).open
-
-
-def _sha256(value: str | bytes) -> str:
-    if isinstance(value, str):
-        value = value.encode("utf-8")
-    return hashlib.sha256(value).hexdigest()
-
-
-def _canonical(value: object) -> bytes:
-    return json.dumps(
-        value, ensure_ascii=False, separators=(",", ":"), sort_keys=True
-    ).encode("utf-8")
 
 
 def redact_and_cap(text: str, max_chars: int) -> tuple[str, dict[str, int | bool]]:
@@ -136,7 +120,7 @@ def validate_verdict(content: str) -> str:
 
 def build_request(
     *, model: str, api_key: str, input_channel: str, text: str
-) -> tuple[urllib.request.Request, str]:
+) -> tuple[Request, str]:
     """Build one non-streaming request. The returned hash excludes authorization."""
     if _safe_name(model) != model:
         raise ValueError("invalid model slug")
@@ -175,20 +159,11 @@ def build_request(
     else:
         body["max_tokens"] = 20
         body["temperature"] = 0
-    encoded = _canonical(body)
-    request = urllib.request.Request(
-        ENDPOINT,
-        data=encoded,
-        method="POST",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            "X-OpenRouter-Cache": "false",
-            "X-OpenRouter-Metadata": "enabled",
-            "User-Agent": "vulsight-agent-guard-openrouter-review/1",
-        },
+    return build_openrouter_request(
+        body,
+        api_key,
+        "vulsight-agent-guard-openrouter-review/1",
     )
-    return request, _sha256(encoded)
 
 
 def _safe_name(value: object) -> str:
@@ -264,55 +239,17 @@ def _parse_completion(raw: bytes) -> dict[str, object]:
 
 
 def call_judge(
-    request: urllib.request.Request,
+    request: Request,
     *,
     timeout: float,
-    opener: Callable[..., object] = _OPEN_ONCE,
+    opener: Callable[..., object] = OPEN_ONCE,
 ) -> dict[str, object]:
     """Make exactly one HTTP attempt; any failure becomes unavailable."""
-    started = time.perf_counter()
-    result: dict[str, object]
-    try:
-        with opener(request, timeout=timeout) as response:  # type: ignore[attr-defined]
-            raw = response.read(MAX_RESPONSE_BYTES + 1)
-        result = (
-            {
-                "verdict": "unavailable",
-                "unavailable_reason": "response_too_large",
-                "response_sha256": _sha256(raw),
-            }
-            if len(raw) > MAX_RESPONSE_BYTES
-            else _parse_completion(raw)
-        )
-    except urllib.error.HTTPError as exc:
-        exc.close()
-        family = exc.code // 100 if isinstance(exc.code, int) else 0
-        result = {
-            "verdict": "unavailable",
-            "unavailable_reason": f"http_{family}xx"
-            if family in {4, 5}
-            else "http_error",
-            "response_sha256": None,
-        }
-    except (TimeoutError, socket.timeout):
-        result = {
-            "verdict": "unavailable",
-            "unavailable_reason": "timeout",
-            "response_sha256": None,
-        }
-    except urllib.error.URLError:
-        result = {
-            "verdict": "unavailable",
-            "unavailable_reason": "network_error",
-            "response_sha256": None,
-        }
-    except Exception:
-        result = {
-            "verdict": "unavailable",
-            "unavailable_reason": "client_error",
-            "response_sha256": None,
-        }
-    result["latency_ms"] = round((time.perf_counter() - started) * 1000, 3)
+    raw, transport = request_once(request, timeout, MAX_RESPONSE_BYTES, opener)
+    if raw is None:
+        return {"verdict": "unavailable", **transport}
+    result = _parse_completion(raw)
+    result["latency_ms"] = transport["latency_ms"]
     return result
 
 

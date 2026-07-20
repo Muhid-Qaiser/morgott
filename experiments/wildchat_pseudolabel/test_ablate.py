@@ -1,7 +1,6 @@
 import unittest
-from pathlib import Path
 
-from ablate import report_path, select, validate_accepted, weights
+from ablate import select, validate_accepted, weights
 
 
 def accepted_row(sample_id="a", audited=False):
@@ -21,13 +20,6 @@ def accepted_row(sample_id="a", audited=False):
 
 
 class AblationTests(unittest.TestCase):
-    def test_report_paths_inside_repository_are_portable(self):
-        root = Path(__file__).resolve().parents[2]
-        self.assertEqual(
-            report_path(root / "experiments/example/manifest.json"),
-            "experiments/example/manifest.json",
-        )
-
     def test_validation_requires_unanimous_high_benign(self):
         validate_accepted([accepted_row()])
         invalid = accepted_row()

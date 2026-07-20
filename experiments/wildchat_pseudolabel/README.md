@@ -68,9 +68,9 @@ Privacy and provenance:
 ## Evaluation and scaling
 
 Weak negatives receive a fixed aggregate source-weight budget so 5k/20k/50k
-rows cannot dominate the original 311 direct positives. The ablation utility
-creates deterministic manifests; model training/evaluation remains a separate,
-explicit step.
+rows cannot dominate the original 311 direct positives. The evaluator validates
+the accepted rows, selects each deterministic ablation, applies the fixed source
+weights, and trains each available candidate directly.
 
 The user's requested ToxicChat, deepset, multi-turn, BIPIA, Tensor Trust,
 NotInject, position-stress, and non-overlapping JailbreaksOverTime comparisons
@@ -101,19 +101,15 @@ python experiments/wildchat_pseudolabel/label.py \
   --offset 40 --limit 20 --workers 8 --execute \
   --journal experiments/wildchat_pseudolabel/outputs/smoke3_journal.jsonl \
   --accepted experiments/wildchat_pseudolabel/outputs/smoke3_accepted.jsonl \
-  --report reports/wildchat-labels-smoke3.json
+  --report experiments/wildchat_pseudolabel/outputs/smoke3_report.json
 
 # Full pilot after the preflight passes. Completed/unavailable journal entries
 # are never retried on resume.
 python experiments/wildchat_pseudolabel/label.py --workers 16 --execute
 
-# Validate and then write ignored source-weight manifests.
-python experiments/wildchat_pseudolabel/ablate.py
-python experiments/wildchat_pseudolabel/ablate.py --write-manifests
-
-# Train every currently available 0/pilot/5k/20k/50k accepted-negative
-# candidate. Weak rows enter fitting only; original grouped validation alone
-# selects each precision-first operating point and records FPR diagnostics.
+# Validate, select, weight, and train every currently available
+# 0/pilot/5k/20k/50k accepted-negative candidate. Weak rows enter fitting only;
+# original grouped validation alone selects each precision-first operating point.
 PYTHONPATH=src python experiments/wildchat_pseudolabel/evaluate.py
 
 python -m unittest discover -s experiments/wildchat_pseudolabel -v
