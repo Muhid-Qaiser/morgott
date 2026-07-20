@@ -7,13 +7,13 @@ from unittest.mock import patch
 
 import numpy as np
 
-from vulsight_guard.data import (
+from morgott.data import (
     deduplicate,
     manifest_output_hashes,
     normalize_text,
     read_verified_jsonl,
 )
-from vulsight_guard.detector import (
+from morgott.detector import (
     DIRECT_OPERATING_FPR_BUDGETS,
     DIRECT_PRECISION_FLOORS,
     DIRECT_REVIEW_PRECISION_FLOOR,
@@ -23,7 +23,7 @@ from vulsight_guard.detector import (
     split_fit_validation,
     validation_mask,
 )
-from vulsight_guard.policy import (
+from morgott.policy import (
     REFERENCE_POLICY,
     SCENARIOS,
     authorize,
@@ -156,7 +156,7 @@ class DetectorTests(unittest.TestCase):
                 },
             },
         }
-        with patch("vulsight_guard.detector.joblib.load", return_value=artifact):
+        with patch("morgott.detector.joblib.load", return_value=artifact):
             result = scan("ordinary-looking injected task", channel="untrusted_content")
         self.assertEqual(result["signal"], "elevated")
         self.assertEqual(result["decision"], "allow")

@@ -1376,7 +1376,7 @@ wheels = [
 ]
 
 [[package]]
-name = "vulsight-agent-guard"
+name = "morgott"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

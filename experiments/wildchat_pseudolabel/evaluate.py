@@ -15,8 +15,8 @@ import joblib
 import numpy as np
 from scipy.sparse import vstack
 
-from vulsight_guard.data import deduplicate, normalize_text, read_jsonl
-from vulsight_guard.detector import (
+from morgott.data import deduplicate, normalize_text, read_jsonl
+from morgott.detector import (
     DIRECT_OPERATING_FPR_BUDGETS,
     DIRECT_PRECISION_FLOORS,
     DIRECT_REVIEW_PRECISION_FLOOR,

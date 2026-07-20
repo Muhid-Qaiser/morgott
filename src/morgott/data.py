@@ -181,9 +181,7 @@ def _sample(
 
 
 def _fetch(url: str) -> tuple[bytes, str]:
-    request = urllib.request.Request(
-        url, headers={"User-Agent": "vulsight-agent-guard/0.1"}
-    )
+    request = urllib.request.Request(url, headers={"User-Agent": "morgott/0.1"})
     with urllib.request.urlopen(request, timeout=60) as response:
         data = response.read(MAX_DOWNLOAD_BYTES + 1)
     if len(data) > MAX_DOWNLOAD_BYTES:

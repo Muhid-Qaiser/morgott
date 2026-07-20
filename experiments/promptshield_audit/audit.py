@@ -16,7 +16,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 
-from vulsight_guard.data import normalize_text
+from morgott.data import normalize_text
 
 
 REPO = "hendzh/PromptShield"
@@ -142,9 +142,7 @@ def _fetch(data_dir: Path) -> None:
             url = f"{DATASET_URL}/raw/{REVISION}/README.md"
         else:
             url = f"{DATASET_URL}/resolve/{REVISION}/{entry['name']}?download=true"
-        request = urllib.request.Request(
-            url, headers={"User-Agent": "vulsight-agent-guard/0.1"}
-        )
+        request = urllib.request.Request(url, headers={"User-Agent": "morgott/0.1"})
         with urllib.request.urlopen(request, timeout=120) as response:
             data = response.read(entry["bytes"] + 1)
         if len(data) != entry["bytes"] or _sha256_bytes(data) != entry["sha256"]:

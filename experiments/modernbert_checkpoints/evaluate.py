@@ -17,8 +17,8 @@ from transformers import (
     AutoTokenizer,
 )
 
-from vulsight_guard.data import manifest_output_hashes, read_verified_jsonl
-from vulsight_guard.detector import (
+from morgott.data import manifest_output_hashes, read_verified_jsonl
+from morgott.detector import (
     DIRECT_PRECISION_FLOORS,
     DIRECT_REVIEW_PRECISION_FLOOR,
     _rates,

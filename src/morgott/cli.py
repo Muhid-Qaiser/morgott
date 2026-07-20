@@ -10,7 +10,7 @@ from .policy import run_policy_ablation
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="vulsight-guard")
+    parser = argparse.ArgumentParser(prog="morgott")
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     data = subcommands.add_parser("data", help="download and consolidate pinned data")

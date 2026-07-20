@@ -367,9 +367,7 @@ def prepare_source_toxicity_stratum(rows: list[dict]) -> str:
 
 
 def _get_json(url: str, timeout: float = 30) -> dict:
-    request = urllib.request.Request(
-        url, headers={"User-Agent": "vulsight-agent-guard-wildchat/1"}
-    )
+    request = urllib.request.Request(url, headers={"User-Agent": "morgott-wildchat/1"})
     for attempt in range(5):
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -420,7 +418,7 @@ def download_shard(shard: dict, target: Path) -> int:
             shard_url(shard),
             headers={
                 "Accept-Encoding": "identity",
-                "User-Agent": "vulsight-agent-guard-wildchat/1",
+                "User-Agent": "morgott-wildchat/1",
             },
         )
         try:

@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Callable
 from urllib.request import Request
 
-from vulsight_guard.openrouter import (
+from morgott.openrouter import (
     ENDPOINT,
     OPEN_ONCE,
     build_request as build_openrouter_request,
@@ -138,7 +138,7 @@ def build_request(model: str, api_key: str, text: str) -> tuple[Request, str]:
     return build_openrouter_request(
         body,
         api_key,
-        "vulsight-agent-guard-wildchat/1",
+        "morgott-wildchat/1",
     )
 
 

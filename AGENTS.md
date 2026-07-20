@@ -5,6 +5,10 @@ repository. Read this file before changing code, data, experiments, reports, or
 security claims. Then read `README.md`, `docs/threat-model.md`, and the report for
 the experiment you are touching.
 
+The canonical project, Python package, and CLI names are `Morgott`, `morgott`,
+and `morgott`. Frozen `vulsight-*` experiment seeds already recorded in reports
+are protocol provenance; renaming them would invalidate reproducibility.
+
 This file records stable intent and decisions. Generated JSON/Markdown reports
 are the source of truth for exact current metrics, hashes, and timestamps. If a
 measurement changes, update the relevant report and this file's conclusion when
@@ -12,7 +16,7 @@ the decision changes; do not paste transient caches or secrets here.
 
 ## Mission, goal, and non-goals
 
-VulSight Agent Guard is a research POC for defense in depth around LLM
+Morgott is a research POC for defense in depth around LLM
 applications and agents. The goal is to reduce successful direct jailbreaks,
 direct prompt injections, and indirect prompt injections while preserving noisy
 normal conversation—including security discussion and harmful requests that do
@@ -104,7 +108,7 @@ threshold, or support a production-FPR/lockout claim.
 
 ## Current implementation
 
-The retained cheap control under `src/vulsight_guard/` is intentionally small:
+The retained cheap control under `src/morgott/` is intentionally small:
 
 - Data build: twelve pinned, ungated public sources; raw text retained; NFKC +
   casefold + whitespace normalization used only as a derived matching/model
@@ -169,7 +173,7 @@ the detector is useful but bypassable and its indirect FPR estimate is weak.
 
 ## Data sources and intended roles
 
-`src/vulsight_guard/data.py` pins revisions; `reports/data_manifest.json` pins
+`src/morgott/data.py` pins revisions; `reports/data_manifest.json` pins
 download/output digests and exact counts.
 
 | Source | Role | Training status |
@@ -407,13 +411,13 @@ its own sake; the security contribution is the prediction/authority split.
 
 ## Repository map and source-of-truth files
 
-- `src/vulsight_guard/data.py`: source pins, consolidation, normalization,
+- `src/morgott/data.py`: source pins, consolidation, normalization,
   grouping metadata, overlap blocking, and manifest generation.
-- `src/vulsight_guard/detector.py`: cheap sensors, grouped threshold selection,
+- `src/morgott/detector.py`: cheap sensors, grouped threshold selection,
   evaluation, local artifact, and shadow scanner.
-- `src/vulsight_guard/openrouter.py`: shared no-redirect, one-attempt provider
+- `src/morgott/openrouter.py`: shared no-redirect, one-attempt provider
   transport; experiment-specific prompts and response validation stay separate.
-- `src/vulsight_guard/policy.py`: deterministic reference monitor and ablation.
+- `src/morgott/policy.py`: deterministic reference monitor and ablation.
 - `tests/`: fast standard-library invariants for the retained POC.
 - `experiments/gpu_baselines/`: E5, PIGuard, and ProtectAI frozen evaluations.
 - `experiments/modernbert/`: frozen ModernBERT mean/CLS linear probe.

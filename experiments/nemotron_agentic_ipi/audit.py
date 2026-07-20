@@ -13,13 +13,13 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 
-from vulsight_guard.data import normalize_text, read_jsonl
-from vulsight_guard.detector import (
+from morgott.data import normalize_text, read_jsonl
+from morgott.detector import (
     _score_paragraphs,
     choose_threshold,
     split_fit_validation,
 )
-from vulsight_guard.policy import REFERENCE_POLICY, SCENARIOS, authorize
+from morgott.policy import REFERENCE_POLICY, SCENARIOS, authorize
 
 
 SOURCE = "nemotron_agentic_ipi"

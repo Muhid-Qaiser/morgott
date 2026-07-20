@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from vulsight_guard.data import _parse_nemotron_agentic_ipi
+from morgott.data import _parse_nemotron_agentic_ipi
 
 
 def _source_row() -> dict:

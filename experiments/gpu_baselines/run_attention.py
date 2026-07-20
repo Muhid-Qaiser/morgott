@@ -26,7 +26,7 @@ from run_embeddings import (
     read_rows,
     validation_mask,
 )
-from vulsight_guard.detector import _rates, choose_threshold
+from morgott.detector import _rates, choose_threshold
 
 
 MODELS = {
