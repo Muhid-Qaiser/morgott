@@ -1,7 +1,5 @@
 # Reference-monitor policy ablation
 
-Generated: 2026-07-20T06:57:55+00:00
-
 This is a deterministic simulation of a compromised planner. It tests the authorization boundary, not an LLM and not detector accuracy.
 
 | Guard | Unauthorized committed | Benign committed |

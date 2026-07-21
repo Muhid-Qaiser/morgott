@@ -22,7 +22,13 @@ from sklearn.metrics import (
 )
 from sklearn.pipeline import Pipeline
 
-from .data import deduplicate, normalize_text, read_jsonl
+from .data import (
+    deduplicate,
+    manifest_output_path,
+    normalize_text,
+    read_verified_jsonl,
+    split_is_validation,
+)
 
 
 KEYWORD_PATTERNS = [
@@ -43,18 +49,7 @@ DIRECT_EXPECTED_ATTACK_PREVALENCES = (0.001, 0.01, 0.05)
 
 
 def validation_mask(rows: list[dict]) -> np.ndarray:
-    return np.asarray(
-        [
-            int.from_bytes(
-                hashlib.sha256(
-                    row.get("split_group_id", row["group_id"]).encode()
-                ).digest()[:2]
-            )
-            % 5
-            == 0
-            for row in rows
-        ]
-    )
+    return np.asarray([split_is_validation(row) for row in rows])
 
 
 def split_fit_validation(rows: list[dict]) -> tuple[list[dict], list[dict]]:
@@ -354,7 +349,7 @@ def _write_report(path: Path, manifest: dict, results: dict) -> None:
         "| Partition | Rows | Attack | Non-attack |",
         "|---|---:|---:|---:|",
     ]
-    for name, output in manifest["outputs"].items():
+    for name, output in manifest["injection_views"].items():
         lines.append(
             f"| {name} | {output['rows']} | {output['positive']} | {output['negative']} |"
         )
@@ -416,8 +411,9 @@ def _write_report(path: Path, manifest: dict, results: dict) -> None:
         "more attacks. All profiles remain advisory and were selected without official "
         "test results.",
         "",
-        "Observed precision reflects the validation source mixture (66 attacks among "
-        "7,186 rows), not product traffic. Expected-precision cells are prevalence "
+        f"Observed precision reflects the validation source mixture "
+        f"({recommended['positive']} attacks among {recommended['rows']} rows), not "
+        "product traffic. Expected-precision cells are prevalence "
         "scenarios calculated from validation recall and FPR. Each cell is `point / "
         "FPR-upper stress estimate`; neither value is production calibration, and the "
         "stress estimate is not a full confidence interval.",
@@ -695,24 +691,40 @@ def run_benchmark(
     artifacts_dir: Path = Path("artifacts"),
     reports_dir: Path = Path("reports"),
 ) -> dict:
-    manifest = json.loads(
-        (data_dir / "processed" / "manifest.json").read_text(encoding="utf-8")
+    manifest_path = data_dir / "manifest.json"
+    manifest_bytes = manifest_path.read_bytes()
+    manifest = json.loads(manifest_bytes)
+
+    def read(output: dict) -> list[dict]:
+        return read_verified_jsonl(
+            manifest_output_path(data_dir, output), output["sha256"]
+        )
+
+    train = read(manifest["injection_views"]["direct_train"]) + read(
+        manifest["injection_views"]["direct_validation"]
     )
-    train = read_jsonl(data_dir / "processed" / "train.jsonl")
     model, training, validation, validation_score = _fit_sensor(
         train, min_precision=DIRECT_REVIEW_PRECISION_FLOOR
     )
     threshold = training["threshold"]
-    indirect_train = read_jsonl(data_dir / "processed" / "indirect_train.jsonl")
+    indirect_train = read(manifest["injection_views"]["indirect_train"]) + read(
+        manifest["injection_views"]["indirect_validation"]
+    )
     indirect_model, indirect_training, _, _ = _fit_sensor(
         indirect_train, 0.0, score_paragraphs=True
     )
     indirect_threshold = indirect_training["threshold"]
 
     physical_evaluation = {
-        name: read_jsonl(data_dir / "processed" / f"{name}.jsonl")
-        for name in manifest["outputs"]
-        if name not in {"train", "indirect_train"}
+        name: read(output)
+        for name, output in manifest["injection_views"].items()
+        if name
+        not in {
+            "direct_train",
+            "direct_validation",
+            "indirect_train",
+            "indirect_validation",
+        }
     }
     evaluation = dict(physical_evaluation)
     evaluation["harmful_nonattack"], _ = deduplicate(
@@ -960,6 +972,7 @@ def run_benchmark(
         {
             "schema_version": 2,
             "operating_mode": "shadow",
+            "data_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
             "channels": {
                 "direct_user": {
                     "target": "direct jailbreak or prompt-injection attack attempt",
@@ -981,9 +994,6 @@ def run_benchmark(
         artifacts_dir / "guard_bundle.joblib",
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
-    (reports_dir / "data_manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
     (reports_dir / "baseline.json").write_text(
         json.dumps(results, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

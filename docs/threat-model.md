@@ -1,78 +1,77 @@
-# POC threat model
+# Threat model
 
 ## Security claim
 
-Within the simulated reference agent, every side-effecting tool request passes
-through a fail-closed policy check. A compromised planner cannot invoke an
-ungranted tool, alter constrained arguments, or transmit data marked sensitive.
+Morgott makes a narrow architectural claim: a compromised planner must not gain
+authority from text. In the current simulation, every side-effecting proposal
+passes through a fail-closed reference monitor with caller-supplied capabilities
+and exact argument constraints.
 
-The channel-scoped detectors are shadow-mode sensors. Untrusted content runs
-both the indirect sensor and the direct-override fallback. Their scores neither
-grant authority nor block a user.
+The legacy injection-control classifier and corpus routing labels are predictive
+only; no routing classifier has been trained. Neither current labels nor future
+scores may block a user or approve a tool action. Finance, cybersecurity, and
+other sensitive topics are not deny rules; exact side effects require scoped
+authority.
 
-## Boundary
+## Trust boundary
 
-The trusted computing base is the policy document, the `authorize` function,
-runtime-supplied provenance and sensitive-data labels, and the code that refuses
-to execute denied actions. The model/planner, retrieved documents, email, tool
-results, memory, and detector are untrusted. The planner cannot set its own
-provenance or clear a sensitive-data label.
+Trusted:
 
-The POC uses simulated tool commits; it has no real credentials, network egress,
-wallet, email connector, or model API.
+- static policy and reference-monitor code;
+- runtime-supplied capability, provenance, and sensitive-data metadata;
+- the code that refuses to execute denied actions.
 
-The simulation assumes the caller supplies trusted policy/context objects. It
-does not bind capabilities to task or user identity, issue/expire credentials,
-or validate provenance beyond a nonempty list of strings; provenance does not
-yet affect authorization. Those are required runtime integrations, not current
-test evidence.
+Untrusted:
 
-## Assets, actors, sources, and sinks
+- users, models, planners, retrieved documents, email, web pages, tool output,
+  memory, summaries, classifier scores, and generated labels.
 
-| Kind | Initial set |
+The POC uses simulated commits. It has no real credentials, wallet, email
+connector, network egress, or model API. It does not yet bind capabilities to a
+task/user identity, issue expirations, or propagate provenance through a live
+agent runtime.
+
+## Assets and sinks
+
+| Kind | Examples |
 |---|---|
-| Assets | tenant data, canary secrets, durable memory, funds, external identity |
+| Assets | tenant data, secrets, durable memory, funds, external identity |
 | Actors | legitimate user, malicious user, hostile content author, compromised tool |
-| Untrusted sources | direct prompt, email, RAG document, web page, tool result, memory |
-| Sinks | model response, email, file, durable memory, transaction, external API |
+| Untrusted sources | prompt, email, RAG document, web page, tool result, memory |
+| Sinks | response, email, file, memory, transaction, external API |
 
 ## Invariants
 
 1. Untrusted content may provide facts but cannot grant authority.
 2. Every side effect is mediated outside the planner.
-3. Sensitive data flows only when the task capability explicitly permits it.
-4. Tool output and memory cannot increase privilege.
-5. No ambient or long-lived credential is exposed to the planner.
-6. Summarization does not erase provenance.
-7. Model output is untrusted application input.
-8. Human approval, when added, must bind the exact action and arguments.
-9. Missing provenance or malformed action schemas fail closed.
-10. Detector scores can reduce privilege or escalate review, never authorize.
+3. Sensitive data flows only when an exact capability permits it.
+4. Tool output, memory, summaries, and detector scores cannot increase privilege.
+5. Credentials are not exposed to the planner.
+6. Model output is untrusted application input.
+7. Future human approval binds the exact action and arguments.
+8. Missing provenance and malformed action schemas fail closed.
+9. `uncertain` never becomes benign by default.
+10. Train, validation, and dev-test groups and exact texts remain disjoint;
+    conflicts and leakage stay visible in quarantine.
 
-## Initial abuse cases
+## Abuse cases
 
-| Abuse case | POC control | Status |
-|---|---|---|
-| Direct user jailbreak | P0 text sensor | measured, bypassable |
-| Direct prompt override | P0 text sensor | measured, bypassable |
-| Obfuscated/cipher jailbreak | out-of-source holdout | measured, bypassable |
-| Human prompt hijacking/extraction | Tensor Trust locked holdout | measured, bypassable |
-| Benign or harmful non-injection prompt alerted | OASST1, XSTest, HarmBench, Do-Not-Answer | measured |
-| Indirect injection in external content | BIPIA train/test sensor plus reference monitor | measured, bypassable |
-| Synthetic agentic tool-output injection | Nemotron transfer audit plus reference monitor | detector 0/676; four representative actions blocked |
-| False positive locks out a user | shadow-only allow decision | prevented by design |
-| Retrieved text sends a canary | capability plus sensitive-data check | blocked |
-| Retrieved text changes email recipient | exact recipient constraint | blocked |
-| Retrieved text writes durable memory | tool not granted | blocked |
-| Retrieved text transfers funds | tool not granted | blocked |
-| Malformed action smuggles fields | exact schema | blocked |
-| Authorized safe summary/email | scoped capability | allowed |
+| Abuse case | Required control |
+|---|---|
+| Direct jailbreak or prompt override | advisory detector plus deterministic action policy |
+| Injection in email, RAG, web, tool output, or memory | provenance-aware routing plus the same action policy |
+| Obfuscated or unseen attack bypasses the detector | reference monitor still denies ungranted side effects |
+| Benign security/finance discussion is flagged | shadow-only routing and measured review cost |
+| Harmful content is confused with injection | independent label axes and masked subtype supervision |
+| Source ambiguity becomes a benign label | nullable labels and separate uncertain/auxiliary roles |
+| Train/evaluation leakage inflates results | grouped splits, exact blocking, near-overlap quarantine |
+| Retrieved text changes a recipient or transfers funds | exact tool and argument constraints |
+| Retrieved text exfiltrates a secret | sensitive-data egress policy |
+| Retrieved text writes durable memory | capability denial or quarantined memory writes |
 
 ## Deferred
 
-AgentDojo/stateful target integration, egress taint across transformations,
-credential brokering, exact human approvals, memory quarantine, adaptive
-attacks, multilingual attack positives, fuller multi-seed encoder training, and
-production-traffic calibration are outside this initial POC. Frozen encoders,
-off-the-shelf guard checkpoints, a bounded provider reviewer, and a one-seed
-ModernBERT/DeBERTa screen were measured only as shadow experiments.
+Stateful agent integration, taint propagation, credential brokering, exact human
+approval, durable-memory quarantine, adaptive attacks, multimodal/browser
+injection, and production-traffic calibration are future work. No text detector
+is a substitute for those controls.

@@ -1,0 +1,1768 @@
+{
+  "audits": {
+    "injection_near_overlap": {
+      "action": "audited but not removed from the retained baseline; new rows matching locked evaluation are quarantined before training",
+      "candidate_rows_by_dataset": {
+        "direct_validation": 23,
+        "jailbreaks_over_time": 241,
+        "prompt_injections": 1,
+        "toxic_chat": 42
+      },
+      "method": "128-bit SimHash over word unigrams+bigrams, eight 16-bit bands, Hamming <= 6, five-word minimum; documents over 24,000 characters use contiguous 8,000-character head, middle, and tail windows",
+      "path": "audits/injection_near_overlap.jsonl",
+      "rows": 307,
+      "scope": "materialized train rows against validation and dev-test rows",
+      "sha256": "4ab6d45538046d169bb7810c90393f0953cc88e38993fb22773d8b66188de316"
+    }
+  },
+  "canonical_row_schema_version": 5,
+  "deduplication": {
+    "bipia_clean_context": {
+      "blocked_by_reference": 13,
+      "blocked_label_conflicts": 0,
+      "duplicates": 20,
+      "label_conflicts": 0
+    },
+    "bipia_context": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "bipia_payload": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "do_not_answer": {
+      "blocked_by_reference": 1,
+      "blocked_label_conflicts": 0,
+      "duplicates": 1,
+      "label_conflicts": 0
+    },
+    "do_not_answer_chinese": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 2,
+      "label_conflicts": 0
+    },
+    "do_not_answer_translated_english": {
+      "blocked_by_reference": 1,
+      "blocked_label_conflicts": 0,
+      "duplicates": 2,
+      "label_conflicts": 0
+    },
+    "harmbench": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "indirect_train": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 288,
+      "label_conflicts": 0
+    },
+    "jailbreaks_over_time": {
+      "blocked_by_reference": 742,
+      "blocked_label_conflicts": 0,
+      "duplicates": 463,
+      "label_conflicts": 0
+    },
+    "multi_turn": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "multi_turn_benign": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "multi_turn_semi_benign": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "nemotron_agentic_ipi": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 596,
+      "label_conflicts": 0
+    },
+    "notinject": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "oasst1_chat": {
+      "blocked_by_reference": 21,
+      "blocked_label_conflicts": 0,
+      "duplicates": 1,
+      "label_conflicts": 0
+    },
+    "oasst1_position_stress": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "prompt_injections": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "tensor_trust_attack": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 438,
+      "label_conflicts": 0
+    },
+    "tensor_trust_context": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    },
+    "toxic_chat": {
+      "blocked_by_reference": 275,
+      "blocked_label_conflicts": 0,
+      "duplicates": 105,
+      "label_conflicts": 0
+    },
+    "train": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 474,
+      "label_conflicts": 2
+    },
+    "xstest": {
+      "blocked_by_reference": 0,
+      "blocked_label_conflicts": 0,
+      "duplicates": 0,
+      "label_conflicts": 0
+    }
+  },
+  "download_sha256": {
+    "bipia/benchmark/code/test.jsonl": "ed40b84f541352fb45753032a80750922de8d5e0b70997924df3d04cf942e058",
+    "bipia/benchmark/code/train.jsonl": "5e6879b621a5cefe265a5b41b7ed0be632536f658f6097baf85a28b9abcb3115",
+    "bipia/benchmark/code_attack_test.json": "892545c5aaec0645b1ded65dc7816b3d70e9ef4eadcba2301a7a3db93676b6e0",
+    "bipia/benchmark/code_attack_train.json": "fe515080b6da2b5c0b67ca7ba2a3b3c2ce57c48f45733c475ebc813cba118484",
+    "bipia/benchmark/email/test.jsonl": "217b403faaa1d0cb12c24892bea39f4a0b9e2819919ac7e2b902006e28278cdb",
+    "bipia/benchmark/email/train.jsonl": "82207193cb8ce06713eeb7c33ca0716446613512e2ad9303b302ba14d425ddd4",
+    "bipia/benchmark/table/test.jsonl": "3d5eaab192b80bada762e3cd7655583a14e5888ba8b845a01f0434e4ccc4291e",
+    "bipia/benchmark/table/train.jsonl": "ae1c3ff25733fb3ff1a35bda3009716f4d25a17ae6833c73521be0411d576494",
+    "bipia/benchmark/text_attack_test.json": "75750e7b4e8b34e8f9d88d89b357aeaaf02bd07f9e493ccd37eda74a0cd7c7f8",
+    "bipia/benchmark/text_attack_train.json": "63f95d3e67eac4178cdabdbdaf192cd05f2b6ed0702b578f1d30d556e5155670",
+    "browsesafe/test.parquet": "00cbad96b60fee46e016d79af6981fb221384c61f12cf28b4f04b5a6420573d0",
+    "browsesafe/train.parquet": "430881fa53da3898956048676f58db894fc760cfa348ab264ee8a07c44a3d9fb",
+    "do_not_answer/datasets/Instruction/do_not_answer_en.csv": "06acfa39a06a1b33d1f264ce41b4f7a95812010c594fb733ae4717ee0a4544fc",
+    "do_not_answer/datasets/data_zh.csv": "cec83aa3c0f141f1c65b88ab99b953e6acd7d1badec630a0a76f70044a07fec3",
+    "gandalf/data/test-00000-of-00001-bc92128b9288a6d1.parquet": "56b646d133335ebc535266bd55dbe1b5bee7caa4b95bf49d040684b9b5dd9972",
+    "gandalf/data/train-00000-of-00001-ded53be747ff55cd.parquet": "5b6acf3e5a5998d21f8e1222bb45bbdec25a14408747b1cd63bebef4a75fa439",
+    "gandalf/data/validation-00000-of-00001-94481a2a09ff2fff.parquet": "f51ab3e3407a368845b0f57932cc745c09280429416d7507bd178a16326a79f6",
+    "hackaprompt/hackaprompt.parquet": "bedca308fbd71be57793930e4e4a0dcfbda2a27b6d0f2ad3191bb20a6a315928",
+    "harmbench_behaviors_text_all.csv": "8d81accedd38eaaf8b760618622bb888417d1fd0c86eba65c427a16f1cbb4afc",
+    "jailbreaks_over_time/jailbreaksovertime.json": "110fb269a3af1bd9891d583b576563ddde658a980efee5718be50dd8fc5ad001",
+    "llmail/data/emails_for_fp_tests.json": "4ddd950b5dbaa8548f5597c886d8e09a051ba07f80a9291fdcca9c2397d22abe",
+    "llmail/data/labelled_unique_submissions_phase1.json": "691dfa1595d2bd0e731069f233bd5448f7af1c0ebd9732bc6f12dd6cee446586",
+    "llmail/data/labelled_unique_submissions_phase2.json": "f89af984e345430c3b357903890e30867bf4676f4ef10c138cc7bad218e890b8",
+    "llmail/data/raw_submissions_phase1.jsonl": "a9c62eca699dd270fdfbbfbfcc1253f5e5017f6d5a34ff7cb0f2cbb80b7f7c0a",
+    "llmail/data/raw_submissions_phase2.jsonl": "a9207e1d893ccb74ca6f9cc5eecea433bc49c23a26bed88088afd385c7ab18b6",
+    "multi_turn/Complete Harmful Dataset.csv": "c0c037832b43c3ccc7386a70e50a1c51b4e5fb30128fd9beb252369492807304",
+    "multi_turn/Completely-Benign Dataset.csv": "4efb90f0b4c8d54ad66353acd89bf4008413c80b9bf45ddc812b1f36847c7398",
+    "multi_turn/Harmful Dataset.csv": "9b84edb9ebbf695b4884a897284022c4f75e382a577359bd031c6ec902a45f17",
+    "multi_turn/Semi-Benign Dataset.csv": "9acd4d02efaf7cdf79ac52841541e07bf405e7d9257884af7b55793fe0c839da",
+    "nemotron_agentic_ipi/train.jsonl": "3329da17564a7eb287e2730fc7d6956e1f4fe51e8950ac4f110b3c37e78cf3b9",
+    "notinject/datasets/NotInject_one.json": "69b535596d95102424e9c5946944feb4f2d596687eb8213f2ecad75478e5ffdd",
+    "notinject/datasets/NotInject_three.json": "ef01eff0d761d2e34571b3fdbcec08c30cd93efe8d0e1a2eb5c2baeb1873b070",
+    "notinject/datasets/NotInject_two.json": "6043d94e75b48d8e7682d25dc79eaf45359e1e561ce520e3b8fd5625a91060c6",
+    "tensor_trust/benchmarks/extraction-robustness/v1/extraction_robustness_dataset.jsonl": "4090f9f57b6df69cc32d7669ac991e3fd53e6e2bb616a5e6f45dac79c183ee4c",
+    "tensor_trust/benchmarks/hijacking-robustness/v1/hijacking_robustness_dataset.jsonl": "2ad3c2343bbf43cb1924f3ec5d6f830864ce3c879e9832b01d93a991e7e2e680",
+    "tensor_trust_raw/detecting-extractions/v1/prompt_extraction_detection.jsonl": "af28d09554db4f8ed91d042005c3457f72c88e763e3787c3b1c76c1d9e8f8260",
+    "tensor_trust_raw/raw-data/v2/raw_dump_attacks.jsonl.bz2": "87853cc8065a22156d15c4bdec777a8d35758749beb79769147d63a9644a73ce",
+    "tensor_trust_raw/raw-data/v2/raw_dump_defenses.jsonl.bz2": "cbdf52c469b2a57db61f885562bae1725cd56174cc201979e7bc042a680a5166",
+    "wildguardmix/test/wildguard_test.parquet": "6ccc2909c1ae6d41424fac69f1fc32535b1de39cb8f80407d81e8bc64a0bebca",
+    "wildguardmix/train/wildguard_train.parquet": "02ecea8a724a9146a1e473a95a7cdf262adfe9c7d5408953ca86d2fcfbdc8953",
+    "wildjailbreak/eval/eval.tsv": "eeb7e43aafa0151588f5cb8994b99adc0ee34a57819d92f43a6084f0b7fe4fa4",
+    "wildjailbreak/train/train.tsv": "376719bfdb46ad1a19e7ba4f587f80cc7cb1368cc213ee647ef739c170550f7a",
+    "xstest_prompts.csv": "11783fb294ed017473ee53c207d71f2161c7672c8d0b037501e78387f801cb5a"
+  },
+  "injection_views": {
+    "bipia_clean_context": {
+      "negative": 167,
+      "path": "views/injection/bipia_clean_context.jsonl",
+      "positive": 0,
+      "routing_benign": 167,
+      "routing_non_benign": 0,
+      "rows": 167,
+      "security_labels": {
+        "benign": 167
+      },
+      "sha256": "c7f8006c7617fa2ee78af6a00f68ebd649c06a3755e092aa6bb2fbb28e8f2123"
+    },
+    "bipia_context": {
+      "negative": 0,
+      "path": "views/injection/bipia_context.jsonl",
+      "positive": 375,
+      "routing_benign": 0,
+      "routing_non_benign": 375,
+      "rows": 375,
+      "security_labels": {
+        "indirect_prompt_injection": 375
+      },
+      "sha256": "ff0c1722faf58483ef476b69f15d8f96b040978ad566afb8194a1905fc0592da"
+    },
+    "bipia_payload": {
+      "negative": 0,
+      "path": "views/injection/bipia_payload.jsonl",
+      "positive": 125,
+      "routing_benign": 0,
+      "routing_non_benign": 125,
+      "rows": 125,
+      "security_labels": {
+        "indirect_prompt_injection": 125
+      },
+      "sha256": "e1419fb906ed30a5ba9634545b9ec39f1959f79f70a29e9fe8a02f4cf5268015"
+    },
+    "direct_train": {
+      "negative": 28481,
+      "path": "views/injection/direct_train.jsonl",
+      "positive": 245,
+      "routing_benign": 3937,
+      "routing_non_benign": 24789,
+      "rows": 28726,
+      "sha256": "eea0676c4d33522d79f3850cef22c20d7fe6e467ce76a864401b0b2c52f908c1"
+    },
+    "direct_validation": {
+      "negative": 7120,
+      "path": "views/injection/direct_validation.jsonl",
+      "positive": 66,
+      "routing_benign": 976,
+      "routing_non_benign": 6210,
+      "rows": 7186,
+      "sha256": "ad5b0df316e5a045a1ea5bffb23bc06c93220c91321eb7a6aabc69894789fcac"
+    },
+    "do_not_answer": {
+      "negative": 937,
+      "path": "views/injection/do_not_answer.jsonl",
+      "positive": 0,
+      "routing_benign": 0,
+      "routing_non_benign": 937,
+      "rows": 937,
+      "security_labels": {
+        "harmful_non_injection": 937
+      },
+      "sha256": "99e4cd24509792a6a6efb30304d1e140edb17c4c2215069789d772dd888111ca"
+    },
+    "do_not_answer_chinese": {
+      "negative": 2724,
+      "path": "views/injection/do_not_answer_chinese.jsonl",
+      "positive": 0,
+      "routing_benign": 0,
+      "routing_non_benign": 2724,
+      "rows": 2724,
+      "security_labels": {
+        "harmful_non_injection": 2724
+      },
+      "sha256": "40e12d24a78c7d65dd15ca0acc394d4cd23765083443019a6481d8eb537fbe4a"
+    },
+    "do_not_answer_translated_english": {
+      "negative": 2723,
+      "path": "views/injection/do_not_answer_translated_english.jsonl",
+      "positive": 0,
+      "routing_benign": 0,
+      "routing_non_benign": 2723,
+      "rows": 2723,
+      "security_labels": {
+        "harmful_non_injection": 2723
+      },
+      "sha256": "cca45d1379f1864f189abd680e941dd5305b7a26bd9d6785dfe5d5d247bf3c73"
+    },
+    "harmbench": {
+      "negative": 400,
+      "path": "views/injection/harmbench.jsonl",
+      "positive": 0,
+      "routing_benign": 0,
+      "routing_non_benign": 400,
+      "rows": 400,
+      "security_labels": {
+        "harmful_non_injection": 400
+      },
+      "sha256": "3e6d4a205fbb7eb462c4de5b592578959e06ef09f3adf185fd1007cf8c2feb62"
+    },
+    "indirect_train": {
+      "negative": 570,
+      "path": "views/injection/indirect_train.jsonl",
+      "positive": 416,
+      "routing_benign": 570,
+      "routing_non_benign": 416,
+      "rows": 986,
+      "sha256": "b5fe904c9834a61de2df5d61a96c8462e31f3ea1de10f99fe8eee4f120490dbf"
+    },
+    "indirect_validation": {
+      "negative": 142,
+      "path": "views/injection/indirect_validation.jsonl",
+      "positive": 84,
+      "routing_benign": 142,
+      "routing_non_benign": 84,
+      "rows": 226,
+      "sha256": "b768c58cede5a4fd697e1ebb4ec2f719653cd64b8e97635d5ad0a261ca0193f6"
+    },
+    "jailbreaks_over_time": {
+      "negative": 18195,
+      "path": "views/injection/jailbreaks_over_time.jsonl",
+      "positive": 3901,
+      "routing_benign": 18195,
+      "routing_non_benign": 3901,
+      "rows": 22096,
+      "security_labels": {
+        "benign": 18195,
+        "direct_jailbreak": 3901
+      },
+      "sha256": "479d691d8c6b438d45c683378fcefd7ddae264bca898c32de651b16652309f9d"
+    },
+    "multi_turn": {
+      "negative": 0,
+      "path": "views/injection/multi_turn.jsonl",
+      "positive": 4136,
+      "routing_benign": 0,
+      "routing_non_benign": 4136,
+      "rows": 4136,
+      "security_labels": {
+        "direct_jailbreak": 4136
+      },
+      "sha256": "c98ad0ebd0ff12ce50272048d07bd948c09812166a3ee7fece65ec75713ef510"
+    },
+    "multi_turn_benign": {
+      "negative": 1200,
+      "path": "views/injection/multi_turn_benign.jsonl",
+      "positive": 0,
+      "routing_benign": 1200,
+      "routing_non_benign": 0,
+      "rows": 1200,
+      "security_labels": {
+        "benign": 1200
+      },
+      "sha256": "a35f6240c6e48d67fbeabdafa4f1e96076a5cbf2acb4b78a3d9bb0c4f419eba7"
+    },
+    "multi_turn_semi_benign": {
+      "negative": 1200,
+      "path": "views/injection/multi_turn_semi_benign.jsonl",
+      "positive": 0,
+      "routing_benign": 1200,
+      "routing_non_benign": 0,
+      "rows": 1200,
+      "security_labels": {
+        "benign": 1200
+      },
+      "sha256": "cd5cb6c8d629936aacc8d2836e937c9110ebbb8c57186435279ab4d4f20739be"
+    },
+    "nemotron_agentic_ipi": {
+      "negative": 0,
+      "path": "views/injection/nemotron_agentic_ipi.jsonl",
+      "positive": 676,
+      "routing_benign": 0,
+      "routing_non_benign": 676,
+      "rows": 676,
+      "security_labels": {
+        "indirect_prompt_injection": 676
+      },
+      "sha256": "8925d72f069f9f82e5efb95dc2bcc268772aba46db7051fb51abfc4dfdc7353b"
+    },
+    "notinject": {
+      "negative": 339,
+      "path": "views/injection/notinject.jsonl",
+      "positive": 0,
+      "routing_benign": 339,
+      "routing_non_benign": 0,
+      "rows": 339,
+      "security_labels": {
+        "benign": 339
+      },
+      "sha256": "8f893ca1782dc1f81f2b04743e92e1fd38c2c4c62af0b01de25ddd5df6cda8b7"
+    },
+    "oasst1_chat": {
+      "negative": 1582,
+      "path": "views/injection/oasst1_chat.jsonl",
+      "positive": 0,
+      "routing_benign": 0,
+      "routing_non_benign": 1582,
+      "rows": 1582,
+      "security_labels": {
+        "uncertain": 1582
+      },
+      "sha256": "8b9c60313422b54a7bf98c4f943f813d5a8282132a982324eccd19017f5e66b1"
+    },
+    "oasst1_position_stress": {
+      "negative": 500,
+      "path": "views/injection/oasst1_position_stress.jsonl",
+      "positive": 0,
+      "routing_benign": 500,
+      "routing_non_benign": 0,
+      "rows": 500,
+      "security_labels": {
+        "benign": 500
+      },
+      "sha256": "d3ab6796aad63b4829ea2a95c0741994fb239e2f8d211877ca9a0703cf155b53"
+    },
+    "prompt_injections": {
+      "negative": 56,
+      "path": "views/injection/prompt_injections.jsonl",
+      "positive": 60,
+      "routing_benign": 56,
+      "routing_non_benign": 60,
+      "rows": 116,
+      "security_labels": {
+        "benign": 56,
+        "direct_prompt_injection": 60
+      },
+      "sha256": "3974f0c03aceb45c85600bed6597cbc16198faa208c478ba27217ee3509b0618"
+    },
+    "tensor_trust_attack": {
+      "negative": 0,
+      "path": "views/injection/tensor_trust_attack.jsonl",
+      "positive": 908,
+      "routing_benign": 0,
+      "routing_non_benign": 908,
+      "rows": 908,
+      "security_labels": {
+        "direct_prompt_injection": 908
+      },
+      "sha256": "501189689c73e44e64fc10c8752a50f3d0cfaf58e94afd3d3b8c54f0a97c269f"
+    },
+    "tensor_trust_context": {
+      "negative": 0,
+      "path": "views/injection/tensor_trust_context.jsonl",
+      "positive": 1346,
+      "routing_benign": 0,
+      "routing_non_benign": 1346,
+      "rows": 1346,
+      "security_labels": {
+        "indirect_prompt_injection": 1346
+      },
+      "sha256": "8763dfa81058b4958d973d37caca4d8d02da32892594efffcc524a8502e3a39f"
+    },
+    "toxic_chat": {
+      "negative": 4630,
+      "path": "views/injection/toxic_chat.jsonl",
+      "positive": 73,
+      "routing_benign": 4383,
+      "routing_non_benign": 320,
+      "rows": 4703,
+      "security_labels": {
+        "benign": 4383,
+        "direct_jailbreak": 73,
+        "harmful_non_injection": 247
+      },
+      "sha256": "32d91cfd95b8513571400cdde23436f360ab9d14069201bcbd2036158516c198"
+    },
+    "xstest": {
+      "negative": 450,
+      "path": "views/injection/xstest.jsonl",
+      "positive": 0,
+      "routing_benign": 250,
+      "routing_non_benign": 200,
+      "rows": 450,
+      "security_labels": {
+        "benign": 250,
+        "harmful_non_injection": 200
+      },
+      "sha256": "d480073aa0476bf1707d28072c11bc2da4d67e26685e247c0b4eaf3b92c304b2"
+    }
+  },
+  "quarantines": {
+    "injection": {
+      "path": "quarantine/injection.jsonl",
+      "reasons": {
+        "exact_label_conflict": 2,
+        "exact_train_overlap": 1053
+      },
+      "rows": 1055,
+      "sha256": "a6eed1435e05142ee40aeda4c0bd9d553e2338eb46b0e0499484d6e4cd02ef46"
+    },
+    "routing": {
+      "path": "quarantine/routing.jsonl",
+      "reasons": {
+        "exact_label_conflict": 4,
+        "exact_supervised_overlap": 3999,
+        "near_dev_test_overlap": 50416,
+        "near_train_overlap": 3060
+      },
+      "representative_source_routing": {
+        "browsesafe": {
+          "benign": 49,
+          "non_benign": 63
+        },
+        "do_not_answer": {
+          "benign": 0,
+          "non_benign": 1
+        },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 9214
+        },
+        "llmail": {
+          "benign": 0,
+          "non_benign": 24037
+        },
+        "oasst1": {
+          "benign": 0,
+          "non_benign": 120
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 3
+        },
+        "tensor_trust_raw": {
+          "benign": 0,
+          "non_benign": 23909
+        },
+        "toxic_chat": {
+          "benign": 0,
+          "non_benign": 9
+        },
+        "wildjailbreak": {
+          "benign": 52,
+          "non_benign": 22
+        }
+      },
+      "representative_sources": {
+        "browsesafe": 112,
+        "do_not_answer": 1,
+        "hackaprompt": 9214,
+        "llmail": 24037,
+        "oasst1": 120,
+        "prompt_injections": 3,
+        "tensor_trust_raw": 23909,
+        "toxic_chat": 9,
+        "wildjailbreak": 74
+      },
+      "routing_benign": 101,
+      "routing_non_benign": 57378,
+      "rows": 57479,
+      "sha256": "5edc1af0f3008921a2700b5592b76c5354db8579149f861cb720309e85bc0e87",
+      "source_membership_routing": {
+        "browsesafe": {
+          "benign": 49,
+          "non_benign": 63
+        },
+        "do_not_answer": {
+          "benign": 0,
+          "non_benign": 1
+        },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 9214
+        },
+        "llmail": {
+          "benign": 0,
+          "non_benign": 24037
+        },
+        "oasst1": {
+          "benign": 0,
+          "non_benign": 120
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 4
+        },
+        "tensor_trust_raw": {
+          "benign": 0,
+          "non_benign": 23951
+        },
+        "toxic_chat": {
+          "benign": 0,
+          "non_benign": 10
+        },
+        "wildjailbreak": {
+          "benign": 52,
+          "non_benign": 22
+        }
+      },
+      "source_memberships": {
+        "browsesafe": 112,
+        "do_not_answer": 1,
+        "hackaprompt": 9214,
+        "llmail": 24037,
+        "oasst1": 120,
+        "prompt_injections": 4,
+        "tensor_trust_raw": 23951,
+        "toxic_chat": 10,
+        "wildjailbreak": 74
+      }
+    }
+  },
+  "routing_deduplication": {
+    "actual_ratios": {
+      "dev_test": 0.2112178646723796,
+      "train": 0.6917284636927176,
+      "validation": 0.09705367163490282
+    },
+    "actual_rows": {
+      "dev_test": 201373,
+      "train": 659487,
+      "validation": 92530
+    },
+    "candidate_exact_rows_fixed_by_official_lineage": 985,
+    "candidate_partition_rows": {
+      "dev_test": 151926,
+      "train": 704806,
+      "validation": 100687
+    },
+    "cross_lineage_exact_duplicates": 31975,
+    "exact_conflict_rows_quarantined": 4,
+    "exact_duplicate_rows_merged": 711175,
+    "input_rows": 1718045,
+    "near_method": "128-bit SimHash over word unigrams+bigrams, eight 16-bit bands, Hamming <= 6, five-word minimum; documents over 24,000 characters use contiguous 8,000-character head, middle, and tail windows",
+    "official_dev_test_rows": 49447,
+    "partition_method": "exact deduplication, official-dev locking, 70/10/20 iterative source/label targets, then deterministic weighted lineage placement",
+    "planned_ratios": {
+      "dev_test": 0.1999998013638359,
+      "train": 0.6999998013638359,
+      "validation": 0.10000039727232819
+    },
+    "planned_rows": {
+      "dev_test": 201373,
+      "train": 704806,
+      "validation": 100687
+    },
+    "ratio_deviation": {
+      "dev_test": 0.01121786467237959,
+      "train": -0.00827153630728239,
+      "validation": -0.0029463283650971867
+    },
+    "storage": "temporary SQLite index; canonical JSONL source shards remain authoritative",
+    "supervised": {
+      "near_dev_test_overlap_rows_quarantined": 50416,
+      "near_train_overlap_rows_quarantined": 3060
+    },
+    "target_ratios": {
+      "dev_test": 0.2,
+      "train": 0.7,
+      "validation": 0.1
+    },
+    "uncertain": {
+      "exact_duplicate_rows_merged": 53568,
+      "exact_supervised_overlap_rows_quarantined": 3999,
+      "input_rows": 108099
+    }
+  },
+  "routing_views": {
+    "dev_test": {
+      "largest_split_group": {
+        "partition_share": 0.1718005889568115,
+        "rows": 34596,
+        "split_group_sha256": "47942d9d5938b37e2eb2ab172b6aae6fcc2bd537d7e3ff4ccf79aaf7d6ed2fb8"
+      },
+      "path": "views/routing/dev_test.jsonl",
+      "representative_source_routing": {
+        "bipia": {
+          "benign": 0,
+          "non_benign": 500
+        },
+        "browsesafe": {
+          "benign": 1856,
+          "non_benign": 1824
+        },
+        "do_not_answer": {
+          "benign": 0,
+          "non_benign": 6313
+        },
+        "gandalf": {
+          "benign": 0,
+          "non_benign": 223
+        },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 65850
+        },
+        "harmbench": {
+          "benign": 0,
+          "non_benign": 400
+        },
+        "jailbreaks_over_time": {
+          "benign": 0,
+          "non_benign": 3901
+        },
+        "llmail": {
+          "benign": 160,
+          "non_benign": 27447
+        },
+        "multi_turn": {
+          "benign": 2400,
+          "non_benign": 4136
+        },
+        "nemotron_agentic_ipi": {
+          "benign": 0,
+          "non_benign": 676
+        },
+        "notinject": {
+          "benign": 339,
+          "non_benign": 0
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 60
+        },
+        "tensor_trust": {
+          "benign": 0,
+          "non_benign": 2254
+        },
+        "tensor_trust_raw": {
+          "benign": 0,
+          "non_benign": 47947
+        },
+        "toxic_chat": {
+          "benign": 0,
+          "non_benign": 354
+        },
+        "wildguardmix": {
+          "benign": 490,
+          "non_benign": 754
+        },
+        "wildjailbreak": {
+          "benign": 8883,
+          "non_benign": 24156
+        },
+        "xstest": {
+          "benign": 250,
+          "non_benign": 200
+        }
+      },
+      "representative_sources": {
+        "bipia": 500,
+        "browsesafe": 3680,
+        "do_not_answer": 6313,
+        "gandalf": 223,
+        "hackaprompt": 65850,
+        "harmbench": 400,
+        "jailbreaks_over_time": 3901,
+        "llmail": 27607,
+        "multi_turn": 6536,
+        "nemotron_agentic_ipi": 676,
+        "notinject": 339,
+        "prompt_injections": 60,
+        "tensor_trust": 2254,
+        "tensor_trust_raw": 47947,
+        "toxic_chat": 354,
+        "wildguardmix": 1244,
+        "wildjailbreak": 33039,
+        "xstest": 450
+      },
+      "routing_benign": 14378,
+      "routing_non_benign": 186995,
+      "rows": 201373,
+      "sha256": "3cfb4fdae6339be6f79050b3e39691b116fc635c8afcc121598d0d01b17f32fe",
+      "source_membership_routing": {
+        "bipia": {
+          "benign": 0,
+          "non_benign": 500
+        },
+        "browsesafe": {
+          "benign": 1856,
+          "non_benign": 1824
+        },
+        "do_not_answer": {
+          "benign": 0,
+          "non_benign": 6313
+        },
+        "gandalf": {
+          "benign": 0,
+          "non_benign": 223
+        },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 65854
+        },
+        "harmbench": {
+          "benign": 0,
+          "non_benign": 400
+        },
+        "jailbreaks_over_time": {
+          "benign": 0,
+          "non_benign": 3901
+        },
+        "llmail": {
+          "benign": 160,
+          "non_benign": 27447
+        },
+        "multi_turn": {
+          "benign": 2400,
+          "non_benign": 4136
+        },
+        "nemotron_agentic_ipi": {
+          "benign": 0,
+          "non_benign": 676
+        },
+        "notinject": {
+          "benign": 339,
+          "non_benign": 0
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 61
+        },
+        "tensor_trust": {
+          "benign": 0,
+          "non_benign": 2254
+        },
+        "tensor_trust_raw": {
+          "benign": 0,
+          "non_benign": 48984
+        },
+        "toxic_chat": {
+          "benign": 0,
+          "non_benign": 354
+        },
+        "wildguardmix": {
+          "benign": 490,
+          "non_benign": 754
+        },
+        "wildjailbreak": {
+          "benign": 8889,
+          "non_benign": 24156
+        },
+        "xstest": {
+          "benign": 250,
+          "non_benign": 200
+        }
+      },
+      "source_memberships": {
+        "bipia": 500,
+        "browsesafe": 3680,
+        "do_not_answer": 6313,
+        "gandalf": 223,
+        "hackaprompt": 65854,
+        "harmbench": 400,
+        "jailbreaks_over_time": 3901,
+        "llmail": 27607,
+        "multi_turn": 6536,
+        "nemotron_agentic_ipi": 676,
+        "notinject": 339,
+        "prompt_injections": 61,
+        "tensor_trust": 2254,
+        "tensor_trust_raw": 48984,
+        "toxic_chat": 354,
+        "wildguardmix": 1244,
+        "wildjailbreak": 33045,
+        "xstest": 450
+      }
+    },
+    "train": {
+      "largest_split_group": {
+        "partition_share": 0.09266444979203532,
+        "rows": 61111,
+        "split_group_sha256": "302e34375952e4585f9b38c02a12348e630410628f803b7eb4caf4565fb45373"
+      },
+      "path": "views/routing/train.jsonl",
+      "representative_source_routing": {
+        "bipia": {
+          "benign": 0,
+          "non_benign": 436
+        },
+        "browsesafe": {
+          "benign": 4833,
+          "non_benign": 4735
+        },
+        "gandalf": {
+          "benign": 0,
+          "non_benign": 679
+        },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 258893
+        },
+        "llmail": {
+          "benign": 0,
+          "non_benign": 83995
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 173
+        },
+        "tensor_trust_raw": {
+          "benign": 0,
+          "non_benign": 172767
+        },
+        "toxic_chat": {
+          "benign": 0,
+          "non_benign": 291
+        },
+        "wildjailbreak": {
+          "benign": 35892,
+          "non_benign": 96793
+        }
+      },
+      "representative_sources": {
+        "bipia": 436,
+        "browsesafe": 9568,
+        "gandalf": 679,
+        "hackaprompt": 258893,
+        "llmail": 83995,
+        "prompt_injections": 173,
+        "tensor_trust_raw": 172767,
+        "toxic_chat": 291,
+        "wildjailbreak": 132685
+      },
+      "routing_benign": 40725,
+      "routing_non_benign": 618762,
+      "rows": 659487,
+      "sha256": "ac730d46b8f59344f2bbd03d9ddcb709146c7c02241e34930d6d66bacd60035d",
+      "source_membership_routing": {
+        "bipia": {
+          "benign": 0,
+          "non_benign": 436
+        },
+        "browsesafe": {
+          "benign": 4833,
+          "non_benign": 4735
+        },
+        "gandalf": {
+          "benign": 0,
+          "non_benign": 679
+        },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 258894
+        },
+        "llmail": {
+          "benign": 0,
+          "non_benign": 83995
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 173
+        },
+        "tensor_trust_raw": {
+          "benign": 0,
+          "non_benign": 172925
+        },
+        "toxic_chat": {
+          "benign": 0,
+          "non_benign": 291
+        },
+        "wildjailbreak": {
+          "benign": 35892,
+          "non_benign": 96793
+        }
+      },
+      "source_memberships": {
+        "bipia": 436,
+        "browsesafe": 9568,
+        "gandalf": 679,
+        "hackaprompt": 258894,
+        "llmail": 83995,
+        "prompt_injections": 173,
+        "tensor_trust_raw": 172925,
+        "toxic_chat": 291,
+        "wildjailbreak": 132685
+      }
+    },
+    "uncertain": {
+      "path": "views/routing/uncertain.jsonl",
+      "representative_source_routing": {
+        "llmail": {
+          "benign": 0,
+          "non_benign": 53820
+        },
+        "oasst1": {
+          "benign": 0,
+          "non_benign": 685
+        },
+        "wildguardmix": {
+          "benign": 0,
+          "non_benign": 26
+        }
+      },
+      "representative_sources": {
+        "llmail": 53820,
+        "oasst1": 685,
+        "wildguardmix": 26
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 54531,
+      "rows": 54531,
+      "sha256": "1e2584dddbca67ce059f84f9f0a554d3a615c6c3909e18dac21fb59aeb9d701d",
+      "source_membership_routing": {
+        "llmail": {
+          "benign": 0,
+          "non_benign": 53820
+        },
+        "oasst1": {
+          "benign": 0,
+          "non_benign": 685
+        },
+        "wildguardmix": {
+          "benign": 0,
+          "non_benign": 26
+        }
+      },
+      "source_memberships": {
+        "llmail": 53820,
+        "oasst1": 685,
+        "wildguardmix": 26
+      }
+    },
+    "validation": {
+      "largest_split_group": {
+        "partition_share": 0.3416945855398249,
+        "rows": 31617,
+        "split_group_sha256": "edf39f6069d43c020792d887b56b1338f2e52e8876497fb302fe8bcc96e2981e"
+      },
+      "path": "views/routing/validation.jsonl",
+      "representative_source_routing": {
+        "bipia": {
+          "benign": 0,
+          "non_benign": 64
+        },
+        "browsesafe": {
+          "benign": 682,
+          "non_benign": 675
+        },
+        "gandalf": {
+          "benign": 0,
+          "non_benign": 97
+        },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 36281
+        },
+        "llmail": {
+          "benign": 0,
+          "non_benign": 10764
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 25
+        },
+        "tensor_trust_raw": {
+          "benign": 0,
+          "non_benign": 24956
+        },
+        "toxic_chat": {
+          "benign": 0,
+          "non_benign": 40
+        },
+        "wildjailbreak": {
+          "benign": 5119,
+          "non_benign": 13827
+        }
+      },
+      "representative_sources": {
+        "bipia": 64,
+        "browsesafe": 1357,
+        "gandalf": 97,
+        "hackaprompt": 36281,
+        "llmail": 10764,
+        "prompt_injections": 25,
+        "tensor_trust_raw": 24956,
+        "toxic_chat": 40,
+        "wildjailbreak": 18946
+      },
+      "routing_benign": 5801,
+      "routing_non_benign": 86729,
+      "rows": 92530,
+      "sha256": "a6e6ac75f13de36cb8e566b8836e97b85c7f8f192c2da40674a15365fd9eb43b",
+      "source_membership_routing": {
+        "bipia": {
+          "benign": 0,
+          "non_benign": 64
+        },
+        "browsesafe": {
+          "benign": 682,
+          "non_benign": 675
+        },
+        "gandalf": {
+          "benign": 0,
+          "non_benign": 97
+        },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 36281
+        },
+        "llmail": {
+          "benign": 0,
+          "non_benign": 10764
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 25
+        },
+        "tensor_trust_raw": {
+          "benign": 0,
+          "non_benign": 25488
+        },
+        "toxic_chat": {
+          "benign": 0,
+          "non_benign": 40
+        },
+        "wildjailbreak": {
+          "benign": 5119,
+          "non_benign": 13828
+        }
+      },
+      "source_memberships": {
+        "bipia": 64,
+        "browsesafe": 1357,
+        "gandalf": 97,
+        "hackaprompt": 36281,
+        "llmail": 10764,
+        "prompt_injections": 25,
+        "tensor_trust_raw": 25488,
+        "toxic_chat": 40,
+        "wildjailbreak": 18947
+      }
+    }
+  },
+  "schema_version": 5,
+  "source_outputs": {
+    "bipia": {
+      "path": "sources/bipia.jsonl",
+      "roles": {
+        "auxiliary": 1200,
+        "candidate": 500,
+        "dev_test": 500
+      },
+      "routing_benign": 1200,
+      "routing_non_benign": 1000,
+      "rows": 2200,
+      "security_labels": {
+        "benign": 1200,
+        "indirect_prompt_injection": 1000
+      },
+      "sha256": "c20e60bc65a059c0b4096d765c48071d261ea10d635938a3cb3b67c945285808"
+    },
+    "browsesafe": {
+      "path": "sources/browsesafe.jsonl",
+      "roles": {
+        "candidate": 11039,
+        "dev_test": 3680
+      },
+      "routing_benign": 7422,
+      "routing_non_benign": 7297,
+      "rows": 14719,
+      "security_labels": {
+        "benign": 7422,
+        "indirect_prompt_injection": 7297
+      },
+      "sha256": "ff744fdd3f009f90b104b6bba64b8a693502d0dc16ced9810e5ce4e94c477e91"
+    },
+    "do_not_answer": {
+      "path": "sources/do_not_answer.jsonl",
+      "roles": {
+        "dev_test": 6391
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 6391,
+      "rows": 6391,
+      "security_labels": {
+        "harmful_non_injection": 6391
+      },
+      "sha256": "ad4baa9e16601b4d387f21ce92f12114e73cd0c4620df3d77ed947595cb4937d"
+    },
+    "gandalf": {
+      "path": "sources/gandalf.jsonl",
+      "roles": {
+        "candidate": 777,
+        "dev_test": 223
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 1000,
+      "rows": 1000,
+      "security_labels": {
+        "direct_prompt_injection": 1000
+      },
+      "sha256": "fac4c160f8cb98d39ced68b830d3bae077e6eb1960df39001d8b0fee0f195801"
+    },
+    "hackaprompt": {
+      "path": "sources/hackaprompt.jsonl",
+      "roles": {
+        "candidate": 579887
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 579887,
+      "rows": 579887,
+      "security_labels": {
+        "direct_prompt_injection": 579887
+      },
+      "sha256": "7817c9b2709cc0c3019d17fcd71e157cdac3d7b2991e0e59a05438dd5e33ec4e"
+    },
+    "harmbench": {
+      "path": "sources/harmbench.jsonl",
+      "roles": {
+        "dev_test": 400
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 400,
+      "rows": 400,
+      "security_labels": {
+        "harmful_non_injection": 400
+      },
+      "sha256": "4fee7a8593f1eb065cde0833e6a3375150d4ee97f96a0d22c8b792ac97c80aa3"
+    },
+    "jailbreaks_over_time": {
+      "path": "sources/jailbreaks_over_time.jsonl",
+      "roles": {
+        "auxiliary": 19399,
+        "dev_test": 3902
+      },
+      "routing_benign": 19399,
+      "routing_non_benign": 3902,
+      "rows": 23301,
+      "security_labels": {
+        "benign": 19399,
+        "direct_jailbreak": 3902
+      },
+      "sha256": "d64a26fed98da49189a32b88b50446ccd12f63d32fb46da86b641e6021596775"
+    },
+    "llmail": {
+      "path": "sources/llmail.jsonl",
+      "roles": {
+        "candidate": 286777,
+        "dev_test": 63828,
+        "uncertain": 111245
+      },
+      "routing_benign": 203,
+      "routing_non_benign": 461647,
+      "rows": 461850,
+      "security_labels": {
+        "benign": 203,
+        "indirect_prompt_injection": 350402,
+        "uncertain": 111245
+      },
+      "sha256": "e2e2ba6fe027feebcdea6ef1201405338c17f6b87445cb0b20e53acbdb826122"
+    },
+    "multi_turn": {
+      "path": "sources/multi_turn.jsonl",
+      "roles": {
+        "auxiliary": 382,
+        "dev_test": 6536
+      },
+      "routing_benign": 2400,
+      "routing_non_benign": 4518,
+      "rows": 6918,
+      "security_labels": {
+        "benign": 2400,
+        "direct_jailbreak": 4518
+      },
+      "sha256": "dfd0e13c165c5c8e4f46e89b61bd75b01c71f7d28a7958105cef8f38afc40c34"
+    },
+    "nemotron_agentic_ipi": {
+      "path": "sources/nemotron_agentic_ipi.jsonl",
+      "roles": {
+        "dev_test": 1272
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 1272,
+      "rows": 1272,
+      "security_labels": {
+        "indirect_prompt_injection": 1272
+      },
+      "sha256": "e724fe04acd0f578f4509578945263c8a6dc0709c9bda2bd1fc3d5465198499f"
+    },
+    "notinject": {
+      "path": "sources/notinject.jsonl",
+      "roles": {
+        "dev_test": 339
+      },
+      "routing_benign": 339,
+      "routing_non_benign": 0,
+      "rows": 339,
+      "security_labels": {
+        "benign": 339
+      },
+      "sha256": "e29eb1d16875f06cbfc4e0e0aa37c3145cb61a52dbf4234ee6ace6e332b364bd"
+    },
+    "oasst1": {
+      "path": "sources/oasst1.jsonl",
+      "roles": {
+        "auxiliary": 88032,
+        "uncertain": 806
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 88838,
+      "rows": 88838,
+      "security_labels": {
+        "uncertain": 88838
+      },
+      "sha256": "105c805032e8fcb71f8bf11a01cd1a18a8fa019101fe92d41c18971b6a06dc50"
+    },
+    "prompt_injections": {
+      "path": "sources/prompt_injections.jsonl",
+      "roles": {
+        "auxiliary": 399,
+        "candidate": 203,
+        "dev_test": 60
+      },
+      "routing_benign": 399,
+      "routing_non_benign": 263,
+      "rows": 662,
+      "security_labels": {
+        "benign": 399,
+        "direct_prompt_injection": 263
+      },
+      "sha256": "15b353a9cf609e3041e618c58e78c463d6fcb988867241374b231aa0c99c7e4b"
+    },
+    "tensor_trust": {
+      "path": "sources/tensor_trust.jsonl",
+      "roles": {
+        "dev_test": 2692
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 2692,
+      "rows": 2692,
+      "security_labels": {
+        "direct_prompt_injection": 1346,
+        "indirect_prompt_injection": 1346
+      },
+      "sha256": "6bf3339b0f6334941e3339b37a3d04af8df2860c5128688305d7dbfb72da7e28"
+    },
+    "tensor_trust_raw": {
+      "path": "sources/tensor_trust_raw.jsonl",
+      "roles": {
+        "auxiliary": 118556,
+        "candidate": 561771
+      },
+      "routing_benign": 0,
+      "routing_non_benign": 680327,
+      "rows": 680327,
+      "security_labels": {
+        "direct_prompt_injection": 561771,
+        "uncertain": 118556
+      },
+      "sha256": "d94bbd51b5732b080dfc44cb7aa02db8ed61079301864bc5fc404993333c3dab"
+    },
+    "toxic_chat": {
+      "path": "sources/toxic_chat.jsonl",
+      "roles": {
+        "auxiliary": 9419,
+        "candidate": 384,
+        "dev_test": 362
+      },
+      "routing_benign": 9419,
+      "routing_non_benign": 746,
+      "rows": 10165,
+      "security_labels": {
+        "benign": 9419,
+        "direct_jailbreak": 204,
+        "harmful_non_injection": 542
+      },
+      "sha256": "4944bf6564b8715dc26a67db422b9325c583be7527c2f4399298c105308bb008"
+    },
+    "wildguardmix": {
+      "path": "sources/wildguardmix.jsonl",
+      "roles": {
+        "auxiliary": 87200,
+        "dev_test": 1244,
+        "uncertain": 26
+      },
+      "routing_benign": 20634,
+      "routing_non_benign": 67836,
+      "rows": 88470,
+      "security_labels": {
+        "benign": 20634,
+        "harmful_non_injection": 26062,
+        "uncertain": 41774
+      },
+      "sha256": "cd91e24f2e4067191db2435a680bb23a1986285de6d07ee1a35839a68d0eda47"
+    },
+    "wildjailbreak": {
+      "path": "sources/wildjailbreak.jsonl",
+      "roles": {
+        "auxiliary": 78920,
+        "candidate": 182828,
+        "dev_test": 2000,
+        "uncertain": 21
+      },
+      "routing_benign": 50050,
+      "routing_non_benign": 213719,
+      "rows": 263769,
+      "security_labels": {
+        "benign": 50050,
+        "direct_jailbreak": 84728,
+        "harmful_non_injection": 50050,
+        "uncertain": 78941
+      },
+      "sha256": "73cec95f24f8f8ab7322723760bb2dbcec55043e36098fd1c37650f93f535a5f"
+    },
+    "xstest": {
+      "path": "sources/xstest.jsonl",
+      "roles": {
+        "dev_test": 450
+      },
+      "routing_benign": 250,
+      "routing_non_benign": 200,
+      "rows": 450,
+      "security_labels": {
+        "benign": 250,
+        "harmful_non_injection": 200
+      },
+      "sha256": "1dcf7ab88dd02f90be5851bf294a957bf8e2795c78025a4c0b72df404f0369d4"
+    }
+  },
+  "source_profiles": {
+    "browsesafe": {
+      "positive_payload_spans_available": false
+    },
+    "gandalf": {},
+    "hackaprompt": {
+      "collections": {
+        "playground_data": 538292,
+        "submission_data": 41595
+      },
+      "empty_user_input_rows_omitted": 21870,
+      "participant_identifier_available": false,
+      "rows_without_score": 0,
+      "rows_without_session_id": 41595,
+      "rows_without_timestamp": 41595,
+      "source_error_rows": 0,
+      "split_grouping": "whole challenge level; session_id is retained by hash but is not claimed as participant identity",
+      "unique_session_ids": 23
+    },
+    "llmail": {
+      "false_positive_controls": 203,
+      "incomplete_raw_rows": {
+        "phase1": 12,
+        "phase2": 9
+      },
+      "labelled_unique_rows_without_raw_submission": {
+        "phase1": 7,
+        "phase2": 0
+      },
+      "normalized_source_labels": {
+        "phase1:False": 9452,
+        "phase1:True": 127377,
+        "phase1:Unclear": 23912,
+        "phase2:False": 2500,
+        "phase2:True": 21007,
+        "phase2:Unclear": 13796
+      },
+      "raw_projection": {
+        "detector_text": "subject + body",
+        "excluded_from_canonical_shard": [
+          "output",
+          "Timestamp"
+        ],
+        "retained_metadata": [
+          "RowKey",
+          "job_id",
+          "team_id",
+          "scenario",
+          "objectives",
+          "scheduled_time",
+          "started_time",
+          "completed_time",
+          "sha256(output)"
+        ]
+      },
+      "raw_rows": {
+        "phase1": 370724,
+        "phase2": 90916
+      },
+      "raw_rows_without_unique_annotation": {
+        "phase1": 10898,
+        "phase2": 1189
+      }
+    },
+    "multi_turn": {
+      "projection": "Prompt is detector text; goals, multi-turn histories, and target responses are retained by digest and remain reproducible from pinned source files",
+      "rows_by_file": {
+        "Complete Harmful Dataset.csv": 382,
+        "Completely-Benign Dataset.csv": 1200,
+        "Harmful Dataset.csv": 4136,
+        "Semi-Benign Dataset.csv": 1200
+      }
+    },
+    "nemotron_agentic_ipi": {
+      "attack_categories": {
+        "data_modification": 366,
+        "denial_of_service": 247,
+        "exfiltration": 118,
+        "unauthorized_action": 541
+      },
+      "domains": {
+        "ecommerce": 157,
+        "education": 150,
+        "healthcare": 183,
+        "hr": 131,
+        "insurance": 65,
+        "it_helpdesk": 91,
+        "legal": 177,
+        "logistics": 158,
+        "real_estate": 160
+      },
+      "excluded_content": [
+        "environment",
+        "injection.goal",
+        "injection.target_args",
+        "responses_create_params.input",
+        "responses_create_params.tools"
+      ],
+      "injection_vectors": {
+        "adjuster_note_text": 8,
+        "advisor_notes": 31,
+        "application_notes": 52,
+        "appointment_reason": 46,
+        "asset_notes": 14,
+        "carrier_message_body": 6,
+        "case_notes": 20,
+        "case_summary": 144,
+        "chart_notes": 65,
+        "claim_description": 24,
+        "client_notes": 30,
+        "course_description": 45,
+        "court_location": 6,
+        "court_notes": 7,
+        "customs_additional_info": 40,
+        "delivery_special_instructions": 24,
+        "fraud_flag_reason": 7,
+        "grader_comments": 2,
+        "incident_description": 68,
+        "inspection_findings": 38,
+        "interview_feedback": 12,
+        "job_description": 28,
+        "kb_article_content": 9,
+        "lab_comments": 51,
+        "message_body": 117,
+        "order_notes": 55,
+        "payout_notes": 1,
+        "policy_notes": 25,
+        "product_description": 51,
+        "property_description": 49,
+        "resolution_notes": 20,
+        "resume_text": 6,
+        "reviewer_notes": 52,
+        "shipment_notes": 41,
+        "ticket_description": 31,
+        "warehouse_comments": 47
+      },
+      "normalized_unique_injection_texts": 676,
+      "projection": "injection.injection_text plus non-content grouping metadata",
+      "raw_rows": 1272,
+      "target_tools": {
+        "add_adjuster_note": 8,
+        "add_client_note": 41,
+        "add_order_note": 21,
+        "add_warehouse_inventory": 48,
+        "adjust_financial_aid": 61,
+        "adjust_warehouse_quantity": 53,
+        "cancel_appointment": 44,
+        "create_claim": 7,
+        "create_course": 16,
+        "create_incident": 13,
+        "create_property": 44,
+        "create_support_ticket": 18,
+        "flag_fraud_investigation": 7,
+        "process_payout": 1,
+        "process_refund": 6,
+        "schedule_appointment": 3,
+        "send_carrier_message": 20,
+        "send_email": 24,
+        "send_message": 86,
+        "send_offer": 55,
+        "send_referral": 45,
+        "submit_customs_declaration": 13,
+        "submit_grade": 26,
+        "submit_inspection_findings": 34,
+        "submit_interview_feedback": 33,
+        "update_asset_notes": 14,
+        "update_candidate_status": 19,
+        "update_case_notes": 164,
+        "update_claim_description": 17,
+        "update_incident_description": 55,
+        "update_kb_article_content": 9,
+        "update_order_status": 43,
+        "update_patient_chart": 34,
+        "update_policy_notes": 25,
+        "update_product_stock": 61,
+        "update_property_description": 16,
+        "update_schedule_location": 13,
+        "update_shipment_status": 24,
+        "update_student_advisor_notes": 43,
+        "update_ticket_status": 8
+      }
+    },
+    "oasst1": {
+      "rows_by_split_and_role": {
+        "train": {
+          "assistant": 52912,
+          "prompter": 31525
+        },
+        "validation": {
+          "assistant": 2756,
+          "prompter": 1645
+        }
+      },
+      "selected_weak_injection_control_rows": {
+        "train": 30760,
+        "validation": 1604
+      }
+    },
+    "tensor_trust_raw": {
+      "empty_attacker_input_rows_omitted": 1578,
+      "empty_defense_rows_omitted": 51,
+      "empty_extraction_output_rows_omitted": 0,
+      "excluded_files": {
+        "raw-data/v1": "superseded by the pinned v2 raw dumps"
+      },
+      "extraction_detection_rows": 230,
+      "incomplete_defense_rows": 103,
+      "raw_attack_rows": 563349,
+      "raw_defense_rows": 118377
+    },
+    "wildguardmix": {
+      "empty_prompt_rows_omitted": 14
+    },
+    "wildjailbreak": {
+      "missing_adversarial_text_rows_uncertain": 21
+    }
+  },
+  "sources": {
+    "bipia": {
+      "license": "MIT attacks; mixed benchmark context licenses",
+      "revision": "a004b69ec0dd446e0afd461d98cb5e96e120a5d0",
+      "url": "https://github.com/microsoft/BIPIA",
+      "use": "channel-specific indirect-injection train/test with clean-context controls"
+    },
+    "browsesafe": {
+      "license": "MIT",
+      "repo": "perplexity-ai/browsesafe-bench",
+      "revision": "b506fb5bc7fd4472c8738055a67a0ef6406afdc9",
+      "url": "https://huggingface.co/datasets/perplexity-ai/browsesafe-bench",
+      "use": "whole-document browser injection train and official test"
+    },
+    "do_not_answer": {
+      "license": "CC-BY-NC-SA-4.0",
+      "revision": "460703484df354958a5e1cd7378a38fcb94a2f3e",
+      "url": "https://github.com/libr-ai/do-not-answer",
+      "use": "held-out harmful-goal non-injection negatives"
+    },
+    "gandalf": {
+      "license": "MIT",
+      "repo": "Lakera/gandalf_ignore_instructions",
+      "revision": "04737b65e90a6794ec227012e4a255a7def6344b",
+      "url": "https://huggingface.co/datasets/Lakera/gandalf_ignore_instructions",
+      "use": "human direct-injection data; official train only for fitting"
+    },
+    "hackaprompt": {
+      "gated": true,
+      "license": "MIT",
+      "repo": "hackaprompt/hackaprompt-dataset",
+      "revision": "25b87fbedfb86840abaf8cd09af7a029208a971a",
+      "url": "https://huggingface.co/datasets/hackaprompt/hackaprompt-dataset",
+      "use": "gated human direct attack attempts; user_input only"
+    },
+    "harmbench": {
+      "license": "MIT",
+      "revision": "8e1604d1171fe8a48d8febecd22f600e462bdcdd",
+      "url": "https://github.com/centerforaisafety/HarmBench",
+      "use": "held-out harmful-goal non-injection negatives"
+    },
+    "jailbreaks_over_time": {
+      "license": "MIT",
+      "revision": "94a2e998282301d545f92177e3fff8aab11fb0dd",
+      "url": "https://github.com/wagner-group/JailbreaksOverTime",
+      "use": "source-held-out temporal distribution-shift evaluation only"
+    },
+    "llmail": {
+      "license": "MIT",
+      "repo": "microsoft/llmail-inject-challenge",
+      "revision": "1063bdf01ec8762b812d5e06ee768a06faa5a6f7",
+      "url": "https://huggingface.co/datasets/microsoft/llmail-inject-challenge",
+      "use": "human adaptive email injection; phase 1 fit, phase 2 evaluation"
+    },
+    "multi_turn": {
+      "license": "MIT",
+      "repo": "tom-gibbs/multi-turn_jailbreak_attack_datasets",
+      "revision": "e3b30257c4d6be5438ea19f0989ac82c24234fe4",
+      "url": "https://huggingface.co/datasets/tom-gibbs/multi-turn_jailbreak_attack_datasets",
+      "use": "out-of-source obfuscated-jailbreak test grouped by goal"
+    },
+    "nemotron_agentic_ipi": {
+      "bytes": 11703379,
+      "license": "CC-BY-4.0",
+      "path": "train.jsonl",
+      "repo": "nvidia/Nemotron-RL-Agentic-Indirect-Prompt-Injection-v1",
+      "revision": "d738d4f361cc38bb4d7a42b9066776dade5332f5",
+      "sha256": "3329da17564a7eb287e2730fc7d6956e1f4fe51e8950ac4f110b3c37e78cf3b9",
+      "url": "https://huggingface.co/datasets/nvidia/Nemotron-RL-Agentic-Indirect-Prompt-Injection-v1",
+      "use": "synthetic successful agentic indirect-injection evaluation only; never direct-user training"
+    },
+    "notinject": {
+      "license": "MIT",
+      "revision": "1b5751e88bf7475acbedfc8eda795ce060307c84",
+      "url": "https://github.com/leolee99/PIGuard",
+      "use": "locked trigger-word hard negatives for measuring over-defense"
+    },
+    "oasst1": {
+      "license": "Apache-2.0",
+      "repo": "OpenAssistant/oasst1",
+      "revision": "fdf72ae0827c1cda404aff25b6603abec9e3399b",
+      "url": "https://huggingface.co/datasets/OpenAssistant/oasst1",
+      "use": "multilingual weak injection controls; auxiliary for broad routing"
+    },
+    "prompt_injections": {
+      "license": "Apache-2.0",
+      "repo": "deepset/prompt-injections",
+      "revision": "4f61ecb038e9c3fb77e21034b22511b523772cdd",
+      "url": "https://huggingface.co/datasets/deepset/prompt-injections",
+      "use": "train and same-source test; direct prompt-injection label"
+    },
+    "tensor_trust": {
+      "license": "public research release; no explicit standard dataset license",
+      "revision": "747a75e096761ebc01bd3970158827326b4add23",
+      "url": "https://github.com/HumanCompatibleAI/tensor-trust-data",
+      "use": "human prompt-injection robustness evaluation only; never training"
+    },
+    "tensor_trust_raw": {
+      "license": "no standard dataset license declared",
+      "repo": "qxcv/tensor-trust",
+      "revision": "4de2b2fe01ba0cb6fbf7cbb9f1a3fabaf8157372",
+      "url": "https://huggingface.co/datasets/qxcv/tensor-trust",
+      "use": "human game attack attempts; grouped development data"
+    },
+    "toxic_chat": {
+      "license": "CC-BY-NC-4.0",
+      "repo": "lmsys/toxic-chat",
+      "revision": "29df8e4dba60e1f4af4b4075c0705c5b313548a8",
+      "url": "https://huggingface.co/datasets/lmsys/toxic-chat",
+      "use": "train and same-source test; explicit jailbreak label"
+    },
+    "wildguardmix": {
+      "gated": true,
+      "license": "ODC-BY",
+      "repo": "allenai/wildguardmix",
+      "revision": "d29c47f41c8b51348b5c8e8c81c039b3132b66d1",
+      "url": "https://huggingface.co/datasets/allenai/wildguardmix",
+      "use": "gated prompt harmfulness data for the routing target"
+    },
+    "wildjailbreak": {
+      "gated": true,
+      "license": "ODC-BY",
+      "repo": "allenai/wildjailbreak",
+      "revision": "5ddc12a7894f842b0619b8e1c7ee496b198af009",
+      "url": "https://huggingface.co/datasets/allenai/wildjailbreak",
+      "use": "gated four-way harmful/benign and adversarial contrast data"
+    },
+    "xstest": {
+      "license": "CC-BY-4.0",
+      "revision": "d7bb5bd738c1fcbc36edd83d5e7d1b71a3e2d84d",
+      "url": "https://github.com/paul-rottger/xstest",
+      "use": "hard-negative test; safe and unsafe requests are not attacks"
+    }
+  },
+  "targets": {
+    "injection_label": "channel-scoped jailbreak or prompt-injection attack attempt; retained for the existing sensors",
+    "injection_subtype_training_eligible": "false when injection subtype is unknown or exact-duplicate injection annotations disagree; routing, harmfulness, or toxicity supervision may still be valid",
+    "routing_label": "0 only for a source-supported benign row; 1 for injection, jailbreak, harmful non-injection, toxic, or uncertain content requiring a downstream decision",
+    "security_tags": "independent tags for instruction subversion, subtype, harmful intent, toxicity, benignness, or unresolved labels; use masked multi-task losses rather than forcing mutually exclusive classes"
+  }
+}

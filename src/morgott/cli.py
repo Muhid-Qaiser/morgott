@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import tempfile
 from pathlib import Path
 
+from .corpus import build_corpus, rebuild_routing
 from .data import build_dataset
 from .detector import run_benchmark, scan
 from .policy import run_policy_ablation
@@ -15,8 +17,15 @@ def _parser() -> argparse.ArgumentParser:
 
     data = subcommands.add_parser("data", help="download and consolidate pinned data")
     data.add_argument("--data-dir", type=Path, default=Path("data"))
+    data.add_argument(
+        "--routing-only",
+        action="store_true",
+        help="rebuild routing views from manifest-verified canonical source shards",
+    )
 
-    benchmark = subcommands.add_parser("benchmark", help="train and evaluate baselines")
+    benchmark = subcommands.add_parser(
+        "benchmark", help="train and evaluate the legacy shadow control"
+    )
     benchmark.add_argument("--data-dir", type=Path, default=Path("data"))
     benchmark.add_argument("--artifacts-dir", type=Path, default=Path("artifacts"))
     benchmark.add_argument("--reports-dir", type=Path, default=Path("reports"))
@@ -44,8 +53,28 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> None:
     args = _parser().parse_args(argv)
     if args.command == "data":
-        result = build_dataset(args.data_dir)
-        summary = result["outputs"]
+        args.data_dir.mkdir(parents=True, exist_ok=True)
+        canonical_manifest = args.data_dir / "manifest.json"
+        if args.routing_only:
+            result = rebuild_routing(args.data_dir)
+        else:
+            canonical_manifest.unlink(missing_ok=True)
+            with tempfile.TemporaryDirectory(
+                dir=args.data_dir, prefix=".core-build-"
+            ) as directory:
+                core_manifest = Path(directory) / "manifest.json"
+                build_dataset(args.data_dir, manifest_path=core_manifest)
+                result = build_corpus(
+                    args.data_dir,
+                    core_manifest_path=core_manifest,
+                )
+        summary = {
+            "manifest": str(canonical_manifest),
+            "sources": len(result["source_outputs"]),
+            "routing_rows": {
+                name: output["rows"] for name, output in result["routing_views"].items()
+            },
+        }
     elif args.command == "benchmark":
         result = run_benchmark(args.data_dir, args.artifacts_dir, args.reports_dir)
         summary = {

@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from morgott.data import _parse_nemotron_agentic_ipi
+from morgott.data import _parse_nemotron_agentic_ipi, _set_source_role
 
 
 def _source_row() -> dict:
@@ -49,10 +49,15 @@ class NemotronAgenticIpiTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["input_channel"], "untrusted_content")
         self.assertEqual(rows[0]["attack_type"], "indirect_prompt_injection")
-        self.assertEqual(rows[0]["domain"], "healthcare")
-        self.assertEqual(rows[0]["attack_category"], "exfiltration")
-        self.assertEqual(rows[0]["injection_vector"], "chart_notes")
-        self.assertEqual(rows[0]["target_tool"], "send_message")
+        self.assertEqual(rows[0]["source_domain"], "healthcare")
+        self.assertEqual(rows[0]["source_attack_category"], "exfiltration")
+        self.assertEqual(rows[0]["source_injection_vector"], "chart_notes")
+        self.assertEqual(rows[0]["source_target_tool"], "send_message")
+        _set_source_role(rows[0], "dev_test")
+        self.assertEqual(rows[0]["origins"][0]["source_domain"], "healthcare")
+        self.assertEqual(
+            rows[0]["origins"][0]["source_injection_vector"], "chart_notes"
+        )
         projected = json.dumps(rows)
         for excluded in (
             "FAKE-PII-MUST-NOT-PERSIST",

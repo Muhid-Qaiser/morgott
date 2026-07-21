@@ -1,10 +1,9 @@
-.PHONY: setup data benchmark demo test poc
+.PHONY: setup data benchmark demo test
 
-PYTHON := python3
-RUN := PYTHONPATH=src $(PYTHON) -m morgott.cli
+RUN := uv run morgott
 
 setup:
-	$(PYTHON) -m pip install -e .
+	uv sync
 
 data:
 	$(RUN) data
@@ -16,6 +15,4 @@ demo:
 	$(RUN) demo
 
 test:
-	PYTHONPATH=src $(PYTHON) -m unittest discover -s tests -v
-
-poc: data benchmark demo test
+	uv run python -m unittest discover -s tests -v

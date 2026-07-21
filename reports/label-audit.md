@@ -1,70 +1,90 @@
-# Initial label audit
+# Label audit
 
-Method: a Codex agent qualitatively inspected the highest-confidence false
-positives and false negatives from each evaluation family at the then-retained
-0.1% direct diagnostic and zero-observed-FP indirect point. This was not
-independent human annotation or adjudication, and no visible test label was
-changed after inspection. The later precision-first shadow-review recommendation
-changes counts but does not turn this inspection into ground truth.
+This document records how source annotations map into the canonical schema. It
+is not independent human adjudication. Public labels remain source labels, and
+model/Codex judgments are never presented as ground truth.
 
-## Findings
+## Target boundaries
 
-- At the 0.1% diagnostic, the direct model alerts on 18/4,630 ToxicChat
-  source-labeled negatives. The
-  highest-scoring examples are long role assignments, instruction-heavy
-  adventure prompts, forced response prefixes, and requests for hidden
-  instructions. Several are plausible source-label errors or genuinely
-  ambiguous, not ordinary small talk.
-- At that diagnostic, the direct model misses 46/60 deepset positives. The
-  highest missed scores include explicit overrides just below the
-  threshold; lower-scoring multilingual and context-dependent fragments expose
-  both calibration and label-context problems.
-- At that diagnostic, OASST1 produces 0/1,582 held-out alerts. Its highest scores
-  are role-play,
-  virtual-assistant command formats, and conversational corrections. Treating
-  every accepted OASST1 prompt as a true negative is still a weak-label
-  assumption.
-- The indirect model's two clean-context false positives are Stack Overflow
-  answers containing imperative code and URL instructions. This is a realistic
-  ambiguity for a text-only external-content detector.
-- The indirect model misses 41/125 standalone BIPIA payloads and 123/375
-  poisoned contexts. Misses span output-format changes, unrelated questions,
-  and harmful code insertion; provenance helps choose the sensor but does not
-  make intent identifiable from text alone.
-- At the stringent 0.1% diagnostic, the cipher aggregate hides a severe subgroup
-  gap: the two plain word-mapping variants reach 0.0% and 0.2% recall, while
-  encoded variants range from 52.8% to 69.3%. At the recommended 85%-precision
-  profile, both plain variants fall to 0% and encoded variants reach only
-  19.3%–39.8%. The high-precision preference exposes this recall failure rather
-  than fixing it.
-- At the stringent 0.1% diagnostic, the direct model alerts on 91/18,195
-  JailbreaksOverTime source-labeled negatives. All 91 come from the WildChat
-  subset. The highest-scoring audit
-  rows contain DAN personas, explicit jailbreak framing, instruction overrides,
-  or requests to evade safeguards, so the source annotation is visibly noisy
-  for this task. Keep the source label in metrics, but do not interpret its
-  0.50% source-label FPR as the false-positive rate on ordinary production chat.
-- JailbreaksOverTime mixes source, collection period, attack family, and label
-  process. Its 84.88% source-labeled attack recall at the 0.1% diagnostic is
-  useful distribution-shift evidence, not a causal claim about robustness
-  improving or degrading over time.
-- Tensor Trust contributes 908 unique attack-only texts and 1,346 attack-plus-
-  defense contexts. At the 0.1% diagnostic the direct baseline detects 33.48%
-  attack-only and the two shadow sensors together detect 67.09% of contexts; at
-  the precision-first review point those figures are 28.85% and 62.48%. The higher context
-  score is not automatically better intent recognition: benchmark defenses
-  themselves contain phrases about secrets, instructions, and attacks, and no
-  matched defense-only controls are published in these two suites. Treat
-  attack-only as the cleaner transfer check and the context view as a provenance
-  stress test.
+- Direct jailbreak and prompt injection attempt to subvert instruction
+  hierarchy.
+- Indirect injection embeds such instructions in untrusted email, documents,
+  web pages, retrieval, tool output, or memory.
+- Harmful non-injection describes harmful intent without instruction subversion.
+- Toxicity is independent and may co-occur with any other label.
+- Benign means the source supports ordinary/safe content with no known
+  instruction-subversion signal.
+- Uncertain means the source cannot establish the required distinction. It is
+  never coerced to benign.
+
+The binary router is deliberately broader than injection detection:
+source-supported benign rows receive `routing_label=0`; injection, harmful,
+toxic, and unresolved rows receive `routing_label=1`. Nullable subtype fields
+and independent tags preserve why a row is routed.
+
+## Known source limitations
+
+- ToxicChat and JailbreaksOverTime negatives do not establish broad benignity.
+  ToxicChat rows without jailbreak or toxicity and JailbreaksOverTime negatives
+  remain auxiliary for routing; ToxicChat's human-annotation and moderation
+  metadata is preserved so label strength is not flattened.
+- Deepset negatives and BIPIA clean contexts establish no injection under their
+  source task, not general safety. They remain legacy injection controls and are
+  auxiliary for broad routing.
+- OASST1 accepted turns remain auxiliary for broad routing because acceptance
+  does not establish benign safety. Only the legacy injection control uses its
+  historical ordinary-chat view; available labels and Detoxify metadata remain
+  in the source shard.
+- BIPIA payload meaning depends on provenance. A standalone ordinary-looking
+  question may become an attack only when inserted into untrusted context.
+- Tensor Trust defense text contains security and instruction language. Attack
+  contexts have no matched clean control and can expose benchmark shortcuts.
+  Standalone attacks are direct injection while attacks embedded between
+  defense prompts are indirect injection.
+- Nemotron agentic IPI is synthetic and positive-only; it cannot estimate false
+  positives, precision, or benign utility.
+- LLMail `False` and `Unclear` annotations mean the challenge audit did not
+  establish a confirmed attempt. They do not establish benign intent and remain
+  outside ordinary supervision.
+- HackAPrompt `correct` is target-model success, not attack intent. Failed
+  submissions remain attack attempts.
+- Tensor Trust game success is outcome metadata, not attack intent. Failed
+  attacks remain attack attempts; defenses and outputs are auxiliary.
+- WildJailbreak adversarial-benign and WildGuardMix's adversarial flag do not by
+  themselves establish an injection label. The former and
+  adversarial-unharmful WildGuardMix rows stay auxiliary. All WildGuard train
+  prompt-harmfulness rows are model-labelled weak supervision and remain
+  auxiliary; its test prompt harmfulness uses three human annotators, preserves
+  agreement metadata, and may enter dev-test.
+- BrowseSafe positive documents lack payload spans. They must not create
+  positive labels for every chunk or window.
+- HarmBench, Do-Not-Answer, AdvBench, AgentHarm, Aegis, BeaverTails, and generic
+  toxicity annotations must not be converted into injection positives.
+
+## Merge and conflict policy
+
+- Detector text is preserved in canonical projections; normalization is derived
+  only for matching.
+- Exact same-label duplicates merge into one view row while every source
+  annotation remains in `origins`.
+- Exact routing-label conflicts go to quarantine.
+- If routing agrees but subtype annotations disagree, disputed top-level fields
+  become unknown and subtype training is masked. Source order never decides.
+- Auxiliary, uncertain, and quarantined rows never silently enter train,
+  validation, or dev-test.
+- `routing_training_eligible` is derived from `source_role`. It is separate from
+  injection-label availability and the historical injection-view recipe.
+
+## Weak labels
+
+No human labelers are available. A future provider-assisted experiment may
+produce development-only weak labels, but agreement measures consistency rather
+than correctness. Weak labels require their own versioned recipe and must stay
+out of validation, dev-test, final evaluation, and production-FPR claims.
 
 ## Decision
 
-Keep source labels for reproducibility, expose weak-label assumptions and exact
-denominators, and never tune on inspected test errors. Keep a label schema that
-separates harmful intent, direct jailbreak, direct prompt injection, indirect
-injection, uncertainty, and toxicity even though no human labelers are
-available. Cross-family LLM agreement may supply conservative weak training
-labels, but disagreements must be discarded and model-labelled rows must stay
-out of threshold calibration, locked tests, and production-FPR claims. Without
-independent product labels, the learned detector remains shadow-only.
+Keep the binary route for the first model while retaining nullable injection
+labels and independent security tags. Use masked multi-task losses rather than a
+single mutually exclusive “unsafe subtype.” The detector stays shadow-only until
+independently labelled product evidence exists.

@@ -8,15 +8,11 @@ __pycache__/
 .env.*
 !.env.example
 
-# Rebuilt from pinned public sources.
-data/
+# Rebuilt from pinned public sources. Track only the canonical manifest.
+data/*
+!data/manifest.json
 
 # Rebuilt by `make benchmark`.
 artifacts/
-
-# Local experiment outputs.
-experiments/**/cache/
-experiments/**/checkpoints/
-experiments/**/data/
-experiments/**/outputs/
-experiments/**/results/
+reports/baseline.json
+reports/baseline.md

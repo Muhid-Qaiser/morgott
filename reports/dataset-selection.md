@@ -1,68 +1,129 @@
-# Dataset selection and expansion audit
+# Dataset selection
 
-Generated: 2026-07-20
+The corpus serves two related targets: the retained channel-specific injection
+POC and a future conservative benign/non-benign router. A source is useful only
+when its label meaning, detector text, and grouping lineage survive
+canonicalization.
 
-The user's Linear research list was reviewed against the detector's actual
-target: attempts to subvert instruction hierarchy, not harmful content in
-general. More rows are useful only when they add an attack family, provenance
-condition, language, or realistic non-attack distribution that is absent from
-the current corpus.
+Exact revisions, file digests, output counts, and licenses live only in
+`data/manifest.json`. This document records durable interpretation decisions.
 
-## Included now
+## Included sources
 
-The reproducible build uses twelve ungated, pinned public sources. ToxicChat,
-deepset, and OASST1 provide the direct training mixture. BIPIA alone trains the
-separate untrusted-content channel. XSTest, HarmBench, Do-Not-Answer, NotInject,
-the multi-turn cipher corpus, JailbreaksOverTime, and Tensor Trust stay out of
-training and threshold selection.
+| Source | Canonical role |
+|---|---|
+| ToxicChat | Jailbreak/toxicity positives; ordinary rows remain auxiliary for broad routing |
+| deepset prompt-injections | Injection positives; negatives remain legacy injection controls |
+| OASST1 | Multilingual accepted chat retained as auxiliary; historical view remains a legacy injection control |
+| XSTest | Over-refusal and sensitive-topic hard negatives |
+| HarmBench | Harmful goals without instruction subversion |
+| Do-Not-Answer | Harmful requests without instruction subversion |
+| Multi-turn jailbreak corpus | Goal-grouped obfuscated attacks and matched contrast families |
+| BIPIA | Indirect payloads/poisoned contexts; clean contexts remain legacy injection controls and routing auxiliary |
+| NotInject | Instruction/security trigger-word hard negatives |
+| JailbreaksOverTime | Source/style-shift development evaluation with noisy labels |
+| Tensor Trust robustness suites | Human attacks and attack-in-defense contexts; evaluation only |
+| Nemotron Agentic IPI | Positive-only synthetic agentic injection development evaluation |
+| Gandalf | Human direct attack attempts; official train candidate, validation/test dev-test |
+| LLMail | Adaptive email submissions with team/scenario/time lineage and official controls |
+| BrowseSafe | Long HTML attacks and matched controls; whole documents retained |
+| HackAPrompt | Competition `user_input` attack attempts; success is metadata |
+| WildJailbreak | Four-way harmful/benign and vanilla/adversarial source construction |
+| WildGuardMix | Prompt harmfulness with a separate adversarial flag |
+| Tensor Trust raw | Human game attacks plus auxiliary defenses and model outputs |
 
-Tensor Trust was an earlier immediate addition from the expanded audit. Its two
-small official robustness suites contain 1,346 human-written attack records:
-908 unique attack texts after exact deduplication, plus all 1,346 records
-embedded between their benchmark defense prompts. They are pinned at
-[`747a75e`](https://github.com/HumanCompatibleAI/tensor-trust-data/commit/747a75e096761ebc01bd3970158827326b4add23)
-and are evaluation-only because the data repository has no explicit standard
-dataset license. The large game dump is deliberately not downloaded.
+The two Tensor Trust adapters intentionally expose different official artifacts:
+the compact robustness suites remain a historical development comparison, while
+the raw game dump supplies full attack/defender/time lineage for the routing
+corpus.
 
-NVIDIA's [Nemotron Agentic Indirect Prompt Injection
-suite](https://huggingface.co/datasets/nvidia/Nemotron-RL-Agentic-Indirect-Prompt-Injection-v1/tree/d738d4f361cc38bb4d7a42b9066776dade5332f5)
-adds 1,272 fully synthetic agentic attacks across nine domains, four impact
-categories, 36 injection vectors, and 40 target tools. The build pins its
-CC-BY-4.0 release and retains 676 exact-unique `injection_text` values as an
-evaluation-only untrusted-content suite. It stores categorical lineage but not
-the source environment and its synthetic identity records, system/user prompts,
-tool schemas, attack goal, or target arguments. Because the source is
-positive-only and retains only
-attacks that succeeded against its defender, it measures transfer recall—not
-false positives, benign task utility, or production safety. See the [dedicated
-audit](nemotron-agentic-ipi.md).
+## High-risk mapping decisions
+
+- LLMail phase-1 `True` is a candidate. Phase-2 `True` and official benign
+  controls are dev-test. `False` and `Unclear` annotations are uncertain—not
+  benign—because “not confirmed as an attack attempt” does not establish benign
+  intent.
+- LLMail raw submissions are grouped by phase, team, and challenge level. This
+  keeps adaptive attempts against one task together without letting a team that
+  participated in phase 2 pull unrelated phase-1 tasks into dev-test.
+- Every nonempty HackAPrompt `user_input` is an attack attempt. `correct` records
+  success against a particular target and never turns a failed attempt benign.
+  Challenge prompts, expected completions, and model completions are not detector
+  input.
+- Every nonempty Tensor Trust attack record remains an attack attempt regardless
+  of game success. Defenses and labelled model outputs are auxiliary. The first
+  routing POC groups raw attacks by anonymized attacker, not defense task. Its
+  dev-test split is therefore not task-held-out and cannot support an unseen-task
+  generalization claim; revisit task grouping for the prospective final test.
+- WildJailbreak vanilla harmful is harmful non-injection; adversarial harmful is
+  a jailbreak; vanilla benign is benign. Adversarial benign stays auxiliary
+  because benign intent does not settle whether jailbreak-like wording is
+  instruction subversion.
+- For the first proper router, score OASST1 accepted user prompts and
+  WildJailbreak adversarial-benign rows as diagnostics only; do not fit on them
+  or tune thresholds from them. Audit genuine errors first. If an audited subset
+  later enters a training ablation, split it by conversation or base-prompt
+  lineage and retain a disjoint diagnostic subset. OASST1 assistant messages
+  remain in the `model_output` channel rather than direct-user training.
+- WildGuardMix `adversarial` is not an injection label. Its train prompt labels
+  are model-produced weak supervision, so all labelled train rows remain
+  auxiliary unless a future training-only ablation explicitly selects them.
+  Eligible three-human-annotator test rows remain dev-test; unlabelled rows are
+  uncertain.
+- BrowseSafe does not publish payload spans. Positive HTML is retained at
+  document granularity and must not be split into all-positive windows.
+- Nemotron is positive-only synthetic data. It can measure transfer recall, not
+  precision, benign utility, or false-positive rate.
+
+Canonical shards retain every valid, non-empty detector-text projection and
+available lineage used by Morgott. They are standardized projections rather
+than byte-for-byte mirrors; exclusions are recorded in the manifest.
+“Auxiliary” or “uncertain” means excluded from the default routing supervision,
+not deleted.
 
 ## Deferred or rejected
 
-| Candidate | Decision | Reason |
-|---|---|---|
-| [WildChat-1M](https://huggingface.co/datasets/allenai/WildChat-1M) | Completed weak-label experiment; stopped | The 5k sampled pilot accepted 2,430 model-agreed weak negatives, but the bounded-weight ablation reduced direct and indirect macro recall, including multi-turn recall from 908/4,136 to 291/4,136 at the 85% profile. The rows stay out of the baseline and collection does not scale. They cannot support a lockout/FPR claim. See [the pilot report](wildchat-ablation.md). |
-| [PromptShield](https://huggingface.co/datasets/hendzh/PromptShield) | Completed evaluation-only audit; do not train | Its 43,425 rows lack row-level source/group lineage, the paper discloses aggregation from public corpora with active-family overlap, and 97 test rows overlap the active fit set. At the locked 85% profile the character control catches 194/6,486 source positives and alerts on 240/17,030 source negatives; removing fit overlaps barely changes this. See [the audit](../experiments/promptshield_audit/REPORT.md). |
-| [HackAPrompt](https://huggingface.co/datasets/hackaprompt/hackaprompt-dataset) | Skip while gated; provenance audit only | The MIT-labelled repository still requires contact-sharing acceptance and returns 401 anonymously, so no token or mirror was used. If explicitly accessed later, use only `user_input`, keep `correct` as target-specific success rather than a benign label, and begin evaluation-only. See [the pinned audit](hackaprompt-yaklang-audit.md). |
-| [Yaklang llm-prompt-injection](https://github.com/yaklang/hack-skills/tree/c9a4b9ee8645eb60763eb4eef172f1ecb0a5b3e8/skills/llm-prompt-injection) | Taxonomy/scenario reference only | It is a playbook rather than a labelled corpus. Canonical direct examples mostly duplicate current sources, while tool-output, cross-MCP, and Markdown-exfiltration gaps belong in stateful reference-monitor tests. It is not installed, vendored, or used as a payload generator. |
-| [AgentHarm](https://huggingface.co/datasets/ai-safety-institute/AgentHarm) | Reference-monitor evaluation later | Agent misuse tasks test authorization and harmful actions, not prompt injection. Treating them as detector attacks would recreate harmful-content conflation. |
-| [SafeDialBench](https://huggingface.co/datasets/HongyeCao/SafeDialBench) | Defer | Synthetic multi-turn attacks with no clean controls, unclear redistribution metadata, and attack-template leakage risk; the current grouped multi-turn holdout already tests this gap. |
-| [AdvBench](https://github.com/llm-attacks/llm-attacks) | Skip | The released goals are harmful requests, not jailbreak prompts; generated GCG suffixes are separate. HarmBench already supplies this negative control. |
-| [Aegis 2.0](https://huggingface.co/datasets/nvidia/Aegis-AI-Content-Safety-Dataset-2.0) and [BeaverTails](https://huggingface.co/datasets/PKU-Alignment/BeaverTails) | Skip | Content-safety labels do not identify instruction subversion, and both add overlap/license risk without a new injection signal. |
-| WildGuardMix, Chatbot Arena, LMSYS-Chat-1M, CeSIA Jailbreak, CeSIA BET | Skip for now | Access conditions or manual gating conflict with the requested ungated baseline. BET/technique transformations also require grouping by primitive/base prompt to avoid catastrophic leakage. |
+| Candidate | Decision |
+|---|---|
+| WildChat-1M | Stopped weak-label pilot. Accepted model-agreed negatives reduced recall; no rows enter the canonical corpus. |
+| PromptShield | Evaluation-only audit. It lacks row-level source/group lineage and aggregates families that overlap active sources. Do not train on this release. |
+| Yaklang prompt-injection skill | Taxonomy and scenario reference, not a labelled corpus. Do not vendor or generate rows from it. |
+| AgentHarm | Future stateful authorization evaluation; its harmful actions are not prompt-injection labels. |
+| SafeDialBench | Deferred pending cleaner grouping and independent controls. |
+| AdvBench | Released goals are harmful requests, not prompt-injection positives. |
+| Aegis and BeaverTails | Content-safety labels do not establish instruction subversion. |
+| PIArena, MCP/Agent benchmarks, AgentDojo | Future stateful evaluation; do not flatten trajectories into independent text rows. |
+| CyberSecEval prompt injection | Deferred prospective multilingual evaluation after the first recipe; positive-only machine translations are derived lineages, not training rows. |
+| JailbreakBench artifacts | Deferred method/target-held-out evaluation; preserve behavior/method/target/outcome and known HarmBench/AdvBench lineage overlap. |
 
-## Anti-overfitting rules
+## Next benign-source pass
 
-- Training, calibration, and external evaluation sources remain distinct where
-  the source permits it.
-- Conversation trees, BIPIA contexts, mutation goals, and future synthetic
-  seeds are split as groups; exact evaluation duplicates are blocked from
-  training.
-- Harmful intent and injection intent remain separate labels.
-- No model- or Codex-generated row enters frozen public evaluation. With no human labelers,
-  the WildChat pilot uses conservative model-only weak supervision: two model
-  families must agree on high-confidence benign, every detector-hard candidate
-  and a deterministic random audit slice receive a third-family judgment, and
-  disagreements or uncertain rows are discarded. Agreement is not accuracy.
-- Report leave-one-source-out and production-sampled metrics before any model
-  is allowed to block users. Until then, detector output remains shadow-only.
+Do not add these during the routing-split repair. Audit and version them as a
+separate corpus change:
+
+| Source | Proposed role |
+|---|---|
+| [Schema-Guided Dialogue](https://github.com/google-research-datasets/dstc8-schema-guided-dialogue) | Ordinary task-dialogue candidate rows grouped by `dialogue_id`; official test stays dev-test. |
+| [BANKING77](https://huggingface.co/datasets/PolyAI/banking77) | Finance-language benign candidates; preserve the official test and note the lack of conversation lineage. |
+| [FalseReject](https://huggingface.co/datasets/AmazonScience/FalseReject) | Human-validated hard-benign test rows to dev-test; synthetic train remains auxiliary. |
+| [CoCoNot](https://huggingface.co/datasets/allenai/coconot) and [JailbreakBench benign behaviors](https://github.com/JailbreakBench/jailbreakbench#accessing-the-jbb-behaviors-datasets) | Small safety-sensitive benign contrasts for dev-test. |
+| [MASSIVE](https://huggingface.co/datasets/AmazonScience/massive) | Defer until multilingual coverage is needed; group translations by original ID and prevent its scale from defining the corpus. |
+
+Moderation-safe, non-toxic, accepted-chat, or “not injection” labels alone still
+do not establish broad benignity.
+
+Historical experiment counts are summarized in `reports/model-experiments.md`.
+Their runners and generated JSON were removed from the active tree because they
+used the old corpus or ended in a stop decision.
+
+## Corpus rules
+
+- There is no row cap. Source sampling or weights are model-recipe decisions.
+- Canonical source shards retain repeated valid projections. Exact same-annotation repeats
+  project once into views while `origins` retains lineage.
+- Conflicting routing annotations and exact/strict-near leakage are quarantined.
+- Candidate lineages touching dev-test move to dev-test instead of training.
+- Train, validation, and dev-test are development roles. A prospective final
+  test does not yet exist.
+- No model-generated label enters dev-test or supports a production-FPR claim.
+- Report source-held-out results before promoting any model.
