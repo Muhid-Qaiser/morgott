@@ -118,7 +118,7 @@ corpus.
   goals to dev-test.
 
 Canonical shards retain every valid, non-empty detector-text projection and
-available lineage used by Morgott. They are standardized projections rather
+available lineage used by morgott. They are standardized projections rather
 than byte-for-byte mirrors; exclusions are recorded in the manifest.
 “Auxiliary” or “uncertain” means excluded from the default routing supervision,
 not deleted.

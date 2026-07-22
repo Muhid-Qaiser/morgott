@@ -1,6 +1,6 @@
-# Morgott
+# morgott
 
-Morgott is a research POC for prompt-injection and agent-security work. The
+morgott is a research POC for prompt-injection and agent-security work. The
 current deliverable is a reproducible, provenance-preserving data corpus. There
 is **no finalized model trained on the broad routing corpus yet**.
 
@@ -50,7 +50,7 @@ are ignored by Git; `data/manifest.json` pins their hashes and is the only
 versioned machine manifest. Exact current counts belong only in that manifest.
 
 The corpus builder has no row cap. Canonical shards retain every valid,
-non-empty detector-text projection and the available lineage needed by Morgott.
+non-empty detector-text projection and the available lineage needed by morgott.
 They are standardized projections, not byte-for-byte source mirrors: unrelated
 upstream fields and unusable detector inputs may be omitted, with exclusions
 recorded in the manifest. Every exact-unique routing-eligible projection enters

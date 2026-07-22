@@ -1,3 +1,3 @@
-"""Morgott proof of concept."""
+"""morgott proof of concept."""
 
 __version__ = "0.1.0"

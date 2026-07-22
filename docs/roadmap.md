@@ -1,6 +1,6 @@
 # Roadmap
 
-Morgott is still at the data-foundation stage. The broad corpus is not a trained
+morgott is still at the data-foundation stage. The broad corpus is not a trained
 or promoted model, and the old POC results do not choose the final architecture.
 
 ## P0 — finish and freeze the corpus

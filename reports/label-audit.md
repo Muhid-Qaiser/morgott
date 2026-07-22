@@ -65,13 +65,13 @@ and independent tags preserve why a row is routed.
 - FalseReject generated prompts and CoCoNot preference prompts are explicit
   weak benign development labels. Their respective human-annotated and
   human-verified test prompts remain identifiable dev-test evidence.
-- LMSYS Chatbot Arena retains unsafe conversations upstream. Morgott treats
+- LMSYS Chatbot Arena retains unsafe conversations upstream. morgott treats
   English user prompts for which OpenAI moderation and both published ToxicChat
   taggers are unflagged as weak benign development supervision. Paired model
   outputs are a separate weak-benign slice inferred from that context, with
   toxicity left unknown because the tags do not label the responses. Flagged
   user prompts and paired model outputs remain uncertain. The September 2023
-  source does not pin tagger checkpoints or establish performance for Morgott's
+  source does not pin tagger checkpoints or establish performance for morgott's
   routing ontology, and audited positives mix false positives with genuine harm
   and jailbreaks.
 - JBB benign behaviors are curated thematic contrasts to misuse requests. They

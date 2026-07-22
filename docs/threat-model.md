@@ -2,7 +2,7 @@
 
 ## Security claim
 
-Morgott makes a narrow architectural claim: a compromised planner must not gain
+morgott makes a narrow architectural claim: a compromised planner must not gain
 authority from text. In the current simulation, every side-effecting proposal
 passes through a fail-closed reference monitor with caller-supplied capabilities
 and exact argument constraints.

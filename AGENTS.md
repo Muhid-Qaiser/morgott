@@ -4,7 +4,7 @@ Durable operating brief for coding agents in this repository. Read this file,
 `README.md`, and `docs/threat-model.md` before changing data, labels, model
 claims, or authorization code.
 
-The canonical project, package, and CLI names are `Morgott`, `morgott`, and
+The canonical project, package, and CLI names are `morgott`, `morgott`, and
 `morgott`. Old `vulsight-*` seeds that remain in historical Git objects are
 provenance, not names to revive.
 
@@ -22,7 +22,7 @@ archive.
 
 ## Mission and non-goals
 
-Morgott studies defense in depth for LLM applications and agents. It should
+morgott studies defense in depth for LLM applications and agents. It should
 reduce successful direct jailbreaks, direct prompt injections, and indirect
 prompt injections while preserving ordinary conversation, including legitimate
 security and finance discussion.
@@ -95,7 +95,7 @@ the current manifest, rebuild only routing derivatives, and publish the updated
 manifest last.
 
 Corpus construction has no row cap. Retain every valid, non-empty detector-text
-projection and available lineage needed by Morgott. Source shards are
+projection and available lineage needed by morgott. Source shards are
 standardized projections, not byte-for-byte mirrors: unrelated upstream fields
 and unusable detector inputs may be omitted, with exclusions recorded in the
 manifest. Every exact-unique routing-eligible row enters a grouped development
