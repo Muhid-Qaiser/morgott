@@ -1,4 +1,6 @@
 import hashlib
+import http.client
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +10,7 @@ import numpy as np
 
 from morgott import cli
 from morgott.data import (
+    _fetch,
     _sample,
     _set_core_routing_role,
     _set_source_role,
@@ -38,6 +41,45 @@ from morgott.overlap import NearIndex, fingerprint
 
 
 class DataTests(unittest.TestCase):
+    def test_fetch_retries_content_length_mismatch(self):
+        partial = io.BytesIO(b"partial")
+        partial.headers = {"Content-Length": "10"}
+        stable = io.BytesIO(b"stable")
+        stable.headers = {"Content-Length": "6"}
+        with patch(
+            "morgott.data.urllib.request.urlopen",
+            side_effect=[partial, stable],
+        ) as urlopen:
+            data, digest = _fetch("https://example.test/data")
+
+        self.assertEqual(data, b"stable")
+        self.assertEqual(digest, hashlib.sha256(data).hexdigest())
+        self.assertEqual(urlopen.call_count, 2)
+
+    def test_fetch_retries_transient_failure(self):
+        expected = hashlib.sha256(b"stable").hexdigest()
+        partial = io.BytesIO(b"partial")
+        partial.headers = {}
+        stable = io.BytesIO(b"stable")
+        stable.headers = {}
+        with patch(
+            "morgott.data.urllib.request.urlopen",
+            side_effect=[
+                http.client.IncompleteRead(b"partial", 10),
+                partial,
+                stable,
+            ],
+        ) as urlopen:
+            data, digest = _fetch(
+                "https://example.test/data",
+                expected_bytes=6,
+                expected_sha256=expected,
+            )
+
+        self.assertEqual(data, b"stable")
+        self.assertEqual(digest, hashlib.sha256(data).hexdigest())
+        self.assertEqual(urlopen.call_count, 3)
+
     def test_data_cli_leaves_no_manifest_on_failure(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -150,7 +150,10 @@ broad router. OASST source rows retain its available moderation metadata.
 
 No human labelers are available. Public source labels remain source labels;
 model/provider/Codex labels are weak supervision only. Agreement is not
-accuracy. Weak labels never enter a locked test or support production-FPR claims.
+accuracy. Selected weak labels may enter the grouped train, validation, and
+dev-test development roles when their `label_basis` remains explicit and
+metrics are sliced by evidence strength. They never enter a prospective locked
+final test or support production-FPR claims.
 
 ## Important source mappings
 
@@ -165,7 +168,8 @@ WildJailbreak remain auxiliary. WildGuardMix harmfulness and `adversarial` stay
 independent; its model-labelled train rows remain auxiliary and its
 human-annotated test rows may enter dev-test. BrowseSafe positive HTML remains
 whole-document data because payload spans are unavailable. Harmful content is
-never silently relabelled as prompt injection.
+never silently relabelled as prompt injection. LMSYS automated positive safety
+tags remain uncertain metadata and do not supervise the router.
 
 LLMail raw attempts use phase + team + challenge level as split lineage;
 HackAPrompt keeps whole challenge levels together because they share a task/base

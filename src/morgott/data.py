@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import http.client
 import io
 import json
 import tempfile
 import unicodedata
+import urllib.error
 import urllib.request
 from collections import Counter
 from collections.abc import Iterable
@@ -145,6 +147,68 @@ SOURCES = {
         "license": "ODC-BY",
         "url": "https://huggingface.co/datasets/allenai/wildguardmix",
         "use": "gated prompt harmfulness data for the routing target",
+        "gated": True,
+    },
+    "taskmaster": {
+        "revision": "d92cb6af3005f1dc09c39e75e7daf4a04905e00b",
+        "license": "CC-BY-4.0",
+        "url": "https://github.com/google-research-datasets/Taskmaster",
+        "use": "English task-oriented user and assistant turns for benign routing balance",
+        "archive_url": "https://codeload.github.com/google-research-datasets/Taskmaster/tar.gz/d92cb6af3005f1dc09c39e75e7daf4a04905e00b",
+        "bytes": 138_453_808,
+        "sha256": "c7e4774798ace96e3b413a9beef6d2a706458d66c4e87ef1061e9426db1a3c46",
+    },
+    "banking77": {
+        "revision": "57ec275d8078af65b7731c2a98be812d844a6d6b",
+        "license": "CC-BY-4.0",
+        "url": "https://github.com/PolyAI-LDN/task-specific-datasets",
+        "use": "English online-banking intent queries as finance hard negatives",
+    },
+    "false_reject": {
+        "repo": "AmazonScience/FalseReject",
+        "revision": "493ba967714ea54c6f01067e1f61e389cc2c9b3e",
+        "license": "CC-BY-NC-4.0",
+        "url": "https://huggingface.co/datasets/AmazonScience/FalseReject",
+        "use": "hard-benign prompts; generated candidates and human test held out",
+    },
+    "schema_guided_dialogue": {
+        "revision": "e852981ae34990f4358979625854259302feaa78",
+        "license": "CC-BY-SA-4.0",
+        "url": "https://github.com/google-research-datasets/dstc8-schema-guided-dialogue",
+        "use": "English crowdworker task-dialogue turns for benign routing balance",
+        "archive_url": "https://codeload.github.com/google-research-datasets/dstc8-schema-guided-dialogue/tar.gz/e852981ae34990f4358979625854259302feaa78",
+        "bytes": 36_792_911,
+        "sha256": "ff97a9ab52b4cc9f25e1a093c96431512465e8377f9a1f57dc710a10484d2188",
+    },
+    "massive_en": {
+        "revision": "ff6bd8e4b27c3543e4f8fe2108f32bb95a6f8740",
+        "license": "CC-BY-4.0",
+        "url": "https://huggingface.co/datasets/AmazonScience/massive",
+        "use": "English voice-assistant utterances for benign intent coverage",
+        "archive_url": "https://amazon-massive-nlu-dataset.s3.amazonaws.com/amazon-massive-dataset-1.1.tar.gz",
+        "bytes": 40_251_390,
+        "sha256": "4cba5faa11c71437928e17cb1b9b3d8b8e727e7ea363a3a9a8045e19c0491577",
+    },
+    "coconot": {
+        "repo": "allenai/coconot",
+        "revision": "2cbe16aabf9069f17e48c8daad8aeabc29469eb7",
+        "license": "ODC-BY-1.0 + component licenses",
+        "url": "https://huggingface.co/datasets/allenai/coconot",
+        "use": "safe-to-comply prompts for weak development and hard-benign evaluation",
+    },
+    "jbb_benign": {
+        "repo": "JailbreakBench/JBB-Behaviors",
+        "revision": "886acc352a31533ffbcf4ef22c744658688086fc",
+        "license": "MIT",
+        "url": "https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors",
+        "use": "curated benign behaviors thematically matched to misuse requests",
+    },
+    "lmsys_arena": {
+        "repo": "lmsys/chatbot_arena_conversations",
+        "revision": "1b6335d42a1d2c7e34870c905d03ab964f7f2bd8",
+        "license": "CC-BY-4.0 prompts; CC-BY-NC-4.0 model outputs",
+        "url": "https://huggingface.co/datasets/lmsys/chatbot_arena_conversations",
+        "use": "English Arena messages with weak-benign candidates and flagged conversations retained as uncertain",
         "gated": True,
     },
 }
@@ -357,13 +421,44 @@ def _set_source_role(row: dict, role: str) -> dict:
     return row
 
 
-def _fetch(url: str) -> tuple[bytes, str]:
+def _fetch(
+    url: str,
+    *,
+    max_bytes: int = MAX_DOWNLOAD_BYTES,
+    expected_bytes: int | None = None,
+    expected_sha256: str | None = None,
+) -> tuple[bytes, str]:
     request = urllib.request.Request(url, headers={"User-Agent": "morgott/0.1"})
-    with urllib.request.urlopen(request, timeout=60) as response:
-        data = response.read(MAX_DOWNLOAD_BYTES + 1)
-    if len(data) > MAX_DOWNLOAD_BYTES:
-        raise ValueError(f"download exceeded {MAX_DOWNLOAD_BYTES} bytes: {url}")
-    return data, hashlib.sha256(data).hexdigest()
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                content_length = response.headers.get("Content-Length")
+                data = response.read(max_bytes + 1)
+        except (
+            ConnectionError,
+            TimeoutError,
+            http.client.IncompleteRead,
+            urllib.error.URLError,
+        ):
+            if attempt == 2:
+                raise
+            continue
+        if len(data) > max_bytes:
+            raise ValueError(f"download exceeded {max_bytes} bytes: {url}")
+        digest = hashlib.sha256(data).hexdigest()
+        if (
+            content_length is not None
+            and len(data) != int(content_length)
+            or expected_bytes is not None
+            and len(data) != expected_bytes
+            or expected_sha256 is not None
+            and digest != expected_sha256
+        ):
+            if attempt == 2:
+                raise ValueError(f"download does not match pinned metadata: {url}")
+            continue
+        return data, digest
+    raise AssertionError("unreachable")
 
 
 def _csv_rows(data: bytes, required: set[str]) -> list[dict[str, str]]:
@@ -1153,10 +1248,10 @@ def _load_nemotron_agentic_ipi() -> tuple[list[dict], str, dict]:
     info = SOURCES["nemotron_agentic_ipi"]
     data, digest = _fetch(
         f"https://huggingface.co/datasets/{info['repo']}/resolve/"
-        f"{info['revision']}/{info['path']}"
+        f"{info['revision']}/{info['path']}",
+        expected_bytes=info["bytes"],
+        expected_sha256=info["sha256"],
     )
-    if len(data) != info["bytes"] or digest != info["sha256"]:
-        raise ValueError("Nemotron Agentic IPI artifact does not match pinned metadata")
     rows, profile = _parse_nemotron_agentic_ipi(data)
     return rows, digest, profile
 

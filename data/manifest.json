@@ -151,6 +151,8 @@
     }
   },
   "download_sha256": {
+    "banking77/banking_data/test.csv": "d12d6e3bc4c3103966ae786dc435913c0c563dfa328f5a3646d0e62cfeeb474d",
+    "banking77/banking_data/train.csv": "b06e26ac675513959a63135f11b94ea7786ed02da65db93a5650d8838cbc664b",
     "bipia/benchmark/code/test.jsonl": "ed40b84f541352fb45753032a80750922de8d5e0b70997924df3d04cf942e058",
     "bipia/benchmark/code/train.jsonl": "5e6879b621a5cefe265a5b41b7ed0be632536f658f6097baf85a28b9abcb3115",
     "bipia/benchmark/code_attack_test.json": "892545c5aaec0645b1ded65dc7816b3d70e9ef4eadcba2301a7a3db93676b6e0",
@@ -163,19 +165,26 @@
     "bipia/benchmark/text_attack_train.json": "63f95d3e67eac4178cdabdbdaf192cd05f2b6ed0702b578f1d30d556e5155670",
     "browsesafe/test.parquet": "00cbad96b60fee46e016d79af6981fb221384c61f12cf28b4f04b5a6420573d0",
     "browsesafe/train.parquet": "430881fa53da3898956048676f58db894fc760cfa348ab264ee8a07c44a3d9fb",
+    "coconot/contrast/test-00000-of-00001.parquet": "d2d4f9ea33eac017cfdd2b56669e417e979933418276083d3acb28be170a588f",
+    "coconot/pref/train-00000-of-00001.parquet": "136ac18a54fbfa98472eabb77369de89c556ea05626584445f381238c287e104",
     "do_not_answer/datasets/Instruction/do_not_answer_en.csv": "06acfa39a06a1b33d1f264ce41b4f7a95812010c594fb733ae4717ee0a4544fc",
     "do_not_answer/datasets/data_zh.csv": "cec83aa3c0f141f1c65b88ab99b953e6acd7d1badec630a0a76f70044a07fec3",
+    "false_reject/test.jsonl": "644b243987b4d16f36b1b668b03a17fa49d18174fee80fbaeef94a53facc462d",
+    "false_reject/train.jsonl": "0331899da03e9c2c232acffd8b086e5e57116e1f53986012743b9a3bea46f868",
     "gandalf/data/test-00000-of-00001-bc92128b9288a6d1.parquet": "56b646d133335ebc535266bd55dbe1b5bee7caa4b95bf49d040684b9b5dd9972",
     "gandalf/data/train-00000-of-00001-ded53be747ff55cd.parquet": "5b6acf3e5a5998d21f8e1222bb45bbdec25a14408747b1cd63bebef4a75fa439",
     "gandalf/data/validation-00000-of-00001-94481a2a09ff2fff.parquet": "f51ab3e3407a368845b0f57932cc745c09280429416d7507bd178a16326a79f6",
     "hackaprompt/hackaprompt.parquet": "bedca308fbd71be57793930e4e4a0dcfbda2a27b6d0f2ad3191bb20a6a315928",
     "harmbench_behaviors_text_all.csv": "8d81accedd38eaaf8b760618622bb888417d1fd0c86eba65c427a16f1cbb4afc",
     "jailbreaks_over_time/jailbreaksovertime.json": "110fb269a3af1bd9891d583b576563ddde658a980efee5718be50dd8fc5ad001",
+    "jbb_benign/data/benign-behaviors.csv": "3cda234d21a991fa309bbfea4b6d9dae31ccdf8e9d452424b6a983e4fdc33468",
     "llmail/data/emails_for_fp_tests.json": "4ddd950b5dbaa8548f5597c886d8e09a051ba07f80a9291fdcca9c2397d22abe",
     "llmail/data/labelled_unique_submissions_phase1.json": "691dfa1595d2bd0e731069f233bd5448f7af1c0ebd9732bc6f12dd6cee446586",
     "llmail/data/labelled_unique_submissions_phase2.json": "f89af984e345430c3b357903890e30867bf4676f4ef10c138cc7bad218e890b8",
     "llmail/data/raw_submissions_phase1.jsonl": "a9c62eca699dd270fdfbbfbfcc1253f5e5017f6d5a34ff7cb0f2cbb80b7f7c0a",
     "llmail/data/raw_submissions_phase2.jsonl": "a9207e1d893ccb74ca6f9cc5eecea433bc49c23a26bed88088afd385c7ab18b6",
+    "lmsys_arena/data/train-00000-of-00001-cced8514c7ed782a.parquet": "3726a6352e9bfc34e206460646f6e5e99bb837751966a671ddd30c7f64e5b06e",
+    "massive_en/amazon-massive-dataset-1.1.tar.gz": "4cba5faa11c71437928e17cb1b9b3d8b8e727e7ea363a3a9a8045e19c0491577",
     "multi_turn/Complete Harmful Dataset.csv": "c0c037832b43c3ccc7386a70e50a1c51b4e5fb30128fd9beb252369492807304",
     "multi_turn/Completely-Benign Dataset.csv": "4efb90f0b4c8d54ad66353acd89bf4008413c80b9bf45ddc812b1f36847c7398",
     "multi_turn/Harmful Dataset.csv": "9b84edb9ebbf695b4884a897284022c4f75e382a577359bd031c6ec902a45f17",
@@ -184,6 +193,8 @@
     "notinject/datasets/NotInject_one.json": "69b535596d95102424e9c5946944feb4f2d596687eb8213f2ecad75478e5ffdd",
     "notinject/datasets/NotInject_three.json": "ef01eff0d761d2e34571b3fdbcec08c30cd93efe8d0e1a2eb5c2baeb1873b070",
     "notinject/datasets/NotInject_two.json": "6043d94e75b48d8e7682d25dc79eaf45359e1e561ce520e3b8fd5625a91060c6",
+    "schema_guided_dialogue/schema_guided_dialogue.tar.gz": "ff97a9ab52b4cc9f25e1a093c96431512465e8377f9a1f57dc710a10484d2188",
+    "taskmaster/taskmaster.tar.gz": "c7e4774798ace96e3b413a9beef6d2a706458d66c4e87ef1061e9426db1a3c46",
     "tensor_trust/benchmarks/extraction-robustness/v1/extraction_robustness_dataset.jsonl": "4090f9f57b6df69cc32d7669ac991e3fd53e6e2bb616a5e6f45dac79c183ee4c",
     "tensor_trust/benchmarks/hijacking-robustness/v1/hijacking_robustness_dataset.jsonl": "2ad3c2343bbf43cb1924f3ec5d6f830864ce3c879e9832b01d93a991e7e2e680",
     "tensor_trust_raw/detecting-extractions/v1/prompt_extraction_detection.jsonl": "af28d09554db4f8ed91d042005c3457f72c88e763e3787c3b1c76c1d9e8f8260",
@@ -491,158 +502,218 @@
     "routing": {
       "path": "quarantine/routing.jsonl",
       "reasons": {
-        "exact_label_conflict": 4,
-        "exact_supervised_overlap": 3999,
-        "near_dev_test_overlap": 50416,
-        "near_train_overlap": 3060
+        "exact_label_conflict": 74311,
+        "exact_supervised_overlap": 3962,
+        "near_dev_test_overlap": 58525,
+        "near_train_overlap": 7831
       },
       "representative_source_routing": {
+        "banking77": {
+          "benign": 37,
+          "non_benign": 0
+        },
+        "bipia": {
+          "benign": 0,
+          "non_benign": 2
+        },
         "browsesafe": {
           "benign": 49,
           "non_benign": 63
         },
         "do_not_answer": {
-          "benign": 0,
-          "non_benign": 1
-        },
-        "hackaprompt": {
-          "benign": 0,
-          "non_benign": 9214
-        },
-        "llmail": {
-          "benign": 0,
-          "non_benign": 24037
-        },
-        "oasst1": {
-          "benign": 0,
-          "non_benign": 120
-        },
-        "prompt_injections": {
           "benign": 0,
           "non_benign": 3
         },
+        "hackaprompt": {
+          "benign": 0,
+          "non_benign": 11047
+        },
+        "llmail": {
+          "benign": 0,
+          "non_benign": 24044
+        },
+        "lmsys_arena": {
+          "benign": 2384,
+          "non_benign": 36
+        },
+        "massive_en": {
+          "benign": 159,
+          "non_benign": 0
+        },
+        "oasst1": {
+          "benign": 0,
+          "non_benign": 47
+        },
+        "prompt_injections": {
+          "benign": 0,
+          "non_benign": 6
+        },
+        "schema_guided_dialogue": {
+          "benign": 7201,
+          "non_benign": 0
+        },
+        "taskmaster": {
+          "benign": 59746,
+          "non_benign": 0
+        },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 23909
+          "non_benign": 39729
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 9
+          "non_benign": 11
         },
         "wildjailbreak": {
-          "benign": 52,
-          "non_benign": 22
+          "benign": 40,
+          "non_benign": 25
         }
       },
       "representative_sources": {
+        "banking77": 37,
+        "bipia": 2,
         "browsesafe": 112,
-        "do_not_answer": 1,
-        "hackaprompt": 9214,
-        "llmail": 24037,
-        "oasst1": 120,
-        "prompt_injections": 3,
-        "tensor_trust_raw": 23909,
-        "toxic_chat": 9,
-        "wildjailbreak": 74
+        "do_not_answer": 3,
+        "hackaprompt": 11047,
+        "llmail": 24044,
+        "lmsys_arena": 2420,
+        "massive_en": 159,
+        "oasst1": 47,
+        "prompt_injections": 6,
+        "schema_guided_dialogue": 7201,
+        "taskmaster": 59746,
+        "tensor_trust_raw": 39729,
+        "toxic_chat": 11,
+        "wildjailbreak": 65
       },
-      "routing_benign": 101,
-      "routing_non_benign": 57378,
-      "rows": 57479,
-      "sha256": "5edc1af0f3008921a2700b5592b76c5354db8579149f861cb720309e85bc0e87",
+      "routing_benign": 69616,
+      "routing_non_benign": 75013,
+      "rows": 144629,
+      "sha256": "d9355dccae148d5502946a17e6d9abb4d02066a01329764cd3c5e6c1e31152a7",
       "source_membership_routing": {
+        "banking77": {
+          "benign": 37,
+          "non_benign": 0
+        },
+        "bipia": {
+          "benign": 0,
+          "non_benign": 2
+        },
         "browsesafe": {
           "benign": 49,
           "non_benign": 63
         },
         "do_not_answer": {
           "benign": 0,
-          "non_benign": 1
+          "non_benign": 3
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 9214
+          "non_benign": 11047
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 24037
+          "non_benign": 24044
+        },
+        "lmsys_arena": {
+          "benign": 2384,
+          "non_benign": 36
+        },
+        "massive_en": {
+          "benign": 162,
+          "non_benign": 0
         },
         "oasst1": {
           "benign": 0,
-          "non_benign": 120
+          "non_benign": 47
         },
         "prompt_injections": {
           "benign": 0,
-          "non_benign": 4
+          "non_benign": 6
+        },
+        "schema_guided_dialogue": {
+          "benign": 7202,
+          "non_benign": 0
+        },
+        "taskmaster": {
+          "benign": 60353,
+          "non_benign": 0
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 23951
+          "non_benign": 39768
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 10
+          "non_benign": 11
         },
         "wildjailbreak": {
-          "benign": 52,
-          "non_benign": 22
+          "benign": 40,
+          "non_benign": 25
         }
       },
       "source_memberships": {
+        "banking77": 37,
+        "bipia": 2,
         "browsesafe": 112,
-        "do_not_answer": 1,
-        "hackaprompt": 9214,
-        "llmail": 24037,
-        "oasst1": 120,
-        "prompt_injections": 4,
-        "tensor_trust_raw": 23951,
-        "toxic_chat": 10,
-        "wildjailbreak": 74
+        "do_not_answer": 3,
+        "hackaprompt": 11047,
+        "llmail": 24044,
+        "lmsys_arena": 2420,
+        "massive_en": 162,
+        "oasst1": 47,
+        "prompt_injections": 6,
+        "schema_guided_dialogue": 7202,
+        "taskmaster": 60353,
+        "tensor_trust_raw": 39768,
+        "toxic_chat": 11,
+        "wildjailbreak": 65
       }
     }
   },
   "routing_deduplication": {
     "actual_ratios": {
-      "dev_test": 0.2112178646723796,
-      "train": 0.6917284636927176,
-      "validation": 0.09705367163490282
+      "dev_test": 0.20832397073877112,
+      "train": 0.6965491877108985,
+      "validation": 0.09512684155033042
     },
     "actual_rows": {
-      "dev_test": 201373,
-      "train": 659487,
-      "validation": 92530
+      "dev_test": 433888,
+      "train": 1450742,
+      "validation": 198126
     },
-    "candidate_exact_rows_fixed_by_official_lineage": 985,
+    "candidate_exact_rows_fixed_by_official_lineage": 119197,
     "candidate_partition_rows": {
-      "dev_test": 151926,
-      "train": 704806,
-      "validation": 100687
+      "dev_test": 139062,
+      "train": 1502346,
+      "validation": 212878
     },
-    "cross_lineage_exact_duplicates": 31975,
-    "exact_conflict_rows_quarantined": 4,
-    "exact_duplicate_rows_merged": 711175,
-    "input_rows": 1718045,
+    "cross_lineage_exact_duplicates": 86507,
+    "exact_conflict_rows_quarantined": 74311,
+    "exact_duplicate_rows_merged": 1265222,
+    "input_rows": 3488645,
     "near_method": "128-bit SimHash over word unigrams+bigrams, eight 16-bit bands, Hamming <= 6, five-word minimum; documents over 24,000 characters use contiguous 8,000-character head, middle, and tail windows",
-    "official_dev_test_rows": 49447,
+    "official_dev_test_rows": 294826,
     "partition_method": "exact deduplication, official-dev locking, 70/10/20 iterative source/label targets, then deterministic weighted lineage placement",
     "planned_ratios": {
-      "dev_test": 0.1999998013638359,
-      "train": 0.6999998013638359,
-      "validation": 0.10000039727232819
+      "dev_test": 0.20189175808426923,
+      "train": 0.6990543070812503,
+      "validation": 0.09905393483448047
     },
     "planned_rows": {
-      "dev_test": 201373,
-      "train": 704806,
-      "validation": 100687
+      "dev_test": 433888,
+      "train": 1502346,
+      "validation": 212878
     },
     "ratio_deviation": {
-      "dev_test": 0.01121786467237959,
-      "train": -0.00827153630728239,
-      "validation": -0.0029463283650971867
+      "dev_test": 0.008323970738771114,
+      "train": -0.0034508122891014903,
+      "validation": -0.004873158449669582
     },
     "storage": "temporary SQLite index; canonical JSONL source shards remain authoritative",
     "supervised": {
-      "near_dev_test_overlap_rows_quarantined": 50416,
-      "near_train_overlap_rows_quarantined": 3060
+      "near_dev_test_overlap_rows_quarantined": 58525,
+      "near_train_overlap_rows_quarantined": 7831
     },
     "target_ratios": {
       "dev_test": 0.2,
@@ -650,31 +721,43 @@
       "validation": 0.1
     },
     "uncertain": {
-      "exact_duplicate_rows_merged": 53568,
-      "exact_supervised_overlap_rows_quarantined": 3999,
-      "input_rows": 108099
+      "exact_duplicate_rows_merged": 54602,
+      "exact_supervised_overlap_rows_quarantined": 3962,
+      "input_rows": 111239
     }
   },
   "routing_views": {
     "dev_test": {
       "largest_split_group": {
-        "partition_share": 0.1718005889568115,
-        "rows": 34596,
+        "partition_share": 0.07971872925731986,
+        "rows": 34589,
         "split_group_sha256": "47942d9d5938b37e2eb2ab172b6aae6fcc2bd537d7e3ff4ccf79aaf7d6ed2fb8"
       },
       "path": "views/routing/dev_test.jsonl",
       "representative_source_routing": {
+        "banking77": {
+          "benign": 3075,
+          "non_benign": 0
+        },
         "bipia": {
           "benign": 0,
-          "non_benign": 500
+          "non_benign": 499
         },
         "browsesafe": {
           "benign": 1856,
           "non_benign": 1824
         },
+        "coconot": {
+          "benign": 379,
+          "non_benign": 0
+        },
         "do_not_answer": {
           "benign": 0,
-          "non_benign": 6313
+          "non_benign": 6312
+        },
+        "false_reject": {
+          "benign": 2530,
+          "non_benign": 0
         },
         "gandalf": {
           "benign": 0,
@@ -682,7 +765,7 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 65850
+          "non_benign": 55622
         },
         "harmbench": {
           "benign": 0,
@@ -692,9 +775,21 @@
           "benign": 0,
           "non_benign": 3901
         },
+        "jbb_benign": {
+          "benign": 100,
+          "non_benign": 0
+        },
         "llmail": {
           "benign": 160,
-          "non_benign": 27447
+          "non_benign": 25743
+        },
+        "lmsys_arena": {
+          "benign": 12927,
+          "non_benign": 0
+        },
+        "massive_en": {
+          "benign": 4954,
+          "non_benign": 0
         },
         "multi_turn": {
           "benign": 2400,
@@ -710,7 +805,15 @@
         },
         "prompt_injections": {
           "benign": 0,
-          "non_benign": 60
+          "non_benign": 59
+        },
+        "schema_guided_dialogue": {
+          "benign": 104219,
+          "non_benign": 0
+        },
+        "taskmaster": {
+          "benign": 133514,
+          "non_benign": 0
         },
         "tensor_trust": {
           "benign": 0,
@@ -718,19 +821,19 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 47947
+          "non_benign": 37471
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 354
+          "non_benign": 352
         },
         "wildguardmix": {
           "benign": 490,
           "non_benign": 754
         },
         "wildjailbreak": {
-          "benign": 8883,
-          "non_benign": 24156
+          "benign": 6960,
+          "non_benign": 19309
         },
         "xstest": {
           "benign": 250,
@@ -738,41 +841,61 @@
         }
       },
       "representative_sources": {
-        "bipia": 500,
+        "banking77": 3075,
+        "bipia": 499,
         "browsesafe": 3680,
-        "do_not_answer": 6313,
+        "coconot": 379,
+        "do_not_answer": 6312,
+        "false_reject": 2530,
         "gandalf": 223,
-        "hackaprompt": 65850,
+        "hackaprompt": 55622,
         "harmbench": 400,
         "jailbreaks_over_time": 3901,
-        "llmail": 27607,
+        "jbb_benign": 100,
+        "llmail": 25903,
+        "lmsys_arena": 12927,
+        "massive_en": 4954,
         "multi_turn": 6536,
         "nemotron_agentic_ipi": 676,
         "notinject": 339,
-        "prompt_injections": 60,
+        "prompt_injections": 59,
+        "schema_guided_dialogue": 104219,
+        "taskmaster": 133514,
         "tensor_trust": 2254,
-        "tensor_trust_raw": 47947,
-        "toxic_chat": 354,
+        "tensor_trust_raw": 37471,
+        "toxic_chat": 352,
         "wildguardmix": 1244,
-        "wildjailbreak": 33039,
+        "wildjailbreak": 26269,
         "xstest": 450
       },
-      "routing_benign": 14378,
-      "routing_non_benign": 186995,
-      "rows": 201373,
-      "sha256": "3cfb4fdae6339be6f79050b3e39691b116fc635c8afcc121598d0d01b17f32fe",
+      "routing_benign": 274153,
+      "routing_non_benign": 159735,
+      "rows": 433888,
+      "sha256": "e24b1fcd47d124359d0f58661c5cf2235b40c3905e20ab5ba09b05889a1ede0f",
       "source_membership_routing": {
+        "banking77": {
+          "benign": 3077,
+          "non_benign": 0
+        },
         "bipia": {
           "benign": 0,
-          "non_benign": 500
+          "non_benign": 499
         },
         "browsesafe": {
           "benign": 1856,
           "non_benign": 1824
         },
+        "coconot": {
+          "benign": 379,
+          "non_benign": 0
+        },
         "do_not_answer": {
           "benign": 0,
-          "non_benign": 6313
+          "non_benign": 6312
+        },
+        "false_reject": {
+          "benign": 2530,
+          "non_benign": 0
         },
         "gandalf": {
           "benign": 0,
@@ -780,7 +903,7 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 65854
+          "non_benign": 55626
         },
         "harmbench": {
           "benign": 0,
@@ -790,9 +913,21 @@
           "benign": 0,
           "non_benign": 3901
         },
+        "jbb_benign": {
+          "benign": 100,
+          "non_benign": 0
+        },
         "llmail": {
           "benign": 160,
-          "non_benign": 27447
+          "non_benign": 25743
+        },
+        "lmsys_arena": {
+          "benign": 13010,
+          "non_benign": 0
+        },
+        "massive_en": {
+          "benign": 4973,
+          "non_benign": 0
         },
         "multi_turn": {
           "benign": 2400,
@@ -808,7 +943,15 @@
         },
         "prompt_injections": {
           "benign": 0,
-          "non_benign": 61
+          "non_benign": 59
+        },
+        "schema_guided_dialogue": {
+          "benign": 105630,
+          "non_benign": 0
+        },
+        "taskmaster": {
+          "benign": 137524,
+          "non_benign": 0
         },
         "tensor_trust": {
           "benign": 0,
@@ -816,19 +959,19 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 48984
+          "non_benign": 38385
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 354
+          "non_benign": 353
         },
         "wildguardmix": {
           "benign": 490,
           "non_benign": 754
         },
         "wildjailbreak": {
-          "benign": 8889,
-          "non_benign": 24156
+          "benign": 6967,
+          "non_benign": 19309
         },
         "xstest": {
           "benign": 250,
@@ -836,41 +979,61 @@
         }
       },
       "source_memberships": {
-        "bipia": 500,
+        "banking77": 3077,
+        "bipia": 499,
         "browsesafe": 3680,
-        "do_not_answer": 6313,
+        "coconot": 379,
+        "do_not_answer": 6312,
+        "false_reject": 2530,
         "gandalf": 223,
-        "hackaprompt": 65854,
+        "hackaprompt": 55626,
         "harmbench": 400,
         "jailbreaks_over_time": 3901,
-        "llmail": 27607,
+        "jbb_benign": 100,
+        "llmail": 25903,
+        "lmsys_arena": 13010,
+        "massive_en": 4973,
         "multi_turn": 6536,
         "nemotron_agentic_ipi": 676,
         "notinject": 339,
-        "prompt_injections": 61,
+        "prompt_injections": 59,
+        "schema_guided_dialogue": 105630,
+        "taskmaster": 137524,
         "tensor_trust": 2254,
-        "tensor_trust_raw": 48984,
-        "toxic_chat": 354,
+        "tensor_trust_raw": 38385,
+        "toxic_chat": 353,
         "wildguardmix": 1244,
-        "wildjailbreak": 33045,
+        "wildjailbreak": 26276,
         "xstest": 450
       }
     },
     "train": {
       "largest_split_group": {
-        "partition_share": 0.09266444979203532,
-        "rows": 61111,
-        "split_group_sha256": "302e34375952e4585f9b38c02a12348e630410628f803b7eb4caf4565fb45373"
+        "partition_share": 0.06013543414335561,
+        "rows": 87241,
+        "split_group_sha256": "9249785f5c0d33f877f0fb05da17879204c823082435c6d7999d1a3258f18049"
       },
       "path": "views/routing/train.jsonl",
       "representative_source_routing": {
+        "banking77": {
+          "benign": 8720,
+          "non_benign": 0
+        },
         "bipia": {
           "benign": 0,
           "non_benign": 436
         },
         "browsesafe": {
-          "benign": 4833,
+          "benign": 4832,
           "non_benign": 4735
+        },
+        "coconot": {
+          "benign": 804,
+          "non_benign": 0
+        },
+        "false_reject": {
+          "benign": 11621,
+          "non_benign": 0
         },
         "gandalf": {
           "benign": 0,
@@ -878,52 +1041,87 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 258893
+          "non_benign": 270238
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 83995
+          "non_benign": 85053
+        },
+        "lmsys_arena": {
+          "benign": 69757,
+          "non_benign": 0
+        },
+        "massive_en": {
+          "benign": 9882,
+          "non_benign": 0
         },
         "prompt_injections": {
           "benign": 0,
           "non_benign": 173
         },
+        "schema_guided_dialogue": {
+          "benign": 195773,
+          "non_benign": 0
+        },
+        "taskmaster": {
+          "benign": 468070,
+          "non_benign": 0
+        },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 172767
+          "non_benign": 181060
         },
         "toxic_chat": {
           "benign": 0,
           "non_benign": 291
         },
         "wildjailbreak": {
-          "benign": 35892,
-          "non_benign": 96793
+          "benign": 37586,
+          "non_benign": 101032
         }
       },
       "representative_sources": {
+        "banking77": 8720,
         "bipia": 436,
-        "browsesafe": 9568,
+        "browsesafe": 9567,
+        "coconot": 804,
+        "false_reject": 11621,
         "gandalf": 679,
-        "hackaprompt": 258893,
-        "llmail": 83995,
+        "hackaprompt": 270238,
+        "llmail": 85053,
+        "lmsys_arena": 69757,
+        "massive_en": 9882,
         "prompt_injections": 173,
-        "tensor_trust_raw": 172767,
+        "schema_guided_dialogue": 195773,
+        "taskmaster": 468070,
+        "tensor_trust_raw": 181060,
         "toxic_chat": 291,
-        "wildjailbreak": 132685
+        "wildjailbreak": 138618
       },
-      "routing_benign": 40725,
-      "routing_non_benign": 618762,
-      "rows": 659487,
-      "sha256": "ac730d46b8f59344f2bbd03d9ddcb709146c7c02241e34930d6d66bacd60035d",
+      "routing_benign": 807045,
+      "routing_non_benign": 643697,
+      "rows": 1450742,
+      "sha256": "f6064137767ac39e7d28f16be49afe544f47ffab6937e7ccaf03eaaeeb9368d7",
       "source_membership_routing": {
+        "banking77": {
+          "benign": 8720,
+          "non_benign": 0
+        },
         "bipia": {
           "benign": 0,
           "non_benign": 436
         },
         "browsesafe": {
-          "benign": 4833,
+          "benign": 4832,
           "non_benign": 4735
+        },
+        "coconot": {
+          "benign": 804,
+          "non_benign": 0
+        },
+        "false_reject": {
+          "benign": 11621,
+          "non_benign": 0
         },
         "gandalf": {
           "benign": 0,
@@ -931,39 +1129,62 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 258894
+          "non_benign": 270239
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 83995
+          "non_benign": 85053
+        },
+        "lmsys_arena": {
+          "benign": 69757,
+          "non_benign": 0
+        },
+        "massive_en": {
+          "benign": 9892,
+          "non_benign": 0
         },
         "prompt_injections": {
           "benign": 0,
           "non_benign": 173
         },
+        "schema_guided_dialogue": {
+          "benign": 195780,
+          "non_benign": 0
+        },
+        "taskmaster": {
+          "benign": 469202,
+          "non_benign": 0
+        },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 172925
+          "non_benign": 181396
         },
         "toxic_chat": {
           "benign": 0,
           "non_benign": 291
         },
         "wildjailbreak": {
-          "benign": 35892,
-          "non_benign": 96793
+          "benign": 37586,
+          "non_benign": 101032
         }
       },
       "source_memberships": {
+        "banking77": 8720,
         "bipia": 436,
-        "browsesafe": 9568,
+        "browsesafe": 9567,
+        "coconot": 804,
+        "false_reject": 11621,
         "gandalf": 679,
-        "hackaprompt": 258894,
-        "llmail": 83995,
+        "hackaprompt": 270239,
+        "llmail": 85053,
+        "lmsys_arena": 69757,
+        "massive_en": 9892,
         "prompt_injections": 173,
-        "tensor_trust_raw": 172925,
+        "schema_guided_dialogue": 195780,
+        "taskmaster": 469202,
+        "tensor_trust_raw": 181396,
         "toxic_chat": 291,
-        "wildjailbreak": 132685
+        "wildjailbreak": 138618
       }
     },
     "uncertain": {
@@ -973,9 +1194,13 @@
           "benign": 0,
           "non_benign": 53820
         },
+        "lmsys_arena": {
+          "benign": 0,
+          "non_benign": 2084
+        },
         "oasst1": {
           "benign": 0,
-          "non_benign": 685
+          "non_benign": 707
         },
         "wildguardmix": {
           "benign": 0,
@@ -984,21 +1209,26 @@
       },
       "representative_sources": {
         "llmail": 53820,
-        "oasst1": 685,
+        "lmsys_arena": 2084,
+        "oasst1": 707,
         "wildguardmix": 26
       },
       "routing_benign": 0,
-      "routing_non_benign": 54531,
-      "rows": 54531,
-      "sha256": "1e2584dddbca67ce059f84f9f0a554d3a615c6c3909e18dac21fb59aeb9d701d",
+      "routing_non_benign": 56637,
+      "rows": 56637,
+      "sha256": "f42ed71e8b84ce9fc0eddf014ecb58469c57056883117388cbaa6571767e3049",
       "source_membership_routing": {
         "llmail": {
           "benign": 0,
           "non_benign": 53820
         },
+        "lmsys_arena": {
+          "benign": 0,
+          "non_benign": 2084
+        },
         "oasst1": {
           "benign": 0,
-          "non_benign": 685
+          "non_benign": 707
         },
         "wildguardmix": {
           "benign": 0,
@@ -1007,25 +1237,38 @@
       },
       "source_memberships": {
         "llmail": 53820,
-        "oasst1": 685,
+        "lmsys_arena": 2084,
+        "oasst1": 707,
         "wildguardmix": 26
       }
     },
     "validation": {
       "largest_split_group": {
-        "partition_share": 0.3416945855398249,
-        "rows": 31617,
-        "split_group_sha256": "edf39f6069d43c020792d887b56b1338f2e52e8876497fb302fe8bcc96e2981e"
+        "partition_share": 0.11545683050180189,
+        "rows": 22875,
+        "split_group_sha256": "78166f61073578e5c64a0042fc47c7b2789e2837ef73a6d05b3ceef698166b18"
       },
       "path": "views/routing/validation.jsonl",
       "representative_source_routing": {
+        "banking77": {
+          "benign": 1237,
+          "non_benign": 0
+        },
         "bipia": {
           "benign": 0,
-          "non_benign": 64
+          "non_benign": 63
         },
         "browsesafe": {
-          "benign": 682,
+          "benign": 683,
           "non_benign": 675
+        },
+        "coconot": {
+          "benign": 115,
+          "non_benign": 0
+        },
+        "false_reject": {
+          "benign": 1660,
+          "non_benign": 0
         },
         "gandalf": {
           "benign": 0,
@@ -1033,52 +1276,87 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 36281
+          "non_benign": 34443
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 10764
+          "non_benign": 11403
+        },
+        "lmsys_arena": {
+          "benign": 9906,
+          "non_benign": 0
+        },
+        "massive_en": {
+          "benign": 1405,
+          "non_benign": 0
         },
         "prompt_injections": {
           "benign": 0,
           "non_benign": 25
         },
+        "schema_guided_dialogue": {
+          "benign": 26654,
+          "non_benign": 0
+        },
+        "taskmaster": {
+          "benign": 63924,
+          "non_benign": 0
+        },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 24956
+          "non_benign": 26004
         },
         "toxic_chat": {
           "benign": 0,
           "non_benign": 40
         },
         "wildjailbreak": {
-          "benign": 5119,
-          "non_benign": 13827
+          "benign": 5359,
+          "non_benign": 14433
         }
       },
       "representative_sources": {
-        "bipia": 64,
-        "browsesafe": 1357,
+        "banking77": 1237,
+        "bipia": 63,
+        "browsesafe": 1358,
+        "coconot": 115,
+        "false_reject": 1660,
         "gandalf": 97,
-        "hackaprompt": 36281,
-        "llmail": 10764,
+        "hackaprompt": 34443,
+        "llmail": 11403,
+        "lmsys_arena": 9906,
+        "massive_en": 1405,
         "prompt_injections": 25,
-        "tensor_trust_raw": 24956,
+        "schema_guided_dialogue": 26654,
+        "taskmaster": 63924,
+        "tensor_trust_raw": 26004,
         "toxic_chat": 40,
-        "wildjailbreak": 18946
+        "wildjailbreak": 19792
       },
-      "routing_benign": 5801,
-      "routing_non_benign": 86729,
-      "rows": 92530,
-      "sha256": "a6e6ac75f13de36cb8e566b8836e97b85c7f8f192c2da40674a15365fd9eb43b",
+      "routing_benign": 110943,
+      "routing_non_benign": 87183,
+      "rows": 198126,
+      "sha256": "06071ed14265a492e30010ac36c52a457ef68d66cf4cebded90696b235228ea6",
       "source_membership_routing": {
+        "banking77": {
+          "benign": 1237,
+          "non_benign": 0
+        },
         "bipia": {
           "benign": 0,
-          "non_benign": 64
+          "non_benign": 63
         },
         "browsesafe": {
-          "benign": 682,
+          "benign": 683,
           "non_benign": 675
+        },
+        "coconot": {
+          "benign": 115,
+          "non_benign": 0
+        },
+        "false_reject": {
+          "benign": 1660,
+          "non_benign": 0
         },
         "gandalf": {
           "benign": 0,
@@ -1086,44 +1364,81 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 36281
+          "non_benign": 34443
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 10764
+          "non_benign": 11403
+        },
+        "lmsys_arena": {
+          "benign": 9906,
+          "non_benign": 0
+        },
+        "massive_en": {
+          "benign": 1410,
+          "non_benign": 0
         },
         "prompt_injections": {
           "benign": 0,
           "non_benign": 25
         },
+        "schema_guided_dialogue": {
+          "benign": 26655,
+          "non_benign": 0
+        },
+        "taskmaster": {
+          "benign": 64841,
+          "non_benign": 0
+        },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 25488
+          "non_benign": 26303
         },
         "toxic_chat": {
           "benign": 0,
           "non_benign": 40
         },
         "wildjailbreak": {
-          "benign": 5119,
-          "non_benign": 13828
+          "benign": 5359,
+          "non_benign": 14433
         }
       },
       "source_memberships": {
-        "bipia": 64,
-        "browsesafe": 1357,
+        "banking77": 1237,
+        "bipia": 63,
+        "browsesafe": 1358,
+        "coconot": 115,
+        "false_reject": 1660,
         "gandalf": 97,
-        "hackaprompt": 36281,
-        "llmail": 10764,
+        "hackaprompt": 34443,
+        "llmail": 11403,
+        "lmsys_arena": 9906,
+        "massive_en": 1410,
         "prompt_injections": 25,
-        "tensor_trust_raw": 25488,
+        "schema_guided_dialogue": 26655,
+        "taskmaster": 64841,
+        "tensor_trust_raw": 26303,
         "toxic_chat": 40,
-        "wildjailbreak": 18947
+        "wildjailbreak": 19792
       }
     }
   },
   "schema_version": 5,
   "source_outputs": {
+    "banking77": {
+      "path": "sources/banking77.jsonl",
+      "roles": {
+        "candidate": 10003,
+        "dev_test": 3080
+      },
+      "routing_benign": 13083,
+      "routing_non_benign": 0,
+      "rows": 13083,
+      "security_labels": {
+        "benign": 13083
+      },
+      "sha256": "5f0d91fe8cbea1ddd84c764f6f2825a2a76e12e59eef36e46b1b39f014423849"
+    },
     "bipia": {
       "path": "sources/bipia.jsonl",
       "roles": {
@@ -1155,6 +1470,20 @@
       },
       "sha256": "ff744fdd3f009f90b104b6bba64b8a693502d0dc16ced9810e5ce4e94c477e91"
     },
+    "coconot": {
+      "path": "sources/coconot.jsonl",
+      "roles": {
+        "candidate": 927,
+        "dev_test": 379
+      },
+      "routing_benign": 1306,
+      "routing_non_benign": 0,
+      "rows": 1306,
+      "security_labels": {
+        "benign": 1306
+      },
+      "sha256": "de63179184e27f17f50cb568a7caac965081d2ba8effa52316f98d3f728a0e68"
+    },
     "do_not_answer": {
       "path": "sources/do_not_answer.jsonl",
       "roles": {
@@ -1167,6 +1496,20 @@
         "harmful_non_injection": 6391
       },
       "sha256": "ad4baa9e16601b4d387f21ce92f12114e73cd0c4620df3d77ed947595cb4937d"
+    },
+    "false_reject": {
+      "path": "sources/false_reject.jsonl",
+      "roles": {
+        "candidate": 14624,
+        "dev_test": 1187
+      },
+      "routing_benign": 15811,
+      "routing_non_benign": 0,
+      "rows": 15811,
+      "security_labels": {
+        "benign": 15811
+      },
+      "sha256": "048b7e5a07798d4ee8ea2993b8030dc6184bb4cfa2723bf40cfa4cf63462efcc"
     },
     "gandalf": {
       "path": "sources/gandalf.jsonl",
@@ -1223,6 +1566,19 @@
       },
       "sha256": "d64a26fed98da49189a32b88b50446ccd12f63d32fb46da86b641e6021596775"
     },
+    "jbb_benign": {
+      "path": "sources/jbb_benign.jsonl",
+      "roles": {
+        "dev_test": 100
+      },
+      "routing_benign": 100,
+      "routing_non_benign": 0,
+      "rows": 100,
+      "security_labels": {
+        "benign": 100
+      },
+      "sha256": "fe0148f6d00cfb0433090dd1ded48364cb757816a2eb17107e0aeae83f05e766"
+    },
     "llmail": {
       "path": "sources/llmail.jsonl",
       "roles": {
@@ -1239,6 +1595,35 @@
         "uncertain": 111245
       },
       "sha256": "e2e2ba6fe027feebcdea6ef1201405338c17f6b87445cb0b20e53acbdb826122"
+    },
+    "lmsys_arena": {
+      "path": "sources/lmsys_arena.jsonl",
+      "roles": {
+        "candidate": 134938,
+        "uncertain": 3103
+      },
+      "routing_benign": 134938,
+      "routing_non_benign": 3103,
+      "rows": 138041,
+      "security_labels": {
+        "benign": 134938,
+        "uncertain": 3103
+      },
+      "sha256": "96f0f6c6cd516d67e2d5335914b6add6f584194b4c9ff1ca3ff857d77b0e016c"
+    },
+    "massive_en": {
+      "path": "sources/massive_en.jsonl",
+      "roles": {
+        "candidate": 11514,
+        "dev_test": 5007
+      },
+      "routing_benign": 16521,
+      "routing_non_benign": 0,
+      "rows": 16521,
+      "security_labels": {
+        "benign": 16521
+      },
+      "sha256": "cb4e7c27084e20c682f4112a493280efb016fdf550cdfc1288930751875bbafa"
     },
     "multi_turn": {
       "path": "sources/multi_turn.jsonl",
@@ -1310,6 +1695,34 @@
         "direct_prompt_injection": 263
       },
       "sha256": "15b353a9cf609e3041e618c58e78c463d6fcb988867241374b231aa0c99c7e4b"
+    },
+    "schema_guided_dialogue": {
+      "path": "sources/schema_guided_dialogue.jsonl",
+      "roles": {
+        "candidate": 329964,
+        "dev_test": 133318
+      },
+      "routing_benign": 463282,
+      "routing_non_benign": 0,
+      "rows": 463282,
+      "security_labels": {
+        "benign": 463282
+      },
+      "sha256": "70310ce83df19daee4b45e1f7316c65d41299628b943fa7d648e480ab624f046"
+    },
+    "taskmaster": {
+      "path": "sources/taskmaster.jsonl",
+      "roles": {
+        "candidate": 1091737,
+        "dev_test": 33822
+      },
+      "routing_benign": 1125559,
+      "routing_non_benign": 0,
+      "rows": 1125559,
+      "security_labels": {
+        "benign": 1125559
+      },
+      "sha256": "e921837597d4fbfeae2f111991a5dd86a0caadbd1871dd259d859bdca35bb611"
     },
     "tensor_trust": {
       "path": "sources/tensor_trust.jsonl",
@@ -1409,8 +1822,32 @@
     }
   },
   "source_profiles": {
+    "banking77": {
+      "lineage_limit": "the source exposes no conversation lineage; each query is a singleton group",
+      "projection": "all non-empty English online-banking queries",
+      "raw_rows": {
+        "test": 3080,
+        "train": 10003
+      }
+    },
     "browsesafe": {
       "positive_payload_spans_available": false
+    },
+    "coconot": {
+      "excluded": "chosen, rejected, and contrast response text",
+      "projection": "safe-to-comply prompt only",
+      "raw_rows": {
+        "dev_test": 379,
+        "train": 927
+      }
+    },
+    "false_reject": {
+      "excluded": "generated standard and chain-of-thought response fields",
+      "projection": "prompt only",
+      "raw_rows": {
+        "test": 1187,
+        "train": 14624
+      }
     },
     "gandalf": {},
     "hackaprompt": {
@@ -1426,6 +1863,11 @@
       "source_error_rows": 0,
       "split_grouping": "whole challenge level; session_id is retained by hash but is not claimed as participant identity",
       "unique_session_ids": 23
+    },
+    "jbb_benign": {
+      "excluded": "matched affirmative target response",
+      "projection": "benign behavior goal only",
+      "raw_rows": 100
     },
     "llmail": {
       "false_positive_controls": 203,
@@ -1470,6 +1912,33 @@
       "raw_rows_without_unique_annotation": {
         "phase1": 10898,
         "phase2": 1189
+      }
+    },
+    "lmsys_arena": {
+      "empty_messages_omitted": 51,
+      "excluded": [
+        "non-English conversations",
+        "raw anonymized judge identifier",
+        "full moderation category-score vector"
+      ],
+      "flagged_conversations_retained": 678,
+      "non_english_conversations_omitted": 3794,
+      "projection": "non-empty English messages from unflagged prompts as weak-benign candidates; flagged user prompts and their assistant messages retained as uncertain",
+      "raw_conversations": 33000,
+      "retained_conversations": 29206,
+      "retained_roles": {
+        "assistant": 68995,
+        "user": 69046
+      }
+    },
+    "massive_en": {
+      "excluded": "slot-annotated utterance and raw worker identifier",
+      "language_scope": "English only; translations retain shared IDs upstream",
+      "projection": "all non-empty en-US utterances",
+      "raw_rows": {
+        "dev": 2033,
+        "test": 2974,
+        "train": 11514
       }
     },
     "multi_turn": {
@@ -1606,6 +2075,42 @@
         "validation": 1604
       }
     },
+    "schema_guided_dialogue": {
+      "empty_turns_omitted": 2,
+      "excluded": "schemas, dialogue frames, slot values, actions, and service results",
+      "projection": "all non-empty user and system utterances",
+      "raw_dialogs": {
+        "dev": 2482,
+        "test": 4201,
+        "train": 16142
+      },
+      "raw_turns": {
+        "dev": 48726,
+        "test": 84594,
+        "train": 329964
+      }
+    },
+    "taskmaster": {
+      "empty_speaker_turns_omitted": 55,
+      "empty_text_turns_omitted": 66,
+      "excluded": [
+        "annotations, API calls, task instructions, and reward data",
+        "Taskmaster-3 transformed language-model split files",
+        "Taskmaster-4 because it is outside the selected Taskmaster 1-3 release"
+      ],
+      "projection": "all non-empty user and assistant turn text from Taskmaster 1-3",
+      "raw_dialogs": {
+        "tm1_self": 7708,
+        "tm1_woz": 5507,
+        "tm2": 17304,
+        "tm3": 23757
+      },
+      "raw_turns": 1125680,
+      "retained_speakers": {
+        "assistant": 582598,
+        "user": 542961
+      }
+    },
     "tensor_trust_raw": {
       "empty_attacker_input_rows_omitted": 1578,
       "empty_defense_rows_omitted": 51,
@@ -1626,6 +2131,12 @@
     }
   },
   "sources": {
+    "banking77": {
+      "license": "CC-BY-4.0",
+      "revision": "57ec275d8078af65b7731c2a98be812d844a6d6b",
+      "url": "https://github.com/PolyAI-LDN/task-specific-datasets",
+      "use": "English online-banking intent queries as finance hard negatives"
+    },
     "bipia": {
       "license": "MIT attacks; mixed benchmark context licenses",
       "revision": "a004b69ec0dd446e0afd461d98cb5e96e120a5d0",
@@ -1639,11 +2150,25 @@
       "url": "https://huggingface.co/datasets/perplexity-ai/browsesafe-bench",
       "use": "whole-document browser injection train and official test"
     },
+    "coconot": {
+      "license": "ODC-BY-1.0 + component licenses",
+      "repo": "allenai/coconot",
+      "revision": "2cbe16aabf9069f17e48c8daad8aeabc29469eb7",
+      "url": "https://huggingface.co/datasets/allenai/coconot",
+      "use": "safe-to-comply prompts for weak development and hard-benign evaluation"
+    },
     "do_not_answer": {
       "license": "CC-BY-NC-SA-4.0",
       "revision": "460703484df354958a5e1cd7378a38fcb94a2f3e",
       "url": "https://github.com/libr-ai/do-not-answer",
       "use": "held-out harmful-goal non-injection negatives"
+    },
+    "false_reject": {
+      "license": "CC-BY-NC-4.0",
+      "repo": "AmazonScience/FalseReject",
+      "revision": "493ba967714ea54c6f01067e1f61e389cc2c9b3e",
+      "url": "https://huggingface.co/datasets/AmazonScience/FalseReject",
+      "use": "hard-benign prompts; generated candidates and human test held out"
     },
     "gandalf": {
       "license": "MIT",
@@ -1672,12 +2197,36 @@
       "url": "https://github.com/wagner-group/JailbreaksOverTime",
       "use": "source-held-out temporal distribution-shift evaluation only"
     },
+    "jbb_benign": {
+      "license": "MIT",
+      "repo": "JailbreakBench/JBB-Behaviors",
+      "revision": "886acc352a31533ffbcf4ef22c744658688086fc",
+      "url": "https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors",
+      "use": "curated benign behaviors thematically matched to misuse requests"
+    },
     "llmail": {
       "license": "MIT",
       "repo": "microsoft/llmail-inject-challenge",
       "revision": "1063bdf01ec8762b812d5e06ee768a06faa5a6f7",
       "url": "https://huggingface.co/datasets/microsoft/llmail-inject-challenge",
       "use": "human adaptive email injection; phase 1 fit, phase 2 evaluation"
+    },
+    "lmsys_arena": {
+      "gated": true,
+      "license": "CC-BY-4.0 prompts; CC-BY-NC-4.0 model outputs",
+      "repo": "lmsys/chatbot_arena_conversations",
+      "revision": "1b6335d42a1d2c7e34870c905d03ab964f7f2bd8",
+      "url": "https://huggingface.co/datasets/lmsys/chatbot_arena_conversations",
+      "use": "English Arena messages with weak-benign candidates and flagged conversations retained as uncertain"
+    },
+    "massive_en": {
+      "archive_url": "https://amazon-massive-nlu-dataset.s3.amazonaws.com/amazon-massive-dataset-1.1.tar.gz",
+      "bytes": 40251390,
+      "license": "CC-BY-4.0",
+      "revision": "ff6bd8e4b27c3543e4f8fe2108f32bb95a6f8740",
+      "sha256": "4cba5faa11c71437928e17cb1b9b3d8b8e727e7ea363a3a9a8045e19c0491577",
+      "url": "https://huggingface.co/datasets/AmazonScience/massive",
+      "use": "English voice-assistant utterances for benign intent coverage"
     },
     "multi_turn": {
       "license": "MIT",
@@ -1715,6 +2264,24 @@
       "revision": "4f61ecb038e9c3fb77e21034b22511b523772cdd",
       "url": "https://huggingface.co/datasets/deepset/prompt-injections",
       "use": "train and same-source test; direct prompt-injection label"
+    },
+    "schema_guided_dialogue": {
+      "archive_url": "https://codeload.github.com/google-research-datasets/dstc8-schema-guided-dialogue/tar.gz/e852981ae34990f4358979625854259302feaa78",
+      "bytes": 36792911,
+      "license": "CC-BY-SA-4.0",
+      "revision": "e852981ae34990f4358979625854259302feaa78",
+      "sha256": "ff97a9ab52b4cc9f25e1a093c96431512465e8377f9a1f57dc710a10484d2188",
+      "url": "https://github.com/google-research-datasets/dstc8-schema-guided-dialogue",
+      "use": "English crowdworker task-dialogue turns for benign routing balance"
+    },
+    "taskmaster": {
+      "archive_url": "https://codeload.github.com/google-research-datasets/Taskmaster/tar.gz/d92cb6af3005f1dc09c39e75e7daf4a04905e00b",
+      "bytes": 138453808,
+      "license": "CC-BY-4.0",
+      "revision": "d92cb6af3005f1dc09c39e75e7daf4a04905e00b",
+      "sha256": "c7e4774798ace96e3b413a9beef6d2a706458d66c4e87ef1061e9426db1a3c46",
+      "url": "https://github.com/google-research-datasets/Taskmaster",
+      "use": "English task-oriented user and assistant turns for benign routing balance"
     },
     "tensor_trust": {
       "license": "public research release; no explicit standard dataset license",

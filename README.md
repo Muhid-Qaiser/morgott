@@ -74,6 +74,13 @@ a row was routed:
 - `routing_training_eligible`: derived from `source_role`; it does not control
   the separate legacy injection views.
 
+Generated and automated benign labels use the normal `candidate` role when the
+source context supports likely ordinary content. They can therefore enter all
+three grouped development partitions. Their `label_basis` and complete origins
+remain attached so training recipes and metrics can isolate weak supervision
+from human or source-supported evidence. An official dev-test origin still wins
+when the same exact text appears in both roles.
+
 “Not an injection” is not automatically “benign.” Injection-only negatives
 remain available for the legacy detector but are auxiliary for broad routing
 unless their source also supports the broader benign claim.
@@ -98,6 +105,10 @@ stratified by source and routing label where lineage permits. Official holdouts
 stay in dev-test. Exact text is merged once; duplicates across unrelated
 lineages become singleton split atoms instead of joining whole lineage networks.
 Strict near-overlap is audited and conflicting or leaking rows are quarantined.
+Because weak-labelled candidates can enter validation and dev-test, those views
+are development comparisons rather than independent evidence. Report weak and
+non-weak slices separately; neither weak-label agreement nor an aggregate score
+supports a production false-positive claim.
 
 ## Model status
 

@@ -58,6 +58,24 @@ and independent tags preserve why a row is routed.
   agreement metadata, and may enter dev-test.
 - BrowseSafe positive documents lack payload spans. They must not create
   positive labels for every chunk or window.
+- Taskmaster, Schema-Guided Dialogue, BANKING77, and MASSIVE en-US are
+  collection-supported ordinary task data, not independently adjudicated
+  safety data. Their bounded source tasks support benign intent; sensitive
+  topic words alone do not change that mapping.
+- FalseReject generated prompts and CoCoNot preference prompts are explicit
+  weak benign development labels. Their respective human-annotated and
+  human-verified test prompts remain identifiable dev-test evidence.
+- LMSYS Chatbot Arena retains unsafe conversations upstream. Morgott treats
+  English user prompts for which OpenAI moderation and both published ToxicChat
+  taggers are unflagged as weak benign development supervision. Paired model
+  outputs are a separate weak-benign slice inferred from that context, with
+  toxicity left unknown because the tags do not label the responses. Flagged
+  user prompts and paired model outputs remain uncertain. The September 2023
+  source does not pin tagger checkpoints or establish performance for Morgott's
+  routing ontology, and audited positives mix false positives with genuine harm
+  and jailbreaks.
+- JBB benign behaviors are curated thematic contrasts to misuse requests. They
+  are hard-benign dev-test rows, not evidence about arbitrary live traffic.
 - HarmBench, Do-Not-Answer, AdvBench, AgentHarm, Aegis, BeaverTails, and generic
   toxicity annotations must not be converted into injection positives.
 
@@ -72,15 +90,19 @@ and independent tags preserve why a row is routed.
   become unknown and subtype training is masked. Source order never decides.
 - Auxiliary, uncertain, and quarantined rows never silently enter train,
   validation, or dev-test.
+- Weak-labelled rows use `source_role=candidate`; `label_basis` and origins
+  retain their evidence strength after exact merging and grouped partitioning.
 - `routing_training_eligible` is derived from `source_role`. It is separate from
   injection-label availability and the historical injection-view recipe.
 
 ## Weak labels
 
-No human labelers are available. A future provider-assisted experiment may
-produce development-only weak labels, but agreement measures consistency rather
-than correctness. Weak labels require their own versioned recipe and must stay
-out of validation, dev-test, final evaluation, and production-FPR claims.
+No project-specific human labelers are available. Public synthetic and
+automated labels remain weak even at scale: agreement measures consistency
+rather than correctness. Selected weak rows may enter train, validation, and
+dev-test as candidates, but must be sliced separately from human/source labels.
+They stay out of any prospective locked final evaluation and cannot support
+production-FPR claims.
 
 ## Decision
 

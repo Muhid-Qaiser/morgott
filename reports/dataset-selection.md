@@ -31,6 +31,14 @@ Exact revisions, file digests, output counts, and licenses live only in
 | WildJailbreak | Four-way harmful/benign and vanilla/adversarial source construction |
 | WildGuardMix | Prompt harmfulness with a separate adversarial flag |
 | Tensor Trust raw | Human game attacks plus auxiliary defenses and model outputs |
+| [Taskmaster 1-3](https://github.com/google-research-datasets/Taskmaster) | English task-oriented user and assistant turns grouped by conversation and shared task instructions |
+| [Schema-Guided Dialogue](https://github.com/google-research-datasets/dstc8-schema-guided-dialogue) | English task-dialogue turns grouped by official split and dialogue |
+| [BANKING77](https://huggingface.co/datasets/PolyAI/banking77) | English finance-language queries with its official test held out |
+| [MASSIVE 1.1 en-US](https://huggingface.co/datasets/AmazonScience/massive) | English voice-assistant intents; multilingual translations remain excluded |
+| [FalseReject](https://huggingface.co/datasets/AmazonScience/FalseReject) | Synthetic hard-benign candidates plus human-annotated dev-test |
+| [CoCoNot](https://huggingface.co/datasets/allenai/coconot) | Safe-to-comply preference candidates plus human-verified contrast dev-test |
+| [JBB benign behaviors](https://github.com/JailbreakBench/jailbreakbench#accessing-the-jbb-behaviors-datasets) | Curated, safety-sensitive benign dev-test goals |
+| [LMSYS Chatbot Arena Conversations](https://huggingface.co/datasets/lmsys/chatbot_arena_conversations) | English Arena messages with weak-benign candidates and flagged conversations retained as uncertain |
 
 The two Tensor Trust adapters intentionally expose different official artifacts:
 the compact robustness suites remain a historical development comparison, while
@@ -74,6 +82,40 @@ corpus.
   document granularity and must not be split into all-positive windows.
 - Nemotron is positive-only synthetic data. It can measure transfer recall, not
   precision, benign utility, or false-positive rate.
+- FalseReject generated prompts, CoCoNot safe-to-comply preference prompts, and
+  eligible LMSYS messages use the normal `candidate` role. They are grouped
+  across train, validation, and dev-test, while their weak `label_basis` remains
+  machine-readable for training ablations and metric slices. LMSYS flagged user
+  prompts and their responses remain uncertain. An exact duplicate with an
+  official dev-test origin is held out entirely and never also appears in train.
+- Taskmaster and Schema-Guided Dialogue retain every non-empty user and
+  assistant/system turn. Taskmaster groups shared task-instruction families;
+  SGD groups whole conversations. Published task
+  instructions, schemas, dialogue frames, and API annotations are not detector
+  text. Official Taskmaster-1 and SGD evaluation splits stay in dev-test.
+- MASSIVE is limited to the complete en-US release for this first router. Its
+  source IDs remain translation-compatible, but adding all 52 parallel
+  languages before comparable multilingual attack coverage would make language
+  an avoidable label shortcut.
+- LMSYS Chatbot Arena is weak benign supervision, not ground truth. English user
+  prompts unflagged by OpenAI moderation and both published ToxicChat taggers
+  enter as one candidate slice. Paired model outputs enter as a separate weak
+  candidate slice inferred from that context; their toxicity remains unknown
+  because the published tags do not label responses. Automated positive tags are
+  retained only as uncertain metadata: a stratified audit found ordinary
+  security discussion, jokes, fiction, and sexual-health questions mixed with
+  genuine harmful requests and jailbreaks, including under two-tagger agreement.
+  Their paired model outputs remain uncertain because they may refuse or comply.
+  The unflagged slice also contains occasional jailbreak-shaped false negatives,
+  so the first recipe must report a source-weighted with/without-LMSYS ablation.
+  Non-English conversations are omitted. User lineage is grouped by a hash of
+  the published anonymized judge ID, never the raw value. User prompts and model
+  outputs retain their distinct licenses.
+- FalseReject's generated train prompts enter as candidates; its human-annotated
+  test prompts enter dev-test. CoCoNot uses the same source-label distinction
+  between its candidate preference prompts and human-verified contrast test.
+  Only prompt text is detector input. JBB contributes only its curated benign
+  goals to dev-test.
 
 Canonical shards retain every valid, non-empty detector-text projection and
 available lineage used by Morgott. They are standardized projections rather
@@ -94,23 +136,7 @@ not deleted.
 | Aegis and BeaverTails | Content-safety labels do not establish instruction subversion. |
 | PIArena, MCP/Agent benchmarks, AgentDojo | Future stateful evaluation; do not flatten trajectories into independent text rows. |
 | CyberSecEval prompt injection | Deferred prospective multilingual evaluation after the first recipe; positive-only machine translations are derived lineages, not training rows. |
-| JailbreakBench artifacts | Deferred method/target-held-out evaluation; preserve behavior/method/target/outcome and known HarmBench/AdvBench lineage overlap. |
-
-## Next benign-source pass
-
-Do not add these during the routing-split repair. Audit and version them as a
-separate corpus change:
-
-| Source | Proposed role |
-|---|---|
-| [Schema-Guided Dialogue](https://github.com/google-research-datasets/dstc8-schema-guided-dialogue) | Ordinary task-dialogue candidate rows grouped by `dialogue_id`; official test stays dev-test. |
-| [BANKING77](https://huggingface.co/datasets/PolyAI/banking77) | Finance-language benign candidates; preserve the official test and note the lack of conversation lineage. |
-| [FalseReject](https://huggingface.co/datasets/AmazonScience/FalseReject) | Human-validated hard-benign test rows to dev-test; synthetic train remains auxiliary. |
-| [CoCoNot](https://huggingface.co/datasets/allenai/coconot) and [JailbreakBench benign behaviors](https://github.com/JailbreakBench/jailbreakbench#accessing-the-jbb-behaviors-datasets) | Small safety-sensitive benign contrasts for dev-test. |
-| [MASSIVE](https://huggingface.co/datasets/AmazonScience/massive) | Defer until multilingual coverage is needed; group translations by original ID and prevent its scale from defining the corpus. |
-
-Moderation-safe, non-toxic, accepted-chat, or “not injection” labels alone still
-do not establish broad benignity.
+| JailbreakBench jailbreak artifacts | Deferred method/target-held-out attack evaluation; the separate benign-behavior goals are included. |
 
 Historical experiment counts are summarized in `reports/model-experiments.md`.
 Their runners and generated JSON were removed from the active tree because they
@@ -125,5 +151,7 @@ used the old corpus or ended in a stop decision.
 - Candidate lineages touching dev-test move to dev-test instead of training.
 - Train, validation, and dev-test are development roles. A prospective final
   test does not yet exist.
-- No model-generated label enters dev-test or supports a production-FPR claim.
+- Explicit weak labels may enter train, validation, and dev-test, all of which
+  are development roles. They must be reported separately and cannot support a
+  prospective final-test or production-FPR claim.
 - Report source-held-out results before promoting any model.
