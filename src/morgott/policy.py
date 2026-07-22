@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 REFERENCE_POLICY = {
     "capabilities": {
         "save_summary": {

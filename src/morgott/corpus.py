@@ -32,7 +32,6 @@ from .data import (
 )
 from .routing import materialize_routing_views
 
-
 FILES = {
     "gandalf": {
         "train": (

@@ -30,6 +30,7 @@ from morgott.detector import (
     split_fit_validation,
     validation_mask,
 )
+from morgott.overlap import NearIndex, fingerprint
 from morgott.policy import (
     REFERENCE_POLICY,
     SCENARIOS,
@@ -37,7 +38,6 @@ from morgott.policy import (
     execute,
     run_policy_ablation,
 )
-from morgott.overlap import NearIndex, fingerprint
 
 
 class DataTests(unittest.TestCase):

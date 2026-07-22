@@ -8,7 +8,6 @@ import numpy as np
 
 from .data import normalize_text, text_hash
 
-
 NEAR_BITS = 128
 NEAR_BANDS = 8
 NEAR_MAX_HAMMING = 6

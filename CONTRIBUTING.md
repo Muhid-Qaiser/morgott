@@ -1,0 +1,49 @@
+# Contributing
+
+Morgott is a private research repository with a lightweight pull request workflow.
+Keep changes focused and preserve the security, data, and evaluation contracts in `AGENTS.md`.
+
+## Setup
+
+Install the locked project and development dependencies:
+
+```bash
+uv sync --locked
+```
+
+The pre-commit hooks are optional and apply Ruff fixes and formatting to staged Python files:
+
+```bash
+make hooks
+```
+
+CI remains the source of truth when hooks are not installed or are bypassed.
+
+## Workflow
+
+1. Create a short-lived branch using `feat/`, `fix/`, `docs/`, `chore/`, or `codex/` followed by a concise slug.
+2. Make the smallest change that satisfies the intended outcome.
+3. Run `make check` and any domain-specific verification required by `AGENTS.md`.
+4. Open a focused pull request and describe its data and security impact.
+5. Squash merge after CI passes so the pull request title becomes the durable commit summary.
+
+GitHub cannot enforce branch protection for this private repository on its current plan.
+Treat a green CI run as required team policy even though an administrator can technically bypass it.
+
+## Verification
+
+Every change must pass:
+
+```bash
+make check
+git diff --check
+```
+
+Data, label, partition, or manifest changes also require the applicable full corpus or routing-only rebuild described in `AGENTS.md`.
+Inspect the resulting manifest hashes, counts, split invariants, and quarantine summary before handoff.
+
+## Data and credentials
+
+Never commit credentials, `.env` files, local model artifacts, raw provider responses, or ignored corpus outputs.
+Only `data/manifest.json` is versioned from the local data tree.
+Do not send corpus text to an external provider without an explicit, separately reviewed experiment.

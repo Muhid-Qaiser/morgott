@@ -259,9 +259,7 @@ credentials, raw provider responses, or sensitive prompts.
 Before handing off a data change:
 
 ```bash
-uv run ruff format src tests
-uv run ruff check src tests
-uv run python -m unittest discover -s tests -v
+make check
 git diff --check
 ```
 

@@ -5,13 +5,11 @@ import json
 import sqlite3
 import tempfile
 import zlib
-from collections import Counter
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from .data import SOURCES, deduplicate, file_sha256, manifest_output_path, text_hash
 from .overlap import NEAR_METHOD, NearIndex, fingerprint
-
 
 TRAIN = 0
 VALIDATION = 1

@@ -15,12 +15,24 @@ A detector may miss an attack or flag a benign prompt. It therefore never grants
 tool, data, network, memory, credential, or financial authority. Every side
 effect must still pass deterministic policy using trusted runtime context.
 
+## Development
+
+Install the locked environment and run the canonical local checks:
+
+```bash
+uv sync --locked
+make check
+```
+
+Run `make hooks` once to opt into automatic Ruff fixes and formatting for staged Python files.
+See `CONTRIBUTING.md` for the lightweight branch and pull request workflow.
+
 ## Build the corpus
 
 ```bash
-uv sync
+uv sync --locked
 make data
-make test
+make check
 ```
 
 After changing only partition logic, use `uv run morgott data --routing-only`.

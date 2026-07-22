@@ -30,7 +30,6 @@ from .data import (
     split_is_validation,
 )
 
-
 KEYWORD_PATTERNS = [
     re.compile(pattern)
     for pattern in (
