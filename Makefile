@@ -1,4 +1,4 @@
-.PHONY: setup hooks format lint check data benchmark demo test
+.PHONY: setup hooks format lint check data benchmark routing-baseline demo test
 
 UV_RUN := uv run --locked
 RUN := $(UV_RUN) morgott
@@ -24,6 +24,9 @@ data:
 
 benchmark:
 	$(RUN) benchmark
+
+routing-baseline:
+	$(RUN) routing-baseline
 
 demo:
 	$(RUN) demo

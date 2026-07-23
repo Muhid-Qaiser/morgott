@@ -30,6 +30,10 @@ Exact revisions, file digests, output counts, and licenses live only in
 | HackAPrompt | Competition `user_input` attack attempts; success is metadata |
 | WildJailbreak | Four-way harmful/benign and vanilla/adversarial source construction |
 | WildGuardMix | Prompt harmfulness with a separate adversarial flag |
+| [HarperValleyBank](https://github.com/cricketclub/gridspace-stanford-harper-valley) | Simulated human-human banking turns grouped by complete conversation |
+| [TAT-QA](https://github.com/NExTplusplus/TAT-QA) | Finance questions plus clean report paragraphs and serialized tables grouped by hybrid context |
+| [FinanceBench](https://github.com/patronus-ai/financebench) | Public 150-example finance diagnostic held entirely in dev-test and grouped by document |
+| [Mind2Web](https://huggingface.co/datasets/osunlp/Mind2Web) | Confirmed official training tasks after local secret and PII quarantine |
 | Tensor Trust raw | Human game attacks plus auxiliary defenses and model outputs |
 | [Taskmaster 1-3](https://github.com/google-research-datasets/Taskmaster) | English task-oriented user and assistant turns grouped by conversation and shared task instructions |
 | [Schema-Guided Dialogue](https://github.com/google-research-datasets/dstc8-schema-guided-dialogue) | English task-dialogue turns grouped by official split and dialogue |
@@ -48,8 +52,8 @@ corpus.
 ## High-risk mapping decisions
 
 - LLMail phase-1 `True` is a candidate. Phase-2 `True` and official benign
-  controls are dev-test. `False` and `Unclear` annotations are uncertain—not
-  benign—because “not confirmed as an attack attempt” does not establish benign
+  controls are dev-test. `False` and `Unclear` annotations are uncertain, not
+  benign, because “not confirmed as an attack attempt” does not establish benign
   intent.
 - LLMail raw submissions are grouped by phase, team, and challenge level. This
   keeps adaptive attempts against one task together without letting a team that
@@ -78,6 +82,23 @@ corpus.
   auxiliary unless a future training-only ablation explicitly selects them.
   Eligible three-human-annotator test rows remain dev-test; unlabelled rows are
   uncertain.
+- HarperValleyBank caller and agent segments both use human-corrected transcripts.
+  Caller turns enter the `direct_user` channel and agent turns enter `model_output`, while every meaningful turn stays grouped by call ID.
+  Empty and marker-only segments are not detector text.
+  Speaker IDs, sessions, and task intents are retained, but participant names, task slot values, audio, timing, model dialog acts and emotions, surveys, and machine transcripts are excluded.
+  The corpus is simulated, covers only eight banking intents, and was deliberately built with limited vocabulary, so it cannot represent natural financial-agent traffic by itself.
+- TAT-QA uses the pinned official GitHub raw JSON because the hosted viewer is not the source of truth for this projection.
+  Questions are `direct_user`; report paragraphs and reversible TSV tables are `untrusted_content`.
+  Every item in one hybrid context uses the table UID as split lineage because the release does not expose a stable report identifier.
+  Official development and test contexts stay in dev-test.
+  Answers, derivations, reasoning metadata, and supporting-fact labels never become detector text.
+- FinanceBench contributes all 150 public examples to dev-test only.
+  Questions and `evidence_text` passages share `doc_name` lineage, and answers, justifications, full-page text, PDFs, results, and vector stores are excluded.
+  This is a repeated development diagnostic, not a prospective final test.
+- Mind2Web contributes only `confirmed_task` from the 1,009 official training annotations.
+  Protected test data, HTML, actions, DOM data, traces, and browser or session artifacts are excluded.
+  A local high-precision secret and PII screen runs before routing eligibility; suspicious task text is retained verbatim only in source-level quarantine and is never silently redacted.
+  Pattern screening is not proof that every retained task is free of personal information.
 - BrowseSafe does not publish payload spans. Positive HTML is retained at
   document granularity and must not be split into all-positive windows.
 - Nemotron is positive-only synthetic data. It can measure transfer recall, not
@@ -116,7 +137,6 @@ corpus.
   between its candidate preference prompts and human-verified contrast test.
   Only prompt text is detector input. JBB contributes only its curated benign
   goals to dev-test.
-
 Canonical shards retain every valid, non-empty detector-text projection and
 available lineage used by morgott. They are standardized projections rather
 than byte-for-byte mirrors; exclusions are recorded in the manifest.
@@ -133,10 +153,25 @@ not deleted.
 | AgentHarm | Future stateful authorization evaluation; its harmful actions are not prompt-injection labels. |
 | SafeDialBench | Deferred pending cleaner grouping and independent controls. |
 | AdvBench | Released goals are harmful requests, not prompt-injection positives. |
-| Aegis and BeaverTails | Content-safety labels do not establish instruction subversion. |
-| PIArena, MCP/Agent benchmarks, AgentDojo | Future stateful evaluation; do not flatten trajectories into independent text rows. |
+| Aegis 2.0 | Removed from the active corpus. Its content-safety labels belong to a separate harmfulness task that has no active model recipe. |
+| BeaverTails | Content-safety labels do not establish instruction subversion. |
+| OR-Bench | Removed after the hard-benign ablation reduced recall without materially improving false positives. Its generated weak labels and missing rewrite-family lineage do not justify a required source. |
+| SWE-bench | Deferred until matched same-format attacks and repository-heldout evaluation exist. A large auxiliary-only download should not be required by the canonical build. |
+| AgentDojo and AgentDyn | Stateful evaluation only. Their deterministic utility and security outcomes are stronger evidence for banking and tool-use behavior than flattened prompt labels. |
+| WASP and LivePI | Browser, messaging, file, and wallet evaluation only. Prefer observable final-state side effects over their model-judged intermediate labels. |
+| PIArena | Adaptive cross-benchmark evaluation only after a candidate is frozen; never add its public attack texts to that candidate's training recipe. |
 | CyberSecEval prompt injection | Deferred prospective multilingual evaluation after the first recipe; positive-only machine translations are derived lineages, not training rows. |
 | JailbreakBench jailbreak artifacts | Deferred method/target-held-out attack evaluation; the separate benign-behavior goals are included. |
+| API-Bank | Defer until tool-output diagnostics show a gap. Its generated, context-dependent tool dialogues would add weak supervision where Schema-Guided Dialogue already supplies ordinary API interactions. |
+| Agentic Prompt Injection Boundary Pairs | Keep auxiliary-only at revision `a5682e7573e1c7bc4b12e64d49c0dcd90ca776cf`. The 600 synthetic pairs cover useful agent boundaries, but are templated, longer than the dominant short-turn errors, and weakly labelled. Add only through a predeclared pair-balanced recipe with pair-ranking, both-correct, and strict overlap diagnostics. |
+| MInDS-14 plus CyberSecEval multilingual injection | Recommended paired multilingual diagnostic. Keep the benign and positive-only sources separate so language and source cannot become the label. |
+| ASPI and Prompt Injection as Role Confusion | Full-system, provenance-aware evaluation only. Flattening context-dependent messages into text labels would create false certainty. |
+| tau banking and AgentLAB | Future stateful utility, transaction-invariant, long-horizon, and memory-poisoning evaluation. Prefer deterministic environment outcomes and keep planner, attacker, judge, and search budgets fixed. |
+| Prahari Bank Lending | Strong finance-specific matched diagnostic, but gated and explicitly evaluation-only. Do not use for training. |
+| PINT | One-shot private external evaluation after model, threshold, and preprocessing are frozen. |
+| Mindgard evasion samples | Held-out robustness stress only. Apply deterministic transformations symmetrically to benign and attack controls instead of treating detector-specific evasions as independent training rows. |
+| ACL indirect-PIA detection corpus | Reject for ordinary training and headline evaluation. A small payload set is reused across nominal corpora, so payload-family grouping would be mandatory even for a span-localization ablation. |
+| FinGuard and Mukta finance injection aggregates | Reject. They combine benign finance data with unrelated attack sources and directly recreate the source-label shortcut. |
 
 Historical experiment counts are summarized in `reports/model-experiments.md`.
 Their runners and generated JSON were removed from the active tree because they

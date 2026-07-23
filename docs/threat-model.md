@@ -7,11 +7,15 @@ authority from text. In the current simulation, every side-effecting proposal
 passes through a fail-closed reference monitor with caller-supplied capabilities
 and exact argument constraints.
 
-The legacy injection-control classifier and corpus routing labels are predictive
-only; no routing classifier has been trained. Neither current labels nor future
-scores may block a user or approve a tool action. Finance, cybersecurity, and
-other sensitive topics are not deny rules; exact side effects require scoped
-authority.
+The legacy injection-control classifier, the word routing baseline, and corpus routing labels are predictive only.
+The routing baseline uses the untouched 0.5 cutoff and has neither production
+calibration nor a prospectively labelled final test.
+Neither current labels nor future scores may block a user or approve a tool
+action.
+Finance, cybersecurity, and other sensitive topics are not deny rules; exact
+side effects require scoped authority.
+Some identical text is legitimate when supplied by an authorized user and hostile when embedded in untrusted content.
+A text-only classifier cannot recover that missing authority or provenance, so channel and actor identity must come from trusted runtime metadata.
 
 ## Trust boundary
 

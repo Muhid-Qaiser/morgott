@@ -1,8 +1,8 @@
 # morgott
 
-morgott is a research POC for prompt-injection and agent-security work. The
-current deliverable is a reproducible, provenance-preserving data corpus. There
-is **no finalized model trained on the broad routing corpus yet**.
+morgott is a research POC for prompt-injection and agent-security work.
+The current deliverable is a reproducible, provenance-preserving data corpus.
+No model is finalized or approved for blocking.
 
 The security design deliberately separates prediction from authority:
 
@@ -129,19 +129,22 @@ control over the original injection views. It is useful as a code and evaluation
 smoke test, but it is not the intended routing model and its generated report is
 ignored. `morgott scan` is shadow-only and always returns `decision: allow`.
 
+`morgott routing-baseline` trains one reproducible unweighted word 1-2 gram linear control on source-supported direct-user rows.
+It verifies inputs against the canonical manifest, uses the untouched 0.5 cutoff, and reports aggregate and per-source development metrics.
+Completed neural and data-ablation runners are not part of the active package because none produced a promotable model.
+Their metrics and stop decisions remain in the versioned reports.
+
 The first proper routing experiment should stay deliberately small:
 
 1. Train a cheap linear text baseline on the canonical routing train split.
-2. Compare one end-to-end encoder using the identical grouped data and source
-   weighting, with masked subtype heads only where labels are known.
-3. Select thresholds on validation; compare on `dev_test`; report per-source and
-   leave-one-source-out results, not only aggregate accuracy.
+2. Compare one end-to-end encoder on the identical selected grouped rows, and state its weighting explicitly; add masked subtype heads only where labels are known.
+3. First report the untouched 0.5 cutoff; tune later thresholds on validation only after application costs and prevalence are known; compare on `dev_test`; report per-source and leave-one-source-out results, not only aggregate accuracy.
 4. Freeze a genuinely prospective final test before claiming generalization.
 
 Large-source caps may be tested as model ablations, but the canonical corpus
 must remain complete. No existing neural, remote-reviewer, or weak-label pilot
 is promoted; their durable conclusions are summarized in
-`reports/model-experiments.md`, and the obsolete runners live in Git history.
+`reports/model-experiments.md`.
 
 ## Repository map
 
@@ -155,6 +158,8 @@ is promoted; their durable conclusions are summarized in
 - `data/manifest.json`: sole versioned machine data manifest.
 - `reports/dataset-selection.md`: source inclusion and exclusion decisions.
 - `reports/label-audit.md`: label interpretation and known ambiguity.
+- `reports/corpus-sanity-audit.md`: corpus-wide integrity checks and critical limitations.
+- `reports/attention-kernel-audit.md`: measured SDPA versus FlashAttention-2 and context-length constraints.
 - `reports/model-experiments.md`: concise historical model decision ledger.
 - `docs/threat-model.md`: trust boundary and security claims.
 - `docs/roadmap.md`: evidence-gated next steps.

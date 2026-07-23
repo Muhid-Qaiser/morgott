@@ -62,6 +62,14 @@ and independent tags preserve why a row is routed.
   collection-supported ordinary task data, not independently adjudicated
   safety data. Their bounded source tasks support benign intent; sensitive
   topic words alone do not change that mapping.
+- HarperValleyBank, TAT-QA, FinanceBench, and Mind2Web are also task-supported benign data, not human safety annotation.
+  HarperValleyBank is simulated and narrow.
+  TAT-QA and FinanceBench annotations establish finance-QA correctness and relevance, not arbitrary prompt safety.
+  Mind2Web annotations establish executable web tasks; retained tasks pass a local high-precision sensitive-text screen, while suspicious tasks remain outside supervised views in quarantine.
+- TAT-QA report paragraphs and tables and FinanceBench evidence are clean controls only in their published finance-task context.
+  They do not prove that arbitrary retrieved financial text is safe, and their trusted `untrusted_content` channel comes from the adapter rather than text.
+- FinanceBench is dev-test only and has already influenced source selection.
+  It cannot become a prospective final test or support a production false-positive claim.
 - FalseReject generated prompts and CoCoNot preference prompts are explicit
   weak benign development labels. Their respective human-annotated and
   human-verified test prompts remain identifiable dev-test evidence.
@@ -76,7 +84,7 @@ and independent tags preserve why a row is routed.
   and jailbreaks.
 - JBB benign behaviors are curated thematic contrasts to misuse requests. They
   are hard-benign dev-test rows, not evidence about arbitrary live traffic.
-- HarmBench, Do-Not-Answer, AdvBench, AgentHarm, Aegis, BeaverTails, and generic
+- HarmBench, Do-Not-Answer, AdvBench, AgentHarm, BeaverTails, and generic
   toxicity annotations must not be converted into injection positives.
 
 ## Merge and conflict policy
@@ -106,7 +114,7 @@ production-FPR claims.
 
 ## Decision
 
-Keep the binary route for the first model while retaining nullable injection
+Keep the binary `no_security_signal` versus `review_required` route for the first model while retaining nullable injection
 labels and independent security tags. Use masked multi-task losses rather than a
 single mutually exclusive “unsafe subtype.” The detector stays shadow-only until
 independently labelled product evidence exists.

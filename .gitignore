@@ -16,3 +16,10 @@ data/*
 artifacts/
 reports/baseline.json
 reports/baseline.md
+reports/routing-baseline.json
+reports/routing-baseline.md
+reports/routing-quick-ablation.json
+reports/routing-quick-ablation.md
+reports/modernbert-*.json
+reports/modernbert-*.md
+reports/modernbert-*.jsonl.gz

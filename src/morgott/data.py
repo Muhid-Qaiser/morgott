@@ -148,6 +148,32 @@ SOURCES = {
         "use": "gated prompt harmfulness data for the routing target",
         "gated": True,
     },
+    "harper_valley_bank": {
+        "revision": "0bd721e877c4a85d8c13ff837e68661ea6200a98",
+        "license": "CC-BY-4.0",
+        "url": "https://github.com/cricketclub/gridspace-stanford-harper-valley",
+        "use": "simulated human-human banking calls; caller and agent channels retained separately",
+    },
+    "tatqa": {
+        "revision": "870accc41953dcde885aabeb963d94aabdc0fbc3",
+        "license": "CC-BY-4.0",
+        "url": "https://github.com/NExTplusplus/TAT-QA",
+        "use": "finance-QA questions and report contexts; task construction is not safety adjudication",
+    },
+    "financebench": {
+        "revision": "cc39aeb4afdf33909ee1412188bf89035950c2eb",
+        "license": "no explicit dataset license declared; public open-source sample",
+        "url": "https://github.com/patronus-ai/financebench",
+        "use": "150 public finance-QA examples as development-only hard-benign diagnostics",
+    },
+    "mind2web": {
+        "repo": "osunlp/Mind2Web",
+        "revision": "17ece8eb89862368edc0cc806acee6fca5163474",
+        "conversion_revision": "eabe74c3532cf3a35ff02913cece5341bd1ca0d5",
+        "license": "CC-BY-4.0",
+        "url": "https://huggingface.co/datasets/osunlp/Mind2Web",
+        "use": "confirmed official training tasks only, after local secret and PII quarantine",
+    },
     "taskmaster": {
         "revision": "d92cb6af3005f1dc09c39e75e7daf4a04905e00b",
         "license": "CC-BY-4.0",
@@ -261,14 +287,22 @@ def manifest_output_path(data_dir: Path, output: dict) -> Path:
     return data_dir / output["path"]
 
 
-def read_verified_jsonl(path: Path, expected_sha256: str) -> list[dict]:
-    data = path.read_bytes()
-    digest = hashlib.sha256(data).hexdigest()
-    if digest != expected_sha256:
+def iter_verified_jsonl(path: Path, expected_sha256: str):
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for line in handle:
+            digest.update(line)
+            if line.strip():
+                yield json.loads(line)
+    actual = digest.hexdigest()
+    if actual != expected_sha256:
         raise RuntimeError(
-            f"{path.name} changed: expected {expected_sha256}, got {digest}"
+            f"{path.name} changed: expected {expected_sha256}, got {actual}"
         )
-    return [json.loads(line) for line in data.splitlines() if line.strip()]
+
+
+def read_verified_jsonl(path: Path, expected_sha256: str) -> list[dict]:
+    return list(iter_verified_jsonl(path, expected_sha256))
 
 
 def _sample(

@@ -9,12 +9,19 @@ from morgott.corpus import (
     _banking77_sample,
     _coconot_sample,
     _consume_source,
+    _consume_source_quarantine,
     _false_reject_sample,
+    _financebench_rows,
     _hackaprompt_sample,
+    _harper_has_lexical_content,
     _llmail_attack_attempt,
     _lmsys_arena_sample,
+    _mind2web_sample,
+    _sensitive_text_reasons,
     _taskmaster_sample,
     _taskmaster_split_group,
+    _tatqa_sample,
+    _tatqa_table_text,
     _wildguard_sample,
     _wildjailbreak_sample,
     rebuild_routing,
@@ -64,6 +71,126 @@ def _read_rows(path: Path) -> list[dict]:
 
 
 class CorpusTests(unittest.TestCase):
+    def test_harper_omits_only_marker_only_segments(self):
+        self.assertFalse(_harper_has_lexical_content("[noise] <unk> [cough]"))
+        self.assertTrue(_harper_has_lexical_content("[noise] check my balance"))
+
+    def test_tatqa_preserves_context_group_and_channel(self):
+        question = _tatqa_sample(
+            text="What was the 2023 revenue?",
+            split="train",
+            source_id="question-1",
+            context_id="context-1",
+            category="financial_question",
+            input_channel="direct_user",
+            metadata={"source_question_uid": "question-1"},
+        )
+        paragraph = _tatqa_sample(
+            text="Revenue increased in 2023.",
+            split="test",
+            source_id="paragraph-1",
+            context_id="context-1",
+            category="financial_report_paragraph",
+            input_channel="untrusted_content",
+            metadata={"source_paragraph_uid": "paragraph-1"},
+        )
+        self.assertEqual(question["split_group_id"], paragraph["split_group_id"])
+        self.assertEqual(question["source_role"], "candidate")
+        self.assertEqual(paragraph["source_role"], "dev_test")
+        self.assertEqual(question["input_channel"], "direct_user")
+        self.assertEqual(paragraph["input_channel"], "untrusted_content")
+        self.assertIn("not_human_safety_annotation", question["label_basis"])
+        self.assertEqual(
+            _tatqa_table_text([["Metric", "2023"], ["Revenue", "$5"]]),
+            "Metric\t2023\nRevenue\t$5",
+        )
+
+    def test_financebench_keeps_only_questions_and_evidence_as_dev_test(self):
+        source_rows = []
+        for index in range(150):
+            source_rows.append(
+                {
+                    "financebench_id": f"id-{index}",
+                    "company": "Example Co",
+                    "doc_name": f"document-{index % 3}",
+                    "question_type": "domain-relevant",
+                    "question": f"What is metric {index}?",
+                    "answer": "must not persist",
+                    "justification": "must not persist",
+                    "dataset_subset_label": "OPEN_SOURCE",
+                    "evidence": [
+                        {
+                            "evidence_text": f"Evidence passage {index}.",
+                            "doc_name": f"document-{index % 3}",
+                            "evidence_page_num": index,
+                            "evidence_text_full_page": "must not persist",
+                        }
+                    ],
+                }
+            )
+        data = b"".join(json.dumps(row).encode() + b"\n" for row in source_rows)
+        with patch(
+            "morgott.corpus._github_raw",
+            return_value=(
+                data,
+                "a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877",
+            ),
+        ):
+            rows, _, profile = _financebench_rows()
+            rows = list(rows)
+        self.assertEqual(len(rows), 300)
+        self.assertTrue(all(row["source_role"] == "dev_test" for row in rows))
+        self.assertEqual(
+            {row["input_channel"] for row in rows},
+            {"direct_user", "untrusted_content"},
+        )
+        self.assertNotIn("must not persist", str(rows))
+        self.assertEqual(profile["documents"], 3)
+
+    def test_mind2web_sensitive_text_is_detected_before_training(self):
+        benign = "Find the next train from Boston to New York."
+        sensitive = "Book for a@example.com using booking number X123456."
+        token = "Use api key: sk-abcdefghijklmnopqrstuvwxyz123456"
+        self.assertEqual(_sensitive_text_reasons(benign), [])
+        self.assertEqual(
+            _sensitive_text_reasons(sensitive),
+            ["email_address", "transaction_identifier"],
+        )
+        self.assertIn("provider_token", _sensitive_text_reasons(token))
+        row = _mind2web_sample(
+            {
+                "annotation_id": "task-1",
+                "confirmed_task": benign,
+                "website": "example",
+                "domain": "Travel",
+                "subdomain": "Train",
+            }
+        )
+        self.assertEqual(row["input_channel"], "direct_user")
+        self.assertEqual(row["split_group_id"], "mind2web:task-1")
+        self.assertNotIn("actions", row)
+
+    def test_source_privacy_quarantine_is_not_training_eligible(self):
+        row = _mind2web_sample(
+            {
+                "annotation_id": "sensitive-task",
+                "confirmed_task": "Email the receipt to a@example.com.",
+                "website": "example",
+                "domain": "Shopping",
+                "subdomain": "Retail",
+            }
+        )
+        row["source_sensitive_text_reasons"] = ["email_address"]
+        row = _set_source_role(row, "uncertain")
+        row["data_role"] = "quarantine"
+        row["quarantine_reason"] = "potential_secret_or_pii"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "mind2web.jsonl"
+            output = _consume_source_quarantine(path, [row])
+            self.assertEqual(_read_rows(path), [row])
+        self.assertEqual(output["rows"], 1)
+        self.assertFalse(row["routing_training_eligible"])
+
     def test_taskmaster_maps_dialogue_lineage_and_speaker_channel(self):
         dialog = {
             "conversation_id": "dlg-test",

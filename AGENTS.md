@@ -10,8 +10,10 @@ provenance, not names to revive.
 
 ## Current status
 
-The active deliverable is the canonical data corpus. No proper model has been
-trained on the broad routing views and no model is approved for blocking.
+The active deliverable is the canonical data corpus.
+One minimal unweighted word n-gram baseline is retained as a cheap broad-routing control.
+Completed ModernBERT and data-ablation experiments were not promoted; their conclusions and exact metrics live in reports, while their runners are not active code.
+No model is approved for blocking.
 
 The retained character n-gram/logistic-regression detector is only a cheap POC
 control over the original injection views. Historical neural, OpenRouter,
@@ -177,6 +179,14 @@ prompt and the public data does not expose participant identity. Tensor Trust ra
 currently groups by anonymized attacker for the first routing POC; its dev-test is
 not task-held-out, and task grouping is deferred to prospective final evaluation.
 
+HarperValleyBank retains meaningful human-corrected caller and agent turns grouped
+by complete simulated conversation; only callers enter the direct-user recipe.
+TAT-QA questions, paragraphs, and serialized tables share hybrid-context lineage,
+with official dev/test held out. FinanceBench is dev-test only and grouped by
+document. Mind2Web contributes only confirmed official training tasks after local
+secret and PII screening; suspicious raw task text stays in source-level quarantine.
+API-Bank remains deferred until tool-output diagnostics show a gap.
+
 Authenticated Hugging Face access has been explicitly authorized after the
 user accepted the applicable gates. Never print tokens or `.env` contents.
 
@@ -228,6 +238,10 @@ Before promoting auxiliary rows, follow the diagnostic-first OASST1 and
 WildJailbreak procedure in `reports/dataset-selection.md`; those rows must not
 silently enter fitting or threshold selection.
 
+Current direct-user source identity explains most of the label entropy, and the completed ModernBERT recipe had no long-benign denominator above its context limit.
+Treat source-heldout folds, genuinely matched contrasts, and a genuine long-benign denominator as prerequisites for interpreting another encoder run.
+Do not increase context length merely because FlashAttention makes it fit.
+
 The 7,000-ish number in historical discussion was the negative count in an old
 validation split, not a corpus cap, training cap, or context limit.
 
@@ -248,11 +262,13 @@ credentials, raw provider responses, or sensitive prompts.
 - `src/morgott/routing.py`: disk-backed routing-view assembly.
 - `src/morgott/overlap.py`: conservative near-overlap checks.
 - `src/morgott/detector.py`: optional shadow-control model.
+- `src/morgott/routing_baseline.py`: minimal broad-routing word n-gram control.
 - `src/morgott/policy.py`: deterministic reference-monitor simulation.
 - `tests/`: maintained invariants.
 - `data/manifest.json`: sole machine data manifest.
 - `reports/dataset-selection.md`: source decisions.
 - `reports/label-audit.md`: label decisions.
+- `reports/corpus-sanity-audit.md`: corpus integrity and critical limitations.
 - `reports/model-experiments.md`: concise historical model ledger.
 - `docs/threat-model.md` and `docs/roadmap.md`: current architecture and plan.
 

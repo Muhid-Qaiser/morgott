@@ -9,6 +9,11 @@ from .corpus import build_corpus, rebuild_routing
 from .data import build_dataset
 from .detector import run_benchmark, scan
 from .policy import run_policy_ablation
+from .routing_baseline import (
+    DEFAULT_EPOCHS,
+    DEFAULT_MAX_PER_SOURCE_LABEL,
+    run_routing_baseline,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -29,6 +34,22 @@ def _parser() -> argparse.ArgumentParser:
     benchmark.add_argument("--data-dir", type=Path, default=Path("data"))
     benchmark.add_argument("--artifacts-dir", type=Path, default=Path("artifacts"))
     benchmark.add_argument("--reports-dir", type=Path, default=Path("reports"))
+
+    routing_baseline = subcommands.add_parser(
+        "routing-baseline",
+        help="train the direct-user word n-gram routing control",
+    )
+    routing_baseline.add_argument("--data-dir", type=Path, default=Path("data"))
+    routing_baseline.add_argument(
+        "--artifacts-dir", type=Path, default=Path("artifacts")
+    )
+    routing_baseline.add_argument("--reports-dir", type=Path, default=Path("reports"))
+    routing_baseline.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS)
+    routing_baseline.add_argument(
+        "--max-per-source-label",
+        type=int,
+        default=DEFAULT_MAX_PER_SOURCE_LABEL,
+    )
 
     demo = subcommands.add_parser("demo", help="run the action-policy ablation")
     demo.add_argument("--reports-dir", type=Path, default=Path("reports"))
@@ -81,6 +102,19 @@ def main(argv: list[str] | None = None) -> None:
             "direct_threshold": result["training"]["threshold"],
             "indirect_threshold": result["indirect_training"]["threshold"],
             "report": str(args.reports_dir / "baseline.md"),
+        }
+    elif args.command == "routing-baseline":
+        result = run_routing_baseline(
+            args.data_dir,
+            args.artifacts_dir,
+            args.reports_dir,
+            epochs=args.epochs,
+            max_per_source_label=args.max_per_source_label,
+        )
+        summary = {
+            "artifact": str(args.artifacts_dir / "routing_baseline.joblib"),
+            "report": str(args.reports_dir / "routing-baseline.md"),
+            "selected_rows": result["selection"]["selected_rows"],
         }
     elif args.command == "demo":
         result = run_policy_ablation(args.reports_dir)

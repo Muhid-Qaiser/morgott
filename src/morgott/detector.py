@@ -232,7 +232,7 @@ def _latency(score, texts: list[str]) -> float:
 
 def _format(value: float | int | None) -> str:
     if value is None:
-        return "—"
+        return "-"
     if isinstance(value, int):
         return str(value)
     return f"{value:.4f}"
