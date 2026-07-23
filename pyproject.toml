@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Reproducible jailbreak detection and agent action-policy POC"
 requires-python = ">=3.11"
 dependencies = [
-  "datasets>=3.6,<5",
+  "datasets>=5.0.0,<6",
   "ijson>=3.4,<4",
   "scikit-learn>=1.6,<2",
 ]
