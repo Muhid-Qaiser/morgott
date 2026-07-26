@@ -11,6 +11,8 @@ Exact current counts, hashes, and split distributions remain in `data/manifest.j
 - Split groups do not cross train, validation, and dev-test.
 - Exact label conflicts, strict near-overlaps, and source-level sensitive-text matches remain visible in quarantine instead of silently entering fitting.
 - Official evaluation lineages remain in dev-test, and exact duplicates touching those lineages are held out with them.
+- Boundary Pairs preserve official splits, pair IDs, scenario IDs, and source context.
+  Every pair and scenario stays within one official role, and authorization-only families remain auxiliary diagnostics.
 
 ## Critical red flags
 
@@ -33,8 +35,16 @@ Exact current counts, hashes, and split distributions remain in `data/manifest.j
   Passing it does not prove that public issue or agent-task text contains no personal or sensitive information.
 - Corrected source-heldout experiments did not find an architecture fix for the data problem.
   Full tuning overfit source artifacts, the frozen multipool head retained double-digit macro-source false-positive rates, OR-Bench reduced recall, and paired splices did not improve ranking materially.
+- The masked multitask frozen encoder also failed the quick promotion gates.
+  Its winning auxiliary-BCE recipe escalated 59.80% of legitimate held-out finance rows and every benign held-out BrowseSafe document at validation-selected operating points.
+  Pair ranking improved matched Boundary ordering without repairing either false-positive failure.
+- Global label-support counts overstate evaluability when a held-out source lacks explicit matching-axis negatives.
+  Masked per-head metrics can be undefined even while the derived route imposes a severe benign review load.
+- The Rogue Security benchmark is materially contaminated by current public-source families.
+  An exact normalized audit matched 54.28% of its rows to the canonical corpus, so it cannot serve as an independent headline evaluation.
 
 ## Consequence
 
 No current classifier should block users, approve transactions, or grant tool authority.
-The viable near-term target is a shadow-only `no_security_signal` versus `review_required` sensor, evaluated by source-heldout and explicitly qualified paired diagnostics, behind a deterministic reference monitor.
+The next work is matched finance and long-document data collection, not additional encoder tuning.
+A future candidate remains a shadow-only advisory sensor behind the deterministic reference monitor.

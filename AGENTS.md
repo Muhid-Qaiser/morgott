@@ -12,7 +12,9 @@ provenance, not names to revive.
 
 The active deliverable is the canonical data corpus.
 One minimal unweighted word n-gram baseline is retained as a cheap broad-routing control.
-Completed ModernBERT and data-ablation experiments were not promoted; their conclusions and exact metrics live in reports, while their runners are not active code.
+Completed ModernBERT and data-ablation experiments were not promoted.
+Clean WildGuardMix counterexamples and an English ModernBERT plus mmBERT-base ensemble improved the open-development direct frontier, but remain single-seed research shadows.
+Their conclusions and exact metrics live in reports, while their runners are not active code.
 No model is approved for blocking.
 
 The retained character n-gram/logistic-regression detector is only a cheap POC
@@ -224,15 +226,19 @@ single large source.
 
 ## Model work after the data pass
 
-Do not revive old experiment runners as the default trainer. Start with a new,
-small recipe against the routing views:
+Do not revive old experiment runners as the default trainer.
+Start with a new, small recipe against the routing views:
 
 1. cheap character or word linear baseline;
-2. one end-to-end encoder comparison on the identical grouped data;
+2. one frozen encoder comparison on the identical grouped data;
 3. source-balanced sampling or weights as an explicit ablation;
-4. binary routing head plus masked subtype heads where annotations are known;
-5. validation-selected operating points and source-held-out diagnostics;
+4. masked direct, indirect, jailbreak, and harmful-intent heads where annotations are known;
+5. validation-selected operating points and source-heldout diagnostics;
 6. prospective final evaluation before any blocking claim.
+
+Do not repeat context-length, document-bag, or BIPIA augmentation experiments on the same labels.
+Before another encoder run, add realistic matched transaction tasks, paired multilingual transformations, known-span long-document attacks, and stronger same-source controls.
+Toxicity remains deferred until a second independent positive source and matched negatives exist.
 
 Before promoting auxiliary rows, follow the diagnostic-first OASST1 and
 WildJailbreak procedure in `reports/dataset-selection.md`; those rows must not

@@ -43,6 +43,7 @@ Exact revisions, file digests, output counts, and licenses live only in
 | [CoCoNot](https://huggingface.co/datasets/allenai/coconot) | Safe-to-comply preference candidates plus human-verified contrast dev-test |
 | [JBB benign behaviors](https://github.com/JailbreakBench/jailbreakbench#accessing-the-jbb-behaviors-datasets) | Curated, safety-sensitive benign dev-test goals |
 | [LMSYS Chatbot Arena Conversations](https://huggingface.co/datasets/lmsys/chatbot_arena_conversations) | English Arena messages with weak-benign candidates and flagged conversations retained as uncertain |
+| [Agentic Prompt Injection Boundary Pairs](https://huggingface.co/datasets/3nesdeniz/agentic-prompt-injection-boundary-pairs/tree/a5682e7573e1c7bc4b12e64d49c0dcd90ca776cf) | Auxiliary-only matched instruction-boundary pairs with official split and pair/scenario lineage |
 
 The two Tensor Trust adapters intentionally expose different official artifacts:
 the compact robustness suites remain a historical development comparison, while
@@ -163,7 +164,6 @@ not deleted.
 | CyberSecEval prompt injection | Deferred prospective multilingual evaluation after the first recipe; positive-only machine translations are derived lineages, not training rows. |
 | JailbreakBench jailbreak artifacts | Deferred method/target-held-out attack evaluation; the separate benign-behavior goals are included. |
 | API-Bank | Defer until tool-output diagnostics show a gap. Its generated, context-dependent tool dialogues would add weak supervision where Schema-Guided Dialogue already supplies ordinary API interactions. |
-| Agentic Prompt Injection Boundary Pairs | Keep auxiliary-only at revision `a5682e7573e1c7bc4b12e64d49c0dcd90ca776cf`. The 600 synthetic pairs cover useful agent boundaries, but are templated, longer than the dominant short-turn errors, and weakly labelled. Add only through a predeclared pair-balanced recipe with pair-ranking, both-correct, and strict overlap diagnostics. |
 | MInDS-14 plus CyberSecEval multilingual injection | Recommended paired multilingual diagnostic. Keep the benign and positive-only sources separate so language and source cannot become the label. |
 | ASPI and Prompt Injection as Role Confusion | Full-system, provenance-aware evaluation only. Flattening context-dependent messages into text labels would create false certainty. |
 | tau banking and AgentLAB | Future stateful utility, transaction-invariant, long-horizon, and memory-poisoning evaluation. Prefer deterministic environment outcomes and keep planner, attacker, judge, and search budgets fixed. |
@@ -172,6 +172,19 @@ not deleted.
 | Mindgard evasion samples | Held-out robustness stress only. Apply deterministic transformations symmetrically to benign and attack controls instead of treating detector-specific evasions as independent training rows. |
 | ACL indirect-PIA detection corpus | Reject for ordinary training and headline evaluation. A small payload set is reused across nominal corpora, so payload-family grouping would be mandatory even for a span-localization ablation. |
 | FinGuard and Mukta finance injection aggregates | Reject. They combine benign finance data with unrelated attack sources and directly recreate the source-label shortcut. |
+
+## External reference audits
+
+The [Wolf Defender small model card](https://huggingface.co/patronus-studio/wolf-defender-prompt-injection-small) is useful recipe context, not comparable promotion evidence.
+Its published strategy supports symmetric transformations across benign and attack rows, hard negatives, counterfactuals, long-context position variation, and aggressive similarity deduplication.
+Its binary benign/injection target does not preserve morgott's provenance, harmful-intent, or authorization boundaries, and model-card aggregate metrics do not replace source-heldout and scenario-heldout evaluation on morgott's canonical rows.
+Wolf Defender was not added as a training teacher or promoted checkpoint.
+
+The gated [Rogue Security prompt-injections benchmark](https://huggingface.co/datasets/rogue-security/prompt-injections-benchmark) is test-only and is not an independent benchmark for the present corpus.
+A local normalized exact-overlap audit matched 2,714 of its 5,000 rows, or 54.28%, against existing morgott canonical sources.
+The overlap was dominated by WildJailbreak and WildGuardMix families, with smaller matches to other existing sources.
+It must not enter training, threshold selection, or an uncontaminated headline metric.
+At most, a frozen future candidate may use the exact-overlap-excluded remainder as a clearly labelled post-hoc diagnostic after near-duplicate and lineage review.
 
 Historical experiment counts are summarized in `reports/model-experiments.md`.
 Their runners and generated JSON were removed from the active tree because they

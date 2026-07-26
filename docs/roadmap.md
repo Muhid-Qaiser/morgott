@@ -3,7 +3,7 @@
 morgott is still at the data-foundation stage. The broad corpus is not a trained
 or promoted model, and the old POC results do not choose the final architecture.
 
-## P0 — finish and freeze the corpus
+## P0 - finish and freeze the corpus
 
 - Build every manifest-declared source through one command and publish one manifest.
 - Verify source/output digests, canonical schema, row counts, label mappings,
@@ -19,17 +19,18 @@ Exit condition: a clean rebuild produces the versioned manifest, all maintained
 tests and manifest invariants pass, and no second manifest or legacy data root
 exists.
 
-## P1 — first proper routing model
+## P1 - first proper routing model
 
 Start with the smallest fair comparison:
 
 1. A character/word linear baseline on the canonical routing train split.
-2. One end-to-end encoder trained on the identical grouped rows.
-3. Binary benign/non-benign routing as the primary head, plus masked injection,
-   harmfulness, and toxicity heads only where labels are known.
-4. Explicit source-balanced weighting or sampling ablations so HackAPrompt,
+2. One frozen encoder comparison on identical grouped rows before any limited top-layer unfreezing.
+3. Independent masked heads for direct instruction subversion, indirect instruction subversion, jailbreak, and harmful intent.
+4. Derived advisory routing for benign, uncertain, and review-required outcomes.
+5. Toxicity only after two independent positive source families and matched negatives exist.
+6. Explicit source-balanced weighting or sampling ablations so HackAPrompt,
    LLMail, Tensor Trust, or another large family cannot dominate by volume.
-5. Threshold and recipe selection on validation only.
+7. Threshold and recipe selection on validation only.
 
 Required reporting:
 
@@ -49,7 +50,22 @@ Exit condition: one reproducible shadow candidate improves on the cheap control
 across source-held-out evidence without unacceptable benign review load. This is
 still not permission to block users.
 
-## P2 — prospective evaluation
+### July 2026 experiments and stop decision
+
+The frozen four-head quick comparison failed its finance and BrowseSafe false-positive gates.
+Longer 2,048-token training made BrowseSafe ranking worse, while document bags and pair-balanced BIPIA data produced only a narrow indirect-route improvement.
+A later direct repair added group-held-out multi-turn rows and clean non-adversarial WildGuardMix counterexamples.
+The clean repair reduced the English ModernBERT direct-suite FPR to 0.221% at 75.68% recall and the mmBERT-base FPR to 0.106% at 74.73% recall under the nominal 0.1% per-head profile.
+A validation-calibrated mean of the two backbones' direct-route probabilities reached 0.101% FPR and 77.16% recall on the open direct suite.
+These are single-seed development shadows, not a promoted global model.
+No model is approved for global routing or blocking.
+
+Before another encoder-tuning experiment, collect realistic matched transaction attacks and benign tasks, paired multilingual transformations on both labels, independently sourced known-span long-document attacks, and prospective traffic-like negatives.
+Do not repeat context-length, document-bag, or BIPIA augmentation ablations on the same labels.
+Do not sweep reinforcement-learning, focal-loss, or source-weighting objectives over the current open dev roles as a substitute for new evidence.
+Do not use the Rogue Security benchmark as independent evidence because more than half of its rows exactly overlap current canonical public sources.
+
+## P2 - prospective evaluation
 
 - Freeze a new final test before using its results for model or threshold choice.
 - Add known-span long-document attacks with matched clean controls.
@@ -61,7 +77,7 @@ still not permission to block users.
 Exit condition: evidence supports a narrowly stated shadow-deployment claim.
 Blocking requires a separate product and risk review.
 
-## P3 — stateful agent containment
+## P3 - stateful agent containment
 
 - Integrate the reference monitor with a stateful environment such as AgentDojo.
 - Propagate provenance/taint through retrieval, summaries, tool outputs, memory,
@@ -71,7 +87,7 @@ Blocking requires a separate product and risk review.
 - Quarantine durable memory writes and prevent untrusted content from creating
   capabilities.
 - Measure task success, attack success, unauthorized side effects, and secret
-  exfiltration—not only text-classifier accuracy.
+  exfiltration, not only text-classifier accuracy.
 
 The core security thesis remains: prediction reduces exposure; deterministic
 authorization bounds impact when prediction fails.

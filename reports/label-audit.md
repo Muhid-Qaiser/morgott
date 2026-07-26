@@ -87,6 +87,31 @@ and independent tags preserve why a row is routed.
 - HarmBench, Do-Not-Answer, AdvBench, AgentHarm, BeaverTails, and generic
   toxicity annotations must not be converted into injection positives.
 
+## Masked model-target projection
+
+The research encoder target projection is deterministic and leaves the canonical labels unchanged.
+A head receives a positive only from explicit evidence for that axis and a negative only from explicit matching-axis evidence.
+Missing, weakly incompatible, or conflicting evidence is null and loss-masked.
+A positive subtype is never silently used as a negative for another subtype.
+
+`direct_instruction_subversion` covers direct prompt injection and jailbreak attempts.
+`jailbreak` remains a separate co-occurring head.
+`indirect_instruction_subversion` depends on trusted runtime provenance and must not infer the input channel from attacker-controlled text.
+`harmful_intent` may co-occur with instruction subversion.
+`harmful_non_injection`, `review_required`, `no_security_signal`, and `uncertain` are derived by advisory routing logic rather than mutually exclusive learned classes.
+Toxicity remains outside the active model until a second independent positive source and matched negatives exist.
+
+Boundary Pairs may supervise only eight instruction-subversion families: direct override, indirect content injection, memory poisoning, multi-agent spoofing, obfuscation, RAG poisoning, roleplay jailbreak, and system-prompt extraction.
+Approval bypass, authority claims, sensitive-data exfiltration, and tool abuse remain reference-monitor diagnostics with every learned target masked.
+Clean Boundary rows are negatives only for their supported paired head and never become broad benign routing examples.
+Official split, pair ID, scenario ID, source context, risk domain, and boundary metadata are preserved.
+Pairs and scenarios must not cross fitting and evaluation roles.
+
+The global label-support audit found two positive source families, explicit negatives, and a same-source or paired contrast for each active head.
+That gate establishes only that fitting is mechanically supportable.
+The finance quick fold still had undefined masked per-head PR-AUC because legitimate held-out task rows lacked explicit matching-axis negatives, while its combined advisory route had catastrophic false positives.
+Broad source-supported benign route metrics must therefore accompany every masked-head report.
+
 ## Merge and conflict policy
 
 - Detector text is preserved in canonical projections; normalization is derived
@@ -114,7 +139,10 @@ production-FPR claims.
 
 ## Decision
 
-Keep the binary `no_security_signal` versus `review_required` route for the first model while retaining nullable injection
-labels and independent security tags. Use masked multi-task losses rather than a
-single mutually exclusive “unsafe subtype.” The detector stays shadow-only until
-independently labelled product evidence exists.
+Retain nullable injection labels and independent security tags.
+Use masked multi-task losses rather than a single mutually exclusive unsafe subtype.
+Derive `no_security_signal` and `review_required` through advisory routing logic.
+The completed quick encoder failed finance and long-document false-positive gates.
+A bounded consolidated repair passed the finance and matched-pair gates but failed the BrowseSafe ranking and recall gates.
+Harmful intent remains content-safety metadata and is not OR-ed into the transaction-security route.
+The detector stays shadow-only, and no learned output may authorize or block an action.

@@ -236,6 +236,13 @@ SOURCES = {
         "use": "English Arena messages with weak-benign candidates and flagged conversations retained as uncertain",
         "gated": True,
     },
+    "agentic_boundary_pairs": {
+        "repo": "3nesdeniz/agentic-prompt-injection-boundary-pairs",
+        "revision": "a5682e7573e1c7bc4b12e64d49c0dcd90ca776cf",
+        "license": "CC-BY-4.0",
+        "url": "https://huggingface.co/datasets/3nesdeniz/agentic-prompt-injection-boundary-pairs",
+        "use": "auxiliary paired instruction-subversion training and authorization diagnostics",
+    },
 }
 
 MAX_DOWNLOAD_BYTES = 60_000_000

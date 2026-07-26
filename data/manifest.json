@@ -151,6 +151,9 @@
     }
   },
   "download_sha256": {
+    "agentic_boundary_pairs/data/test.jsonl": "034523eefaec18c291f9daa7699037acb0e7a91b1aeb1b205878b124f6e18f10",
+    "agentic_boundary_pairs/data/train.jsonl": "98fc7ea70a45215ba50d21efcd79cfed33afcbc1ac95d0fc388066b42cea2238",
+    "agentic_boundary_pairs/data/validation.jsonl": "1e5f483277ca776f0bb7d26c1a85ca4cd6d73f8d30f638c75265d82a6de751c3",
     "banking77/banking_data/test.csv": "d12d6e3bc4c3103966ae786dc435913c0c563dfa328f5a3646d0e62cfeeb474d",
     "banking77/banking_data/train.csv": "b06e26ac675513959a63135f11b94ea7786ed02da65db93a5650d8838cbc664b",
     "bipia/benchmark/code/test.jsonl": "ed40b84f541352fb45753032a80750922de8d5e0b70997924df3d04cf942e058",
@@ -1566,6 +1569,23 @@
   },
   "schema_version": 5,
   "source_outputs": {
+    "agentic_boundary_pairs": {
+      "path": "sources/agentic_boundary_pairs.jsonl",
+      "roles": {
+        "auxiliary": 1200
+      },
+      "routing_benign": 400,
+      "routing_non_benign": 800,
+      "rows": 1200,
+      "security_labels": {
+        "benign": 400,
+        "direct_jailbreak": 50,
+        "direct_prompt_injection": 150,
+        "indirect_prompt_injection": 200,
+        "uncertain": 400
+      },
+      "sha256": "e53e30059e78574e0f009cc87c5fcdf3e5363932424ded2fd90fa6161af4939b"
+    },
     "banking77": {
       "path": "sources/banking77.jsonl",
       "roles": {
@@ -2016,6 +2036,106 @@
     }
   },
   "source_profiles": {
+    "agentic_boundary_pairs": {
+      "authorization_diagnostic_families": [
+        "approval_workflow_bypass",
+        "authority_claim_bypass",
+        "sensitive_data_exfiltration",
+        "tool_action_abuse"
+      ],
+      "family_label_rows": {
+        "test:approval_workflow_bypass:0": 10,
+        "test:approval_workflow_bypass:1": 10,
+        "test:authority_claim_bypass:0": 10,
+        "test:authority_claim_bypass:1": 10,
+        "test:direct_instruction_override:0": 10,
+        "test:direct_instruction_override:1": 10,
+        "test:indirect_content_injection:0": 10,
+        "test:indirect_content_injection:1": 10,
+        "test:memory_context_poisoning:0": 10,
+        "test:memory_context_poisoning:1": 10,
+        "test:multi_agent_trust_spoofing:0": 10,
+        "test:multi_agent_trust_spoofing:1": 10,
+        "test:obfuscation_encoding:0": 10,
+        "test:obfuscation_encoding:1": 10,
+        "test:rag_context_poisoning:0": 10,
+        "test:rag_context_poisoning:1": 10,
+        "test:roleplay_jailbreak:0": 10,
+        "test:roleplay_jailbreak:1": 10,
+        "test:sensitive_data_exfiltration:0": 10,
+        "test:sensitive_data_exfiltration:1": 10,
+        "test:system_prompt_extraction:0": 10,
+        "test:system_prompt_extraction:1": 10,
+        "test:tool_action_abuse:0": 10,
+        "test:tool_action_abuse:1": 10,
+        "train:approval_workflow_bypass:0": 35,
+        "train:approval_workflow_bypass:1": 35,
+        "train:authority_claim_bypass:0": 35,
+        "train:authority_claim_bypass:1": 35,
+        "train:direct_instruction_override:0": 35,
+        "train:direct_instruction_override:1": 35,
+        "train:indirect_content_injection:0": 35,
+        "train:indirect_content_injection:1": 35,
+        "train:memory_context_poisoning:0": 35,
+        "train:memory_context_poisoning:1": 35,
+        "train:multi_agent_trust_spoofing:0": 35,
+        "train:multi_agent_trust_spoofing:1": 35,
+        "train:obfuscation_encoding:0": 35,
+        "train:obfuscation_encoding:1": 35,
+        "train:rag_context_poisoning:0": 35,
+        "train:rag_context_poisoning:1": 35,
+        "train:roleplay_jailbreak:0": 35,
+        "train:roleplay_jailbreak:1": 35,
+        "train:sensitive_data_exfiltration:0": 35,
+        "train:sensitive_data_exfiltration:1": 35,
+        "train:system_prompt_extraction:0": 35,
+        "train:system_prompt_extraction:1": 35,
+        "train:tool_action_abuse:0": 35,
+        "train:tool_action_abuse:1": 35,
+        "validation:approval_workflow_bypass:0": 5,
+        "validation:approval_workflow_bypass:1": 5,
+        "validation:authority_claim_bypass:0": 5,
+        "validation:authority_claim_bypass:1": 5,
+        "validation:direct_instruction_override:0": 5,
+        "validation:direct_instruction_override:1": 5,
+        "validation:indirect_content_injection:0": 5,
+        "validation:indirect_content_injection:1": 5,
+        "validation:memory_context_poisoning:0": 5,
+        "validation:memory_context_poisoning:1": 5,
+        "validation:multi_agent_trust_spoofing:0": 5,
+        "validation:multi_agent_trust_spoofing:1": 5,
+        "validation:obfuscation_encoding:0": 5,
+        "validation:obfuscation_encoding:1": 5,
+        "validation:rag_context_poisoning:0": 5,
+        "validation:rag_context_poisoning:1": 5,
+        "validation:roleplay_jailbreak:0": 5,
+        "validation:roleplay_jailbreak:1": 5,
+        "validation:sensitive_data_exfiltration:0": 5,
+        "validation:sensitive_data_exfiltration:1": 5,
+        "validation:system_prompt_extraction:0": 5,
+        "validation:system_prompt_extraction:1": 5,
+        "validation:tool_action_abuse:0": 5,
+        "validation:tool_action_abuse:1": 5
+      },
+      "instruction_subversion_families": [
+        "direct_instruction_override",
+        "indirect_content_injection",
+        "memory_context_poisoning",
+        "multi_agent_trust_spoofing",
+        "obfuscation_encoding",
+        "rag_context_poisoning",
+        "roleplay_jailbreak",
+        "system_prompt_extraction"
+      ],
+      "official_rows": {
+        "test": 240,
+        "train": 840,
+        "validation": 120
+      },
+      "pairs": 600,
+      "projection": "raw paired detector text with complete boundary metadata",
+      "scenarios": 50
+    },
     "banking77": {
       "lineage_limit": "the source exposes no conversation lineage; each query is a singleton group",
       "projection": "all non-empty English online-banking queries",
@@ -2406,6 +2526,13 @@
     }
   },
   "sources": {
+    "agentic_boundary_pairs": {
+      "license": "CC-BY-4.0",
+      "repo": "3nesdeniz/agentic-prompt-injection-boundary-pairs",
+      "revision": "a5682e7573e1c7bc4b12e64d49c0dcd90ca776cf",
+      "url": "https://huggingface.co/datasets/3nesdeniz/agentic-prompt-injection-boundary-pairs",
+      "use": "auxiliary paired instruction-subversion training and authorization diagnostics"
+    },
     "banking77": {
       "license": "CC-BY-4.0",
       "revision": "57ec275d8078af65b7731c2a98be812d844a6d6b",

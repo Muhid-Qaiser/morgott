@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from morgott.corpus import (
     _banking77_sample,
+    _boundary_pair_sample,
     _coconot_sample,
     _consume_source,
     _consume_source_quarantine,
@@ -22,6 +23,7 @@ from morgott.corpus import (
     _taskmaster_split_group,
     _tatqa_sample,
     _tatqa_table_text,
+    _validate_boundary_rows,
     _wildguard_sample,
     _wildjailbreak_sample,
     rebuild_routing,
@@ -70,7 +72,105 @@ def _read_rows(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line]
 
 
+def _boundary_row(
+    row_id: str,
+    pair_id: str,
+    label: int,
+    *,
+    family: str = "direct_instruction_override",
+    scenario_id: str = "scenario-1",
+    split: str = "train",
+    source_context: str = "direct_user",
+) -> dict:
+    return {
+        "attack_family": family if label else "none",
+        "category": "prompt_injection" if label else "benign_boundary",
+        "expected_action": "block_or_review" if label else "allow",
+        "id": row_id,
+        "label": label,
+        "language": "en",
+        "pair_family": family,
+        "pair_id": pair_id,
+        "risk_domain": "finance",
+        "scenario_id": scenario_id,
+        "source_context": source_context,
+        "source_type": "synthetic_curated",
+        "split": split,
+        "target_boundary": "instruction_integrity",
+        "text": f"boundary example {row_id}",
+    }
+
+
 class CorpusTests(unittest.TestCase):
+    def test_boundary_pairs_map_only_instruction_families_to_injection(self):
+        direct = _boundary_pair_sample(
+            _boundary_row("direct", "pair-direct", 1), "train"
+        )
+        indirect = _boundary_pair_sample(
+            _boundary_row(
+                "indirect",
+                "pair-indirect",
+                1,
+                family="rag_context_poisoning",
+                source_context="retrieved_document",
+            ),
+            "train",
+        )
+        authorization = _boundary_pair_sample(
+            _boundary_row(
+                "authorization",
+                "pair-authorization",
+                1,
+                family="approval_workflow_bypass",
+                source_context="agent_tool_request",
+            ),
+            "train",
+        )
+        self.assertEqual(direct["security_label"], "direct_prompt_injection")
+        self.assertEqual(indirect["security_label"], "indirect_prompt_injection")
+        self.assertEqual(indirect["input_channel"], "untrusted_content")
+        self.assertIsNone(authorization["injection_label"])
+        self.assertEqual(authorization["security_label"], "uncertain")
+        self.assertTrue(
+            all(
+                not row["routing_training_eligible"]
+                for row in (direct, indirect, authorization)
+            )
+        )
+
+    def test_boundary_validation_enforces_pair_and_scenario_isolation(self):
+        train_pair = [
+            _boundary_row("train-0", "pair-train", 0),
+            _boundary_row("train-1", "pair-train", 1),
+        ]
+        profile = _validate_boundary_rows({"train": train_pair})
+        self.assertEqual(profile["pairs"], 1)
+        broken_pair = [{**row} for row in train_pair]
+        broken_pair[1]["pair_id"] = "different-pair"
+        with self.assertRaisesRegex(ValueError, "aligned binary pair"):
+            _validate_boundary_rows({"train": broken_pair})
+
+        validation_pair = [
+            _boundary_row(
+                "validation-0",
+                "pair-validation",
+                0,
+                scenario_id="scenario-1",
+                split="validation",
+            ),
+            _boundary_row(
+                "validation-1",
+                "pair-validation",
+                1,
+                scenario_id="scenario-1",
+                split="validation",
+            ),
+        ]
+        with self.assertRaisesRegex(ValueError, "cross official splits"):
+            _validate_boundary_rows(
+                {"train": train_pair, "validation": validation_pair}
+            )
+
     def test_harper_omits_only_marker_only_segments(self):
         self.assertFalse(_harper_has_lexical_content("[noise] <unk> [cough]"))
         self.assertTrue(_harper_has_lexical_content("[noise] check my balance"))
