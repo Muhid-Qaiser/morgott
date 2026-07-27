@@ -19,6 +19,46 @@ REFERENCE_POLICY = {
             "free_arguments": ["body"],
             "allow_sensitive_data": False,
         },
+        # The capabilities below are deliberately GRANTED. An earlier version of
+        # this policy simply omitted them, so five of the eight attack scenarios
+        # were refused with `tool_not_granted` -- which demonstrates that a
+        # two-entry allowlist denies everything else, not that the monitor
+        # reasons about provenance. Granting them makes `requires_trusted_origin`
+        # the thing that actually stops the attack, which is the property this
+        # simulation exists to show.
+        #
+        # Each of these mutates durable state, moves value, or creates future
+        # authority, so none may be driven by untrusted content.
+        "write_memory": {
+            "constrained_arguments": {"namespace": ["session", "global"]},
+            "free_arguments": ["value"],
+            "allow_sensitive_data": False,
+            "requires_trusted_origin": True,
+        },
+        "transfer_funds": {
+            "constrained_arguments": {},
+            "free_arguments": ["to", "amount"],
+            "allow_sensitive_data": False,
+            "requires_trusted_origin": True,
+        },
+        "update_case_notes": {
+            "constrained_arguments": {},
+            "free_arguments": ["case_id", "notes"],
+            "allow_sensitive_data": False,
+            "requires_trusted_origin": True,
+        },
+        "add_warehouse_inventory": {
+            "constrained_arguments": {},
+            "free_arguments": ["warehouse_id", "sku", "quantity"],
+            "allow_sensitive_data": False,
+            "requires_trusted_origin": True,
+        },
+        "update_order_status": {
+            "constrained_arguments": {},
+            "free_arguments": ["order_id", "status"],
+            "allow_sensitive_data": False,
+            "requires_trusted_origin": True,
+        },
     }
 }
 
@@ -221,6 +261,50 @@ SCENARIOS = [
 ]
 
 
+# Provenance is trusted runtime metadata, never attacker-controlled text. These
+# are the channel names the runtime is allowed to assert. Anything outside both
+# sets is unknown and fails closed rather than defaulting to trusted.
+TRUSTED_PROVENANCE = frozenset(
+    {
+        "user_request",
+        "operator_instruction",
+        "system_policy",
+    }
+)
+UNTRUSTED_PROVENANCE = frozenset(
+    {
+        "untrusted_document",
+        "untrusted_email",
+        "untrusted_rag",
+        "untrusted_tool_output",
+        "untrusted_web",
+        "model_output",
+        "retrieved_memory",
+        "planner_output",
+    }
+)
+
+
+def provenance_trust(provenance: list[str]) -> str | None:
+    """Collapse a provenance list to one trust level.
+
+    Mixed provenance takes the LOWEST trust present. Once untrusted content has
+    influenced an action there is no way to prove which part of it did, so the
+    presence of a trusted source alongside it grants nothing.
+
+    Returns None for an unrecognised channel so the caller can fail closed. A
+    channel this function does not know about is a channel whose trust nobody
+    has decided, which is not the same as a safe one.
+    """
+    seen_untrusted = False
+    for source in provenance:
+        if source in UNTRUSTED_PROVENANCE:
+            seen_untrusted = True
+        elif source not in TRUSTED_PROVENANCE:
+            return None
+    return "untrusted" if seen_untrusted else "trusted"
+
+
 def authorize(policy: dict, action: dict, context: dict) -> tuple[bool, str]:
     if not isinstance(action, dict) or set(action) != {"tool", "arguments"}:
         return False, "invalid_action_schema"
@@ -247,6 +331,24 @@ def authorize(policy: dict, action: dict, context: dict) -> tuple[bool, str]:
     capability = policy["capabilities"].get(action["tool"])
     if capability is None:
         return False, "tool_not_granted"
+
+    # Provenance is checked before arguments: an action whose origin disqualifies
+    # it should be refused on that ground, not on whichever argument happens to
+    # look wrong first.
+    trust = provenance_trust(context["provenance"])
+    if trust is None:
+        return False, "unknown_provenance"
+    if trust == "untrusted":
+        # Untrusted content must not reach capabilities that mutate durable
+        # state, move value, or create future authority. This is the rule that
+        # bounds impact when the detector misses.
+        if capability.get("requires_trusted_origin", False):
+            return False, "untrusted_origin_for_capability"
+        # Untrusted content must not be able to trigger egress of data the
+        # runtime marked sensitive, even where the capability itself may
+        # normally carry it.
+        if context["contains_sensitive_data"]:
+            return False, "sensitive_data_from_untrusted_origin"
 
     constrained = capability.get("constrained_arguments", {})
     free = set(capability.get("free_arguments", []))

@@ -561,3 +561,87 @@ They are retained only to avoid repeating failed ideas.
 - Positive-only sources measure transfer recall, not false-positive cost.
 - A detector score never grants authority.
 - A prospective traffic-like final test is required before any production claim.
+
+## External validation of the retained ensemble (2026-07-27)
+
+The retained English ModernBERT plus mmBERT-base direct-route ensemble was
+scored on the public PromptShield test split (`hendzh/PromptShield`, 23,516
+rows), the first benign distribution this project did not choose. Contamination
+measured at 323 rows (1.374%), all label 0.
+
+- Ensemble ROC AUC 0.624 and **0.00% TPR at 1% FPR**; last against every
+  baseline in that paper's Table 4, below ProtectAI v2.
+- Not truncation: chunked untrusted-channel scoring reaches AUC 0.661 and
+  leaves TPR at 0.00%. Not head, member or fusion selection: every head and both
+  members cap at 0.52%.
+- Mechanism: the highest-scoring benign rows outrank every attack. Maximum
+  attack score 0.9942 against a benign 99th percentile of 0.9975. The rows
+  responsible are ordinary application prompts carrying instructional language.
+- The retained 0.101% FPR is a statement about short text: 98.5% of its
+  negatives are 64 tokens or fewer, and above that the measured FPR is
+  1.1%-6.7% over 303 rows.
+- Multi-turn recall at the same operating point is 1.79%; multi-turn rows were
+  filtered out of the suite the headline was computed on.
+
+## Attempt scaling (2026-07-27)
+
+Seven gradient-free surface mutation families, threshold calibrated at 0.1% FPR
+on the suite's own negatives, 300 caught attacks, 10,500 mutations.
+
+- ASR@1 49.20%, ASR@4 84.48%, ASR@32 98.30%.
+- Clean recall 81.14% corresponds to **1.38% effective recall** against a
+  32-attempt adversary.
+- Per-family evasion: homoglyph 72.6%, zero-width 65.9%, case 61.6%, encoding
+  wrap 60.2%, padding 53.0%, whitespace 24.7%, duplication 6.9%.
+
+Any future recipe should report ASR@k beside clean recall; the two move in
+opposite directions.
+
+## Strict normalisation and generated matched pairs (2026-07-27)
+
+Run through the archived `run_direct_failure_repair` with only preprocessing and
+training data varied, so the baseline reproduces by construction (10,896
+optimizer updates, matching the original exactly). Three seeds per condition
+where stated; `wildguard_weak_transfer` recipe only.
+
+| condition | n | dev recall | PromptShield AUC | TPR@1% | SEP AUC |
+|---|---|---|---|---|---|
+| raw | 3 | 58.33% | 0.6226 | 0.00% | 0.7275 |
+| strict | 3 | 65.48% | 0.6391 | 0.01% | 0.7134 |
+| strict+pairs 25% | 2 | 68.53% | 0.7008 | 0.03% | 0.7324 |
+| strict+pairs 50% | 2 | 54.94% | 0.7056 | 0.03% | 0.7244 |
+| strict+pairs 100% | 3 | 33.33% | 0.7386 | 0.01% | 0.7336 |
+| strict+pairs+ranking 0.25 | 2 | 47.72% | 0.7584 | 0.00% | 0.7506 |
+| strict+mmBERT | 2 | 78.14% | 0.6957 | 0.00% | 0.7563 |
+| strict+pairs+mmBERT | 2 | 61.60% | **0.7814** | 0.02% | 0.7846 |
+
+- Strict normalisation (NFKC plus invisible stripping, homoglyph folding,
+  combining-mark removal, repeat capping) adds 7.15 points of dev recall with
+  near-disjoint seed ranges, and drives case, whitespace, homoglyph and
+  zero-width evasion to **exactly 0.00%** because those variants normalise to
+  the same string. `encoding_wrap` worsens to 80.93% and `padding` stays at
+  58.07%; both add real text and no normaliser reaches them.
+- The mixing ratio is monotone in external AUC (0.639, 0.701, 0.706, 0.739),
+  which distinguishes shortcut removal from label noise in favour of the
+  former. At 25% mixing dev recall also improves.
+- `aligned_pair_ranking_loss` at 0.25, given genuine matched pairs for the first
+  time, raises external AUC to 0.7584 while recovering dev recall from 33.3% to
+  47.7%.
+- **TPR at 1% FPR remains at or below 0.03% in every condition.** Ranking
+  improved by 0.16 AUC; the operating point did not move. This is the open
+  problem, and it implicates the objective: at 0.1% FPR roughly twenty negatives
+  set the threshold while the loss optimises mean likelihood over twenty
+  thousand.
+- Several conditions are n=2 and the 50% dev-recall range is [42-68]; 25% and
+  50% should not be ranked against each other on this evidence.
+
+Reproduction and caveats: `experiments/README.md`. Raw data:
+`artifacts/phase3_archived/phase3_summary.json`.
+
+Reporting rule: any PromptShield number must be labelled Track A (trained on the
+morgott corpus only; the split measures transfer) or Track B (trained on
+morgott plus PromptShield train; the split measures in-distribution capability).
+Everything above is Track A. SEP (`artifacts/external_eval_data/sep/`, 18,320
+rows, contamination 0.126% with zero on positives) is the replacement transfer
+set; its positives are benign-intent imperatives, so it measures
+instruction-in-data separation rather than harmfulness.

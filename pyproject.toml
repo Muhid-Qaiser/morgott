@@ -13,6 +13,16 @@ dependencies = [
   "scikit-learn>=1.6,<2",
 ]
 
+[project.optional-dependencies]
+# Needed only by experiments/ (frozen-encoder inference and head
+# training). Deliberately optional: the corpus build and the retained
+# baseline do not require torch.
+encoder = [
+    "torch>=2.13",
+    "transformers>=5.14",
+    "safetensors>=0.4",
+]
+
 [dependency-groups]
 dev = [
   "pre-commit>=4.6.1,<5",

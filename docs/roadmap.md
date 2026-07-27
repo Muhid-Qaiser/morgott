@@ -60,6 +60,33 @@ A validation-calibrated mean of the two backbones' direct-route probabilities re
 These are single-seed development shadows, not a promoted global model.
 No model is approved for global routing or blocking.
 
+### July 2026 external validation — the shadow does not transfer
+
+The above numbers were subsequently checked outside the corpus and against a
+retrying adversary. Both checks failed. Full detail and reproduction commands
+are in `reports/model-experiments.md`; the summary that changes how the
+numbers above should be read:
+
+- **PromptShield public test split (23,516 rows, 1.374% benign-only overlap
+  with morgott training views): ROC AUC 0.624 and 0.00% TPR at 1% FPR.** Last
+  place against every published baseline on that split, below ProtectAI v2.
+  Every head, both members and all fusions cap at 0.52% TPR. The cause is not
+  truncation (chunked scoring lifts AUC to 0.661 and leaves TPR at 0.00%) and
+  not head selection. Benign application prompts that carry instructional
+  language outrank every attack.
+- **Attempt scaling: ASR@1 is 49.20% and ASR@32 is 98.30%** using free
+  surface mutations, so the 77.16% recall figure corresponds to roughly
+  **1.38% effective recall** against a 32-attempt adversary.
+- **The 0.101% FPR describes short text.** 98.5% of the negatives it averages
+  over are 64 tokens or fewer; above that the measured FPR is 1.1%-6.7%.
+- **Multi-turn recall at the same operating point is 1.79%.** Multi-turn rows
+  were filtered out of the suite the headline was computed on.
+- **The leakage check misses obfuscated duplicates.** Twelve groups span more
+  than one split under a normaliser that handles zero-width and homoglyph
+  evasion; one payload appears in train, validation and dev-test at once.
+
+Treat the 0.101%/77.16% pair as an in-corpus artifact, not a detector result.
+
 Before another encoder-tuning experiment, collect realistic matched transaction attacks and benign tasks, paired multilingual transformations on both labels, independently sourced known-span long-document attacks, and prospective traffic-like negatives.
 Do not repeat context-length, document-bag, or BIPIA augmentation ablations on the same labels.
 Do not sweep reinforcement-learning, focal-loss, or source-weighting objectives over the current open dev roles as a substitute for new evidence.

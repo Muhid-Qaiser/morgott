@@ -543,6 +543,90 @@ class PolicyTests(unittest.TestCase):
             committed[0]["arguments"]["body"], "The public report is ready."
         )
 
+    def test_provenance_is_load_bearing_not_decorative(self):
+        """Flipping ONLY provenance must flip the decision.
+
+        Guards against the earlier state of this policy, where `provenance` was
+        validated for shape and then never read, and attacks were really being
+        stopped by a two-entry tool allowlist.
+        """
+        action = {
+            "tool": "transfer_funds",
+            "arguments": {"to": "treasury-ops", "amount": "100"},
+        }
+        untrusted = {
+            "contains_sensitive_data": False,
+            "provenance": ["untrusted_document"],
+        }
+        trusted = {"contains_sensitive_data": False, "provenance": ["user_request"]}
+
+        allowed_untrusted, reason = authorize(REFERENCE_POLICY, action, untrusted)
+        self.assertFalse(allowed_untrusted)
+        self.assertEqual(reason, "untrusted_origin_for_capability")
+
+        allowed_trusted, _ = authorize(REFERENCE_POLICY, action, trusted)
+        self.assertTrue(allowed_trusted)
+
+    def test_mixed_provenance_takes_the_lowest_trust(self):
+        action = {
+            "tool": "write_memory",
+            "arguments": {"namespace": "global", "value": "remember this"},
+        }
+        mixed = {
+            "contains_sensitive_data": False,
+            "provenance": ["user_request", "untrusted_rag"],
+        }
+        self.assertEqual(
+            authorize(REFERENCE_POLICY, action, mixed)[1],
+            "untrusted_origin_for_capability",
+        )
+
+    def test_unknown_provenance_channel_fails_closed(self):
+        action = {
+            "tool": "save_summary",
+            "arguments": {
+                "path": "/workspace/summaries/report.txt",
+                "summary": "ok",
+            },
+        }
+        context = {"contains_sensitive_data": False, "provenance": ["some_new_channel"]}
+        self.assertEqual(
+            authorize(REFERENCE_POLICY, action, context)[1], "unknown_provenance"
+        )
+
+    def test_untrusted_origin_cannot_trigger_sensitive_egress(self):
+        action = {
+            "tool": "send_email",
+            "arguments": {
+                "to": "analyst@morgott.test",
+                "subject": "Requested report",
+                "body": "secret",
+            },
+        }
+        context = {
+            "contains_sensitive_data": True,
+            "provenance": ["untrusted_email"],
+        }
+        self.assertEqual(
+            authorize(REFERENCE_POLICY, action, context)[1],
+            "sensitive_data_from_untrusted_origin",
+        )
+
+    def test_granted_tools_are_not_denied_merely_by_absence(self):
+        """Every tool the attack scenarios use is actually granted.
+
+        If a future edit drops one, its attack would be denied by
+        `tool_not_granted` again and the ablation would silently stop testing
+        provenance at all.
+        """
+        used = {
+            scenario["action"]["tool"]
+            for scenario in SCENARIOS
+            if scenario["kind"] == "attack"
+        }
+        granted = set(REFERENCE_POLICY["capabilities"])
+        self.assertEqual(used - granted, set())
+
     def test_ablation_commits_no_unauthorized_action(self):
         with tempfile.TemporaryDirectory() as directory:
             result = run_policy_ablation(Path(directory))

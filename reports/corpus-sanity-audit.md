@@ -43,6 +43,31 @@ Exact current counts, hashes, and split distributions remain in `data/manifest.j
 - The Rogue Security benchmark is materially contaminated by current public-source families.
   An exact normalized audit matched 54.28% of its rows to the canonical corpus, so it cannot serve as an independent headline evaluation.
 
+## Normalisation and leakage defects (measured 2026-07-27)
+
+`normalize_text` is NFKC, case folding and whitespace collapse. Tested against
+thirteen known evasion techniques as a pure string transform, it collapses
+**four**; a stricter normaliser adding invisible-codepoint stripping, homoglyph
+folding, combining-mark removal and repeat capping collapses **thirteen**.
+
+The leakage check inherits the gap. Over a 360,000-row sample drawn evenly from
+routing train, validation and dev-test:
+
+- 721 texts (0.200%) collapse under the stricter normaliser but not the current
+  one.
+- **Twelve groups span more than one split** and are invisible to the current
+  exact-hash check. One HackAPrompt payload appears in train, validation and
+  dev-test simultaneously, in three different obfuscations.
+
+Small in aggregate, but these are obfuscated adversarial payloads: precisely the
+population whose held-out status the robustness numbers depend on. Reported
+recall on obfuscated attacks is therefore optimistic by an unknown amount.
+
+Do **not** repair this by editing `normalize_text`. That changes every
+`normalized_text_sha256` in the manifest and forces a full corpus rebuild. Record
+a second, stricter fingerprint alongside the existing one and use it for the
+leakage audit only.
+
 ## Consequence
 
 No current classifier should block users, approve transactions, or grant tool authority.
