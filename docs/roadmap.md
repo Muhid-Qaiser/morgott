@@ -49,6 +49,7 @@ known attack span.
 The repository owner authorized one bounded exception on 2026-07-28 after the external tail failure was measured.
 It covers the completed full-data frozen mmBERT head and one update-matched rank-8 mmBERT LoRA engineering gate.
 It does not authorize a LoRA sweep, a full-mixture LoRA claim, production calibration, or blocking.
+The maintained trainer can execute a full-mixture LoRA run if one is later authorized, but code availability is not evidence or approval.
 
 Exit condition: one reproducible shadow candidate improves on the cheap control
 across source-held-out evidence without unacceptable benign review load. This is
@@ -64,7 +65,7 @@ A validation-calibrated mean of the two backbones' direct-route probabilities re
 These are single-seed development shadows, not a promoted global model.
 No model is approved for global routing or blocking.
 
-### July 2026 external validation — the shadow does not transfer
+### July 2026 external validation - the shadow does not transfer
 
 The above numbers were subsequently checked outside the corpus and against a
 retrying adversary. Both checks failed. Full detail and reproduction commands

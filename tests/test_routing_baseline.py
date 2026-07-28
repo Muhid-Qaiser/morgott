@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from morgott.routing_baseline import (
+from morgott.models.routing_baseline import (
     MAX_BATCH_CHARACTERS,
     _cap_rows,
     _direct_strength,

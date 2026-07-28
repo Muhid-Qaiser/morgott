@@ -2,18 +2,17 @@ from __future__ import annotations
 
 import argparse
 import json
-import tempfile
 from pathlib import Path
 
 from .corpus import build_corpus, rebuild_routing
-from .data import build_dataset
-from .detector import run_benchmark, scan
-from .policy import run_policy_ablation
-from .routing_baseline import (
+from .models.detector import run_benchmark, scan
+from .models.mmbert import score_file
+from .models.routing_baseline import (
     DEFAULT_EPOCHS,
     DEFAULT_MAX_PER_SOURCE_LABEL,
     run_routing_baseline,
 )
+from .policy import run_policy_ablation
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -68,6 +67,19 @@ def _parser() -> argparse.ArgumentParser:
         default=Path("artifacts/guard_bundle.joblib"),
         help="trusted local artifact produced by the benchmark command",
     )
+
+    shadow = subcommands.add_parser(
+        "shadow-score",
+        help="emit advisory scores from one retained mmBERT shadow",
+    )
+    shadow.add_argument("model")
+    shadow.add_argument("input", type=Path)
+    shadow.add_argument("output", type=Path)
+    shadow.add_argument(
+        "--manifest",
+        type=Path,
+        default=Path("model-artifacts.json"),
+    )
     return parser
 
 
@@ -79,16 +91,7 @@ def main(argv: list[str] | None = None) -> None:
         if args.routing_only:
             result = rebuild_routing(args.data_dir)
         else:
-            canonical_manifest.unlink(missing_ok=True)
-            with tempfile.TemporaryDirectory(
-                dir=args.data_dir, prefix=".core-build-"
-            ) as directory:
-                core_manifest = Path(directory) / "manifest.json"
-                build_dataset(args.data_dir, manifest_path=core_manifest)
-                result = build_corpus(
-                    args.data_dir,
-                    core_manifest_path=core_manifest,
-                )
+            result = build_corpus(args.data_dir)
         summary = {
             "manifest": str(canonical_manifest),
             "sources": len(result["source_outputs"]),
@@ -123,6 +126,12 @@ def main(argv: list[str] | None = None) -> None:
                 "unauthorized_actions_committed"
             ],
             "report": str(args.reports_dir / "policy_ablation.md"),
+        }
+    elif args.command == "shadow-score":
+        score_file(args.manifest, args.model, args.input, args.output)
+        summary = {
+            "model": args.model,
+            "output": str(args.output),
         }
     else:
         summary = scan(args.text, args.model, args.channel)

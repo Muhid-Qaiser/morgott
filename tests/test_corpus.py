@@ -6,30 +6,38 @@ from pathlib import Path
 from unittest.mock import patch
 
 from morgott.corpus import (
-    _banking77_sample,
-    _boundary_pair_sample,
-    _coconot_sample,
     _consume_source,
     _consume_source_quarantine,
-    _false_reject_sample,
+    rebuild_routing,
+)
+from morgott.data import SOURCES, _sample, _set_source_role
+from morgott.routing import materialize_routing_views
+from morgott.sources.boundary import (
+    _boundary_pair_sample,
+    _validate_boundary_rows,
+)
+from morgott.sources.finance import (
     _financebench_rows,
-    _hackaprompt_sample,
     _harper_has_lexical_content,
+    _tatqa_sample,
+    _tatqa_table_text,
+)
+from morgott.sources.security import (
+    _hackaprompt_sample,
     _llmail_attack_attempt,
+    _wildguard_sample,
+    _wildjailbreak_sample,
+)
+from morgott.sources.tasks import (
+    _banking77_sample,
+    _coconot_sample,
+    _false_reject_sample,
     _lmsys_arena_sample,
     _mind2web_sample,
     _sensitive_text_reasons,
     _taskmaster_sample,
     _taskmaster_split_group,
-    _tatqa_sample,
-    _tatqa_table_text,
-    _validate_boundary_rows,
-    _wildguard_sample,
-    _wildjailbreak_sample,
-    rebuild_routing,
 )
-from morgott.data import SOURCES, _sample, _set_source_role
-from morgott.routing import materialize_routing_views
 
 
 def _row(
@@ -230,7 +238,7 @@ class CorpusTests(unittest.TestCase):
             )
         data = b"".join(json.dumps(row).encode() + b"\n" for row in source_rows)
         with patch(
-            "morgott.corpus._github_raw",
+            "morgott.sources.finance._github_raw",
             return_value=(
                 data,
                 "a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877",

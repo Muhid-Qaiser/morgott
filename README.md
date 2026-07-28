@@ -3,8 +3,8 @@
 morgott is a research POC for prompt-injection and agent-security work.
 The maintained deliverable is a reproducible, provenance-preserving data corpus.
 The current modelling deliverable is a versioned full-data frozen-mmBERT shadow plus a promising one-seed LoRA gate documented in `reports/model-experiments.md`.
-Their small inference artifacts use Git LFS, and neither is wired into the product CLI.
-No model is finalized or approved for blocking.
+Their small inference artifacts use Git LFS and are available through the explicit advisory `morgott shadow-score` command.
+No model is approved for blocking.
 
 The security design deliberately separates prediction from authority:
 
@@ -141,25 +141,42 @@ ignored. `morgott scan` is shadow-only and always returns `decision: allow`.
 
 `morgott routing-baseline` trains one reproducible unweighted word 1-2 gram linear control on source-supported direct-user rows.
 It verifies inputs against the canonical manifest, uses the untouched 0.5 cutoff, and reports aggregate and per-source development metrics.
-Completed neural and data-ablation runners are not part of the active package because none produced a promotable model.
-Their metrics and stop decisions remain in the versioned reports.
-The frozen-mmBERT full-data pair-ranking candidate and the one-seed LoRA gate are retained only as advisory first-pass research shadows under `artifacts/combined_generic/`.
+Historical neural and data-ablation runners are not part of the active tree.
+Their metrics and stop decisions remain in the versioned reports and Git history.
+The selected frozen-mmBERT full-data pair-ranking candidate and the one-seed LoRA gate are retained only as advisory first-pass research shadows under `artifacts/models/`.
 Their external transfer evidence remains too weak for blocking, and every side effect still requires deterministic policy authorization.
 Both generic heads strictly normalize and truncate each input to its first 512 tokens.
 They do not chunk long documents or localize injected spans.
+
+The maintained mmBERT package can prepare the pinned external data, preflight the complete canonical mixture, train either a frozen head or rank-8 LoRA, and evaluate a new run:
+
+```bash
+uv run python -m morgott.models.mmbert.external_data
+uv run python -m morgott.models.mmbert.train --preflight-only
+uv run --extra encoder python -m morgott.models.mmbert.train --mode lora
+uv run --extra encoder python -m morgott.models.mmbert.evaluate \
+  artifacts/mmbert/runs/mmbert-base-full-lora-s42
+```
+
+The trainer streams every canonical training row with source-supported injection labels after the external leakage guard, then adds filtered PromptShield training rows and the retained matched pairs.
+Its frozen and LoRA modes share one data contract, loss, checkpoint rule, and artifact format.
+The single generic output treats direct injection, indirect injection, and jailbreak as positive instruction subversion and does not expose separate subtype scores.
+Source-supported harmful content without subversion may remain as a negative counterexample; this is not a harmfulness score.
+It keeps the retained SDPA attention contract; an FA2 run requires its own pinned kernel and mmBERT parity record.
+Having a maintained runner does not authorize a new experiment or promote its output.
+The evidence gates in `docs/roadmap.md` still apply.
 
 The registered model keys and exact hashes are in `model-artifacts.json`.
 Score downstream JSONL without producing a decision:
 
 ```bash
-PYTHONPATH=src:experiments uv run python \
-  experiments/score_shadow_model.py \
-  model-artifacts.json full-frozen-s42 input.jsonl scores.jsonl
+uv run --extra encoder morgott shadow-score \
+  mmbert-frozen-s42 input.jsonl scores.jsonl
 ```
 
 Each input row must contain unique `id`, non-empty `text`, and trusted `input_channel` set to `direct_user` or `untrusted_content`.
 The output contains only the raw score, channel, model revision, and artifact hashes.
-Use `full-frozen-s42`, `full-frozen-s43`, `full-frozen-s44`, and `lora-s42` independently for downstream comparisons.
+Use `mmbert-frozen-s42` or `mmbert-lora-s42`.
 Do not average or OR them without evaluating that new ensemble.
 
 The first proper routing experiment should stay deliberately small:
@@ -177,12 +194,17 @@ is promoted; their durable conclusions are summarized in
 ## Repository map
 
 - `src/morgott/data.py`: core source adapters and legacy injection views.
-- `src/morgott/corpus.py`: additional source adapters.
+- `src/morgott/corpus.py`: canonical corpus build and publication interface.
+- `src/morgott/sources/`: source adapters grouped by security, finance, task, and authorization-boundary data.
 - `src/morgott/routing.py`: disk-backed canonical routing-view materialization.
 - `src/morgott/overlap.py`: conservative near-overlap audit.
-- `src/morgott/detector.py`: optional cheap shadow-control model.
+- `src/morgott/models/mmbert/`: maintained mmBERT preparation, full-data training, evaluation, and advisory inference.
+- `src/morgott/models/`: retained linear controls and model-specific packages.
+- `src/morgott/normalization.py`: strict inference-side text normalization.
 - `src/morgott/policy.py`: deterministic authorization simulation.
 - `tests/`: maintained data, detector, and policy invariants.
+- `artifacts/models/`: the two registered advisory model artifacts.
+- `experiments/`: rules for disposable or study-specific experiments that do not belong in maintained model code.
 - `data/manifest.json`: sole versioned machine data manifest.
 - `reports/dataset-selection.md`: source inclusion and exclusion decisions.
 - `reports/label-audit.md`: label interpretation and known ambiguity.

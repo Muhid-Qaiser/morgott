@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from morgott import cli
+from morgott import corpus
 from morgott.data import (
     _fetch,
     _sample,
@@ -20,7 +20,7 @@ from morgott.data import (
     read_verified_jsonl,
     text_hash,
 )
-from morgott.detector import (
+from morgott.models.detector import (
     DIRECT_OPERATING_FPR_BUDGETS,
     DIRECT_PRECISION_FLOORS,
     DIRECT_REVIEW_PRECISION_FLOOR,
@@ -90,15 +90,15 @@ class DataTests(unittest.TestCase):
                 manifest_path.write_text("transient core\n", encoding="utf-8")
 
             with (
-                patch.object(cli, "build_dataset", side_effect=write_core),
+                patch.object(corpus, "build_dataset", side_effect=write_core),
                 patch.object(
-                    cli,
-                    "build_corpus",
+                    corpus,
+                    "_extend_corpus",
                     side_effect=RuntimeError("source failed"),
                 ),
                 self.assertRaisesRegex(RuntimeError, "source failed"),
             ):
-                cli.main(["data", "--data-dir", str(root)])
+                corpus.build_corpus(root)
 
             self.assertFalse(canonical.exists())
             self.assertEqual(list(root.glob(".core-build-*")), [])
@@ -541,7 +541,7 @@ class DetectorTests(unittest.TestCase):
                 },
             },
         }
-        with patch("morgott.detector.joblib.load", return_value=artifact):
+        with patch("morgott.models.detector.joblib.load", return_value=artifact):
             result = scan("ordinary-looking injected task", channel="untrusted_content")
         self.assertEqual(result["signal"], "elevated")
         self.assertEqual(result["decision"], "allow")
@@ -628,6 +628,60 @@ class PolicyTests(unittest.TestCase):
 
         allowed_trusted, _ = authorize(REFERENCE_POLICY, action, trusted)
         self.assertTrue(allowed_trusted)
+
+    def test_trusted_origin_cannot_expand_task_scoped_grants(self):
+        trusted = {"contains_sensitive_data": False, "provenance": ["user_request"]}
+        cases = [
+            (
+                {
+                    "tool": "write_memory",
+                    "arguments": {"namespace": "global", "value": "outside grant"},
+                },
+                "argument_not_granted:value",
+            ),
+            (
+                {
+                    "tool": "transfer_funds",
+                    "arguments": {"to": "attacker-wallet", "amount": "100"},
+                },
+                "argument_not_granted:to",
+            ),
+            (
+                {
+                    "tool": "update_case_notes",
+                    "arguments": {"case_id": "OTHER", "notes": "CANARY-SYNTHETIC"},
+                },
+                "argument_not_granted:case_id",
+            ),
+            (
+                {
+                    "tool": "add_warehouse_inventory",
+                    "arguments": {
+                        "warehouse_id": "SYNTHETIC-WAREHOUSE-001",
+                        "sku": "SYNTHETIC-SKU-001",
+                        "quantity": "999",
+                    },
+                },
+                "argument_not_granted:quantity",
+            ),
+            (
+                {
+                    "tool": "update_order_status",
+                    "arguments": {
+                        "order_id": "SYNTHETIC-ORDER-001",
+                        "status": "fulfilled",
+                    },
+                },
+                "argument_not_granted:status",
+            ),
+        ]
+
+        for action, reason in cases:
+            with self.subTest(tool=action["tool"]):
+                self.assertEqual(
+                    authorize(REFERENCE_POLICY, action, trusted),
+                    (False, reason),
+                )
 
     def test_mixed_provenance_takes_the_lowest_trust(self):
         action = {

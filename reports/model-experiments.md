@@ -635,8 +635,8 @@ where stated; `wildguard_weak_transfer` recipe only.
 - Several conditions are n=2 and the 50% dev-recall range is [42-68]; 25% and
   50% should not be ranked against each other on this evidence.
 
-Reproduction and caveats: `experiments/README.md`. Raw data:
-`artifacts/phase3_archived/phase3_summary.json`.
+The completed runner source is preserved by Git commit `91e8c829c8b39c8ff37a6ca2479c8fc057168d39`.
+Raw local data was written to `artifacts/phase3_archived/phase3_summary.json`.
 
 Reporting rule: any PromptShield number must be labelled Track A (trained on the morgott corpus only; the split measures transfer) or Track B (trained on morgott plus PromptShield train; PromptShield-internal source-disjoint development rather than IID capability).
 Known LMSYS-family overlap and missing row-level PromptShield provenance mean Track B is not source-OOD relative to the complete Morgott plus PromptShield fit.
@@ -670,7 +670,7 @@ Masked losses remain appropriate only for future subtype heads whose labels can 
 The frozen encoder and identical three-epoch schedules isolate the loss change, although validation-selected checkpoints can come from different epochs.
 The scorer strictly normalizes and truncates every row to its first 512 tokens.
 It does not chunk long documents or localize payload spans, so long web, retrieval, and tool content remains outside the supported evidence.
-The three retained run directories are under `artifacts/combined_generic/full_runs/` and end in `_pair-rank-0p25_s42`, `_pair-rank-0p25_s43`, and `_pair-rank-0p25_s44`.
+The three evaluated run directories were under `artifacts/combined_generic/full_runs/` and ended in `_pair-rank-0p25_s42`, `_pair-rank-0p25_s43`, and `_pair-rank-0p25_s44`.
 Their `result.json` SHA-256 digests are `401b8b20c6620fa1c34fa3c82eb59c6f387474f49ea3f7cd97877092d155d0ae`, `2fe0233828456dbb2ca4ee7d91e1e1e7e5d393fe1814926364975859acfb1f27`, and `ed3ca99f94adb1ee0c0af6bcb4aaa70b28a0d89f6b2fb03add43be503ff4bc6a`.
 Their current-source `evaluation.json` SHA-256 digests are `737e8aab8c984841d0404bcfaef4b06442b75995f59738f870fbc9e81e146077`, `4c45cae5be97205f25a71045ffe722461ff9c95b4cc51988c621b938bd805360`, and `4ae05dbf3df0497948a44b655313c3165c3976ac1ff593bc1bf2f96eb2d9f2c2`.
 The corresponding no-ranking control evaluation digests are `51c1e653057e2db3fff242d9c05e8b547f9cd7ecafeb9e1e43a2084a505fa5c9`, `5fb8296b23119b3ba39555c78ff5e91d6a5f7fa2a76c6f78fb4f1889fdc8054a`, and `25a2e10fb21e41de75800e5fe56434f0442453bf3b8d5a29f10c73c6fa5f0e71`.
@@ -703,8 +703,8 @@ Even zero observed false positives there has a 97.5% one-sided upper bound of 0.
 Decision: retain frozen mmBERT with full-balanced BCE and pair ranking at weight 0.25 as the first-pass advisory research shadow.
 It moved the SEP tail in all three seeds without an aggregate finance false-positive regression.
 Absolute transfer remains weak because mean canonical-threshold SEP TPR is only 0.27%.
-The model is not wired into the CLI and is not approved for blocking, authorization, transaction approval, or privilege grants.
-The standalone `experiments/score_shadow_model.py` path verifies the registered artifacts and emits raw scores plus provenance without an authorization decision.
+The model is not wired into `morgott scan` and is not approved for blocking, authorization, transaction approval, or privilege grants.
+The maintained `morgott shadow-score` command verifies the registered artifacts and emits raw scores plus provenance without an authorization decision.
 Trusted provenance must route its score, and every financial or Web3 side effect must still pass the deterministic reference monitor.
 
 The old 81.14% number is not a competing result on this task.

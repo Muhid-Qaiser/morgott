@@ -46,7 +46,7 @@ Inspect the resulting manifest hashes, counts, split invariants, and quarantine 
 
 Never commit credentials, `.env` files, raw provider responses, ignored corpus outputs, or unregistered local model artifacts.
 The only model-artifact exception is the owner-approved advisory research set listed in `model-artifacts.json`.
-Its binary weights and arrays must use Git LFS, retain SHA-256 provenance, and remain separate from the public base encoder and raw training data.
+Its binary weights must use Git LFS, retain SHA-256 provenance, and remain separate from the public base encoder and raw training data.
 Adding or replacing a registered artifact requires explicit owner approval plus a licensing, privacy, and reproducibility review.
 Do not push the registered LFS objects to an external remote until the mixed-corpus redistribution review is complete.
 Only `data/manifest.json` is versioned from the local data tree.

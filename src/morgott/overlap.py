@@ -61,11 +61,22 @@ class NearIndex:
             defaultdict(list) for _ in range(NEAR_BANDS)
         ]
 
-    def add(self, row: dict, *, dataset: str, value: int | None = None) -> None:
+    def add(
+        self,
+        row: dict,
+        *,
+        dataset: str,
+        value: int | None = None,
+        normalized_hash: str | None = None,
+    ) -> None:
         value = fingerprint(row["text"]) if value is None else value
         if value is None:
             return
-        normalized_hash = row.get("normalized_text_sha256") or text_hash(row["text"])
+        normalized_hash = (
+            normalized_hash
+            or row.get("normalized_text_sha256")
+            or text_hash(row["text"])
+        )
         record = {
             "dataset": dataset,
             "id": row.get("id"),
@@ -80,11 +91,21 @@ class NearIndex:
             key = (value >> (band * 16)) & 0xFFFF
             self.buckets[band][key].append(index)
 
-    def query(self, row: dict, *, value: int | None = None) -> list[dict]:
+    def query(
+        self,
+        row: dict,
+        *,
+        value: int | None = None,
+        normalized_hash: str | None = None,
+    ) -> list[dict]:
         value = fingerprint(row["text"]) if value is None else value
         if value is None:
             return []
-        normalized_hash = row.get("normalized_text_sha256") or text_hash(row["text"])
+        normalized_hash = (
+            normalized_hash
+            or row.get("normalized_text_sha256")
+            or text_hash(row["text"])
+        )
         candidates: set[int] = set()
         for band in range(NEAR_BANDS):
             key = (value >> (band * 16)) & 0xFFFF
