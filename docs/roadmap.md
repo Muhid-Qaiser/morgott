@@ -46,6 +46,10 @@ machinery until a measured error analysis predicts what each addition should
 fix. Do not train every window of a positive document as positive without a
 known attack span.
 
+The repository owner authorized one bounded exception on 2026-07-28 after the external tail failure was measured.
+It covers the completed full-data frozen mmBERT head and one update-matched rank-8 mmBERT LoRA engineering gate.
+It does not authorize a LoRA sweep, a full-mixture LoRA claim, production calibration, or blocking.
+
 Exit condition: one reproducible shadow candidate improves on the cheap control
 across source-held-out evidence without unacceptable benign review load. This is
 still not permission to block users.
@@ -86,6 +90,18 @@ numbers above should be read:
   evasion; one payload appears in train, validation and dev-test at once.
 
 Treat the 0.101%/77.16% pair as an in-corpus artifact, not a detector result.
+
+### July 2026 bounded generic first-pass artifacts
+
+The full-data frozen mmBERT recipe fits leakage-filtered canonical rows, PromptShield train, and the retained generated pairs with balanced BCE plus pair ranking.
+Three frozen-head seeds are retained to show dispersion.
+One rank-8 LoRA seed is retained only as an update-matched engineering gate against a frozen control; it omits most canonical rows and all generated pairs.
+PromptShield validation selects checkpoints, while canonical calibration alone selects reported applied thresholds.
+PromptShield test is source-disjoint within its own release and remains already-consumed benchmark development data.
+Known cross-corpus overlap prevents a source-OOD claim relative to the complete Morgott plus PromptShield fit.
+SEP remains already-consumed transfer development data.
+All four downstream checkpoints are advisory and must be compared independently rather than combined into an unevaluated ensemble.
+Every score is truncated to the first 512 normalized tokens, so long web, retrieval, and tool content remains an explicit evidence gap.
 
 Before another encoder-tuning experiment, collect realistic matched transaction attacks and benign tasks, paired multilingual transformations on both labels, independently sourced known-span long-document attacks, and prospective traffic-like negatives.
 Do not repeat context-length, document-bag, or BIPIA augmentation ablations on the same labels.

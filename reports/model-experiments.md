@@ -638,10 +638,127 @@ where stated; `wildguard_weak_transfer` recipe only.
 Reproduction and caveats: `experiments/README.md`. Raw data:
 `artifacts/phase3_archived/phase3_summary.json`.
 
-Reporting rule: any PromptShield number must be labelled Track A (trained on the
-morgott corpus only; the split measures transfer) or Track B (trained on
-morgott plus PromptShield train; the split measures in-distribution capability).
+Reporting rule: any PromptShield number must be labelled Track A (trained on the morgott corpus only; the split measures transfer) or Track B (trained on morgott plus PromptShield train; PromptShield-internal source-disjoint development rather than IID capability).
+Known LMSYS-family overlap and missing row-level PromptShield provenance mean Track B is not source-OOD relative to the complete Morgott plus PromptShield fit.
 Everything above is Track A. SEP (`artifacts/external_eval_data/sep/`, 18,320
 rows, contamination 0.126% with zero on positives) is the replacement transfer
 set; its positives are benign-intent imperatives, so it measures
 instruction-in-data separation rather than harmfulness.
+
+### Rejected tail and OOD-score diagnostics
+
+A seed-42 global top-1% negative penalty with weight 0.1 after one warmup epoch was tested against its same-seed control.
+PromptShield direct ROC AUC fell from 0.8004 to 0.7051, PR-AUC fell from 0.4724 to 0.3546, and descriptive TPR at approximately 1% row FPR fell from 2 of 6,486 positives (0.0308%) to zero.
+SEP descriptive TPR at approximately 1% row FPR was effectively flat at 3.3079% versus 3.3188%.
+Its higher transported SEP TPR came only with row FPR worsening from 3.30% to 6.07%.
+Decision: reject the hard-negative penalty and do not retain its implementation.
+
+Post-hoc energy computed from one binary logit is a monotonic transformation of the existing score and cannot change fixed-FPR ranking.
+Revisit OOD scoring only with a separately trained OOD head or genuine outlier exposure.
+
+## Full-data frozen mmBERT first-line shadow (2026-07-28)
+
+This experiment trains a generic instruction-subversion head over the pinned `jhu-clsp/mmBERT-base` representation with strict normalization.
+The fitted mixture contains 1,069,607 leakage-filtered canonical training rows, 18,197 leakage-filtered PromptShield training rows, and 11,041 retained generated pairs containing 22,082 rows.
+PromptShield validation selects checkpoints but never fits parameters or selects operating thresholds.
+A disjoint 116,488-row canonical calibration role selects thresholds.
+PromptShield test and SEP remain already-open development evaluations.
+
+The retained objective gives equal domain loss mass to canonical rows, PromptShield rows, and generated pairs, then adds aligned pair-ranking loss at weight 0.25.
+The generic binary target is known for every selected row, so its main classification loss is ordinary BCE.
+Masked losses remain appropriate only for future subtype heads whose labels can be unknown.
+The frozen encoder and identical three-epoch schedules isolate the loss change, although validation-selected checkpoints can come from different epochs.
+The scorer strictly normalizes and truncates every row to its first 512 tokens.
+It does not chunk long documents or localize payload spans, so long web, retrieval, and tool content remains outside the supported evidence.
+The three retained run directories are under `artifacts/combined_generic/full_runs/` and end in `_pair-rank-0p25_s42`, `_pair-rank-0p25_s43`, and `_pair-rank-0p25_s44`.
+Their `result.json` SHA-256 digests are `401b8b20c6620fa1c34fa3c82eb59c6f387474f49ea3f7cd97877092d155d0ae`, `2fe0233828456dbb2ca4ee7d91e1e1e7e5d393fe1814926364975859acfb1f27`, and `ed3ca99f94adb1ee0c0af6bcb4aaa70b28a0d89f6b2fb03add43be503ff4bc6a`.
+Their current-source `evaluation.json` SHA-256 digests are `737e8aab8c984841d0404bcfaef4b06442b75995f59738f870fbc9e81e146077`, `4c45cae5be97205f25a71045ffe722461ff9c95b4cc51988c621b938bd805360`, and `4ae05dbf3df0497948a44b655313c3165c3976ac1ff593bc1bf2f96eb2d9f2c2`.
+The corresponding no-ranking control evaluation digests are `51c1e653057e2db3fff242d9c05e8b547f9cd7ecafeb9e1e43a2084a505fa5c9`, `5fb8296b23119b3ba39555c78ff5e91d6a5f7fa2a76c6f78fb4f1889fdc8054a`, and `25a2e10fb21e41de75800e5fe56434f0442453bf3b8d5a29f10c73c6fa5f0e71`.
+All 54 recorded evaluation arrays were independently rehashed and checked for shape and dtype consistency.
+All six v3 metric sections and score arrays are exactly equal to their v2 counterparts.
+The v3 files pin the committed evaluator SHA-256 `5c536552a0007a4e89e2ed829f97e89183a0bf0c16f81505b1e061990c64e83c`, reverify every scored input and head before atomic publication, and treat the large training feature cache as recorded training provenance rather than an evaluation dependency.
+
+| Seed | Validation macro BCE, BCE control to pair ranking | SEP descriptive TPR at empirical approximately 1% row FPR | SEP canonical-threshold TPR / row FPR, control to pair ranking |
+|---|---:|---:|---:|
+| 42 | 0.094521 to 0.093509 | 0.20% to 1.47% | 0.0109% / 0.1747% to 0.0109% / 0.0546% |
+| 43 | 0.105266 to 0.088313 | 0.80% to 4.32% | 0.1092% / 0.3821% to 0.3712% / 0.3493% |
+| 44 | 0.108474 to 0.090422 | 0.47% to 2.98% | 0.1528% / 0.6004% to 0.4148% / 0.3930% |
+
+Pair ranking improved the descriptive SEP tail in all three seeds.
+Its mean SEP TPR at the empirical approximately 1% row-FPR point rose from 0.4876% to 2.9258%.
+The mean improvement was 2.4381 percentage points, with sample standard deviation 1.1262 points and a seed range from 1.2773 to 3.5262 points.
+No confidence interval is claimed: three seeds estimate only limited run dispersion, and the flattened external releases do not expose enough lineage for a defensible independent bootstrap.
+SEP ROC AUC and PR-AUC did not improve in every seed, so this is specifically a tail result rather than a uniform ranking gain.
+
+At the canonical-calibrated threshold, mean SEP TPR rose from 0.0910% to 0.2656% while mean SEP row FPR fell from 0.3857% to 0.2656%.
+Canonical dev-test mean TPR rose from 50.19% to 54.48% while mean row FPR fell from 0.3641% to 0.2931%.
+PromptShield-internal source-disjoint mean TPR rose from 1.81% to 6.27% while mean row FPR fell from 0.689% to 0.644%.
+PromptShield seed 43 is a material exception because both TPR and row FPR increased.
+Finance false positives fell from a mean of 6.67 to 4.33 among 7,054 canonical finance negatives, with no finance source worsening.
+
+The 1% calibration target is the primary operating diagnostic.
+The 0.1% target remains unavailable because the untrusted-content calibration channel contains only 979 negative components.
+Even zero observed false positives there has a 97.5% one-sided upper bound of 0.3761%, so a 0.1% claim would be unsupported.
+
+Decision: retain frozen mmBERT with full-balanced BCE and pair ranking at weight 0.25 as the first-pass advisory research shadow.
+It moved the SEP tail in all three seeds without an aggregate finance false-positive regression.
+Absolute transfer remains weak because mean canonical-threshold SEP TPR is only 0.27%.
+The model is not wired into the CLI and is not approved for blocking, authorization, transaction approval, or privilege grants.
+The standalone `experiments/score_shadow_model.py` path verifies the registered artifacts and emits raw scores plus provenance without an authorization decision.
+Trusted provenance must route its score, and every financial or Web3 side effect must still pass the deterministic reference monitor.
+
+The old 81.14% number is not a competing result on this task.
+It was the clean recall of a two-model ModernBERT plus mmBERT ensemble after generous same-suite recalibration near 0.1% row FPR.
+That setup scored 0.00% TPR at 1% FPR on PromptShield and fell to 1.38% effective recall under 32 mutation attempts.
+The new generic shadow has a stronger transfer-tail protocol and a broader training mixture, but its current absolute recall does not exceed 81.14% on a comparable test because no comparable test exists.
+
+### LoRA engineering gate
+
+The matched frozen seed-42 control fits 18,197 Morgott rows plus 18,197 PromptShield rows for 429 updates and selects epoch 3 at macro validation BCE 0.136361.
+The LoRA gate uses the same rows, seed, update count, pinned encoder revision, and validation roles.
+Only the base attention `Wqkv` and `Wo` projections receive rank-8 adapters with alpha 16 and dropout 0.05; the base encoder weights remain frozen.
+Generated pairs are deliberately excluded from this gate so encoder adaptation is the only material training change.
+The LoRA scorer uses the same strict normalization and first-512-token truncation as the frozen head.
+One seed is sufficient for a preliminary engineering comparison, but it is insufficient for a robust method claim.
+The LoRA run selected epoch 3 at macro validation BCE 0.051875, a 61.96% reduction from the matched frozen control.
+Its `result.json` SHA-256 is `570db76e153f6d08bceb9a5688203e619e297d01f092effa25335743215ef90b`.
+The matched frozen and LoRA current-source `evaluation.json` SHA-256 digests are `306637a7d10e5d2d9bc743db30c0fca75b7b78a93e53b4832364bd0b1370ccaa` and `c76956729eba694e378d5e8246f475dd6c4443a4c109b0550e49b4c13ade354e`.
+Their 22 score arrays and all seven metric sections are exactly equal to their v2 counterparts and pin the same committed evaluator as the full-data runs.
+
+| Metric | Matched frozen head | Rank-8 LoRA |
+|---|---:|---:|
+| SEP ROC AUC / PR AUC | 0.8321 / 0.7902 | 0.8758 / 0.8857 |
+| SEP canonical-threshold TPR / row FPR | 2.03% / 0.71% | 31.71% / 0.92% |
+| SEP descriptive TPR at approximately 1% row FPR | 3.89% | 32.48% |
+| PromptShield-internal source-disjoint ROC AUC / PR AUC | 0.7452 / 0.4899 | 0.8410 / 0.7429 |
+| PromptShield descriptive TPR at approximately 1% row FPR | 2.41% | 26.10% |
+| PromptShield canonical-threshold TPR / row FPR | 43.54% / 12.31% | 64.29% / 10.28% |
+| Canonical dev-test descriptive TPR at approximately 1% row FPR | 63.75% | 50.23% |
+| Canonical dev-test canonical-threshold TPR / row FPR | 73.38% / 1.69% | 87.93% / 2.03% |
+| Finance false positives among 7,054 negatives | 9 | 4 |
+
+The ordinary checkpoint-selection and repeated canonical development metrics are:
+
+| Candidate | n | Morgott checkpoint validation ROC AUC / PR-AUC | PromptShield checkpoint validation ROC AUC / PR-AUC | Canonical dev-test applied precision / recall / F1 |
+|---|---:|---:|---:|---:|
+| Full-data frozen plus pair ranking | 3 | 0.9956 / 0.9952 | 0.9961 / 0.9958 | 99.39% / 54.48% / 69.74% |
+| Update-matched frozen | 1 | 0.9945 / 0.9943 | 0.9892 / 0.9889 | 97.44% / 73.38% / 83.71% |
+| Update-matched rank-8 LoRA | 1 | 0.9969 / 0.9968 | 0.9999 / 0.9999 | 97.44% / 87.93% / 92.44% |
+
+The full-data row is the arithmetic mean across seeds.
+Canonical dev-test precision uses the canonical-calibrated 1% target and a development set with 46.77% positives, so it is not an estimate of review precision on deployment traffic.
+
+Decision: LoRA passes this one-seed preliminary engineering gate because it materially improves SEP transfer, PromptShield ranking, and finance false positives.
+It does not establish that LoRA is generally superior, and it does not yet replace the retained full-data frozen shadow.
+It is not a strict Pareto win because SEP row FPR rises by 0.21 percentage points and canonical dev-test row FPR rises by 0.34 points at their transported thresholds.
+FinanceBench also moves from zero to one false positive among 150 rows even though aggregate finance false positives fall from nine to four.
+PromptShield row FPR remains 10.28% when the canonical threshold is transported, canonical same-test tail recall falls by 13.53 percentage points, and this gate excludes the generated pairs and most canonical training rows.
+The next model experiment, when modelling resumes, is one full-mixture LoRA run with the retained pair-ranking objective and the same external evaluator.
+
+### Deferred improvement ledger
+
+1. Train one full-mixture LoRA run with the retained pair-ranking objective and repeat the same external evaluation.
+2. Run additional LoRA seeds only if that full-mixture externally applied result remains materially better.
+3. Build a prospective, lineage-grouped finance and Web3 suite with matched benign transaction tasks, realistic direct and indirect attacks, multilingual transformations, and a long-benign denominator.
+4. Report mutation ASR at multiple attempts beside clean recall before any deployment claim.
+5. Evaluate the deterministic policy monitor in AgentDojo Banking so the advisory sensor is measured as one layer rather than mistaken for the security boundary.

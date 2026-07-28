@@ -17,7 +17,7 @@ jobs:
   check:
     name: Check (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -35,6 +35,6 @@ jobs:
           enable-cache: true
           prune-cache: true
       - name: Install locked dependencies
-        run: uv sync --locked
+        run: uv sync --locked --extra encoder
       - name: Run checks
         run: make check

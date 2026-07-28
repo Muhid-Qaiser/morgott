@@ -1,7 +1,9 @@
 # morgott
 
 morgott is a research POC for prompt-injection and agent-security work.
-The current deliverable is a reproducible, provenance-preserving data corpus.
+The maintained deliverable is a reproducible, provenance-preserving data corpus.
+The current modelling deliverable is a versioned full-data frozen-mmBERT shadow plus a promising one-seed LoRA gate documented in `reports/model-experiments.md`.
+Their small inference artifacts use Git LFS, and neither is wired into the product CLI.
 No model is finalized or approved for blocking.
 
 The security design deliberately separates prediction from authority:
@@ -22,6 +24,14 @@ Install the locked environment and run the canonical local checks:
 ```bash
 uv sync --locked
 make check
+```
+
+Model research and shadow scoring require the optional encoder environment:
+
+```bash
+git lfs install
+git lfs pull
+uv sync --locked --extra encoder
 ```
 
 Run `make hooks` once to opt into automatic Ruff fixes and formatting for staged Python files.
@@ -133,6 +143,24 @@ ignored. `morgott scan` is shadow-only and always returns `decision: allow`.
 It verifies inputs against the canonical manifest, uses the untouched 0.5 cutoff, and reports aggregate and per-source development metrics.
 Completed neural and data-ablation runners are not part of the active package because none produced a promotable model.
 Their metrics and stop decisions remain in the versioned reports.
+The frozen-mmBERT full-data pair-ranking candidate and the one-seed LoRA gate are retained only as advisory first-pass research shadows under `artifacts/combined_generic/`.
+Their external transfer evidence remains too weak for blocking, and every side effect still requires deterministic policy authorization.
+Both generic heads strictly normalize and truncate each input to its first 512 tokens.
+They do not chunk long documents or localize injected spans.
+
+The registered model keys and exact hashes are in `model-artifacts.json`.
+Score downstream JSONL without producing a decision:
+
+```bash
+PYTHONPATH=src:experiments uv run python \
+  experiments/score_shadow_model.py \
+  model-artifacts.json full-frozen-s42 input.jsonl scores.jsonl
+```
+
+Each input row must contain unique `id`, non-empty `text`, and trusted `input_channel` set to `direct_user` or `untrusted_content`.
+The output contains only the raw score, channel, model revision, and artifact hashes.
+Use `full-frozen-s42`, `full-frozen-s43`, `full-frozen-s44`, and `lora-s42` independently for downstream comparisons.
+Do not average or OR them without evaluating that new ensemble.
 
 The first proper routing experiment should stay deliberately small:
 

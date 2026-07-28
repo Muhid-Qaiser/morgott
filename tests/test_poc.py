@@ -423,6 +423,68 @@ class DetectorTests(unittest.TestCase):
         threshold = choose_threshold([0, 0, 1, 1], [0.1, 0.2, 0.8, 0.9], 0.0)
         self.assertEqual(threshold, 0.8)
 
+    def test_threshold_falls_back_above_the_maximum_score(self):
+        threshold = choose_threshold(
+            [0, 0, 1, 1],
+            [0.9, 0.8, 0.2, 0.1],
+            0.0,
+        )
+
+        self.assertEqual(threshold, np.nextafter(0.9, np.inf))
+
+    def test_threshold_prefers_the_lower_equal_recall_candidate(self):
+        threshold = choose_threshold([0, 0, 1], [0.9, 0.7, 1.0], 0.5)
+
+        self.assertEqual(threshold, 0.9)
+
+    def test_fast_threshold_matches_the_original_search(self):
+        def original(labels, scores, max_fpr):
+            labels = np.asarray(labels)
+            scores = np.asarray(scores)
+            best_threshold = float(np.nextafter(scores.max(), np.inf))
+            best_recall = -1.0
+            for threshold in np.unique(scores)[::-1]:
+                predictions = scores >= threshold
+                fpr = predictions[labels == 0].mean()
+                recall = predictions[labels == 1].mean()
+                if fpr <= max_fpr and (
+                    recall > best_recall
+                    or (recall == best_recall and threshold < best_threshold)
+                ):
+                    best_threshold = float(threshold)
+                    best_recall = float(recall)
+            return best_threshold
+
+        rng = np.random.default_rng(42)
+        special = np.asarray(
+            [-np.inf, -0.0, 0.0, 0.5, 1.0, np.inf, np.nan],
+            dtype=np.float64,
+        )
+        for case in range(500):
+            size = int(rng.integers(2, 14))
+            labels = rng.integers(0, 3, size=size)
+            labels[0:2] = [0, 1]
+            scores = np.where(
+                rng.random(size) < 0.7,
+                rng.choice(special, size=size),
+                rng.normal(size=size),
+            )
+            budget = float(rng.choice([-0.1, 0.0, 0.1, 0.5, 1.0, 1.1]))
+            for label_values, score_values in (
+                (labels, scores),
+                (labels.tolist(), scores.tolist()),
+            ):
+                expected = original(label_values, score_values, budget)
+                actual = choose_threshold(label_values, score_values, budget)
+                with self.subTest(case=case, budget=budget):
+                    if np.isnan(expected):
+                        self.assertTrue(np.isnan(actual))
+                    else:
+                        self.assertEqual(
+                            np.float64(actual).view(np.uint64),
+                            np.float64(expected).view(np.uint64),
+                        )
+
     def test_declared_fpr_diagnostics_remain_available(self):
         self.assertEqual(DIRECT_OPERATING_FPR_BUDGETS, (0.001, 0.005, 0.01, 0.02, 0.05))
 

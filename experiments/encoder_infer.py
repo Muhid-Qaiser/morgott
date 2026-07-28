@@ -134,7 +134,13 @@ def _build_head(hidden_size: int):
     return MultipoolHead(hidden_size)
 
 
-def load_member(member: Member, *, device: str = "cuda", verify_hash: bool = True):
+def load_member(
+    member: Member,
+    *,
+    device: str = "cuda",
+    verify_hash: bool = True,
+    attention_implementation: str | None = None,
+):
     """Load one member's tokenizer, frozen encoder and trained head."""
     import torch
     from safetensors.torch import load_file
@@ -154,6 +160,8 @@ def load_member(member: Member, *, device: str = "cuda", verify_hash: bool = Tru
     kwargs = {"dtype": torch.bfloat16}
     if member.model_revision:
         kwargs["revision"] = member.model_revision
+    if attention_implementation:
+        kwargs["attn_implementation"] = attention_implementation
     tokenizer_kwargs = (
         {"revision": member.model_revision} if member.model_revision else {}
     )
@@ -255,9 +263,11 @@ def score_texts(
 
     for index in order:
         width = len(examples[index][1])
-        if batch and (len(batch) + 1) * max(
-            width, max(len(examples[i][1]) for i in batch)
-        ) > token_budget:
+        if (
+            batch
+            and (len(batch) + 1) * max(width, max(len(examples[i][1]) for i in batch))
+            > token_budget
+        ):
             flush(batch)
             batch = []
         batch.append(index)
@@ -270,12 +280,21 @@ def sigmoid(values: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-values.astype(np.float64)))
 
 
-def direct_route_probability(logits: np.ndarray) -> np.ndarray:
-    """The ensemble's `mean_direct_probability` signal, per member.
-
-    The audited fusion averages this across members.
-    """
+def direct_head_probability(logits: np.ndarray) -> np.ndarray:
+    """Return the direct-instruction-subversion head probability."""
     return sigmoid(logits[:, HEADS.index("direct_instruction_subversion")])
+
+
+def route_probability(logits: np.ndarray) -> np.ndarray:
+    """Return the direct-user route used by the retained ensemble."""
+    direct = direct_head_probability(logits)
+    jailbreak = sigmoid(logits[:, HEADS.index("jailbreak")])
+    return np.maximum(direct, jailbreak)
+
+
+def direct_route_probability(logits: np.ndarray) -> np.ndarray:
+    """Historical direct-head signal retained for archived-script compatibility."""
+    return direct_head_probability(logits)
 
 
 def load_audit_members() -> tuple[Member, ...]:

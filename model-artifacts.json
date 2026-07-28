@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "purpose": "advisory first-pass shadow models",
+  "advisory_only": true,
+  "artifact_distribution": "private internal only pending mixed-corpus redistribution review",
+  "base_model": {
+    "id": "jhu-clsp/mmBERT-base",
+    "revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+    "license": "MIT",
+    "url": "https://huggingface.co/jhu-clsp/mmBERT-base",
+    "pytorch_model_sha256": "8ea64ec1ea4eb8fca0fc14b69a2ae571de6bfbc25fd214bb932dd4aba6a3a04e",
+    "tokenizer_json_sha256": "197d4cc5406ee12cc50c8b5511f2393cc32d9db321545979ce041c1199178356"
+  },
+  "score_definition": "sigmoid(generic instruction-subversion logit)",
+  "normalization": "strict",
+  "maximum_tokens": 512,
+  "models": {
+    "full-frozen-s42": {
+      "adaptation": "frozen",
+      "result": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s42/result.json",
+        "sha256": "401b8b20c6620fa1c34fa3c82eb59c6f387474f49ea3f7cd97877092d155d0ae"
+      },
+      "head": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s42/head.safetensors",
+        "sha256": "a3007323edb6da1d671b80ea1f7f46451384ddb2f45abeb2cae9d645404f5813"
+      },
+      "evaluation": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/evaluation.json",
+        "sha256": "737e8aab8c984841d0404bcfaef4b06442b75995f59738f870fbc9e81e146077"
+      }
+    },
+    "full-frozen-s43": {
+      "adaptation": "frozen",
+      "result": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s43/result.json",
+        "sha256": "2fe0233828456dbb2ca4ee7d91e1e1e7e5d393fe1814926364975859acfb1f27"
+      },
+      "head": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s43/head.safetensors",
+        "sha256": "e8a5cb1be19938f834c31b44ead89b2b7f824ef596b23a56d15cf1b838d180c1"
+      },
+      "evaluation": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s43/evaluation_generic_v3/evaluation.json",
+        "sha256": "4c45cae5be97205f25a71045ffe722461ff9c95b4cc51988c621b938bd805360"
+      }
+    },
+    "full-frozen-s44": {
+      "adaptation": "frozen",
+      "result": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s44/result.json",
+        "sha256": "ed3ca99f94adb1ee0c0af6bcb4aaa70b28a0d89f6b2fb03add43be503ff4bc6a"
+      },
+      "head": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s44/head.safetensors",
+        "sha256": "133326eaa6a9c6359bc744d8f7a3fba03fcfd6bdf4fa98c755cc4cde97e2a179"
+      },
+      "evaluation": {
+        "path": "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p25_s44/evaluation_generic_v3/evaluation.json",
+        "sha256": "4ae05dbf3df0497948a44b655313c3165c3976ac1ff593bc1bf2f96eb2d9f2c2"
+      }
+    },
+    "lora-s42": {
+      "adaptation": "lora",
+      "result": {
+        "path": "artifacts/combined_generic/lora_gate/lora_runs/jhu-clsp-mmbert-base_combined_lora-r8_s42/result.json",
+        "sha256": "570db76e153f6d08bceb9a5688203e619e297d01f092effa25335743215ef90b"
+      },
+      "head": {
+        "path": "artifacts/combined_generic/lora_gate/lora_runs/jhu-clsp-mmbert-base_combined_lora-r8_s42/head.safetensors",
+        "sha256": "1e141f8714c9356f6df3f745b28c4d4e8860546b0bdb714daa69b8df8e5a289f"
+      },
+      "adapter": {
+        "path": "artifacts/combined_generic/lora_gate/lora_runs/jhu-clsp-mmbert-base_combined_lora-r8_s42/adapter",
+        "files": {
+          "README.md": "25e02f4e1120370bcf76598ec974f12bebf1c24301f6312835a21aef037fba80",
+          "adapter_config.json": "cc404cd76eed420d5a489d52eafba146c74e9152b3f62e8b67a58e69930045d6",
+          "adapter_model.safetensors": "8fa15f97f16d6e55e67fd7b856c0e989b0ec310ba463d9032a6b3d14e6de1a49"
+        }
+      },
+      "evaluation": {
+        "path": "artifacts/combined_generic/lora_gate/lora_runs/jhu-clsp-mmbert-base_combined_lora-r8_s42/evaluation_generic_v3/evaluation.json",
+        "sha256": "c76956729eba694e378d5e8246f475dd6c4443a4c109b0550e49b4c13ade354e"
+      }
+    }
+  },
+  "evidence": {
+    "evaluation_directory": "evaluation_generic_v3",
+    "evaluator": {
+      "path": "experiments/eval_combined_generic_head.py",
+      "sha256": "5c536552a0007a4e89e2ed829f97e89183a0bf0c16f81505b1e061990c64e83c"
+    },
+    "full_no_ranking_controls": [
+      "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p0_s42",
+      "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p0_s43",
+      "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-0p0_s44"
+    ],
+    "matched_frozen_lora_control": "artifacts/combined_generic/lora_gate/frozen_runs/jhu-clsp-mmbert-base_combined_s42"
+  },
+  "limitations": [
+    "Research-only internal artifact pending mixed-corpus redistribution review.",
+    "Scores never grant authority and are not approved for blocking.",
+    "Every input is strictly normalized and truncated to its first 512 tokens.",
+    "PromptShield and SEP are already-consumed development evaluations.",
+    "The LoRA result is one seed on a reduced mixture without generated pairs."
+  ]
+}

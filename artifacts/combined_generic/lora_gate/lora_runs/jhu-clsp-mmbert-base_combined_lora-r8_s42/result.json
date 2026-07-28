@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "purpose": "artifact-only update-matched generic instruction-subversion LoRA gate experiment",
+  "condition": "combined",
+  "adaptation": "lora",
+  "generic_target": "instruction_subversion",
+  "model_id": "jhu-clsp/mmBERT-base",
+  "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+  "attention_implementation": "sdpa",
+  "normalization": "strict",
+  "max_tokens": 512,
+  "token_budget": 4096,
+  "validation_feature_record_chunk": 256,
+  "validation_prediction_batch_size": 512,
+  "seed": 42,
+  "lora": {
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "bias": "none",
+    "target_modules_regex": "layers\\.\\d+\\.attn\\.(Wqkv|Wo)",
+    "targeted_modules": [
+      "base_model.model.layers.0.attn.Wo",
+      "base_model.model.layers.0.attn.Wqkv",
+      "base_model.model.layers.1.attn.Wo",
+      "base_model.model.layers.1.attn.Wqkv",
+      "base_model.model.layers.10.attn.Wo",
+      "base_model.model.layers.10.attn.Wqkv",
+      "base_model.model.layers.11.attn.Wo",
+      "base_model.model.layers.11.attn.Wqkv",
+      "base_model.model.layers.12.attn.Wo",
+      "base_model.model.layers.12.attn.Wqkv",
+      "base_model.model.layers.13.attn.Wo",
+      "base_model.model.layers.13.attn.Wqkv",
+      "base_model.model.layers.14.attn.Wo",
+      "base_model.model.layers.14.attn.Wqkv",
+      "base_model.model.layers.15.attn.Wo",
+      "base_model.model.layers.15.attn.Wqkv",
+      "base_model.model.layers.16.attn.Wo",
+      "base_model.model.layers.16.attn.Wqkv",
+      "base_model.model.layers.17.attn.Wo",
+      "base_model.model.layers.17.attn.Wqkv",
+      "base_model.model.layers.18.attn.Wo",
+      "base_model.model.layers.18.attn.Wqkv",
+      "base_model.model.layers.19.attn.Wo",
+      "base_model.model.layers.19.attn.Wqkv",
+      "base_model.model.layers.2.attn.Wo",
+      "base_model.model.layers.2.attn.Wqkv",
+      "base_model.model.layers.20.attn.Wo",
+      "base_model.model.layers.20.attn.Wqkv",
+      "base_model.model.layers.21.attn.Wo",
+      "base_model.model.layers.21.attn.Wqkv",
+      "base_model.model.layers.3.attn.Wo",
+      "base_model.model.layers.3.attn.Wqkv",
+      "base_model.model.layers.4.attn.Wo",
+      "base_model.model.layers.4.attn.Wqkv",
+      "base_model.model.layers.5.attn.Wo",
+      "base_model.model.layers.5.attn.Wqkv",
+      "base_model.model.layers.6.attn.Wo",
+      "base_model.model.layers.6.attn.Wqkv",
+      "base_model.model.layers.7.attn.Wo",
+      "base_model.model.layers.7.attn.Wqkv",
+      "base_model.model.layers.8.attn.Wo",
+      "base_model.model.layers.8.attn.Wqkv",
+      "base_model.model.layers.9.attn.Wo",
+      "base_model.model.layers.9.attn.Wqkv"
+    ],
+    "adapter_parameters": 811008
+  },
+  "training": {
+    "epochs": 3,
+    "microbatch_size": 16,
+    "effective_batch_size": 256,
+    "half_batch_size": 128,
+    "updates_per_epoch": 143,
+    "updates": 429,
+    "forward_backward_microsteps": 6828,
+    "adapter_learning_rate": 0.0001,
+    "head_learning_rate": 0.0003,
+    "scheduler": "constant",
+    "selected_epoch": 3,
+    "checkpoint_selection": "minimum equal-domain mean of matched Morgott and PromptShield validation BCE",
+    "curve": [
+      {
+        "epoch": 1,
+        "mean_training_loss": 0.263365645267084,
+        "validation_morgott_bce": 0.19838284281419966,
+        "validation_promptshield_bce": 0.06049069836902481,
+        "validation_macro_bce": 0.12943677059161224
+      },
+      {
+        "epoch": 2,
+        "mean_training_loss": 0.1080986475154958,
+        "validation_morgott_bce": 0.09009741454531038,
+        "validation_promptshield_bce": 0.030601957126455644,
+        "validation_macro_bce": 0.060349685835883016
+      },
+      {
+        "epoch": 3,
+        "mean_training_loss": 0.08427767887422472,
+        "validation_morgott_bce": 0.08643964314559577,
+        "validation_promptshield_bce": 0.017309548895462074,
+        "validation_macro_bce": 0.05187459602052892
+      }
+    ],
+    "first_half": "m1",
+    "second_half": "promptshield",
+    "rows_per_half": 18197,
+    "labels_per_half": {
+      "0": 9455,
+      "1": 8742
+    },
+    "loss": "0.5 * mean_BCE(first_half) + 0.5 * mean_BCE(second_half)",
+    "base_encoder_frozen": true,
+    "adapter_trainable": true
+  },
+  "validation": {
+    "checkpoint_selection_rows": {
+      "morgott": 29293,
+      "promptshield": 985
+    },
+    "morgott_selection": {
+      "rows": 29293,
+      "negative": 15519,
+      "positive": 13774,
+      "roc_auc": 0.9968701555481908,
+      "pr_auc": 0.9967956110211285,
+      "bce": 0.08643964301384287,
+      "selection_bce": 0.08643964314559577
+    },
+    "promptshield": {
+      "rows": 985,
+      "negative": 497,
+      "positive": 488,
+      "roc_auc": 0.9998886763202164,
+      "pr_auc": 0.9998892569318999,
+      "bce": 0.01730954558196457,
+      "selection_bce": 0.017309548895462074
+    },
+    "macro_bce": 0.05187459602052892
+  },
+  "runtime": {
+    "training_seconds": 2232.5577512580003,
+    "peak_reserved_bytes": 1853882368
+  },
+  "artifact": {
+    "adapter": "artifacts/combined_generic/lora_gate/lora_runs/jhu-clsp-mmbert-base_combined_lora-r8_s42/adapter",
+    "adapter_files": {
+      "README.md": "25e02f4e1120370bcf76598ec974f12bebf1c24301f6312835a21aef037fba80",
+      "adapter_config.json": "cc404cd76eed420d5a489d52eafba146c74e9152b3f62e8b67a58e69930045d6",
+      "adapter_model.safetensors": "8fa15f97f16d6e55e67fd7b856c0e989b0ec310ba463d9032a6b3d14e6de1a49"
+    },
+    "head": "artifacts/combined_generic/lora_gate/lora_runs/jhu-clsp-mmbert-base_combined_lora-r8_s42/head.safetensors",
+    "head_sha256": "1e141f8714c9356f6df3f745b28c4d4e8860546b0bdb714daa69b8df8e5a289f",
+    "roundtrip_probe_rows": 64,
+    "roundtrip_max_abs_score_delta": 0.0,
+    "arrays": {
+      "validation_morgott_selection_logits.npy": "ec2622ad2ac436571a41225c29cc165ad5d1a7de6768ff6a2a8667ea2011db97",
+      "validation_morgott_selection_scores.npy": "6a4ac4bbd3083d35e435d503831c2284a53fc81e49dd15621390af800c726770",
+      "validation_morgott_selection_labels.npy": "1deac25b44da3b02d256e293851e52ce9b4aeb9b8169214c3d5f7714fe4e25d4",
+      "validation_promptshield_logits.npy": "3a9fa374879819d41075464f7c1975d51a05e90898b12ff75cc602fea202d3e2",
+      "validation_promptshield_scores.npy": "81732f1d9dada230d3aaa45308f88fa987a28020fa3fc89cce0ee0efe3a78cf3",
+      "validation_promptshield_labels.npy": "40cf96429a5795eb7e763314d487eae41827a1a33c50f5bada3f5472169f1471"
+    }
+  },
+  "provenance": {
+    "selection_report": "artifacts/combined_generic/selection_s42/selection_report.json",
+    "selection_report_sha256": "4a20915da225f908c4c980d30decb394fe27c59c44b0b6f843d6c9a76679056e",
+    "selection_inputs": {
+      "m1": {
+        "path": "artifacts/combined_generic/selection_s42/m1.jsonl",
+        "sha256": "3d5f703eb25f4409644de9132b80ffff5483a57a8808433a44ede7f168ef3c8a",
+        "rows": 18197,
+        "labels": {
+          "0": 9455,
+          "1": 8742
+        }
+      },
+      "m2": {
+        "path": "artifacts/combined_generic/selection_s42/m2.jsonl",
+        "sha256": "d0403c6f9854c4f1dfd36c714f37f859ab7df7405aeca7ee343e78ab04e9bd06",
+        "rows": 18197,
+        "labels": {
+          "0": 9455,
+          "1": 8742
+        }
+      },
+      "promptshield": {
+        "path": "artifacts/combined_generic/selection_s42/promptshield.jsonl",
+        "sha256": "31a65a587f43dc273b69644e9bf8c20775108d753f0c2cd3ede76133aba40aaa",
+        "rows": 18197,
+        "labels": {
+          "0": 9455,
+          "1": 8742
+        }
+      },
+      "validation_morgott_selection": {
+        "path": "artifacts/combined_generic/selection_s42/validation_morgott_selection.jsonl",
+        "sha256": "d0eb64bb27a36630caae31c77b81a596b9ffae0c35d1aac4e07d449639bfce55",
+        "rows": 29293,
+        "labels": {
+          "0": 15519,
+          "1": 13774
+        }
+      },
+      "validation_morgott_calibration": {
+        "path": "artifacts/combined_generic/selection_s42/validation_morgott_calibration.jsonl",
+        "sha256": "93b565737f9b3f3767b04b779566da5101c1741f7e861322a9862859e6101f2d",
+        "rows": 116488,
+        "labels": {
+          "0": 52028,
+          "1": 64460
+        }
+      },
+      "validation_promptshield": {
+        "path": "artifacts/combined_generic/selection_s42/validation_promptshield.jsonl",
+        "sha256": "060982441744633fb32a2d4f959e0d78f96b261e16b1d487eb9c3d8be5329551",
+        "rows": 985,
+        "labels": {
+          "0": 497,
+          "1": 488
+        }
+      }
+    },
+    "runner_sha256": "94272ce33606347502b8ed2f3913273aae7ce7ea1c0753c1b14ef1a30f63e7b4",
+    "head_helper_sha256": "324fe223f461166a97cb60684d12d625ee18c5500d736ce9ef90096ef185ea54",
+    "strict_normalizer_sha256": "56c242d31502646253bc8152d8f6f7f16773a6911c6ad41b67eb8cdd7b606720",
+    "packages": {
+      "numpy": "2.5.1",
+      "peft": "0.19.1",
+      "safetensors": "0.8.0",
+      "scikit-learn": "1.9.0",
+      "torch": "2.13.0",
+      "transformers": "5.14.1"
+    }
+  },
+  "limitations": [
+    "This gate isolates LoRA on M1 plus PromptShield and does not fit the generated pairs.",
+    "Only checkpoint-selection validation is scored by this trainer.",
+    "No held-out test or operating threshold is scored by this trainer.",
+    "The learned score is advisory and is not approved for blocking."
+  ]
+}

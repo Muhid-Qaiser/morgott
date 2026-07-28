@@ -68,17 +68,24 @@ def choose_threshold(
     if not np.any(labels == 0) or not np.any(labels == 1):
         raise ValueError("threshold selection requires both classes")
 
-    best_threshold, best_recall = float(np.nextafter(scores.max(), np.inf)), -1.0
-    for threshold in np.unique(scores)[::-1]:
-        predictions = scores >= threshold
-        fpr = predictions[labels == 0].mean()
-        recall = predictions[labels == 1].mean()
-        if fpr <= max_fpr and (
-            recall > best_recall
-            or (recall == best_recall and threshold < best_threshold)
-        ):
-            best_threshold, best_recall = float(threshold), float(recall)
-    return best_threshold
+    fallback = float(np.nextafter(scores.max(), np.inf))
+    thresholds = np.unique(scores)
+    nan_thresholds = np.isnan(thresholds)
+    real_thresholds = thresholds[~nan_thresholds]
+    negatives = scores[labels == 0]
+    positives = scores[labels == 1]
+    sorted_negatives = np.sort(negatives[~np.isnan(negatives)], axis=None)
+    false_positives = len(sorted_negatives) - np.searchsorted(
+        sorted_negatives,
+        real_thresholds,
+        side="left",
+    )
+    eligible = np.flatnonzero(false_positives / negatives.size <= max_fpr)
+    if len(eligible):
+        threshold = real_thresholds[eligible[0]]
+        if not nan_thresholds.any() or np.mean(positives >= threshold) > 0:
+            return float(threshold)
+    return fallback
 
 
 def choose_threshold_for_precision(

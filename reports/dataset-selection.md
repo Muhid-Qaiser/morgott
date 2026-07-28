@@ -149,7 +149,7 @@ not deleted.
 | Candidate | Decision |
 |---|---|
 | WildChat-1M | Stopped weak-label pilot. Accepted model-agreed negatives reduced recall; no rows enter the canonical corpus. |
-| PromptShield | Evaluation-only audit. It lacks row-level source/group lineage and aggregates families that overlap active sources. Do not train on this release. |
+| PromptShield | Excluded from the canonical corpus because it lacks row-level source/group lineage and aggregates families that overlap active sources. A bounded 2026-07-28 owner-authorized experiment fits only the release's train split outside the corpus; validation selects checkpoints, test remains PromptShield-internal source-disjoint development, and cross-corpus overlap prevents a source-OOD claim for the complete fit. No result supports promotion or a final-test claim. |
 | Yaklang prompt-injection skill | Taxonomy and scenario reference, not a labelled corpus. Do not vendor or generate rows from it. |
 | AgentHarm | Future stateful authorization evaluation; its harmful actions are not prompt-injection labels. |
 | SafeDialBench | Deferred pending cleaner grouping and independent controls. |
@@ -169,6 +169,10 @@ not deleted.
 | tau banking and AgentLAB | Future stateful utility, transaction-invariant, long-horizon, and memory-poisoning evaluation. Prefer deterministic environment outcomes and keep planner, attacker, judge, and search budgets fixed. |
 | Prahari Bank Lending | Strong finance-specific matched diagnostic, but gated and explicitly evaluation-only. Do not use for training. |
 | PINT | One-shot private external evaluation after model, threshold, and preprocessing are frozen. |
+
+The PromptShield exception does not change the canonical source decision.
+Its rows stay under ignored experiment artifacts, its train split is leakage-filtered against held-out text, and its test split remains deliberately source-disjoint according to the paper.
+The result must be called PromptShield-internal source-disjoint development performance, not IID, complete-fit source-OOD, or independent transfer evidence.
 | Mindgard evasion samples | Held-out robustness stress only. Apply deterministic transformations symmetrically to benign and attack controls instead of treating detector-specific evasions as independent training rows. |
 | ACL indirect-PIA detection corpus | Reject for ordinary training and headline evaluation. A small payload set is reused across nominal corpora, so payload-family grouping would be mandatory even for a span-localization ablation. |
 | FinGuard and Mukta finance injection aggregates | Reject. They combine benign finance data with unrelated attack sources and directly recreate the source-label shortcut. |

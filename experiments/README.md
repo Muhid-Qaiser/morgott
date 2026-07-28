@@ -29,10 +29,15 @@ gzip -dc data-archive/matched_pairs_20260726.jsonl.gz \
 python3 experiments/_archived/build_shim.py
 ```
 
-Not archived because they are reproducible: `artifacts/external_eval_data/`
-(PromptShield and SEP, re-downloadable at the revisions pinned in each
-`_meta.json`) and `artifacts/phase3_archived/` (19 trained heads, about 55
-minutes of GPU).
+Rebuild the pinned PromptShield and SEP projections from their public releases:
+
+```bash
+PYTHONPATH=src:experiments uv run python \
+  experiments/prepare_external_eval.py
+```
+
+The converter verifies raw and projected SHA-256 digests and refuses to replace an existing output.
+Historical Phase 3 heads remain local research artifacts; their durable metrics and decisions are in `reports/model-experiments.md`.
 
 **A fresh clone has no corpus.** Only `data/manifest.json` is versioned;
 `data/sources/` and `data/views/` are empty until you run `uv run morgott data`.
@@ -42,27 +47,34 @@ before the corpus build.
 
 ## Environment
 
-Python 3.12, `torch` 2.13 and `transformers` 5.14 present in the environment
-(optional dependency group `encoder`), scikit-learn, `datasets`. A 6 GB GPU is
-enough: every run below fits. `.env` supplies `OPENROUTER_API_KEY` and
-`HF_TOKEN`; neither is ever printed or committed.
-
-All scripts run as:
+Install the exact optional model environment:
 
 ```bash
-PYTHONPATH=src:experiments/_archived python3 experiments/<script>.py
+uv sync --locked --extra encoder
+```
+
+Python 3.12, `torch` 2.13, `transformers` 5.14, scikit-learn, and `datasets` are pinned by the lockfile.
+A 6 GB GPU is enough for evaluation and every retained run.
+
+Archived-run scripts use:
+
+```bash
+PYTHONPATH=src:experiments:experiments/_archived uv run python \
+  experiments/<script>.py
 ```
 
 ## Run this first after any change
 
 ```bash
-python3 experiments/reproduce_check.py
+PYTHONPATH=src:experiments:experiments/_archived uv run python \
+  experiments/reproduce_check.py
 ```
 
 Re-scores the frozen dev-test suite with the clean forward pass in
 `encoder_infer.py` and compares against the runner's own recorded metrics.
-Expect ROC AUC 0.996906 against 0.996500 recorded, tolerance 0.002. **If this
-fails, no downstream number is trustworthy.**
+Expect ROC AUC 0.996491 against 0.996500 recorded, tolerance 0.0001, over 29,173 route-labelled rows.
+The earlier approximately 0.9969 figure selected rows by head-target availability rather than the route-label contract and is superseded.
+If this check fails, no downstream number is trustworthy.
 
 ## Scripts
 
@@ -77,7 +89,92 @@ fails, no downstream number is trustworthy.**
 | `strict_normalize.py` | the stricter normaliser; run directly for the 13-technique comparison |
 | `run_archived_recipe.py` | **the training entrypoint**; drives the archived recipe with only preprocessing and data varied |
 | `eval_phase3.py` | scores every completed run on dev-test, PromptShield and SEP, grouped by condition with seed spreads |
+| `prepare_external_eval.py` | fetches and projects PromptShield and SEP at pinned revisions and hashes |
 | `matched_pairs/` | generation: `specs.py` categories, `diversity.py` uniqueness and refusal handling, `generate.py` the budgeted runner |
+| `prepare_promptshield_training.py` | filters PromptShield train and validation against held-out rows without changing the canonical corpus |
+| `prepare_combined_generic.py` | builds the update-matched Morgott and PromptShield causal comparison |
+| `prepare_full_combined_generic.py` | builds the full canonical, PromptShield, and generated-pair training recipe |
+| `train_combined_generic_head.py` | trains the update-matched frozen-mmBERT control used by the LoRA gate |
+| `train_full_combined_generic_head.py` | trains the frozen-mmBERT full-data objective controls and pair-ranking ablation |
+| `train_combined_generic_lora.py` | trains the update-matched rank-8 mmBERT LoRA engineering gate |
+| `eval_combined_generic_head.py` | applies canonical calibration and separately reports canonical dev-test, PromptShield-internal source-disjoint development with complete-fit overlap caveats, SEP, finance, and pair diagnostics |
+| `score_shadow_model.py` | loads one registered frozen or LoRA artifact and emits raw JSONL scores plus provenance only |
+
+## Current generic first-pass shadow
+
+The retained first-pass research shadow is frozen mmBERT with the `full_balanced` objective and pair-ranking weight 0.25.
+Its three heads and the LoRA gate artifacts are registered in `model-artifacts.json` and stored through Git LFS.
+They are advisory and are not wired into `morgott scan`.
+The exact measured results and limitations are in `reports/model-experiments.md`.
+The seed-42 rank-8 LoRA gate passed its preliminary matched comparison, but it used the smaller Morgott plus PromptShield mixture and remains a one-seed research result.
+The next possible modelling run is one complete-mixture LoRA run with pair ranking, not a seed or hyperparameter sweep.
+At the measured LoRA throughput and the full schedule's 25,071 updates, it is approximately a 36 GPU-hour run on the current RTX 4050 and is deferred.
+
+Run these commands only after building the canonical corpus and restoring the pinned PromptShield and SEP files described above.
+Use a clean artifact tree because the combined/full preparation, training, and evaluation commands refuse to replace an existing result.
+
+```bash
+PYTHONPATH=src:experiments uv run python \
+  experiments/prepare_promptshield_training.py
+PYTHONPATH=src:experiments uv run python \
+  experiments/prepare_combined_generic.py --seed 42
+PYTHONPATH=src:experiments uv run python \
+  experiments/prepare_full_combined_generic.py --seed 42
+for seed in 42 43 44; do
+  PYTHONPATH=src:experiments uv run python \
+    experiments/train_full_combined_generic_head.py \
+    --objective full_balanced --pair-ranking-weight 0 --seed "$seed"
+  PYTHONPATH=src:experiments uv run python \
+    experiments/train_full_combined_generic_head.py \
+    --objective full_balanced --pair-ranking-weight 0.25 --seed "$seed"
+  for rank in 0p0 0p25; do
+    PYTHONPATH=src:experiments uv run python \
+      experiments/eval_combined_generic_head.py \
+      "artifacts/combined_generic/full_runs/jhu-clsp-mmbert-base_objective-full-balanced_pair-rank-${rank}_s${seed}"
+  done
+done
+```
+
+Frozen evaluations populate the ignored `artifacts/combined_generic/evaluation_feature_cache_v1/` with content-addressed, SHA-256-verified pooled features.
+Later frozen heads reuse those exact BF16 features, while LoRA bypasses the cache because its encoder representation differs.
+Deleting the cache only forces recomputation.
+
+The preliminary LoRA gate intentionally uses only the update-matched Morgott and PromptShield populations so that encoder adaptation is the isolated change.
+It does not use the generated pairs.
+Both gate runs use the seed-42 selection prepared above so their fitted rows are identical.
+
+```bash
+PYTHONPATH=src:experiments uv run python \
+  experiments/train_combined_generic_head.py \
+  --condition combined \
+  --seed 42 \
+  --output-root artifacts/combined_generic/lora_gate/frozen_runs
+PYTHONPATH=src:experiments uv run python \
+  experiments/train_combined_generic_lora.py --seed 42
+PYTHONPATH=src:experiments uv run python \
+  experiments/eval_combined_generic_head.py \
+  artifacts/combined_generic/lora_gate/frozen_runs/jhu-clsp-mmbert-base_combined_s42
+PYTHONPATH=src:experiments uv run python \
+  experiments/eval_combined_generic_head.py \
+  artifacts/combined_generic/lora_gate/lora_runs/jhu-clsp-mmbert-base_combined_lora-r8_s42
+```
+
+Both generic recipes strictly normalize and truncate each row to its first 512 tokens.
+They do not chunk long documents or localize an injected span.
+
+Score trusted-channel JSONL records with either retained shadow:
+
+```bash
+PYTHONPATH=src:experiments uv run python \
+  experiments/score_shadow_model.py \
+  model-artifacts.json \
+  full-frozen-s42 \
+  input.jsonl \
+  scores.jsonl
+```
+
+Each input record must contain `id`, `text`, and a trusted runtime-supplied `input_channel` of `direct_user` or `untrusted_content`.
+The output contains raw scores and artifact provenance, never an authorization decision.
 
 ## Training
 
@@ -130,9 +227,8 @@ Constraints that must not be relaxed:
 - Build synthetic training rows by reading a real record first. Two crashes came
   from assumed shapes: a missing `data_role`, then `pair_head` passed as a name
   where the runner does `HEADS[example["pair_head"]]`.
-- `eval_phase3.py` discovers runs by globbing for `head.safetensors`, so a
-  crashed run is skipped rather than counted. Compare the discovered count
-  against what was queued, and watch for its `WARNING: unparsed run directory`.
+- `eval_phase3.py` now fails when a requested or default run directory is incomplete and validates exactly one head, report, and result.
+  Keep the explicit run list in the command so the expected queue remains auditable.
 - mmBERT and ModernBERT both have `hidden_size` 768, so an mmBERT head loads
   into a ModernBERT encoder without error and produces meaningless scores. The
   encoder is chosen from the run directory; keep it that way.
