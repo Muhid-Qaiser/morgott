@@ -104,6 +104,30 @@ SEP remains already-consumed transfer development data.
 All four downstream checkpoints are advisory and must be compared independently rather than combined into an unevaluated ensemble.
 Every score is truncated to the first 512 normalized tokens, so long web, retrieval, and tool content remains an explicit evidence gap.
 
+### July 2026 downstream cascade candidate
+
+The selected no-manual-review development candidate uses the partial-data `mmbert-lora-s42` artifact followed by DeepSeek V4 Flash only for mmBERT scores from `0.2` through values below `0.999`.
+Scores below `0.2` pass the advisory sensor, scores at or above `0.999` restrict, and middle-zone rows restrict when the normalized DeepSeek two-token probability is at least `0.9`.
+An exhausted DeepSeek failure also restricts.
+The `0.9` threshold was selected on the fixed 6,000-row calibration split and applied once to the separate 14,000-row evaluation split.
+It is an operating threshold, not a calibrated production probability.
+Exact evidence, provider settings, metrics, and limitations are in [the OpenRouter downstream evaluation](../reports/openrouter-downstream-evaluation.md).
+
+The maintained code currently provides mmBERT artifact loading and scoring plus a pure advisory routing function.
+The following integration work remains:
+
+1. Add a maintained orchestrator that sends text through `mmbert-lora-s42`, invokes the advisory route, and calls DeepSeek only for the middle zone.
+2. Add an OpenRouter adapter with the frozen subversion-only prompt, CoreWeave fp8 routing, reasoning disabled, strict integer JSON, and both decision-token log probabilities.
+3. Compute and retain raw decision-token log odds, convert them with the stable sigmoid helper, and pass `p_subversion` to the advisory route.
+4. Add bounded concurrency, timeouts, retry handling, and operational metrics; exhausted failures must restrict.
+5. Map `restrict` to privilege reduction or deterministic reference-monitor policy rather than treating a learned score as authorization.
+6. Keep harmful non-injection classification separate from the subversion prompt and route.
+7. Shadow the complete pipeline on representative traffic and recalibrate before deployment.
+8. Evaluate the full-data LoRA under the identical contract after its independent training run finishes before considering an encoder replacement.
+
+The disposable OpenRouter experiment runner is reproducibility code, not the production adapter.
+Do not import it into the maintained package.
+
 Before another encoder-tuning experiment, collect realistic matched transaction attacks and benign tasks, paired multilingual transformations on both labels, independently sourced known-span long-document attacks, and prospective traffic-like negatives.
 Do not repeat context-length, document-bag, or BIPIA augmentation ablations on the same labels.
 Do not sweep reinforcement-learning, focal-loss, or source-weighting objectives over the current open dev roles as a substitute for new evidence.

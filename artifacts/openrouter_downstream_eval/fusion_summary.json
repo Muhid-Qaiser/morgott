@@ -1,0 +1,2003 @@
+{
+  "encoders": {
+    "mmbert_frozen_full_s42": {
+      "all_rows_fusion_upper_bound": {
+        "llm_call_rate": 1.0,
+        "model": {
+          "fit_rows": 5998,
+          "intercept": 0.8281954616138447,
+          "llm_log_odds_coefficient": 0.39332198372762,
+          "mmbert_logit_coefficient": 0.16639525042323539
+        },
+        "operating_points": {
+          "0.0050": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 617,
+                  "fp": 15,
+                  "fpr": 0.00939261114589856,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9812734082397003,
+                  "recall": 0.5602280826799715,
+                  "rows": 3000,
+                  "selected": 801,
+                  "tn": 1582,
+                  "tp": 786
+                },
+                "promptshield": {
+                  "fn": 305,
+                  "fp": 1,
+                  "fpr": 0.0009208103130755065,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.990909090909091,
+                  "recall": 0.2632850241545894,
+                  "rows": 1500,
+                  "selected": 110,
+                  "tn": 1085,
+                  "tp": 109
+                },
+                "sep": {
+                  "fn": 743,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.875,
+                  "recall": 0.009333333333333334,
+                  "rows": 1500,
+                  "selected": 8,
+                  "tn": 749,
+                  "tp": 7
+                }
+              },
+              "fn": 1665,
+              "fp": 17,
+              "fpr": 0.004951937081270026,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9815016322089227,
+              "recall": 0.3513829372808726,
+              "rows": 6000,
+              "selected": 919,
+              "tn": 3416,
+              "tp": 902
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 1393,
+                  "fp": 34,
+                  "fpr": 0.00912751677852349,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9822546972860126,
+                  "recall": 0.5746564885496184,
+                  "rows": 7000,
+                  "selected": 1916,
+                  "tn": 3691,
+                  "tp": 1882
+                },
+                "promptshield": {
+                  "fn": 716,
+                  "fp": 8,
+                  "fpr": 0.003155818540433925,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.9688715953307393,
+                  "recall": 0.25803108808290154,
+                  "rows": 3500,
+                  "selected": 257,
+                  "tn": 2527,
+                  "tp": 249
+                },
+                "sep": {
+                  "fn": 1737,
+                  "fp": 0,
+                  "fpr": 0.0,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 1.0,
+                  "recall": 0.0074285714285714285,
+                  "rows": 3500,
+                  "selected": 13,
+                  "tn": 1750,
+                  "tp": 13
+                }
+              },
+              "fn": 3846,
+              "fp": 42,
+              "fpr": 0.0052434456928838954,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9807868252516011,
+              "recall": 0.3579298831385643,
+              "rows": 14000,
+              "selected": 2186,
+              "tn": 7968,
+              "tp": 2144
+            },
+            "feasible": true,
+            "threshold": 3.3381898497682934
+          },
+          "0.0100": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 531,
+                  "fp": 25,
+                  "fpr": 0.015654351909830933,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9721293199554069,
+                  "recall": 0.6215253029223093,
+                  "rows": 3000,
+                  "selected": 897,
+                  "tn": 1572,
+                  "tp": 872
+                },
+                "promptshield": {
+                  "fn": 278,
+                  "fp": 8,
+                  "fpr": 0.007366482504604052,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.9444444444444444,
+                  "recall": 0.3285024154589372,
+                  "rows": 1500,
+                  "selected": 144,
+                  "tn": 1078,
+                  "tp": 136
+                },
+                "sep": {
+                  "fn": 737,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.9285714285714286,
+                  "recall": 0.017333333333333333,
+                  "rows": 1500,
+                  "selected": 14,
+                  "tn": 749,
+                  "tp": 13
+                }
+              },
+              "fn": 1546,
+              "fp": 34,
+              "fpr": 0.009903874162540053,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9677725118483412,
+              "recall": 0.39774055317491236,
+              "rows": 6000,
+              "selected": 1055,
+              "tn": 3399,
+              "tp": 1021
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 1211,
+                  "fp": 44,
+                  "fpr": 0.011812080536912751,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9791271347248577,
+                  "recall": 0.6302290076335878,
+                  "rows": 7000,
+                  "selected": 2108,
+                  "tn": 3681,
+                  "tp": 2064
+                },
+                "promptshield": {
+                  "fn": 640,
+                  "fp": 22,
+                  "fpr": 0.008678500986193294,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.9365994236311239,
+                  "recall": 0.33678756476683935,
+                  "rows": 3500,
+                  "selected": 347,
+                  "tn": 2513,
+                  "tp": 325
+                },
+                "sep": {
+                  "fn": 1711,
+                  "fp": 0,
+                  "fpr": 0.0,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 1.0,
+                  "recall": 0.022285714285714287,
+                  "rows": 3500,
+                  "selected": 39,
+                  "tn": 1750,
+                  "tp": 39
+                }
+              },
+              "fn": 3562,
+              "fp": 66,
+              "fpr": 0.008239700374531835,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9735364875701684,
+              "recall": 0.40534223706176964,
+              "rows": 14000,
+              "selected": 2494,
+              "tn": 7944,
+              "tp": 2428
+            },
+            "feasible": true,
+            "threshold": 3.0793308344658086
+          },
+          "0.0200": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 295,
+                  "fp": 36,
+                  "fpr": 0.022542266750156543,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9685314685314685,
+                  "recall": 0.789736279401283,
+                  "rows": 3000,
+                  "selected": 1144,
+                  "tn": 1561,
+                  "tp": 1108
+                },
+                "promptshield": {
+                  "fn": 149,
+                  "fp": 31,
+                  "fpr": 0.0285451197053407,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.8952702702702703,
+                  "recall": 0.6400966183574879,
+                  "rows": 1500,
+                  "selected": 296,
+                  "tn": 1055,
+                  "tp": 265
+                },
+                "sep": {
+                  "fn": 584,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.9940119760479041,
+                  "recall": 0.22133333333333333,
+                  "rows": 1500,
+                  "selected": 167,
+                  "tn": 749,
+                  "tp": 166
+                }
+              },
+              "fn": 1028,
+              "fp": 68,
+              "fpr": 0.019807748325080105,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9576851275668948,
+              "recall": 0.5995325282430853,
+              "rows": 6000,
+              "selected": 1607,
+              "tn": 3365,
+              "tp": 1539
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 694,
+                  "fp": 57,
+                  "fpr": 0.015302013422818792,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9783927217589082,
+                  "recall": 0.7880916030534351,
+                  "rows": 7000,
+                  "selected": 2638,
+                  "tn": 3668,
+                  "tp": 2581
+                },
+                "promptshield": {
+                  "fn": 388,
+                  "fp": 71,
+                  "fpr": 0.028007889546351084,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.8904320987654321,
+                  "recall": 0.5979274611398964,
+                  "rows": 3500,
+                  "selected": 648,
+                  "tn": 2464,
+                  "tp": 577
+                },
+                "sep": {
+                  "fn": 1372,
+                  "fp": 1,
+                  "fpr": 0.0005714285714285715,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.9973614775725593,
+                  "recall": 0.216,
+                  "rows": 3500,
+                  "selected": 379,
+                  "tn": 1749,
+                  "tp": 378
+                }
+              },
+              "fn": 2454,
+              "fp": 129,
+              "fpr": 0.01610486891385768,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9648021828103683,
+              "recall": 0.5903171953255426,
+              "rows": 14000,
+              "selected": 3665,
+              "tn": 7881,
+              "tp": 3536
+            },
+            "feasible": true,
+            "threshold": 2.118725184157671
+          }
+        }
+      },
+      "gated_logistic_fusion": {
+        "llm_call_rate_evaluation": 0.6395,
+        "model": {
+          "fit_rows": 3679,
+          "intercept": 0.8412207090419763,
+          "llm_log_odds_coefficient": 0.39593388689400755,
+          "mmbert_logit_coefficient": 0.08321494999382978
+        },
+        "operating_points": {
+          "0.0050": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 480,
+                  "fp": 12,
+                  "fpr": 0.007514088916718848,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9871657754010695,
+                  "recall": 0.6578759800427655,
+                  "rows": 3000,
+                  "selected": 935,
+                  "tn": 1585,
+                  "tp": 923
+                },
+                "promptshield": {
+                  "fn": 316,
+                  "fp": 4,
+                  "fpr": 0.003683241252302026,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.9607843137254902,
+                  "recall": 0.23671497584541062,
+                  "rows": 1500,
+                  "selected": 102,
+                  "tn": 1082,
+                  "tp": 98
+                },
+                "sep": {
+                  "fn": 745,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.006666666666666667,
+                  "rows": 1500,
+                  "selected": 6,
+                  "tn": 749,
+                  "tp": 5
+                }
+              },
+              "fn": 1541,
+              "fp": 17,
+              "fpr": 0.004951937081270026,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9837008628954937,
+              "recall": 0.3996883521620569,
+              "rows": 6000,
+              "selected": 1043,
+              "tn": 3416,
+              "tp": 1026
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 1276,
+                  "fp": 27,
+                  "fpr": 0.007248322147651007,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9866732477788747,
+                  "recall": 0.610381679389313,
+                  "rows": 7000,
+                  "selected": 2026,
+                  "tn": 3698,
+                  "tp": 1999
+                },
+                "promptshield": {
+                  "fn": 729,
+                  "fp": 13,
+                  "fpr": 0.005128205128205128,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.9477911646586346,
+                  "recall": 0.24455958549222798,
+                  "rows": 3500,
+                  "selected": 249,
+                  "tn": 2522,
+                  "tp": 236
+                },
+                "sep": {
+                  "fn": 1735,
+                  "fp": 2,
+                  "fpr": 0.001142857142857143,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.8823529411764706,
+                  "recall": 0.008571428571428572,
+                  "rows": 3500,
+                  "selected": 17,
+                  "tn": 1748,
+                  "tp": 15
+                }
+              },
+              "fn": 3740,
+              "fp": 42,
+              "fpr": 0.0052434456928838954,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.981675392670157,
+              "recall": 0.3756260434056761,
+              "rows": 14000,
+              "selected": 2292,
+              "tn": 7968,
+              "tp": 2250
+            },
+            "feasible": true,
+            "threshold": 3.2189273462007484
+          },
+          "0.0100": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 417,
+                  "fp": 29,
+                  "fpr": 0.018159048215403883,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9714285714285714,
+                  "recall": 0.7027797576621525,
+                  "rows": 3000,
+                  "selected": 1015,
+                  "tn": 1568,
+                  "tp": 986
+                },
+                "promptshield": {
+                  "fn": 269,
+                  "fp": 4,
+                  "fpr": 0.003683241252302026,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.9731543624161074,
+                  "recall": 0.3502415458937198,
+                  "rows": 1500,
+                  "selected": 149,
+                  "tn": 1082,
+                  "tp": 145
+                },
+                "sep": {
+                  "fn": 722,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.9655172413793104,
+                  "recall": 0.037333333333333336,
+                  "rows": 1500,
+                  "selected": 29,
+                  "tn": 749,
+                  "tp": 28
+                }
+              },
+              "fn": 1408,
+              "fp": 34,
+              "fpr": 0.009903874162540053,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9715004191114837,
+              "recall": 0.4514998052201013,
+              "rows": 6000,
+              "selected": 1193,
+              "tn": 3399,
+              "tp": 1159
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 1082,
+                  "fp": 49,
+                  "fpr": 0.013154362416107382,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9781445138269402,
+                  "recall": 0.669618320610687,
+                  "rows": 7000,
+                  "selected": 2242,
+                  "tn": 3676,
+                  "tp": 2193
+                },
+                "promptshield": {
+                  "fn": 618,
+                  "fp": 15,
+                  "fpr": 0.005917159763313609,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.9585635359116023,
+                  "recall": 0.35958549222797925,
+                  "rows": 3500,
+                  "selected": 362,
+                  "tn": 2520,
+                  "tp": 347
+                },
+                "sep": {
+                  "fn": 1688,
+                  "fp": 2,
+                  "fpr": 0.001142857142857143,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.96875,
+                  "recall": 0.03542857142857143,
+                  "rows": 3500,
+                  "selected": 64,
+                  "tn": 1748,
+                  "tp": 62
+                }
+              },
+              "fn": 3388,
+              "fp": 66,
+              "fpr": 0.008239700374531835,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9752623688155923,
+              "recall": 0.4343906510851419,
+              "rows": 14000,
+              "selected": 2668,
+              "tn": 7944,
+              "tp": 2602
+            },
+            "feasible": true,
+            "threshold": 2.872568088395686
+          },
+          "0.0200": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 291,
+                  "fp": 42,
+                  "fpr": 0.026299311208515967,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9636048526863085,
+                  "recall": 0.7925873129009265,
+                  "rows": 3000,
+                  "selected": 1154,
+                  "tn": 1555,
+                  "tp": 1112
+                },
+                "promptshield": {
+                  "fn": 166,
+                  "fp": 25,
+                  "fpr": 0.02302025782688766,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.9084249084249084,
+                  "recall": 0.5990338164251208,
+                  "rows": 1500,
+                  "selected": 273,
+                  "tn": 1061,
+                  "tp": 248
+                },
+                "sep": {
+                  "fn": 582,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.9940828402366864,
+                  "recall": 0.224,
+                  "rows": 1500,
+                  "selected": 169,
+                  "tn": 749,
+                  "tp": 168
+                }
+              },
+              "fn": 1039,
+              "fp": 68,
+              "fpr": 0.019807748325080105,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9573934837092731,
+              "recall": 0.5952473704713673,
+              "rows": 6000,
+              "selected": 1596,
+              "tn": 3365,
+              "tp": 1528
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 721,
+                  "fp": 61,
+                  "fpr": 0.016375838926174495,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9766730401529636,
+                  "recall": 0.7798473282442748,
+                  "rows": 7000,
+                  "selected": 2615,
+                  "tn": 3664,
+                  "tp": 2554
+                },
+                "promptshield": {
+                  "fn": 413,
+                  "fp": 62,
+                  "fpr": 0.02445759368836292,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.8990228013029316,
+                  "recall": 0.572020725388601,
+                  "rows": 3500,
+                  "selected": 614,
+                  "tn": 2473,
+                  "tp": 552
+                },
+                "sep": {
+                  "fn": 1383,
+                  "fp": 3,
+                  "fpr": 0.0017142857142857142,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.9918918918918919,
+                  "recall": 0.20971428571428571,
+                  "rows": 3500,
+                  "selected": 370,
+                  "tn": 1747,
+                  "tp": 367
+                }
+              },
+              "fn": 2517,
+              "fp": 126,
+              "fpr": 0.015730337078651686,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9649902750764101,
+              "recall": 0.5797996661101836,
+              "rows": 14000,
+              "selected": 3599,
+              "tn": 7884,
+              "tp": 3473
+            },
+            "feasible": true,
+            "threshold": 2.140676738697411
+          }
+        }
+      },
+      "gated_raw_log_odds": {
+        "llm_call_rate_evaluation": 0.6395,
+        "operating_points": {
+          "0.0050": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 503,
+                  "fp": 11,
+                  "fpr": 0.0068879148403256105,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9879253567508233,
+                  "recall": 0.6414825374198146,
+                  "rows": 3000,
+                  "selected": 911,
+                  "tn": 1586,
+                  "tp": 900
+                },
+                "promptshield": {
+                  "fn": 300,
+                  "fp": 4,
+                  "fpr": 0.003683241252302026,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.9661016949152542,
+                  "recall": 0.2753623188405797,
+                  "rows": 1500,
+                  "selected": 118,
+                  "tn": 1082,
+                  "tp": 114
+                },
+                "sep": {
+                  "fn": 736,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.9333333333333333,
+                  "recall": 0.018666666666666668,
+                  "rows": 1500,
+                  "selected": 15,
+                  "tn": 749,
+                  "tp": 14
+                }
+              },
+              "fn": 1539,
+              "fp": 16,
+              "fpr": 0.00466064666472473,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9846743295019157,
+              "recall": 0.40046747175691466,
+              "rows": 6000,
+              "selected": 1044,
+              "tn": 3417,
+              "tp": 1028
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 1413,
+                  "fp": 23,
+                  "fpr": 0.006174496644295302,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9877984084880637,
+                  "recall": 0.5685496183206107,
+                  "rows": 7000,
+                  "selected": 1885,
+                  "tn": 3702,
+                  "tp": 1862
+                },
+                "promptshield": {
+                  "fn": 688,
+                  "fp": 15,
+                  "fpr": 0.005917159763313609,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.9486301369863014,
+                  "recall": 0.28704663212435233,
+                  "rows": 3500,
+                  "selected": 292,
+                  "tn": 2520,
+                  "tp": 277
+                },
+                "sep": {
+                  "fn": 1707,
+                  "fp": 2,
+                  "fpr": 0.001142857142857143,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.9555555555555556,
+                  "recall": 0.02457142857142857,
+                  "rows": 3500,
+                  "selected": 45,
+                  "tn": 1748,
+                  "tp": 43
+                }
+              },
+              "fn": 3808,
+              "fp": 40,
+              "fpr": 0.004993757802746567,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.981998199819982,
+              "recall": 0.3642737896494157,
+              "rows": 14000,
+              "selected": 2222,
+              "tn": 7970,
+              "tp": 2182
+            },
+            "feasible": true,
+            "threshold": 5.250000011175872
+          },
+          "0.0100": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 446,
+                  "fp": 28,
+                  "fpr": 0.017532874139010644,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9715736040609138,
+                  "recall": 0.6821097647897363,
+                  "rows": 3000,
+                  "selected": 985,
+                  "tn": 1569,
+                  "tp": 957
+                },
+                "promptshield": {
+                  "fn": 243,
+                  "fp": 5,
+                  "fpr": 0.004604051565377533,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.9715909090909091,
+                  "recall": 0.41304347826086957,
+                  "rows": 1500,
+                  "selected": 176,
+                  "tn": 1081,
+                  "tp": 171
+                },
+                "sep": {
+                  "fn": 675,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.9868421052631579,
+                  "recall": 0.1,
+                  "rows": 1500,
+                  "selected": 76,
+                  "tn": 749,
+                  "tp": 75
+                }
+              },
+              "fn": 1364,
+              "fp": 34,
+              "fpr": 0.009903874162540053,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9725141471301536,
+              "recall": 0.4686404363069731,
+              "rows": 6000,
+              "selected": 1237,
+              "tn": 3399,
+              "tp": 1203
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 1162,
+                  "fp": 51,
+                  "fpr": 0.013691275167785235,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9764325323475046,
+                  "recall": 0.6451908396946565,
+                  "rows": 7000,
+                  "selected": 2164,
+                  "tn": 3674,
+                  "tp": 2113
+                },
+                "promptshield": {
+                  "fn": 582,
+                  "fp": 16,
+                  "fpr": 0.00631163708086785,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.9598997493734336,
+                  "recall": 0.39689119170984455,
+                  "rows": 3500,
+                  "selected": 399,
+                  "tn": 2519,
+                  "tp": 383
+                },
+                "sep": {
+                  "fn": 1576,
+                  "fp": 2,
+                  "fpr": 0.001142857142857143,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.9886363636363636,
+                  "recall": 0.09942857142857142,
+                  "rows": 3500,
+                  "selected": 176,
+                  "tn": 1748,
+                  "tp": 174
+                }
+              },
+              "fn": 3320,
+              "fp": 69,
+              "fpr": 0.008614232209737827,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9748083242059146,
+              "recall": 0.44574290484140233,
+              "rows": 14000,
+              "selected": 2739,
+              "tn": 7941,
+              "tp": 2670
+            },
+            "feasible": true,
+            "threshold": 4.374999774619938
+          },
+          "0.0200": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 325,
+                  "fp": 43,
+                  "fpr": 0.026925485284909206,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9616413916146298,
+                  "recall": 0.7683535281539559,
+                  "rows": 3000,
+                  "selected": 1121,
+                  "tn": 1554,
+                  "tp": 1078
+                },
+                "promptshield": {
+                  "fn": 161,
+                  "fp": 21,
+                  "fpr": 0.019337016574585635,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.9233576642335767,
+                  "recall": 0.6111111111111112,
+                  "rows": 1500,
+                  "selected": 274,
+                  "tn": 1065,
+                  "tp": 253
+                },
+                "sep": {
+                  "fn": 536,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.9953488372093023,
+                  "recall": 0.2853333333333333,
+                  "rows": 1500,
+                  "selected": 215,
+                  "tn": 749,
+                  "tp": 214
+                }
+              },
+              "fn": 1022,
+              "fp": 65,
+              "fpr": 0.01893387707544422,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9596273291925466,
+              "recall": 0.6018698870276588,
+              "rows": 6000,
+              "selected": 1610,
+              "tn": 3368,
+              "tp": 1545
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 794,
+                  "fp": 65,
+                  "fpr": 0.0174496644295302,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9744697564807542,
+                  "recall": 0.757557251908397,
+                  "rows": 7000,
+                  "selected": 2546,
+                  "tn": 3660,
+                  "tp": 2481
+                },
+                "promptshield": {
+                  "fn": 377,
+                  "fp": 50,
+                  "fpr": 0.01972386587771203,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.9216300940438872,
+                  "recall": 0.6093264248704663,
+                  "rows": 3500,
+                  "selected": 638,
+                  "tn": 2485,
+                  "tp": 588
+                },
+                "sep": {
+                  "fn": 1265,
+                  "fp": 3,
+                  "fpr": 0.0017142857142857142,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.9938524590163934,
+                  "recall": 0.27714285714285714,
+                  "rows": 3500,
+                  "selected": 488,
+                  "tn": 1747,
+                  "tp": 485
+                }
+              },
+              "fn": 2436,
+              "fp": 118,
+              "fpr": 0.014731585518102372,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9678649237472767,
+              "recall": 0.593322203672788,
+              "rows": 14000,
+              "selected": 3672,
+              "tn": 7892,
+              "tp": 3554
+            },
+            "feasible": true,
+            "threshold": 2.500000096857548
+          }
+        }
+      },
+      "gates": {
+        "high": 0.9999,
+        "low": 0.001,
+        "reference_llm_probability": 0.95
+      },
+      "reference_rounded_2pct": {
+        "calibration": {
+          "by_dataset": {
+            "canonical": {
+              "fn": 351,
+              "fp": 42,
+              "fpr": 0.026299311208515967,
+              "negatives": 1597,
+              "positives": 1403,
+              "precision": 0.9616087751371115,
+              "recall": 0.7498218104062723,
+              "rows": 3000,
+              "selected": 1094,
+              "tn": 1555,
+              "tp": 1052
+            },
+            "promptshield": {
+              "fn": 167,
+              "fp": 15,
+              "fpr": 0.013812154696132596,
+              "negatives": 1086,
+              "positives": 414,
+              "precision": 0.9427480916030534,
+              "recall": 0.5966183574879227,
+              "rows": 1500,
+              "selected": 262,
+              "tn": 1071,
+              "tp": 247
+            },
+            "sep": {
+              "fn": 559,
+              "fp": 1,
+              "fpr": 0.0013333333333333333,
+              "negatives": 750,
+              "positives": 750,
+              "precision": 0.9947916666666666,
+              "recall": 0.25466666666666665,
+              "rows": 1500,
+              "selected": 192,
+              "tn": 749,
+              "tp": 191
+            }
+          },
+          "fn": 1077,
+          "fp": 58,
+          "fpr": 0.016894844159627147,
+          "negatives": 3433,
+          "positives": 2567,
+          "precision": 0.962532299741602,
+          "recall": 0.580444098169069,
+          "rows": 6000,
+          "selected": 1548,
+          "tn": 3375,
+          "tp": 1490
+        },
+        "evaluation": {
+          "by_dataset": {
+            "canonical": {
+              "fn": 842,
+              "fp": 63,
+              "fpr": 0.016912751677852347,
+              "negatives": 3725,
+              "positives": 3275,
+              "precision": 0.9747596153846154,
+              "recall": 0.7429007633587786,
+              "rows": 7000,
+              "selected": 2496,
+              "tn": 3662,
+              "tp": 2433
+            },
+            "promptshield": {
+              "fn": 398,
+              "fp": 37,
+              "fpr": 0.014595660749506903,
+              "negatives": 2535,
+              "positives": 965,
+              "precision": 0.9387417218543046,
+              "recall": 0.5875647668393782,
+              "rows": 3500,
+              "selected": 604,
+              "tn": 2498,
+              "tp": 567
+            },
+            "sep": {
+              "fn": 1311,
+              "fp": 3,
+              "fpr": 0.0017142857142857142,
+              "negatives": 1750,
+              "positives": 1750,
+              "precision": 0.9932126696832579,
+              "recall": 0.25085714285714283,
+              "rows": 3500,
+              "selected": 442,
+              "tn": 1747,
+              "tp": 439
+            }
+          },
+          "fn": 2551,
+          "fp": 103,
+          "fpr": 0.01285892634207241,
+          "negatives": 8010,
+          "positives": 5990,
+          "precision": 0.9709203839638623,
+          "recall": 0.5741235392320534,
+          "rows": 14000,
+          "selected": 3542,
+          "tn": 7907,
+          "tp": 3439
+        }
+      }
+    },
+    "mmbert_lora_partial_s42": {
+      "all_rows_fusion_upper_bound": {
+        "llm_call_rate": 1.0,
+        "model": {
+          "fit_rows": 5998,
+          "intercept": 0.8776105920616032,
+          "llm_log_odds_coefficient": 0.358799230320228,
+          "mmbert_logit_coefficient": 0.19817432527735085
+        },
+        "operating_points": {
+          "0.0050": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 1083,
+                  "fp": 16,
+                  "fpr": 0.010018785222291797,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9523809523809523,
+                  "recall": 0.22808267997148968,
+                  "rows": 3000,
+                  "selected": 336,
+                  "tn": 1581,
+                  "tp": 320
+                },
+                "promptshield": {
+                  "fn": 334,
+                  "fp": 0,
+                  "fpr": 0.0,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 1.0,
+                  "recall": 0.1932367149758454,
+                  "rows": 1500,
+                  "selected": 80,
+                  "tn": 1086,
+                  "tp": 80
+                },
+                "sep": {
+                  "fn": 747,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.75,
+                  "recall": 0.004,
+                  "rows": 1500,
+                  "selected": 4,
+                  "tn": 749,
+                  "tp": 3
+                }
+              },
+              "fn": 2164,
+              "fp": 17,
+              "fpr": 0.004951937081270026,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9595238095238096,
+              "recall": 0.15699259836384885,
+              "rows": 6000,
+              "selected": 420,
+              "tn": 3416,
+              "tp": 403
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 2052,
+                  "fp": 34,
+                  "fpr": 0.00912751677852349,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9729514717581543,
+                  "recall": 0.3734351145038168,
+                  "rows": 7000,
+                  "selected": 1257,
+                  "tn": 3691,
+                  "tp": 1223
+                },
+                "promptshield": {
+                  "fn": 764,
+                  "fp": 5,
+                  "fpr": 0.0019723865877712033,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.9757281553398058,
+                  "recall": 0.20829015544041452,
+                  "rows": 3500,
+                  "selected": 206,
+                  "tn": 2530,
+                  "tp": 201
+                },
+                "sep": {
+                  "fn": 1739,
+                  "fp": 0,
+                  "fpr": 0.0,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 1.0,
+                  "recall": 0.006285714285714286,
+                  "rows": 3500,
+                  "selected": 11,
+                  "tn": 1750,
+                  "tp": 11
+                }
+              },
+              "fn": 4555,
+              "fp": 39,
+              "fpr": 0.0048689138576779025,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9735413839891451,
+              "recall": 0.2395659432387312,
+              "rows": 14000,
+              "selected": 1474,
+              "tn": 7971,
+              "tp": 1435
+            },
+            "feasible": true,
+            "threshold": 4.062021434681022
+          },
+          "0.0100": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 864,
+                  "fp": 29,
+                  "fpr": 0.018159048215403883,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.948943661971831,
+                  "recall": 0.38417676407697793,
+                  "rows": 3000,
+                  "selected": 568,
+                  "tn": 1568,
+                  "tp": 539
+                },
+                "promptshield": {
+                  "fn": 270,
+                  "fp": 4,
+                  "fpr": 0.003683241252302026,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.972972972972973,
+                  "recall": 0.34782608695652173,
+                  "rows": 1500,
+                  "selected": 148,
+                  "tn": 1082,
+                  "tp": 144
+                },
+                "sep": {
+                  "fn": 719,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.96875,
+                  "recall": 0.04133333333333333,
+                  "rows": 1500,
+                  "selected": 32,
+                  "tn": 749,
+                  "tp": 31
+                }
+              },
+              "fn": 1853,
+              "fp": 34,
+              "fpr": 0.009903874162540053,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9545454545454546,
+              "recall": 0.2781456953642384,
+              "rows": 6000,
+              "selected": 748,
+              "tn": 3399,
+              "tp": 714
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 1563,
+                  "fp": 43,
+                  "fpr": 0.011543624161073825,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9754985754985755,
+                  "recall": 0.5227480916030535,
+                  "rows": 7000,
+                  "selected": 1755,
+                  "tn": 3682,
+                  "tp": 1712
+                },
+                "promptshield": {
+                  "fn": 626,
+                  "fp": 19,
+                  "fpr": 0.007495069033530572,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.946927374301676,
+                  "recall": 0.35129533678756475,
+                  "rows": 3500,
+                  "selected": 358,
+                  "tn": 2516,
+                  "tp": 339
+                },
+                "sep": {
+                  "fn": 1684,
+                  "fp": 0,
+                  "fpr": 0.0,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 1.0,
+                  "recall": 0.037714285714285714,
+                  "rows": 3500,
+                  "selected": 66,
+                  "tn": 1750,
+                  "tp": 66
+                }
+              },
+              "fn": 3873,
+              "fp": 62,
+              "fpr": 0.007740324594257179,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9715465810004589,
+              "recall": 0.35342237061769616,
+              "rows": 14000,
+              "selected": 2179,
+              "tn": 7948,
+              "tp": 2117
+            },
+            "feasible": true,
+            "threshold": 3.474474866984096
+          },
+          "0.0200": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 306,
+                  "fp": 32,
+                  "fpr": 0.020037570444583593,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9716563330380869,
+                  "recall": 0.781895937277263,
+                  "rows": 3000,
+                  "selected": 1129,
+                  "tn": 1565,
+                  "tp": 1097
+                },
+                "promptshield": {
+                  "fn": 122,
+                  "fp": 35,
+                  "fpr": 0.03222836095764273,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.8929663608562691,
+                  "recall": 0.7053140096618358,
+                  "rows": 1500,
+                  "selected": 327,
+                  "tn": 1051,
+                  "tp": 292
+                },
+                "sep": {
+                  "fn": 455,
+                  "fp": 1,
+                  "fpr": 0.0013333333333333333,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 0.9966216216216216,
+                  "recall": 0.3933333333333333,
+                  "rows": 1500,
+                  "selected": 296,
+                  "tn": 749,
+                  "tp": 295
+                }
+              },
+              "fn": 883,
+              "fp": 68,
+              "fpr": 0.019807748325080105,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9611872146118722,
+              "recall": 0.6560186988702766,
+              "rows": 6000,
+              "selected": 1752,
+              "tn": 3365,
+              "tp": 1684
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 705,
+                  "fp": 55,
+                  "fpr": 0.01476510067114094,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.979047619047619,
+                  "recall": 0.7847328244274809,
+                  "rows": 7000,
+                  "selected": 2625,
+                  "tn": 3670,
+                  "tp": 2570
+                },
+                "promptshield": {
+                  "fn": 307,
+                  "fp": 78,
+                  "fpr": 0.03076923076923077,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.8940217391304348,
+                  "recall": 0.6818652849740933,
+                  "rows": 3500,
+                  "selected": 736,
+                  "tn": 2457,
+                  "tp": 658
+                },
+                "sep": {
+                  "fn": 1074,
+                  "fp": 0,
+                  "fpr": 0.0,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 1.0,
+                  "recall": 0.3862857142857143,
+                  "rows": 3500,
+                  "selected": 676,
+                  "tn": 1750,
+                  "tp": 676
+                }
+              },
+              "fn": 2086,
+              "fp": 133,
+              "fpr": 0.016604244694132336,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9670547436215011,
+              "recall": 0.6517529215358931,
+              "rows": 14000,
+              "selected": 4037,
+              "tn": 7877,
+              "tp": 3904
+            },
+            "feasible": true,
+            "threshold": 1.9520125061991977
+          }
+        }
+      },
+      "gated_logistic_fusion": {
+        "llm_call_rate_evaluation": 0.26785714285714285,
+        "model": {
+          "fit_rows": 1531,
+          "intercept": 0.4153733235047914,
+          "llm_log_odds_coefficient": 0.4072245734616017,
+          "mmbert_logit_coefficient": 0.3468950810115681
+        },
+        "operating_points": {
+          "0.0050": {
+            "feasible": false,
+            "minimum_calibration_fpr": 0.013399359161083601
+          },
+          "0.0100": {
+            "feasible": false,
+            "minimum_calibration_fpr": 0.013399359161083601
+          },
+          "0.0200": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 224,
+                  "fp": 31,
+                  "fpr": 0.019411396368190358,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9743801652892562,
+                  "recall": 0.8403421240199572,
+                  "rows": 3000,
+                  "selected": 1210,
+                  "tn": 1566,
+                  "tp": 1179
+                },
+                "promptshield": {
+                  "fn": 115,
+                  "fp": 37,
+                  "fpr": 0.03406998158379374,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.8898809523809523,
+                  "recall": 0.7222222222222222,
+                  "rows": 1500,
+                  "selected": 336,
+                  "tn": 1049,
+                  "tp": 299
+                },
+                "sep": {
+                  "fn": 463,
+                  "fp": 0,
+                  "fpr": 0.0,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 1.0,
+                  "recall": 0.38266666666666665,
+                  "rows": 1500,
+                  "selected": 287,
+                  "tn": 750,
+                  "tp": 287
+                }
+              },
+              "fn": 802,
+              "fp": 68,
+              "fpr": 0.019807748325080105,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9629023458810693,
+              "recall": 0.6875730424620179,
+              "rows": 6000,
+              "selected": 1833,
+              "tn": 3365,
+              "tp": 1765
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 573,
+                  "fp": 54,
+                  "fpr": 0.014496644295302013,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9804063860667634,
+                  "recall": 0.8250381679389313,
+                  "rows": 7000,
+                  "selected": 2756,
+                  "tn": 3671,
+                  "tp": 2702
+                },
+                "promptshield": {
+                  "fn": 269,
+                  "fp": 92,
+                  "fpr": 0.03629191321499014,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.883248730964467,
+                  "recall": 0.7212435233160622,
+                  "rows": 3500,
+                  "selected": 788,
+                  "tn": 2443,
+                  "tp": 696
+                },
+                "sep": {
+                  "fn": 1105,
+                  "fp": 1,
+                  "fpr": 0.0005714285714285715,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.9984520123839009,
+                  "recall": 0.36857142857142855,
+                  "rows": 3500,
+                  "selected": 646,
+                  "tn": 1749,
+                  "tp": 645
+                }
+              },
+              "fn": 1947,
+              "fp": 147,
+              "fpr": 0.018352059925093634,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.9649164677804296,
+              "recall": 0.6749582637729549,
+              "rows": 14000,
+              "selected": 4190,
+              "tn": 7863,
+              "tp": 4043
+            },
+            "feasible": true,
+            "threshold": 1.7972979661562278
+          }
+        }
+      },
+      "gated_raw_log_odds": {
+        "llm_call_rate_evaluation": 0.26785714285714285,
+        "operating_points": {
+          "0.0050": {
+            "feasible": false,
+            "minimum_calibration_fpr": 0.013399359161083601
+          },
+          "0.0100": {
+            "feasible": false,
+            "minimum_calibration_fpr": 0.013399359161083601
+          },
+          "0.0200": {
+            "calibration": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 330,
+                  "fp": 36,
+                  "fpr": 0.022542266750156543,
+                  "negatives": 1597,
+                  "positives": 1403,
+                  "precision": 0.9675383228133454,
+                  "recall": 0.7647897362794013,
+                  "rows": 3000,
+                  "selected": 1109,
+                  "tn": 1561,
+                  "tp": 1073
+                },
+                "promptshield": {
+                  "fn": 129,
+                  "fp": 32,
+                  "fpr": 0.029465930018416207,
+                  "negatives": 1086,
+                  "positives": 414,
+                  "precision": 0.8990536277602523,
+                  "recall": 0.6884057971014492,
+                  "rows": 1500,
+                  "selected": 317,
+                  "tn": 1054,
+                  "tp": 285
+                },
+                "sep": {
+                  "fn": 510,
+                  "fp": 0,
+                  "fpr": 0.0,
+                  "negatives": 750,
+                  "positives": 750,
+                  "precision": 1.0,
+                  "recall": 0.32,
+                  "rows": 1500,
+                  "selected": 240,
+                  "tn": 750,
+                  "tp": 240
+                }
+              },
+              "fn": 969,
+              "fp": 68,
+              "fpr": 0.019807748325080105,
+              "negatives": 3433,
+              "positives": 2567,
+              "precision": 0.9591836734693877,
+              "recall": 0.6225165562913907,
+              "rows": 6000,
+              "selected": 1666,
+              "tn": 3365,
+              "tp": 1598
+            },
+            "evaluation": {
+              "by_dataset": {
+                "canonical": {
+                  "fn": 765,
+                  "fp": 61,
+                  "fpr": 0.016375838926174495,
+                  "negatives": 3725,
+                  "positives": 3275,
+                  "precision": 0.9762738234150136,
+                  "recall": 0.766412213740458,
+                  "rows": 7000,
+                  "selected": 2571,
+                  "tn": 3664,
+                  "tp": 2510
+                },
+                "promptshield": {
+                  "fn": 299,
+                  "fp": 75,
+                  "fpr": 0.029585798816568046,
+                  "negatives": 2535,
+                  "positives": 965,
+                  "precision": 0.8987854251012146,
+                  "recall": 0.6901554404145078,
+                  "rows": 3500,
+                  "selected": 741,
+                  "tn": 2460,
+                  "tp": 666
+                },
+                "sep": {
+                  "fn": 1218,
+                  "fp": 1,
+                  "fpr": 0.0005714285714285715,
+                  "negatives": 1750,
+                  "positives": 1750,
+                  "precision": 0.99812382739212,
+                  "recall": 0.304,
+                  "rows": 3500,
+                  "selected": 533,
+                  "tn": 1749,
+                  "tp": 532
+                }
+              },
+              "fn": 2282,
+              "fp": 137,
+              "fpr": 0.017103620474406993,
+              "negatives": 8010,
+              "positives": 5990,
+              "precision": 0.964369310793238,
+              "recall": 0.6190317195325542,
+              "rows": 14000,
+              "selected": 3845,
+              "tn": 7873,
+              "tp": 3708
+            },
+            "feasible": true,
+            "threshold": 2.000000044703484
+          }
+        }
+      },
+      "gates": {
+        "high": 0.999,
+        "low": 0.2,
+        "reference_llm_probability": 0.9
+      },
+      "reference_rounded_2pct": {
+        "calibration": {
+          "by_dataset": {
+            "canonical": {
+              "fn": 330,
+              "fp": 36,
+              "fpr": 0.022542266750156543,
+              "negatives": 1597,
+              "positives": 1403,
+              "precision": 0.9675383228133454,
+              "recall": 0.7647897362794013,
+              "rows": 3000,
+              "selected": 1109,
+              "tn": 1561,
+              "tp": 1073
+            },
+            "promptshield": {
+              "fn": 129,
+              "fp": 32,
+              "fpr": 0.029465930018416207,
+              "negatives": 1086,
+              "positives": 414,
+              "precision": 0.8990536277602523,
+              "recall": 0.6884057971014492,
+              "rows": 1500,
+              "selected": 317,
+              "tn": 1054,
+              "tp": 285
+            },
+            "sep": {
+              "fn": 510,
+              "fp": 0,
+              "fpr": 0.0,
+              "negatives": 750,
+              "positives": 750,
+              "precision": 1.0,
+              "recall": 0.32,
+              "rows": 1500,
+              "selected": 240,
+              "tn": 750,
+              "tp": 240
+            }
+          },
+          "fn": 969,
+          "fp": 68,
+          "fpr": 0.019807748325080105,
+          "negatives": 3433,
+          "positives": 2567,
+          "precision": 0.9591836734693877,
+          "recall": 0.6225165562913907,
+          "rows": 6000,
+          "selected": 1666,
+          "tn": 3365,
+          "tp": 1598
+        },
+        "evaluation": {
+          "by_dataset": {
+            "canonical": {
+              "fn": 770,
+              "fp": 60,
+              "fpr": 0.016107382550335572,
+              "negatives": 3725,
+              "positives": 3275,
+              "precision": 0.9766081871345029,
+              "recall": 0.7648854961832061,
+              "rows": 7000,
+              "selected": 2565,
+              "tn": 3665,
+              "tp": 2505
+            },
+            "promptshield": {
+              "fn": 299,
+              "fp": 75,
+              "fpr": 0.029585798816568046,
+              "negatives": 2535,
+              "positives": 965,
+              "precision": 0.8987854251012146,
+              "recall": 0.6901554404145078,
+              "rows": 3500,
+              "selected": 741,
+              "tn": 2460,
+              "tp": 666
+            },
+            "sep": {
+              "fn": 1218,
+              "fp": 1,
+              "fpr": 0.0005714285714285715,
+              "negatives": 1750,
+              "positives": 1750,
+              "precision": 0.99812382739212,
+              "recall": 0.304,
+              "rows": 3500,
+              "selected": 533,
+              "tn": 1749,
+              "tp": 532
+            }
+          },
+          "fn": 2287,
+          "fp": 136,
+          "fpr": 0.016978776529338328,
+          "negatives": 8010,
+          "positives": 5990,
+          "precision": 0.9645741078405835,
+          "recall": 0.6181969949916527,
+          "rows": 14000,
+          "selected": 3839,
+          "tn": 7874,
+          "tp": 3703
+        }
+      },
+      "rounded_fusion_candidate": {
+        "calibration": {
+          "by_dataset": {
+            "canonical": {
+              "fn": 226,
+              "fp": 31,
+              "fpr": 0.019411396368190358,
+              "negatives": 1597,
+              "positives": 1403,
+              "precision": 0.9743377483443708,
+              "recall": 0.8389166072701354,
+              "rows": 3000,
+              "selected": 1208,
+              "tn": 1566,
+              "tp": 1177
+            },
+            "promptshield": {
+              "fn": 115,
+              "fp": 37,
+              "fpr": 0.03406998158379374,
+              "negatives": 1086,
+              "positives": 414,
+              "precision": 0.8898809523809523,
+              "recall": 0.7222222222222222,
+              "rows": 1500,
+              "selected": 336,
+              "tn": 1049,
+              "tp": 299
+            },
+            "sep": {
+              "fn": 463,
+              "fp": 0,
+              "fpr": 0.0,
+              "negatives": 750,
+              "positives": 750,
+              "precision": 1.0,
+              "recall": 0.38266666666666665,
+              "rows": 1500,
+              "selected": 287,
+              "tn": 750,
+              "tp": 287
+            }
+          },
+          "fn": 804,
+          "fp": 68,
+          "fpr": 0.019807748325080105,
+          "negatives": 3433,
+          "positives": 2567,
+          "precision": 0.9628618241398144,
+          "recall": 0.6867939228671601,
+          "rows": 6000,
+          "selected": 1831,
+          "tn": 3365,
+          "tp": 1763
+        },
+        "evaluation": {
+          "by_dataset": {
+            "canonical": {
+              "fn": 573,
+              "fp": 54,
+              "fpr": 0.014496644295302013,
+              "negatives": 3725,
+              "positives": 3275,
+              "precision": 0.9804063860667634,
+              "recall": 0.8250381679389313,
+              "rows": 7000,
+              "selected": 2756,
+              "tn": 3671,
+              "tp": 2702
+            },
+            "promptshield": {
+              "fn": 268,
+              "fp": 92,
+              "fpr": 0.03629191321499014,
+              "negatives": 2535,
+              "positives": 965,
+              "precision": 0.8833967046894804,
+              "recall": 0.722279792746114,
+              "rows": 3500,
+              "selected": 789,
+              "tn": 2443,
+              "tp": 697
+            },
+            "sep": {
+              "fn": 1109,
+              "fp": 1,
+              "fpr": 0.0005714285714285715,
+              "negatives": 1750,
+              "positives": 1750,
+              "precision": 0.9984423676012462,
+              "recall": 0.36628571428571427,
+              "rows": 3500,
+              "selected": 642,
+              "tn": 1749,
+              "tp": 641
+            }
+          },
+          "fn": 1950,
+          "fp": 147,
+          "fpr": 0.018352059925093634,
+          "negatives": 8010,
+          "positives": 5990,
+          "precision": 0.9648913303080965,
+          "recall": 0.674457429048414,
+          "rows": 14000,
+          "selected": 4187,
+          "tn": 7863,
+          "tp": 4040
+        },
+        "formula": {
+          "intercept": 0.4,
+          "llm_log_odds_coefficient": 0.4,
+          "mmbert_logit_coefficient": 0.35,
+          "threshold": 1.8
+        }
+      }
+    }
+  },
+  "evaluation_split": "fixed 14000-row group-held-out evaluation split",
+  "features": [
+    "mmbert_logit",
+    "deepseek_raw_log_odds"
+  ],
+  "fit_split": "fixed 6000-row group-aware calibration split",
+  "followup_ledger_sha256": "002bf9286ef0021a427611c688f4b4e881851d6f7fad1dab57da9531d33b563f",
+  "operational_failure_policy": "flag",
+  "panel_sha256": "45e798955418e8990d5f56b5d1ae542ae3499f8d585a0ea2c4fe6712b4d06e14",
+  "question": "Does two-feature logistic fusion improve the low-FPR frontier over raw DeepSeek log odds without increasing LLM calls?",
+  "schema_version": 1
+}

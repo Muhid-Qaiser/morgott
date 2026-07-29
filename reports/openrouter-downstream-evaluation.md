@@ -21,12 +21,12 @@ Changing from fp4 to fp8 does not materially change Flash or Pro high-reasoning 
 
 The current practical recommendation is:
 
-1. Keep the mmBERT output advisory and use it to route, never to grant authority.
-2. Do not let a binary LLM `false` automatically clear every mmBERT escalation.
-3. If an LLM is needed now, use DeepSeek V4 Flash with reasoning off for review prioritization, subtyping, or evidence collection, not final automatic clearance.
-4. Run instruction-subversion and harmful-request classification as separate prompts in the next experiment.
-5. Revisit encoder selection after the full-data LoRA finishes.
-6. Calibrate any production boundary on representative traffic that is separate from this open development panel.
+1. Use the partial-data rank-8 LoRA only for this selected development policy.
+2. Pass scores below `0.2`, restrict scores at or above `0.999`, and send only the middle zone to DeepSeek V4 Flash.
+3. In the middle zone, restrict at DeepSeek decision-token log odds greater than or equal to `log(9)`, equivalent to `p >= 0.9`; otherwise pass.
+4. Retry transient provider failures in the future provider adapter, and restrict after retries are exhausted.
+5. Keep every learned output advisory and privilege-reducing; it never grants authority or changes `morgott scan`.
+6. Re-evaluate the same policy when the full-data LoRA finishes, then calibrate any deployment boundary on separate representative traffic.
 
 ## Evaluation contract
 
@@ -313,6 +313,138 @@ The first follow-up should use the subversion-only prompt because the current au
 It should keep the same 20,000-row panel for comparability, but model or prompt selection must not turn this open panel into a final test.
 Any production threshold still requires a separate calibration set and representative traffic.
 
+## Log-probability three-zone follow-up (2026-07-29)
+
+This follow-up executes the first two hypotheses above with the same fixed 20,000-row panel.
+A deterministic group-aware split assigned 6,000 rows to calibration and 14,000 rows to evaluation, with no group overlap and complete SEP pairs.
+The split contains 10,000 canonical rows, 5,000 PromptShield rows, and 5,000 SEP rows.
+Every model received the same stored text unchanged and received neither input-channel metadata, source identity, labels, mmBERT scores, nor task context.
+The contract is subversion-only and recall-biased, with harmful non-injection explicitly negative.
+
+DeepSeek V4 Flash used CoreWeave fp8, reasoning disabled, strict integer JSON, `max_tokens=16`, `temperature=0`, and top-20 token log probabilities.
+Qwen 3.7 Flash used Alibaba, default reasoning, JSON-object mode, `max_tokens=1024`, `temperature=0`, and the endpoint maximum of five token alternatives.
+The evaluator stores both raw `logprob(1) - logprob(0)` and its numerically stable sigmoid.
+The selected runtime interface uses the sigmoid value as `p_subversion`, while raw log odds remain available for diagnostics.
+The two values have identical rankings, so this representation change does not alter any selected row or reported metric.
+Missing log probabilities, malformed output, and exhausted transport errors route to review.
+
+### Standalone LLM results
+
+| Configuration and split | Valid score coverage | ROC AUC / PR AUC on valid rows | Recall / FPR at zero log odds with failures routed to review | Mean / p95 latency | Observed cost |
+|---|---:|---:|---:|---:|---:|
+| DeepSeek CoreWeave fp8, calibration | 99.97% | 0.9343 / 0.9114 | 68.10% / 3.58% | 3.00 s / 8.09 s | $0.3176 |
+| DeepSeek CoreWeave fp8, evaluation | 99.95% | 0.9393 / 0.9244 | 71.15% / 3.32% | 2.97 s / 7.96 s | $0.7523 |
+| Qwen default reasoning, calibration | 98.95% | 0.7729 / 0.7848 | 56.45% / 2.97% | 4.15 s / 10.55 s | $0.3301 |
+| DeepSeek StreamLake fp8, calibration diagnostic | 68.22% | 0.9233 / 0.9037 | 77.44% / 39.62% | 2.12 s / 6.10 s | $0.2037 |
+
+CoreWeave returned 19,991 valid scores and nine exhausted HTTP 429 failures over 20,000 rows.
+Qwen returned 5,937 valid scores, 36 invalid verdicts, 26 exhausted HTTP 429 failures, and one provider API error over 6,000 calibration rows.
+Qwen cleared 1.86 percentage points fewer benign rows with the frozen encoder and 2.83 points fewer with the partial LoRA than CoreWeave at the primary calibration constraint.
+It therefore failed the predeclared requirement to clear at least two percentage points more benign rows, and no 14,000-row Qwen evaluation run was performed.
+
+The StreamLake diagnostic was not a small-canary accident.
+It returned only 4,093 valid scores, 1,807 rows where both binary alternatives were unavailable, 98 exhausted HTTP 429 failures, and two provider API errors over the same 6,000 calibration rows.
+Among rows valid on both DeepSeek routes, binary decisions agreed 97.75% of the time, but StreamLake's valid-row ranking was also slightly worse.
+Its lower price does not compensate for forcing approximately one-third of inputs to review.
+
+### Calibration-selected three-zone result
+
+The primary exploratory constraint is 99.5% review-tier recall with a 1% high-confidence flag FPR cap on calibration.
+The selection rule first maximizes high-confidence flag true positives and then benign auto-passes.
+The following numbers apply the selected thresholds once to the 14,000-row evaluation split.
+
+| First-stage encoder | Review-tier recall | Overall auto-pass / benign auto-pass | High-confidence flag recall / FPR / precision | LLM middle zone | Manual-review zone | Projected LLM cost per 1,000 inputs |
+|---|---:|---:|---:|---:|---:|---:|
+| Full-data frozen mmBERT | **99.82%** | **20.84% / 36.29%** | 44.94% / 0.85% / 97.54% | 69.46% | 59.44% | $0.0439 |
+| Partial-data rank-8 LoRA | 99.40% | 12.26% / 20.99% | **47.75%** / 0.81% / **97.78%** | 80.82% | 66.84% | $0.0470 |
+
+The frozen full-data encoder is the better primary cascade at this constraint.
+It transfers above the 99.5% recall anchor and clears substantially more benign rows.
+The partial LoRA has slightly better high-confidence flagging, but its evaluation review recall falls to 99.40% and its review workload is higher.
+The 99.5% value is an exploratory calibration anchor, not an execution gate or a production guarantee.
+
+The frozen primary calibration thresholds are `mmbert_low=0.0002611903`, `mmbert_high=0.9998766054`, LLM clear log odds `-9.2500`, and LLM flag log odds `4.3750`.
+The corresponding LLM sigmoid values are approximately `0.0000961` and `0.987568`.
+These values are development candidates selected on an already-open panel and should not be copied into production.
+
+### Rounded-threshold sensitivity
+
+Decimal simplicity is not robustness when scores are uncalibrated and highly polarized.
+A frozen-mmBERT low threshold of `0.1` retains only 87.18% of evaluation attacks before the LLM, while `0.2` retains 83.29%.
+Allowing the LLM to clear middle-zone rows reduces final review recall to 81.84% and 79.20% with an LLM `0.1` clear and `0.9` flag band.
+Using the LLM's direct binary decision reduces it further to 79.47% and 77.03%.
+The mmBERT high threshold `0.9` also has 6.94% evaluation FPR for the frozen encoder and 4.96% for the partial LoRA before downstream combination.
+Those tenths-based thresholds are therefore incompatible with the recall-first and low-FPR goals.
+
+A small predeclared logarithmic grid is a better anti-overfitting simplification.
+The following frozen and partial-LoRA candidates use `mmbert_low=0.0001` and `llm_clear_probability=0.0001`.
+They were selected as simple sensitivity points rather than fitted order statistics.
+
+| Encoder and candidate | mmBERT high | LLM flag probability | Evaluation review recall | Overall / benign auto-pass | Flag recall / FPR / precision | Manual-review zone |
+|---|---:|---:|---:|---:|---:|---:|
+| Full-data frozen, conservative | 0.9999 | 0.99 | 99.88% | 17.45% / 30.41% | 42.25% / 0.74% / 97.72% | 64.05% |
+| Partial-data LoRA, conservative | 0.9999 | 0.99 | 99.88% | 6.23% / 10.80% | 34.07% / 0.55% / 97.89% | 78.88% |
+| Full-data frozen, higher flag recall | 0.999 | 0.95 | 99.88% | 17.45% / 30.41% | 61.27% / 1.75% / 96.33% | 55.34% |
+| Partial-data LoRA, higher flag recall | 0.999 | 0.95 | 99.88% | 6.23% / 10.80% | 61.27% / 1.54% / 96.76% | 66.68% |
+
+The conservative rounded candidate gives up 3.88 percentage points of benign auto-pass and 2.69 points of flag recall relative to the calibration-optimized primary point, but it transfers with higher review recall and has easier operational semantics.
+The higher-flag candidate reaches the requested 60% to 70% flag-recall range without using fitted decimal cutpoints.
+The partial LoRA slightly reduces flag FPR under the higher-flag policy, but it sends 11.34 percentage points more traffic to manual review and clears 19.61 points fewer benign rows.
+The rounded comparison therefore does not change the recommendation to use the full-data frozen encoder.
+The full-data LoRA is still training and is not represented by these partial-data LoRA results.
+
+Do not collapse the LLM stage to its selected `0` or `1` token for automatic clearance.
+On the rounded frozen setup, a zero-log-odds binary rule yields only 75% to 77% review recall and approximately 3.4% to 3.7% FPR because almost every valid middle-zone row is either passed or flagged.
+Use two LLM thresholds instead: clear only below the low confidence bound, flag only above the high confidence bound, route the interval and every operational failure to review.
+
+### No-manual-review diagnostic
+
+Without a review queue, the cascade must emit only pass or flag.
+This diagnostic sends low mmBERT scores directly to pass, high scores directly to flag, applies one DeepSeek threshold in the middle, and sends operational failures to flag.
+It selects only from the coarse threshold grid on calibration, maximizes recall under each calibration FPR cap, and applies the selected point once to evaluation.
+The selected `0.9` DeepSeek threshold was chosen on the 6,000-row calibration split and then evaluated on the separate 14,000 rows.
+It is an empirically selected operating threshold over the normalized two-token signal, not a claim that DeepSeek outputs calibrated real-world probabilities.
+
+| Encoder | Calibration FPR cap | mmBERT low / high | LLM flag probability | Evaluation recall / FPR / precision | LLM call rate |
+|---|---:|---:|---:|---:|---:|
+| Full-data frozen | 0.5% | 0.001 / 0.9999 | 0.999 | 28.95% / 0.27% / 98.75% | 63.95% |
+| Partial-data LoRA | 0.5% | 0.001 / 0.9999 | 0.99 | 34.12% / 0.57% / 97.80% | 69.96% |
+| Full-data frozen | 1% | 0.001 / 0.9999 | 0.99 | 42.29% / 0.76% / 97.65% | 63.95% |
+| Partial-data LoRA | 1% | 0.001 / 0.9999 | 0.99 | 34.12% / 0.57% / 97.80% | 69.96% |
+| Full-data frozen | 2% | 0.001 / 0.9999 | 0.95 | 57.41% / 1.29% / 97.09% | 63.95% |
+| Partial-data LoRA | 2% | 0.2 / 0.999 | 0.9 | 61.82% / 1.70% / 96.46% | 26.79% |
+| Full-data frozen | 5% | 0.001 / 0.999 | 0.5 | 77.03% / 3.68% / 93.99% | 59.46% |
+| Partial-data LoRA | 5% | 0.0001 / 0.99 | 0.5 | 79.10% / 3.92% / 93.78% | 71.87% |
+
+The 1% region favors frozen mmBERT because it finds materially more attacks at a similar FPR.
+The approximately 2% region favors the partial LoRA when higher recall and lower LLM traffic matter more than its 0.41-point FPR increase.
+At the 5% calibration cap, neither encoder reaches 80% evaluation recall.
+Reaching 99.88% recall by automatically flagging every former review row produces 69.59% FPR with frozen mmBERT and 89.20% FPR with the partial LoRA.
+There is therefore no credible high-recall, low-FPR, no-review operating point in this experiment.
+
+Precision in this table reflects the artificial 42.8% positive panel prevalence.
+For example, the frozen 1% setting has 97.65% panel precision, but its recall and FPR imply only approximately 35.9% precision if attacks are 1% of live traffic.
+Deployment precision must be recomputed using representative prevalence.
+
+### Discarded fusion diagnostics
+
+Two-feature logistic fusion raised the partial-LoRA aggregate result from 61.82% recall at 1.70% FPR to 67.45% recall at 1.84% FPR with the same 26.79% LLM call rate.
+It also raised PromptShield FPR from 2.96% to 3.63%, so the aggregate gain was not uniform.
+A grouped monotonic-boosting follow-up reduced aggregate FPR to 0.32% but collapsed recall to 30.45%, including 3.31% on SEP, at 35.21% LLM calls.
+Both fusion implementations were rejected in favor of the simpler rounded cascade.
+
+At the more permissive 2% calibration flag-FPR cap, the frozen cascade reaches 59.88% evaluation flag recall at 1.46% FPR and 96.84% precision while retaining 99.82% review recall.
+The partial LoRA reaches 65.69% flag recall at 1.79% FPR and 96.49% precision while retaining 99.40% review recall.
+This is the first tested operating region that reaches the requested approximately 60% to 70% high-confidence flag recall at a relatively low FPR.
+At a 5% calibration cap, flag recall rises to 78.71% for frozen and 80.40% for partial LoRA, but evaluation FPR also rises to 4.31% and 4.46%, which is too costly for a default automatic-flag policy.
+
+Decision: retain DeepSeek V4 Flash on CoreWeave fp8 with reasoning disabled as the downstream research route.
+For a review-capable route, use the full-data frozen mmBERT plus the 99.5% review-recall family as the primary high-recall experiment.
+For the no-manual-review route, retain the partial-LoRA `0.2 / 0.999` cascade with DeepSeek `p >= 0.9` as the current 2%-region development candidate.
+No tested no-manual-review policy has both useful recall and a source-robust 2% FPR confidence guarantee under the 35% call budget.
+Treat the 1% and 2% flag-FPR settings as two reported operating candidates rather than pretending one utility tradeoff is universally best.
+Do not promote StreamLake, Qwen, either encoder, the fusion model, or any selected threshold from this open development evidence.
+
 ## Artifacts and limitations
 
 The machine summary is `artifacts/openrouter_downstream_eval/summary.json`.
@@ -322,6 +454,24 @@ Versioned row-level ledgers use deterministic `.jsonl.gz` copies in the same dir
 
 The runner and analyzer are disposable research code under `experiments/openrouter_downstream_eval/`.
 They do not modify `morgott scan`, shadow scoring, policy enforcement, authorization, or the maintained mmBERT trainer.
+
+The follow-up machine summary is `artifacts/openrouter_downstream_eval/followup_summary.json`.
+Its SHA-256 is `e1821ccb1cb8e4f2c6a573398d96f2cdce6c805abc98887f217f7c47dc856eee`.
+It pins follow-up manifest SHA-256 `fe20a42462d1c4929b1f3927bdd34692a44175d3ef9853daee81090f562ac64a`, main parsed-ledger SHA-256 `002bf9286ef0021a427611c688f4b4e881851d6f7fad1dab57da9531d33b563f`, and StreamLake diagnostic-ledger SHA-256 `1a094006d85f556db5cbc99ceacea2594b18cc74f36312d144ed74dae7e035c8`.
+The follow-up ledger stores parsed decisions, log probabilities, status, usage, cost, and latency, but no corpus text, system prompt, or raw provider response.
+
+The fusion machine summary is `artifacts/openrouter_downstream_eval/fusion_summary.json`.
+Its SHA-256 is `ac40eec09967c3bc9c29eb491ba1cc5c3c41c59fe14a07453ca41418ee0d60c4`.
+
+The source-robust machine summary is `artifacts/openrouter_downstream_eval/robust_fusion_summary.json`.
+Its SHA-256 is `148dc7e5cabc81f19b535cca87ceecf0a9a21278ccdf70231616b8ad145241a0`.
+The rejected disposable fusion analyzers were removed after their stop decisions.
+
+The selected pure advisory route is `src/morgott/models/downstream.py`.
+It does not load a model, call a provider, authorize an action, or change `morgott scan`.
+A future provider adapter should retry HTTP 408, 429, 5xx, timeout, and connection failures for at most three total attempts while honoring `Retry-After` and using jittered exponential backoff.
+It should retry malformed output or missing log probabilities once and should not retry configuration or authentication failures such as HTTP 400, 401, or 403.
+Only then should it pass `llm_failed=True`.
 
 This is already-open development evidence.
 The panel has 42.8% positive prevalence and is not representative production traffic.
