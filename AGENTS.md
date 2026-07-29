@@ -277,7 +277,7 @@ validation split, not a corpus cap, training cap, or context limit.
 The active corpus builder makes no OpenRouter calls. The old remote-review and
 WildChat weak-label paths were removed. Do not send corpus text to a provider
 merely because an API key exists. Any future remote-label experiment must be
-explicit, bounded, locally redacted, development-only, and separately reviewed.
+explicit, bounded, development-only, and separately reviewed.
 
 Never inspect, print, persist, or commit `.env`, API keys, Hugging Face tokens,
 credentials, raw provider responses, or sensitive prompts.
