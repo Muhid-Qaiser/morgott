@@ -1,0 +1,1770 @@
+{
+  "schema_version": 2,
+  "purpose": "fail-closed evaluation of a generic instruction-subversion head",
+  "run": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42",
+  "recipe": "full_combined",
+  "adaptation": "frozen",
+  "condition": null,
+  "objective": {
+    "name": "full_balanced",
+    "unique_training_rows": {
+      "morgott": 1069607,
+      "promptshield": 18197,
+      "matched_pairs": 22082
+    },
+    "canonical_weighting": "label_source_group_balanced",
+    "domain_bce_coefficients": {
+      "morgott": 0.3333333333333333,
+      "promptshield": 0.3333333333333333,
+      "matched_pairs": 0.3333333333333333
+    },
+    "domain_bce_coefficients_definition": "predeclared fixed coefficients",
+    "promptshield_sampling": "class_balanced_cycle",
+    "promptshield_class_loss_correction": {
+      "0": 1.0,
+      "1": 1.0
+    },
+    "promptshield_class_loss_correction_definition": "none",
+    "matched_pair_sampling": "complete_pair_cycle",
+    "cross_objective_schedule_comparability": "requires identical recorded seed, epochs, domain batch sizes, learning rate, and shuffle buffer"
+  },
+  "objective_spec_sha256": "3e7e616ec8eb5c3088595cb2aec1ba0cecc687d12af2bba60788c6b241bf713d",
+  "pair_ranking_weight": 0.25,
+  "model_id": "LiquidAI/LFM2.5-Encoder-230M",
+  "model_revision": "0b649ad0c684378b03d4d8304f7577a662ab89bc",
+  "attention_implementation": "sdpa",
+  "normalization": "strict",
+  "max_tokens": 512,
+  "validation_feature_record_chunk": 256,
+  "validation_prediction_batch_size": 512,
+  "evaluation_token_budget": 8192,
+  "evaluation_feature_cache": {
+    "enabled": true,
+    "identity": {
+      "schema_version": 1,
+      "model_id": "LiquidAI/LFM2.5-Encoder-230M",
+      "model_revision": "0b649ad0c684378b03d4d8304f7577a662ab89bc",
+      "attention_implementation": "sdpa",
+      "normalization": "strict",
+      "evaluator_sha256": "85c34d478dcfceef230694871f2d65c3fe1bab7d5d0f78089a7a5cb591b05e75",
+      "feature_extractor_sha256": "bf6dff9104b1c1daf7cf8a98eea53cb16420eafe8021401f98d8733b60794dc2",
+      "strict_normalizer_sha256": "56c242d31502646253bc8152d8f6f7f16773a6911c6ad41b67eb8cdd7b606720",
+      "torch": "2.13.0",
+      "transformers": "5.14.1",
+      "cuda": "13.0",
+      "device": {
+        "name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+        "compute_capability": [
+          8,
+          9
+        ]
+      }
+    },
+    "integrity": "content-addressed exact raw-text order and verified array digest",
+    "causal_input": false
+  },
+  "head_sha256": "5ddcd99e7222cbabecfac399287a14151e98ddc1ac31207ec4e5b072412aac4c",
+  "adapter_files_sha256": null,
+  "seed": 42,
+  "training_epochs": 3,
+  "training_updates": 25071,
+  "selected_epoch": 2,
+  "selected_checkpoint_updates": 16714,
+  "operating_fprs": [
+    0.001,
+    0.01
+  ],
+  "operating_target_unit": "lineage-and-near validation component false-alarm probability within trusted channel",
+  "thresholds": {
+    "source": "canonical calibration role only",
+    "selection": "maximum trusted-channel component-max tie-aware order statistics with 97.5% per-channel one-sided Clopper-Pearson upper bounds and 95% Bonferroni family confidence",
+    "pooled_negative_role": "empirical diagnostic only",
+    "promptshield_validation_used": false,
+    "selected": {
+      "0.1000%": {
+        "target_component_false_alarm_probability": 0.001,
+        "target_unit": "lineage-and-near validation component within trusted channel",
+        "component_score": "maximum negative row score",
+        "family_confidence": 0.95,
+        "per_channel_confidence": 0.975,
+        "multiplicity_correction": "Bonferroni",
+        "family_scope": "the two trusted channels, with a separate family for each target",
+        "negative_rows": 52028,
+        "pooled_negative_role": "empirical diagnostic only",
+        "inference_caveat": "Components and recurring source families are not IID or sampled from a deployment distribution; this is development evidence, not a production guarantee.",
+        "status": "unavailable",
+        "reason": "one or more trusted channels are underpowered",
+        "underpowered_channels": [
+          "untrusted_content"
+        ],
+        "by_channel": {
+          "direct_user": {
+            "status": "powered",
+            "negative_components": 22555,
+            "false_positive_component_budget": 13,
+            "zero_false_positive_component_upper_bound": 0.00016353703443532306
+          },
+          "untrusted_content": {
+            "status": "underpowered",
+            "negative_components": 979,
+            "false_positive_component_budget": null,
+            "zero_false_positive_component_upper_bound": 0.003760917581213183
+          }
+        }
+      },
+      "1.0000%": {
+        "target_component_false_alarm_probability": 0.01,
+        "target_unit": "lineage-and-near validation component within trusted channel",
+        "component_score": "maximum negative row score",
+        "family_confidence": 0.95,
+        "per_channel_confidence": 0.975,
+        "multiplicity_correction": "Bonferroni",
+        "family_scope": "the two trusted channels, with a separate family for each target",
+        "negative_rows": 52028,
+        "pooled_negative_role": "empirical diagnostic only",
+        "inference_caveat": "Components and recurring source families are not IID or sampled from a deployment distribution; this is development evidence, not a production guarantee.",
+        "status": "available",
+        "threshold": 0.9975273768433655,
+        "selection": "maximum trusted-channel component-max tie-aware order statistics with Bonferroni-adjusted one-sided Clopper-Pearson upper bounds",
+        "candidate_thresholds": {
+          "channel:direct_user": 0.7759445507683054,
+          "channel:untrusted_content": 0.9975273768433655
+        },
+        "pooled_row_empirical": {
+          "negative": 52028,
+          "false_positive": 11,
+          "fpr": 0.0002114246175136465
+        },
+        "by_channel": {
+          "direct_user": {
+            "status": "satisfies_bound",
+            "negative_components": 22555,
+            "false_positive_component_budget": 196,
+            "false_positive_components": 7,
+            "component_false_alarm_rate": 0.000310352471735757,
+            "upper_confidence_bound": 0.0006393394927596613,
+            "zero_false_positive_component_upper_bound": 0.00016353703443532306,
+            "row_empirical": {
+              "negative": 50539,
+              "false_positive": 8,
+              "fpr": 0.00015829359504541048
+            }
+          },
+          "untrusted_content": {
+            "status": "satisfies_bound",
+            "negative_components": 979,
+            "false_positive_component_budget": 3,
+            "false_positive_components": 3,
+            "component_false_alarm_rate": 0.0030643513789581204,
+            "upper_confidence_bound": 0.008928991127594935,
+            "zero_false_positive_component_upper_bound": 0.003760917581213183,
+            "row_empirical": {
+              "negative": 1489,
+              "false_positive": 3,
+              "fpr": 0.0020147750167897917
+            }
+          }
+        },
+        "by_source": {
+          "banking77": {
+            "status": "empirical_only",
+            "negative": 990,
+            "false_positive": 0,
+            "fpr": 0.0
+          },
+          "browsesafe": {
+            "status": "empirical_only",
+            "negative": 546,
+            "false_positive": 3,
+            "fpr": 0.005494505494505495
+          },
+          "harper_valley_bank": {
+            "status": "empirical_only",
+            "negative": 308,
+            "false_positive": 0,
+            "fpr": 0.0
+          },
+          "lmsys_arena": {
+            "status": "empirical_only",
+            "negative": 5,
+            "false_positive": 0,
+            "fpr": 0.0
+          },
+          "massive_en": {
+            "status": "empirical_only",
+            "negative": 1123,
+            "false_positive": 1,
+            "fpr": 0.0008904719501335708
+          },
+          "mind2web": {
+            "status": "empirical_only",
+            "negative": 82,
+            "false_positive": 0,
+            "fpr": 0.0
+          },
+          "schema_guided_dialogue": {
+            "status": "empirical_only",
+            "negative": 10620,
+            "false_positive": 0,
+            "fpr": 0.0
+          },
+          "taskmaster": {
+            "status": "empirical_only",
+            "negative": 24701,
+            "false_positive": 7,
+            "fpr": 0.00028338933646411074
+          },
+          "tatqa": {
+            "status": "empirical_only",
+            "negative": 2399,
+            "false_positive": 0,
+            "fpr": 0.0
+          },
+          "toxic_chat": {
+            "status": "empirical_only",
+            "negative": 26,
+            "false_positive": 0,
+            "fpr": 0.0
+          },
+          "wildjailbreak": {
+            "status": "empirical_only",
+            "negative": 11228,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      }
+    }
+  },
+  "checkpoint_selection": {
+    "morgott": {
+      "rows": 29293,
+      "negative": 15519,
+      "positive": 13774,
+      "roc_auc": 0.994899910649721,
+      "pr_auc": 0.9948844482808807,
+      "validation_threshold_applied": {},
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.9728307684643189,
+          "fpr": 0.0009665571235260004,
+          "tpr": 0.8316393204588355,
+          "false_positive": 15,
+          "true_positive": 11455,
+          "negative": 15519,
+          "positive": 13774
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.7279754489059775,
+          "fpr": 0.009987756943102003,
+          "tpr": 0.9250762305793524,
+          "false_positive": 155,
+          "true_positive": 12742,
+          "negative": 15519,
+          "positive": 13774
+        }
+      }
+    },
+    "promptshield": {
+      "rows": 985,
+      "negative": 497,
+      "positive": 488,
+      "roc_auc": 0.9987898703697595,
+      "pr_auc": 0.998807117615294,
+      "validation_threshold_applied": {},
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.9987156918798661,
+          "fpr": 0.0,
+          "tpr": 0.9118852459016393,
+          "false_positive": 0,
+          "true_positive": 445,
+          "negative": 497,
+          "positive": 488
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.9935117304033434,
+          "fpr": 0.008048289738430584,
+          "tpr": 0.9569672131147541,
+          "false_positive": 4,
+          "true_positive": 467,
+          "negative": 497,
+          "positive": 488
+        }
+      }
+    }
+  },
+  "calibration": {
+    "evaluation_scope": "canonical validation calibration role disjoint from checkpoint selection; component-max negatives select thresholds and positives report row recall",
+    "full": {
+      "rows": 116488,
+      "negative": 52028,
+      "positive": 64460,
+      "roc_auc": 0.9949773457565187,
+      "pr_auc": 0.9962061929318128,
+      "validation_threshold_applied": {
+        "1.0000%": {
+          "threshold": 0.9975273768433655,
+          "fpr": 0.0002114246175136465,
+          "tpr": 0.6678560347502327,
+          "false_positive": 11,
+          "true_positive": 43050,
+          "negative": 52028,
+          "positive": 64460
+        }
+      },
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.9793540692607815,
+          "fpr": 0.0009994618282463288,
+          "tpr": 0.8026993484331368,
+          "false_positive": 52,
+          "true_positive": 51742,
+          "negative": 52028,
+          "positive": 64460
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.7732163651347154,
+          "fpr": 0.009975397862689321,
+          "tpr": 0.9167700899782811,
+          "false_positive": 519,
+          "true_positive": 59095,
+          "negative": 52028,
+          "positive": 64460
+        }
+      }
+    },
+    "by_channel": {
+      "direct_user": {
+        "rows": 105257,
+        "negative": 50539,
+        "positive": 54718,
+        "roc_auc": 0.9953540529354389,
+        "pr_auc": 0.9961176577338638,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.00015829359504541048,
+            "tpr": 0.6479951752622537,
+            "false_positive": 8,
+            "true_positive": 35457,
+            "negative": 50539,
+            "positive": 54718
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9736446471538801,
+            "fpr": 0.0009893349690338156,
+            "tpr": 0.7996454548777367,
+            "false_positive": 50,
+            "true_positive": 43755,
+            "negative": 50539,
+            "positive": 54718
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.5131805393956809,
+            "fpr": 0.009992283187241536,
+            "tpr": 0.9387404510398772,
+            "false_positive": 505,
+            "true_positive": 51366,
+            "negative": 50539,
+            "positive": 54718
+          }
+        }
+      },
+      "untrusted_content": {
+        "rows": 11231,
+        "negative": 1489,
+        "positive": 9742,
+        "roc_auc": 0.987368706309832,
+        "pr_auc": 0.9980582824102826,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.0020147750167897917,
+            "tpr": 0.7794087456374461,
+            "false_positive": 3,
+            "true_positive": 7593,
+            "negative": 1489,
+            "positive": 9742
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9982453855899006,
+            "fpr": 0.000671591672263264,
+            "tpr": 0.7565181687538494,
+            "false_positive": 1,
+            "true_positive": 7370,
+            "negative": 1489,
+            "positive": 9742
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9799765587105447,
+            "fpr": 0.009402283411685695,
+            "tpr": 0.8971463765140628,
+            "false_positive": 14,
+            "true_positive": 8740,
+            "negative": 1489,
+            "positive": 9742
+          }
+        }
+      }
+    },
+    "by_source": {
+      "banking77": {
+        "rows": 990,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "bipia": {
+        "rows": 51,
+        "positive": 51,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.5294117647058824,
+            "false_positive": 0,
+            "true_positive": 27,
+            "negative": 0,
+            "positive": 51
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "browsesafe": {
+        "rows": 1086,
+        "negative": 546,
+        "positive": 540,
+        "roc_auc": 0.6196699905033238,
+        "pr_auc": 0.5952242584069672,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.005494505494505495,
+            "tpr": 0.016666666666666666,
+            "false_positive": 3,
+            "true_positive": 9,
+            "negative": 546,
+            "positive": 540
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9995121428772178,
+            "fpr": 0.0,
+            "tpr": 0.012962962962962963,
+            "false_positive": 0,
+            "true_positive": 7,
+            "negative": 546,
+            "positive": 540
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9933071490757153,
+            "fpr": 0.009157509157509158,
+            "tpr": 0.025925925925925925,
+            "false_positive": 5,
+            "true_positive": 14,
+            "negative": 546,
+            "positive": 540
+          }
+        }
+      },
+      "gandalf": {
+        "rows": 78,
+        "positive": 78,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.6025641025641025,
+            "false_positive": 0,
+            "true_positive": 47,
+            "negative": 0,
+            "positive": 78
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "hackaprompt": {
+        "rows": 31082,
+        "positive": 31082,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.7420371919438904,
+            "false_positive": 0,
+            "true_positive": 23064,
+            "negative": 0,
+            "positive": 31082
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "harper_valley_bank": {
+        "rows": 308,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "llmail": {
+        "rows": 9151,
+        "positive": 9151,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.8258113867336903,
+            "false_positive": 0,
+            "true_positive": 7557,
+            "negative": 0,
+            "positive": 9151
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "lmsys_arena": {
+        "rows": 5,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "massive_en": {
+        "rows": 1123,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 1,
+            "fpr": 0.0008904719501335708
+          }
+        }
+      },
+      "mind2web": {
+        "rows": 82,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "prompt_injections": {
+        "rows": 20,
+        "positive": 20,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.25,
+            "false_positive": 0,
+            "true_positive": 5,
+            "negative": 0,
+            "positive": 20
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "schema_guided_dialogue": {
+        "rows": 10620,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "taskmaster": {
+        "rows": 24701,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 7,
+            "fpr": 0.00028338933646411074
+          }
+        }
+      },
+      "tatqa": {
+        "rows": 2399,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "tensor_trust_raw": {
+        "rows": 20576,
+        "positive": 20576,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.473755832037325,
+            "false_positive": 0,
+            "true_positive": 9748,
+            "negative": 0,
+            "positive": 20576
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "toxic_chat": {
+        "rows": 33,
+        "negative": 26,
+        "positive": 7,
+        "roc_auc": 0.978021978021978,
+        "pr_auc": 0.948051948051948,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.0,
+            "tpr": 0.7142857142857143,
+            "false_positive": 0,
+            "true_positive": 5,
+            "negative": 26,
+            "positive": 7
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9961755163553627,
+            "fpr": 0.0,
+            "tpr": 0.8571428571428571,
+            "false_positive": 0,
+            "true_positive": 6,
+            "negative": 26,
+            "positive": 7
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9961755163553627,
+            "fpr": 0.0,
+            "tpr": 0.8571428571428571,
+            "false_positive": 0,
+            "true_positive": 6,
+            "negative": 26,
+            "positive": 7
+          }
+        }
+      },
+      "wildjailbreak": {
+        "rows": 14183,
+        "negative": 11228,
+        "positive": 2955,
+        "roc_auc": 0.9989579773071551,
+        "pr_auc": 0.9974515101213574,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.0,
+            "tpr": 0.8758037225042301,
+            "false_positive": 0,
+            "true_positive": 2588,
+            "negative": 11228,
+            "positive": 2955
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9736446471538801,
+            "fpr": 0.0009796936230851443,
+            "tpr": 0.9607445008460237,
+            "false_positive": 11,
+            "true_positive": 2839,
+            "negative": 11228,
+            "positive": 2955
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.6783269517867622,
+            "fpr": 0.009885999287495548,
+            "tpr": 0.9895093062605753,
+            "false_positive": 111,
+            "true_positive": 2924,
+            "negative": 11228,
+            "positive": 2955
+          }
+        }
+      }
+    }
+  },
+  "validation_head_roundtrip": {
+    "maximum_absolute_score_delta": {
+      "morgott": 0.0,
+      "promptshield": 0.0
+    },
+    "maximum_absolute_logit_delta": null,
+    "tolerance": 1e-05
+  },
+  "canonical_dev_test": {
+    "evaluation_scope": "group-held-out repeated canonical development comparison; source families recur in fitting",
+    "full": {
+      "rows": 303376,
+      "negative": 161482,
+      "positive": 141894,
+      "roc_auc": 0.9852563345184915,
+      "pr_auc": 0.9817297178174975,
+      "validation_threshold_applied": {
+        "1.0000%": {
+          "threshold": 0.9975273768433655,
+          "fpr": 0.01764283325695743,
+          "tpr": 0.7217218487039622,
+          "false_positive": 2849,
+          "true_positive": 102408,
+          "negative": 161482,
+          "positive": 141894
+        }
+      },
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.9999485577862579,
+          "fpr": 0.0009350887405407414,
+          "tpr": 0.43117397493903903,
+          "false_positive": 151,
+          "true_positive": 61181,
+          "negative": 161482,
+          "positive": 141894
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.9993121488449448,
+          "fpr": 0.009920610346664024,
+          "tpr": 0.6320774662776438,
+          "false_positive": 1602,
+          "true_positive": 89688,
+          "negative": 161482,
+          "positive": 141894
+        }
+      }
+    },
+    "fitting_collision_rows": 0,
+    "collision_masked": {
+      "rows": 303376,
+      "negative": 161482,
+      "positive": 141894,
+      "roc_auc": 0.9852563345184915,
+      "pr_auc": 0.9817297178174975,
+      "validation_threshold_applied": {
+        "1.0000%": {
+          "threshold": 0.9975273768433655,
+          "fpr": 0.01764283325695743,
+          "tpr": 0.7217218487039622,
+          "false_positive": 2849,
+          "true_positive": 102408,
+          "negative": 161482,
+          "positive": 141894
+        }
+      },
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.9999485577862579,
+          "fpr": 0.0009350887405407414,
+          "tpr": 0.43117397493903903,
+          "false_positive": 151,
+          "true_positive": 61181,
+          "negative": 161482,
+          "positive": 141894
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.9993121488449448,
+          "fpr": 0.009920610346664024,
+          "tpr": 0.6320774662776438,
+          "false_positive": 1602,
+          "true_positive": 89688,
+          "negative": 161482,
+          "positive": 141894
+        }
+      }
+    },
+    "by_channel": {
+      "direct_user": {
+        "rows": 268012,
+        "negative": 156203,
+        "positive": 111809,
+        "roc_auc": 0.9850191406982871,
+        "pr_auc": 0.9775529146067556,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.01815586128307395,
+            "tpr": 0.7114364675473351,
+            "false_positive": 2836,
+            "true_positive": 79545,
+            "negative": 156203,
+            "positive": 111809
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9999485577862579,
+            "fpr": 0.0009602888548875502,
+            "tpr": 0.43985725657147456,
+            "false_positive": 150,
+            "true_positive": 49180,
+            "negative": 156203,
+            "positive": 111809
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9993332976907565,
+            "fpr": 0.009942190610935769,
+            "tpr": 0.625727803665179,
+            "false_positive": 1553,
+            "true_positive": 69962,
+            "negative": 156203,
+            "positive": 111809
+          }
+        }
+      },
+      "untrusted_content": {
+        "rows": 35364,
+        "negative": 5279,
+        "positive": 30085,
+        "roc_auc": 0.9810140165156228,
+        "pr_auc": 0.9966305407274689,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.002462587611290017,
+            "tpr": 0.7599468173508392,
+            "false_positive": 13,
+            "true_positive": 22863,
+            "negative": 5279,
+            "positive": 30085
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9996430293649623,
+            "fpr": 0.0009471490812653912,
+            "tpr": 0.5824497257769653,
+            "false_positive": 5,
+            "true_positive": 17523,
+            "negative": 5279,
+            "positive": 30085
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9840936082881853,
+            "fpr": 0.00966092062890699,
+            "tpr": 0.8575369785607445,
+            "false_positive": 51,
+            "true_positive": 25799,
+            "negative": 5279,
+            "positive": 30085
+          }
+        }
+      }
+    },
+    "by_source": {
+      "banking77": {
+        "rows": 3075,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "bipia": {
+        "rows": 499,
+        "positive": 499,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.3587174348697395,
+            "false_positive": 0,
+            "true_positive": 179,
+            "negative": 0,
+            "positive": 499
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "browsesafe": {
+        "rows": 3680,
+        "negative": 1856,
+        "positive": 1824,
+        "roc_auc": 0.6273390532838021,
+        "pr_auc": 0.5988252144120749,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.00646551724137931,
+            "tpr": 0.013706140350877192,
+            "false_positive": 12,
+            "true_positive": 25,
+            "negative": 1856,
+            "positive": 1824
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9999203269901391,
+            "fpr": 0.0005387931034482759,
+            "tpr": 0.0021929824561403508,
+            "false_positive": 1,
+            "true_positive": 4,
+            "negative": 1856,
+            "positive": 1824
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9965165758069192,
+            "fpr": 0.009698275862068966,
+            "tpr": 0.017543859649122806,
+            "false_positive": 18,
+            "true_positive": 32,
+            "negative": 1856,
+            "positive": 1824
+          }
+        }
+      },
+      "coconot": {
+        "rows": 379,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "do_not_answer": {
+        "rows": 6312,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 1791,
+            "fpr": 0.28374524714828897
+          }
+        }
+      },
+      "false_reject": {
+        "rows": 1187,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "financebench": {
+        "rows": 330,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "gandalf": {
+        "rows": 223,
+        "positive": 223,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.5695067264573991,
+            "false_positive": 0,
+            "true_positive": 127,
+            "negative": 0,
+            "positive": 223
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "hackaprompt": {
+        "rows": 55622,
+        "positive": 55622,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.8570709431519902,
+            "false_positive": 0,
+            "true_positive": 47672,
+            "negative": 0,
+            "positive": 55622
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "harmbench": {
+        "rows": 400,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 18,
+            "fpr": 0.045
+          }
+        }
+      },
+      "harper_valley_bank": {
+        "rows": 544,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 1,
+            "fpr": 0.001838235294117647
+          }
+        }
+      },
+      "jailbreaks_over_time": {
+        "rows": 3900,
+        "positive": 3900,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.8864102564102564,
+            "false_positive": 0,
+            "true_positive": 3457,
+            "negative": 0,
+            "positive": 3900
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "jbb_benign": {
+        "rows": 100,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "llmail": {
+        "rows": 25900,
+        "negative": 160,
+        "positive": 25740,
+        "roc_auc": 0.9967039384226885,
+        "pr_auc": 0.9999791630710236,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.0,
+            "tpr": 0.8273892773892774,
+            "false_positive": 0,
+            "true_positive": 21297,
+            "negative": 160,
+            "positive": 25740
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9811668701095654,
+            "fpr": 0.0,
+            "tpr": 0.9377233877233877,
+            "false_positive": 0,
+            "true_positive": 24137,
+            "negative": 160,
+            "positive": 25740
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9790357591818724,
+            "fpr": 0.00625,
+            "tpr": 0.9412198912198912,
+            "false_positive": 1,
+            "true_positive": 24227,
+            "negative": 160,
+            "positive": 25740
+          }
+        }
+      },
+      "lmsys_arena": {
+        "rows": 8,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "massive_en": {
+        "rows": 4950,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 1,
+            "fpr": 0.00020202020202020202
+          }
+        }
+      },
+      "mind2web": {
+        "rows": 133,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "multi_turn": {
+        "rows": 6536,
+        "negative": 2400,
+        "positive": 4136,
+        "roc_auc": 0.5078453920857511,
+        "pr_auc": 0.650831038211034,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.4,
+            "tpr": 0.41150870406189555,
+            "false_positive": 960,
+            "true_positive": 1702,
+            "negative": 2400,
+            "positive": 4136
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.999981074851754,
+            "fpr": 0.0008333333333333334,
+            "tpr": 0.0012088974854932303,
+            "false_positive": 2,
+            "true_positive": 5,
+            "negative": 2400,
+            "positive": 4136
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9999203269901391,
+            "fpr": 0.009166666666666667,
+            "tpr": 0.01716634429400387,
+            "false_positive": 22,
+            "true_positive": 71,
+            "negative": 2400,
+            "positive": 4136
+          }
+        }
+      },
+      "nemotron_agentic_ipi": {
+        "rows": 676,
+        "positive": 676,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.0621301775147929,
+            "false_positive": 0,
+            "true_positive": 42,
+            "negative": 0,
+            "positive": 676
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "notinject": {
+        "rows": 339,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 11,
+            "fpr": 0.032448377581120944
+          }
+        }
+      },
+      "prompt_injections": {
+        "rows": 59,
+        "positive": 59,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.2542372881355932,
+            "false_positive": 0,
+            "true_positive": 15,
+            "negative": 0,
+            "positive": 59
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "schema_guided_dialogue": {
+        "rows": 51731,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 2,
+            "fpr": 3.866153756934913e-05
+          }
+        }
+      },
+      "taskmaster": {
+        "rows": 62759,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 29,
+            "fpr": 0.0004620851192657627
+          }
+        }
+      },
+      "tatqa": {
+        "rows": 6368,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 1,
+            "fpr": 0.000157035175879397
+          }
+        }
+      },
+      "tensor_trust": {
+        "rows": 2254,
+        "positive": 2254,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.8997338065661047,
+            "false_positive": 0,
+            "true_positive": 2028,
+            "negative": 0,
+            "positive": 2254
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "tensor_trust_raw": {
+        "rows": 37453,
+        "positive": 37453,
+        "negative": 0,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": null,
+            "tpr": 0.4827116652871599,
+            "false_positive": 0,
+            "true_positive": 18079,
+            "negative": 0,
+            "positive": 37453
+          }
+        },
+        "descriptive_same_test": null
+      },
+      "toxic_chat": {
+        "rows": 348,
+        "negative": 263,
+        "positive": 85,
+        "roc_auc": 0.9169537016327444,
+        "pr_auc": 0.8565601896654531,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 0.07224334600760456,
+            "tpr": 0.7764705882352941,
+            "false_positive": 19,
+            "true_positive": 66,
+            "negative": 263,
+            "positive": 85
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9999898700090192,
+            "fpr": 0.0,
+            "tpr": 0.3058823529411765,
+            "false_positive": 0,
+            "true_positive": 26,
+            "negative": 263,
+            "positive": 85
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.9999379495039771,
+            "fpr": 0.0076045627376425855,
+            "tpr": 0.47058823529411764,
+            "false_positive": 2,
+            "true_positive": 40,
+            "negative": 263,
+            "positive": 85
+          }
+        }
+      },
+      "wildguardmix": {
+        "rows": 903,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 3,
+            "fpr": 0.0033222591362126247
+          }
+        }
+      },
+      "wildjailbreak": {
+        "rows": 26258,
+        "negative": 16835,
+        "positive": 9423,
+        "roc_auc": 0.9961411677744056,
+        "pr_auc": 0.9956875139391993,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "fpr": 5.94000594000594e-05,
+            "tpr": 0.819165870741802,
+            "false_positive": 1,
+            "true_positive": 7719,
+            "negative": 16835,
+            "positive": 9423
+          }
+        },
+        "descriptive_same_test": {
+          "0.1000%": {
+            "target_fpr": 0.001,
+            "threshold": 0.9697854129326061,
+            "fpr": 0.0009504009504009504,
+            "tpr": 0.9304892284834978,
+            "false_positive": 16,
+            "true_positive": 8768,
+            "negative": 16835,
+            "positive": 9423
+          },
+          "1.0000%": {
+            "target_fpr": 0.01,
+            "threshold": 0.7065955179610504,
+            "fpr": 0.009919809919809919,
+            "tpr": 0.9746365276451237,
+            "false_positive": 167,
+            "true_positive": 9184,
+            "negative": 16835,
+            "positive": 9423
+          }
+        }
+      },
+      "xstest": {
+        "rows": 450,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      }
+    },
+    "ordered_identity_sha256": "5720d9956c8a123848eba55f1dd5333d227ebe57100e24c56fdafdb1432a5cfd"
+  },
+  "promptshield_test": {
+    "full": {
+      "rows": 23516,
+      "negative": 17030,
+      "positive": 6486,
+      "roc_auc": 0.7820152135798519,
+      "pr_auc": 0.6664677421004079,
+      "validation_threshold_applied": {
+        "1.0000%": {
+          "threshold": 0.9975273768433655,
+          "fpr": 0.08496770405167352,
+          "tpr": 0.5070921985815603,
+          "false_positive": 1447,
+          "true_positive": 3289,
+          "negative": 17030,
+          "positive": 6486
+        }
+      },
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.999996910505552,
+          "fpr": 0.0009982384028185555,
+          "tpr": 0.06059204440333025,
+          "false_positive": 17,
+          "true_positive": 393,
+          "negative": 17030,
+          "positive": 6486
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.9999251537724895,
+          "fpr": 0.009571344685848502,
+          "tpr": 0.2399013259327783,
+          "false_positive": 163,
+          "true_positive": 1556,
+          "negative": 17030,
+          "positive": 6486
+        }
+      }
+    },
+    "fitting_collision_definition": "normalized or strict exact match to a fitted row",
+    "fitting_collision_rows": 0,
+    "collision_masked": {
+      "rows": 23516,
+      "negative": 17030,
+      "positive": 6486,
+      "roc_auc": 0.7820152135798519,
+      "pr_auc": 0.6664677421004079,
+      "validation_threshold_applied": {
+        "1.0000%": {
+          "threshold": 0.9975273768433655,
+          "fpr": 0.08496770405167352,
+          "tpr": 0.5070921985815603,
+          "false_positive": 1447,
+          "true_positive": 3289,
+          "negative": 17030,
+          "positive": 6486
+        }
+      },
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.999996910505552,
+          "fpr": 0.0009982384028185555,
+          "tpr": 0.06059204440333025,
+          "false_positive": 17,
+          "true_positive": 393,
+          "negative": 17030,
+          "positive": 6486
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.9999251537724895,
+          "fpr": 0.009571344685848502,
+          "tpr": 0.2399013259327783,
+          "false_positive": 163,
+          "true_positive": 1556,
+          "negative": 17030,
+          "positive": 6486
+        }
+      }
+    },
+    "evaluation_scope": "PromptShield's internally source-disjoint split is used as development evidence; PromptShield's own train and test component sources are mutually exclusive, but this model also fits Morgott; known LMSYS-family overlap and missing row-level PromptShield provenance mean the test is not source-OOD relative to the complete fit; this already-open test is not a pristine final evaluation"
+  },
+  "sep": {
+    "full": {
+      "rows": 18320,
+      "negative": 9160,
+      "positive": 9160,
+      "roc_auc": 0.881158456646517,
+      "pr_auc": 0.8500079341420288,
+      "validation_threshold_applied": {
+        "1.0000%": {
+          "threshold": 0.9975273768433655,
+          "fpr": 0.007096069868995633,
+          "tpr": 0.05720524017467249,
+          "false_positive": 65,
+          "true_positive": 524,
+          "negative": 9160,
+          "positive": 9160
+        }
+      },
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.9999910603036951,
+          "fpr": 0.000982532751091703,
+          "tpr": 0.0018558951965065502,
+          "false_positive": 9,
+          "true_positive": 17,
+          "negative": 9160,
+          "positive": 9160
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.994269753485008,
+          "fpr": 0.009934497816593887,
+          "tpr": 0.0890829694323144,
+          "false_positive": 91,
+          "true_positive": 816,
+          "negative": 9160,
+          "positive": 9160
+        }
+      }
+    },
+    "fitting_collision_definition": "normalized or strict exact match to a fitted row",
+    "fitting_collision_rows": 0,
+    "collision_masked": {
+      "rows": 18320,
+      "negative": 9160,
+      "positive": 9160,
+      "roc_auc": 0.881158456646517,
+      "pr_auc": 0.8500079341420288,
+      "validation_threshold_applied": {
+        "1.0000%": {
+          "threshold": 0.9975273768433655,
+          "fpr": 0.007096069868995633,
+          "tpr": 0.05720524017467249,
+          "false_positive": 65,
+          "true_positive": 524,
+          "negative": 9160,
+          "positive": 9160
+        }
+      },
+      "descriptive_same_test": {
+        "0.1000%": {
+          "target_fpr": 0.001,
+          "threshold": 0.9999910603036951,
+          "fpr": 0.000982532751091703,
+          "tpr": 0.0018558951965065502,
+          "false_positive": 9,
+          "true_positive": 17,
+          "negative": 9160,
+          "positive": 9160
+        },
+        "1.0000%": {
+          "target_fpr": 0.01,
+          "threshold": 0.994269753485008,
+          "fpr": 0.009934497816593887,
+          "tpr": 0.0890829694323144,
+          "false_positive": 91,
+          "true_positive": 816,
+          "negative": 9160,
+          "positive": 9160
+        }
+      }
+    },
+    "evaluation_scope": "cross-distribution transfer development test"
+  },
+  "real_finance_negatives": {
+    "independence": "group-held-out canonical dev-test negatives; source families also occur in fitting",
+    "label_basis": "canonical injection_label == 0",
+    "source_counts": {
+      "banking77": 3075,
+      "financebench": 150,
+      "harper_valley_bank": 544,
+      "tatqa": 3285
+    },
+    "all": {
+      "rows": 7054,
+      "validation_threshold_applied": {
+        "1.0000%": {
+          "threshold": 0.9975273768433655,
+          "false_positive": 1,
+          "fpr": 0.0001417635384179189
+        }
+      }
+    },
+    "by_source": {
+      "banking77": {
+        "rows": 3075,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "financebench": {
+        "rows": 150,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      },
+      "harper_valley_bank": {
+        "rows": 544,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 1,
+            "fpr": 0.001838235294117647
+          }
+        }
+      },
+      "tatqa": {
+        "rows": 3285,
+        "validation_threshold_applied": {
+          "1.0000%": {
+            "threshold": 0.9975273768433655,
+            "false_positive": 0,
+            "fpr": 0.0
+          }
+        }
+      }
+    }
+  },
+  "generated_pairs": {
+    "scored": false,
+    "reason": "the selected objective fits generated pairs from every generator lab; no genuine pair holdout exists",
+    "eligible_only_if_genuinely_held_out": true,
+    "run_has_genuine_pair_holdout": false
+  },
+  "training_provenance_only": {
+    "canonical_feature_cache": {
+      "report_path": "artifacts/combined_generic/lfm25_feature_cache/liquidai-lfm2-5-encoder-230m_b12b6bbb4ef6f220860a/cache_report.json",
+      "report_sha256": "a145da34f4dde29855db079861e55509859a82370bb12e1b4aa410f87552fe85",
+      "data_path": "artifacts/combined_generic/lfm25_feature_cache/liquidai-lfm2-5-encoder-230m_b12b6bbb4ef6f220860a/canonical_features.uint16",
+      "data_sha256": "1d7cb5ff3ea5b4b83b1dd509b8dc2dfa8e1c6569e2accb07cbe6713bdcc032e5",
+      "spec_sha256": "b12b6bbb4ef6f220860a654ab451e8a388d16bb00f40f3cdcf828e460cd1fa36",
+      "files_reverified": false
+    }
+  },
+  "arrays": {
+    "canonical_calibration_scores": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/canonical_calibration_scores.npy",
+      "sha256": "dd5c6c4974eb84777d95a716c80383d7df85c76a631d90bda1bcf9b9dee3f07d",
+      "shape": [
+        116488
+      ],
+      "dtype": "float64"
+    },
+    "canonical_calibration_labels": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/canonical_calibration_labels.npy",
+      "sha256": "a9d6b0e60857d21cb7ba7e47acf234018cb914b41044d06294511c8855602c22",
+      "shape": [
+        116488
+      ],
+      "dtype": "int64"
+    },
+    "canonical_dev_scores": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/canonical_dev_scores.npy",
+      "sha256": "5bc80bd4b8bdd0cb5373cd732f8124abc72b614993754b35f5ba55aa26889b5f",
+      "shape": [
+        303376
+      ],
+      "dtype": "float64"
+    },
+    "canonical_dev_labels": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/canonical_dev_labels.npy",
+      "sha256": "c37d46d47e0cd482f1640641a5647ebd469fe7683334c66d6a3fb881475906bc",
+      "shape": [
+        303376
+      ],
+      "dtype": "int64"
+    },
+    "canonical_dev_unseen": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/canonical_dev_unseen.npy",
+      "sha256": "b117d0c00fe89b021820e7d848c101877eca521402acc133bc7c3c52139059ed",
+      "shape": [
+        303376
+      ],
+      "dtype": "bool"
+    },
+    "promptshield_scores": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/promptshield_scores.npy",
+      "sha256": "556733627a72e11ae63c6330eda78600fd72b557b39f6e2e6bbb9b8fc6a8fb97",
+      "shape": [
+        23516
+      ],
+      "dtype": "float64"
+    },
+    "promptshield_unseen": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/promptshield_unseen.npy",
+      "sha256": "d1790a4f82d68b6f6f6ef7203ba9c02ca6f8691fafdc97df5015d7c1c259cda4",
+      "shape": [
+        23516
+      ],
+      "dtype": "bool"
+    },
+    "sep_scores": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/sep_scores.npy",
+      "sha256": "1e351d111de66ca9a72a3255267c33d702b70d4c9dd5e05bee4a7eec3f9ce1f7",
+      "shape": [
+        18320
+      ],
+      "dtype": "float64"
+    },
+    "sep_unseen": {
+      "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/sep_unseen.npy",
+      "sha256": "ff9a54a9d9693e5d3a575abd50569c2fb4866b6eb9697fe67b40fb8ea6a7726f",
+      "shape": [
+        18320
+      ],
+      "dtype": "bool"
+    }
+  },
+  "input_sha256": {
+    "run_result": "7ce618bf63cda5398aea96a2b913c836dea205e10d4a8743207889316369706d",
+    "selection_report": "b2102cf4056ac6073d0fb1e1c465c21df62dc7e58962583125dc6e18904419d1",
+    "canonical_calibration": "93b565737f9b3f3767b04b779566da5101c1741f7e861322a9862859e6101f2d",
+    "head": "5ddcd99e7222cbabecfac399287a14151e98ddc1ac31207ec4e5b072412aac4c",
+    "adapter_files": null,
+    "canonical_dev_test": "992f3f8b9467529261f929a115f8d83f99b0c411c81539778d6d7ec1492ac309",
+    "promptshield_test": "c763dcde8cc9921613476887b43f12917229d1e5e6cfa29c07ee5dc36311abf6",
+    "sep": "0ddcfa5a7963f65f9fc8fdf63af10b9052685f87f0142c243a42a394d6e31a89",
+    "matched_pairs": null,
+    "evaluator": "85c34d478dcfceef230694871f2d65c3fe1bab7d5d0f78089a7a5cb591b05e75",
+    "generic_preparation_helper": "c2289b53aeed707807df8c7f9928eac119bdc04f9145a130dc57c9c0ea56fe75",
+    "full_preparation_helper": "9f59b8bdc88f8f60730b73244ef360412df30d0cf85f95fa28505ce33f907ca8",
+    "training_head_helper": "bf6dff9104b1c1daf7cf8a98eea53cb16420eafe8021401f98d8733b60794dc2",
+    "strict_normalizer": "56c242d31502646253bc8152d8f6f7f16773a6911c6ad41b67eb8cdd7b606720",
+    "descriptive_threshold_helper": "5163fa66b38ff1fd1ea996ac60ac32545571cd2635c8bd97e32f7f6d43759882",
+    "canonical_text_helper": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e",
+    "full_training_helper": "c6c05197d21dd408b75f7413832e2c09fa69a79b8d48a026cdfdd0b6a66c0b37",
+    "calibration_threshold_helper": "85c34d478dcfceef230694871f2d65c3fe1bab7d5d0f78089a7a5cb591b05e75"
+  },
+  "packages": {
+    "numpy": "2.5.1",
+    "scipy": "1.18.0",
+    "scikit-learn": "1.9.0"
+  },
+  "interpretation": [
+    "Only canonical calibration negatives select applied thresholds.",
+    "Threshold confidence targets component false-alarm probability within each trusted channel; applied row FPR and TPR remain separate empirical measurements.",
+    "PromptShield validation is checkpoint-selection evidence and never selects an operating threshold.",
+    "A target is unavailable when either trusted channel lacks enough calibration components for its Bonferroni-adjusted bound.",
+    "Validation components and recurring source families are not IID or sampled from a deployment distribution, so these are development bounds rather than production guarantees.",
+    "Every same-test threshold is descriptive and must not be presented as deployable performance.",
+    "PromptShield and SEP are already-open development sets, not prospective final tests.",
+    "The learned score is advisory and is not approved for blocking."
+  ]
+}
