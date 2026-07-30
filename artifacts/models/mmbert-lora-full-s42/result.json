@@ -1,0 +1,246 @@
+{
+  "adaptation": "lora",
+  "artifact": {
+    "adapter": "adapter",
+    "adapter_files": {
+      "README.md": "25e02f4e1120370bcf76598ec974f12bebf1c24301f6312835a21aef037fba80",
+      "adapter_config.json": "cc404cd76eed420d5a489d52eafba146c74e9152b3f62e8b67a58e69930045d6",
+      "adapter_model.safetensors": "84f85ea8845720896dbe09b8b959e8e8858f23a8ff09fa3ac3e736ddcb5adb0d"
+    },
+    "head": "head.safetensors",
+    "head_sha256": "a40113a01347289f8a409b764b8e546af0e061a19fb0d9210c98590c26e83a41"
+  },
+  "attention_implementation": "sdpa",
+  "generic_target": "instruction_subversion",
+  "limitations": [
+    "This is development evidence, not a production calibration.",
+    "PromptShield and SEP are already-open development benchmarks.",
+    "Inputs are truncated to the first 512 normalized tokens.",
+    "The score is advisory and is not approved for blocking."
+  ],
+  "lora": {
+    "adapter_parameters": 811008,
+    "alpha": 16,
+    "bias": "none",
+    "dropout": 0.05,
+    "rank": 8,
+    "target_modules_regex": "layers\\.\\d+\\.attn\\.(Wqkv|Wo)",
+    "targeted_modules": [
+      "base_model.model.layers.0.attn.Wo",
+      "base_model.model.layers.0.attn.Wqkv",
+      "base_model.model.layers.1.attn.Wo",
+      "base_model.model.layers.1.attn.Wqkv",
+      "base_model.model.layers.10.attn.Wo",
+      "base_model.model.layers.10.attn.Wqkv",
+      "base_model.model.layers.11.attn.Wo",
+      "base_model.model.layers.11.attn.Wqkv",
+      "base_model.model.layers.12.attn.Wo",
+      "base_model.model.layers.12.attn.Wqkv",
+      "base_model.model.layers.13.attn.Wo",
+      "base_model.model.layers.13.attn.Wqkv",
+      "base_model.model.layers.14.attn.Wo",
+      "base_model.model.layers.14.attn.Wqkv",
+      "base_model.model.layers.15.attn.Wo",
+      "base_model.model.layers.15.attn.Wqkv",
+      "base_model.model.layers.16.attn.Wo",
+      "base_model.model.layers.16.attn.Wqkv",
+      "base_model.model.layers.17.attn.Wo",
+      "base_model.model.layers.17.attn.Wqkv",
+      "base_model.model.layers.18.attn.Wo",
+      "base_model.model.layers.18.attn.Wqkv",
+      "base_model.model.layers.19.attn.Wo",
+      "base_model.model.layers.19.attn.Wqkv",
+      "base_model.model.layers.2.attn.Wo",
+      "base_model.model.layers.2.attn.Wqkv",
+      "base_model.model.layers.20.attn.Wo",
+      "base_model.model.layers.20.attn.Wqkv",
+      "base_model.model.layers.21.attn.Wo",
+      "base_model.model.layers.21.attn.Wqkv",
+      "base_model.model.layers.3.attn.Wo",
+      "base_model.model.layers.3.attn.Wqkv",
+      "base_model.model.layers.4.attn.Wo",
+      "base_model.model.layers.4.attn.Wqkv",
+      "base_model.model.layers.5.attn.Wo",
+      "base_model.model.layers.5.attn.Wqkv",
+      "base_model.model.layers.6.attn.Wo",
+      "base_model.model.layers.6.attn.Wqkv",
+      "base_model.model.layers.7.attn.Wo",
+      "base_model.model.layers.7.attn.Wqkv",
+      "base_model.model.layers.8.attn.Wo",
+      "base_model.model.layers.8.attn.Wqkv",
+      "base_model.model.layers.9.attn.Wo",
+      "base_model.model.layers.9.attn.Wqkv"
+    ],
+    "task_type": "FEATURE_EXTRACTION"
+  },
+  "max_tokens": 512,
+  "model_id": "jhu-clsp/mmBERT-base",
+  "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+  "normalization": "strict",
+  "objective": {
+    "canonical_weighting": "label_source_group_balanced",
+    "domains": {
+      "matched_pairs": 0.3333333333333333,
+      "morgott": 0.3333333333333333,
+      "promptshield": 0.3333333333333333
+    },
+    "matched_pair_sampling": "complete_pair_cycle",
+    "pair_ranking_weight": 0.25,
+    "promptshield_sampling": "class_balanced_cycle"
+  },
+  "packages": {
+    "numpy": "2.5.1",
+    "peft": "0.19.1",
+    "safetensors": "0.8.0",
+    "torch": "2.13.0",
+    "transformers": "5.14.1"
+  },
+  "populations": {
+    "calibration_rows": 116488,
+    "canonical_rows": 1069607,
+    "canonical_strata": {
+      "banking77:0": 8720,
+      "bipia:1": 435,
+      "browsesafe:0": 4831,
+      "browsesafe:1": 4735,
+      "gandalf:1": 679,
+      "hackaprompt:1": 268474,
+      "harper_valley_bank:0": 2936,
+      "llmail:1": 84232,
+      "lmsys_arena:0": 13,
+      "massive_en:0": 9873,
+      "mind2web:0": 721,
+      "prompt_injections:1": 173,
+      "schema_guided_dialogue:0": 95696,
+      "taskmaster:0": 247713,
+      "tatqa:0": 21084,
+      "tensor_trust_raw:1": 180378,
+      "toxic_chat:0": 213,
+      "toxic_chat:1": 76,
+      "wildjailbreak:0": 69078,
+      "wildjailbreak:1": 69547
+    },
+    "checkpoint_rows": 29293,
+    "matched_pairs": 11041,
+    "promptshield_rows": 18197,
+    "promptshield_validation_rows": 985,
+    "removed_for_overlap": {
+      "canonical": {
+        "near": 459,
+        "normalized_exact": 18,
+        "strict_duplicate": 2506,
+        "strict_exact": 738,
+        "strict_label_conflict": 2
+      },
+      "pair_atoms": 5,
+      "pairs": {},
+      "pairs_against_canonical_train": {
+        "near": 7
+      },
+      "promptshield": {
+        "near": 86,
+        "normalized_exact": 1
+      },
+      "promptshield_validation": {
+        "near": 13
+      },
+      "validation": {
+        "near": 1,
+        "normalized_exact": 5,
+        "strict_duplicate": 126,
+        "strict_exact": 198
+      }
+    },
+    "validation_components": 36695
+  },
+  "positive_classes": [
+    "direct_prompt_injection",
+    "indirect_prompt_injection",
+    "direct_jailbreak"
+  ],
+  "provenance": {
+    "data_manifest_sha256": "27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81",
+    "external_manifest_sha256": "309cfe0da78b6f1b06220759b458306caa41740882ae10bba4ec3e2516917567",
+    "pair_archive_sha256": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+    "routing_views": {
+      "dev_test": {
+        "path": "views/routing/dev_test.jsonl",
+        "rows": 441649,
+        "sha256": "992f3f8b9467529261f929a115f8d83f99b0c411c81539778d6d7ec1492ac309"
+      },
+      "train": {
+        "path": "views/routing/train.jsonl",
+        "rows": 1478191,
+        "sha256": "682939d7b6a273888b049401cb2e9569027cd94c6cc944b1a13dd92065d5501a"
+      },
+      "validation": {
+        "path": "views/routing/validation.jsonl",
+        "rows": 202055,
+        "sha256": "ca16e7ad3364fb562ff1c9885b90b30902d57226ccfc77eaff5b6d2a223e8a7a"
+      }
+    },
+    "sources": {
+      "src/morgott/data.py": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e",
+      "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+      "src/morgott/models/mmbert/data.py": "d2d4a808994ffa9afb9a83409f16d950c898a9e704b007426751be5e5d9c4693",
+      "src/morgott/models/mmbert/external_data.py": "61d406b5c92bca8c70799b51727a38a1bbb53fe2e6820a0556af295d341b2f97",
+      "src/morgott/models/mmbert/train.py": "4af16c60d480e29ed3a7d906379c0ffb85e18f209db822c34835a4321d6c4574",
+      "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+      "src/morgott/overlap.py": "1be805cf673817948ee80b92084405f0d932dca6789e2c4aad1016eb61345645"
+    },
+    "uv_lock_sha256": "aae638be0b2a7255d599d15fd6ebba8387e3ddb8c48fda8a000663851a33c8b4"
+  },
+  "purpose": "maintained full-data advisory mmBERT training",
+  "runtime": {
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "peak_allocated_bytes": 3249821184,
+    "peak_reserved_bytes": 3623878656,
+    "seconds": 82699.927844168
+  },
+  "runtime_seconds": 82699.927844168,
+  "schema_version": 1,
+  "seed": 42,
+  "token_budget": 4096,
+  "training": {
+    "adapter_learning_rate": 0.0001,
+    "batch_size": 128,
+    "checkpoint_selection": "minimum equal-domain mean of Morgott and PromptShield validation BCE",
+    "curve": [
+      {
+        "canonical_rows_seen": 1069607,
+        "epoch": 1,
+        "training_loss": 0.1531243960430139,
+        "validation_macro_bce": 0.05705263673291848,
+        "validation_morgott_bce": 0.061932421186696306,
+        "validation_promptshield_bce": 0.052172852279140654
+      },
+      {
+        "canonical_rows_seen": 1069607,
+        "epoch": 2,
+        "training_loss": 0.08865716844612592,
+        "validation_macro_bce": 0.05093045498228374,
+        "validation_morgott_bce": 0.045481555607856765,
+        "validation_promptshield_bce": 0.05637935435671072
+      },
+      {
+        "canonical_rows_seen": 1069607,
+        "epoch": 3,
+        "training_loss": 0.08153572091532398,
+        "validation_macro_bce": 0.08239595442711828,
+        "validation_morgott_bce": 0.05497250155988863,
+        "validation_promptshield_bce": 0.10981940729434791
+      }
+    ],
+    "epochs": 3,
+    "gradient_checkpointing": false,
+    "head_learning_rate": 0.0003,
+    "microbatch_size": 8,
+    "mixed_precision": "bfloat16",
+    "pair_batch_pairs": 32,
+    "promptshield_batch_size": 64,
+    "selected_epoch": 2,
+    "shuffle_buffer": 8192,
+    "updates": 25071,
+    "within_batch_order": "raw_character_length_ascending"
+  }
+}

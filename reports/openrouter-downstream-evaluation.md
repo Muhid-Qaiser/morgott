@@ -26,7 +26,7 @@ The current practical recommendation is:
 3. In the middle zone, restrict at DeepSeek decision-token log odds greater than or equal to `log(9)`, equivalent to `p >= 0.9`; otherwise pass.
 4. Retry transient provider failures in the future provider adapter, and restrict after retries are exhausted.
 5. Keep every learned output advisory and privilege-reducing; it never grants authority or changes `morgott scan`.
-6. Re-evaluate the same policy when the full-data LoRA finishes, then calibrate any deployment boundary on separate representative traffic.
+6. Keep the completed full-data LoRA refresh as development evidence only; its copied thresholds miss the calibration FPR cap, and its post-hoc high-gate extension still requires separate prospective calibration.
 
 ## Evaluation contract
 
@@ -127,7 +127,7 @@ Those thresholds are exploratory and are not independent calibration evidence.
 
 Frozen full-data mmBERT is more efficient as an extreme-recall first-stage router on this panel.
 Partial-data LoRA is stronger at ordinary operating points and supplies a much larger retained high-confidence zone.
-The encoder choice therefore remains unresolved until the full-data LoRA is complete and evaluated under the same contract.
+At that stage, the encoder choice remained unresolved until the full-data LoRA could be completed and evaluated under the same contract.
 
 ## Pure two-zone cascade
 
@@ -391,7 +391,7 @@ The conservative rounded candidate gives up 3.88 percentage points of benign aut
 The higher-flag candidate reaches the requested 60% to 70% flag-recall range without using fitted decimal cutpoints.
 The partial LoRA slightly reduces flag FPR under the higher-flag policy, but it sends 11.34 percentage points more traffic to manual review and clears 19.61 points fewer benign rows.
 The rounded comparison therefore does not change the recommendation to use the full-data frozen encoder.
-The full-data LoRA is still training and is not represented by these partial-data LoRA results.
+The full-data LoRA was still training when this rounded comparison was selected and was not represented by these partial-data LoRA results.
 
 Do not collapse the LLM stage to its selected `0` or `1` token for automatic clearance.
 On the rounded frozen setup, a zero-log-odds binary rule yields only 75% to 77% review recall and approximately 3.4% to 3.7% FPR because almost every valid middle-zone row is either passed or flagged.
@@ -425,6 +425,64 @@ There is therefore no credible high-recall, low-FPR, no-review operating point i
 Precision in this table reflects the artificial 42.8% positive panel prevalence.
 For example, the frozen 1% setting has 97.65% panel precision, but its recall and FPR imply only approximately 35.9% precision if attacks are 1% of live traffic.
 Deployment precision must be recomputed using representative prevalence.
+
+### Completed-encoder refresh (2026-07-30)
+
+The completed full-data rank-8 mmBERT LoRA and bounded full-data LFM2.5 frozen-head scores were joined to the exact frozen panel by retained source index and checked against all 20,000 row identities and labels.
+This refresh reuses the already-stored DeepSeek CoreWeave outputs and sends no additional corpus text to a provider.
+The mmBERT and LFM frozen controls trained only their classification heads, so neither is an all-weights fine-tune.
+The hash-linked [machine summary](../artifacts/comparisons/deepseek-v4-flash-encoder-refresh/summary.json) has SHA-256 `a806088e0a6046fcc285c6c04961e9e925885302f8657e1f10ad3598eb99808f`.
+
+The first table literally copies the selected partial-LoRA policy to every encoder: pass below `0.2`, flag at or above `0.999`, call DeepSeek in the middle, and flag at DeepSeek `p >= 0.9` or after an exhausted operational failure.
+
+| First-stage encoder | Calibration FPR | Evaluation recall / FPR / panel precision | DeepSeek call rate | Projected DeepSeek cost per 1,000 inputs |
+|---|---:|---:|---:|---:|
+| Full-data rank-8 mmBERT LoRA | 3.87% | **78.40%** / 3.62% / 94.18% | **11.69%** | **$0.0129** |
+| Partial-data rank-8 mmBERT LoRA | **1.98%** | 61.82% / **1.70%** / **96.46%** | 26.79% | $0.0256 |
+| Full-data frozen mmBERT head | 2.62% | 62.39% / 2.11% / 95.67% | 31.65% | $0.0293 |
+| Full-data frozen LFM2.5 head | 3.70% | 64.41% / 3.63% / 92.99% | 29.14% | $0.0265 |
+
+The fixed full-LoRA policy is not a valid replacement for the partial-LoRA policy because its calibration FPR exceeds the 2% selection cap.
+Its aggregate recall gain also hides an 8.40% PromptShield FPR.
+The exact evaluation recall and FPR slices are:
+
+| First-stage encoder | Canonical | PromptShield | SEP |
+|---|---:|---:|---:|
+| Full-data rank-8 mmBERT LoRA | 90.63% / 1.69% | 81.35% / 8.40% | 53.89% / 0.80% |
+| Partial-data rank-8 mmBERT LoRA | 76.49% / 1.61% | 69.02% / 2.96% | 30.40% / 0.06% |
+| Full-data frozen mmBERT head | 83.39% / 1.85% | 55.85% / 3.71% | 26.69% / 0.34% |
+| Full-data frozen LFM2.5 head | 79.63% / 2.52% | 72.44% / 7.57% | 31.49% / 0.29% |
+
+Raw encoder probabilities are not calibrated across adaptation recipes.
+The original coarse selector was therefore rerun on the same 6,000 calibration rows and evaluated once on the retained 14,000 evaluation rows.
+It maximizes calibration recall subject to the aggregate 2% calibration FPR cap over low gates `{0.0001, 0.001, 0.01, 0.1, 0.2}`, high gates `{0.99, 0.999, 0.9999}`, and DeepSeek gates `{0.5, 0.9, 0.95, 0.99, 0.999}`.
+
+| First-stage encoder and grid | Low / high / DeepSeek threshold | Calibration FPR | Evaluation recall / FPR / panel precision | DeepSeek call rate |
+|---|---:|---:|---:|---:|
+| Full-data frozen mmBERT, original grid | `0.001 / 0.9999 / 0.95` | 1.69% | 57.41% / 1.29% / 97.09% | 63.95% |
+| Partial-data mmBERT LoRA, original grid | `0.2 / 0.999 / 0.9` | 1.98% | 61.82% / 1.70% / 96.46% | 26.79% |
+| Full-data mmBERT LoRA, original grid | no feasible point; nearest `0.0001 / 0.9999 / 0.999` | minimum 2.27% | nearest point: 64.61% / 1.92% / 96.17% | 60.14% |
+| Full-data frozen LFM2.5, original grid | `0.001 / 0.9999 / 0.95` | 1.69% | 56.84% / 1.51% / 96.57% | 60.71% |
+| Full-data mmBERT LoRA, post-hoc high-gate extension | `0.2 / 0.99999 / 0.9` | 1.98% | **66.79%** / 1.81% / **96.50%** | **22.17%** |
+
+The post-hoc full-LoRA extension adds only the `0.99999` high gate, but it was not in the predeclared grid and remains already-open development evidence.
+Against the retained partial-LoRA policy, it gains 4.97 percentage points of aggregate recall and reduces DeepSeek calls by 4.61 points while increasing FPR by 0.11 points.
+Its canonical, PromptShield, and SEP recall and FPR pairs are 78.69% / 1.61%, 77.51% / 3.27%, and 38.63% / 0.11%, respectively.
+The full-LoRA result is promising enough for prospective recalibration, but it does not justify silently replacing the registered partial-LoRA route.
+
+### Finance-negative cascade check
+
+The fixed full-LoRA `0.2 / 0.99999 / 0.9` cascade was subsequently applied without threshold changes to all 7,054 retained direct-user finance negatives.
+The local encoder passed 6,926 rows below `0.2`, sent 128 rows to DeepSeek, and placed no row in the local high-flag zone.
+All 128 CoreWeave fp8 calls completed successfully, all were passed by DeepSeek, and the maximum observed `p_subversion` was `0.4687906266`.
+The complete cascade therefore produced zero false positives and 0.00% empirical FPR, with a two-sided 95% Clopper-Pearson upper bound of 0.0523%.
+It called DeepSeek for 1.81% of finance inputs, cost `$0.00354592` in total, added 38.8 milliseconds of mean provider latency per input, and retained the full LoRA's improvement over the frozen and partial-LoRA controls, which produced five and four false positives respectively.
+This negative-only slice measures false positives and cannot establish finance-attack recall.
+The hash-linked [finance comparison artifact](../artifacts/comparisons/deepseek-v4-flash-finance-full-lora/summary.json) records the complete result without raw corpus text or raw provider response content.
+
+Only the full-data frozen-head LFM2.5 artifact exists.
+No LFM2.5 partial-data LoRA, full-data LoRA, or all-weights fine-tune was trained, and the retained mmBERT LoRA adapter contract does not match LFM2.5 attention modules.
+Producing those missing numbers requires newly authorized training runs and a separate pinned LFM adapter implementation; they cannot be inferred from the frozen-head result.
 
 ### Discarded fusion diagnostics
 

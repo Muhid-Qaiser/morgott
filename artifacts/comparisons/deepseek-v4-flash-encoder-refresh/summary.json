@@ -1,0 +1,286 @@
+{
+  "advisory_only": true,
+  "date": "2026-07-30",
+  "inputs": {
+    "deepseek": {
+      "followup_manifest": {
+        "path": "artifacts/openrouter_downstream_eval/followup_manifest.json",
+        "sha256": "fe20a42462d1c4929b1f3927bdd34692a44175d3ef9853daee81090f562ac64a"
+      },
+      "followup_results": {
+        "path": "artifacts/openrouter_downstream_eval/followup_results.jsonl.gz",
+        "sha256": "069c9413f867c73eb3d8296dfb892dd53f840c62fca184fa8eb8043d08d6cbda"
+      },
+      "followup_summary": {
+        "path": "artifacts/openrouter_downstream_eval/followup_summary.json",
+        "sha256": "e1821ccb1cb8e4f2c6a573398d96f2cdce6c805abc98887f217f7c47dc856eee"
+      },
+      "model": "deepseek/deepseek-v4-flash-20260423",
+      "provider": "coreweave",
+      "quantization": "fp8",
+      "reasoning_enabled": false
+    },
+    "encoders": {
+      "lfm25-frozen-full-s42": {
+        "evaluation": {
+          "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/evaluation_generic_v3/evaluation.json",
+          "sha256": "4675a4c3b97d6f6f88f4e7c8295dfc2d6010af3cd44a736a33a4384ce6f4c9d4"
+        },
+        "result": {
+          "path": "artifacts/combined_generic/lfm25_full_runs/liquidai-lfm2-5-encoder-230m_objective-full-balanced_pair-rank-0p25_s42/result.json",
+          "sha256": "7ce618bf63cda5398aea96a2b913c836dea205e10d4a8743207889316369706d"
+        }
+      },
+      "mmbert-frozen-s42": {
+        "evaluation": {
+          "path": "artifacts/models/mmbert-frozen-s42/evaluation.json",
+          "sha256": "737e8aab8c984841d0404bcfaef4b06442b75995f59738f870fbc9e81e146077"
+        },
+        "result": {
+          "path": "artifacts/models/mmbert-frozen-s42/result.json",
+          "sha256": "401b8b20c6620fa1c34fa3c82eb59c6f387474f49ea3f7cd97877092d155d0ae"
+        }
+      },
+      "mmbert-lora-full-s42": {
+        "evaluation": {
+          "path": "artifacts/models/mmbert-lora-full-s42/evaluation/evaluation.json",
+          "sha256": "ec378e29358aab50515b66d2f05612767dea810b388326f4ece86bc99c7c6e99"
+        },
+        "result": {
+          "path": "artifacts/models/mmbert-lora-full-s42/result.json",
+          "sha256": "d1014af4256212d707f3fe6d6dc8f90a35f65a5086bb7feea2a63bdf703295a0"
+        },
+        "scores": {
+          "path": "artifacts/models/mmbert-lora-full-s42/evaluation/scores.npy",
+          "sha256": "b9ad82b94ffdfa8d2282bbe912b7e7316df4e299bfdee23724955b09cfcc2965"
+        }
+      },
+      "mmbert-lora-s42": {
+        "evaluation": {
+          "path": "artifacts/models/mmbert-lora-s42/evaluation.json",
+          "sha256": "c76956729eba694e378d5e8246f475dd6c4443a4c109b0550e49b4c13ade354e"
+        },
+        "result": {
+          "path": "artifacts/models/mmbert-lora-s42/result.json",
+          "sha256": "570db76e153f6d08bceb9a5688203e619e297d01f092effa25335743215ef90b"
+        }
+      }
+    },
+    "panel": {
+      "calibration_rows": 6000,
+      "evaluation_rows": 14000,
+      "file": {
+        "path": "artifacts/openrouter_downstream_eval/panel.jsonl.gz",
+        "sha256": "25d55cabd284ac6220abceb8298521ca0aeffdc39f92bd918c353b4252f4428f"
+      },
+      "identity_sha256": "45e798955418e8990d5f56b5d1ae542ae3499f8d585a0ea2c4fe6712b4d06e14",
+      "rows": 20000
+    }
+  },
+  "limitations": [
+    "All thresholds and metrics are already-open development evidence.",
+    "The full-LoRA 0.99999 high gate was added after inspecting the original grid.",
+    "The panel prevalence is artificial and does not estimate production precision.",
+    "The LFM2.5 control is a frozen-head model; no LFM2.5 LoRA or all-weights fine-tune was run.",
+    "No corpus text was transmitted for this refresh because it reused retained DeepSeek outputs."
+  ],
+  "policies": {
+    "copied_partial_lora_policy": {
+      "deepseek_threshold": 0.9,
+      "high": 0.999,
+      "low": 0.2,
+      "results": {
+        "lfm25-frozen-full-s42": {
+          "calibration_fpr": 0.037,
+          "deepseek_call_rate": 0.2914,
+          "evaluation_fpr": 0.0363,
+          "evaluation_precision": 0.9299,
+          "evaluation_recall": 0.6441,
+          "projected_deepseek_cost_per_1000_inputs_usd": 0.0265,
+          "slices": {
+            "canonical": {
+              "fpr": 0.0252,
+              "recall": 0.7963
+            },
+            "promptshield": {
+              "fpr": 0.0757,
+              "recall": 0.7244
+            },
+            "sep": {
+              "fpr": 0.0029,
+              "recall": 0.3149
+            }
+          }
+        },
+        "mmbert-frozen-s42": {
+          "calibration_fpr": 0.0262,
+          "deepseek_call_rate": 0.3165,
+          "evaluation_fpr": 0.0211,
+          "evaluation_precision": 0.9567,
+          "evaluation_recall": 0.6239,
+          "projected_deepseek_cost_per_1000_inputs_usd": 0.0293,
+          "slices": {
+            "canonical": {
+              "fpr": 0.0185,
+              "recall": 0.8339
+            },
+            "promptshield": {
+              "fpr": 0.0371,
+              "recall": 0.5585
+            },
+            "sep": {
+              "fpr": 0.0034,
+              "recall": 0.2669
+            }
+          }
+        },
+        "mmbert-lora-full-s42": {
+          "calibration_fpr": 0.0387,
+          "deepseek_call_rate": 0.1169,
+          "evaluation_fpr": 0.0362,
+          "evaluation_precision": 0.9418,
+          "evaluation_recall": 0.784,
+          "projected_deepseek_cost_per_1000_inputs_usd": 0.0129,
+          "slices": {
+            "canonical": {
+              "fpr": 0.0169,
+              "recall": 0.9063
+            },
+            "promptshield": {
+              "fpr": 0.084,
+              "recall": 0.8135
+            },
+            "sep": {
+              "fpr": 0.008,
+              "recall": 0.5389
+            }
+          }
+        },
+        "mmbert-lora-s42": {
+          "calibration_fpr": 0.0198,
+          "deepseek_call_rate": 0.2679,
+          "evaluation_fpr": 0.017,
+          "evaluation_precision": 0.9646,
+          "evaluation_recall": 0.6182,
+          "projected_deepseek_cost_per_1000_inputs_usd": 0.0256,
+          "slices": {
+            "canonical": {
+              "fpr": 0.0161,
+              "recall": 0.7649
+            },
+            "promptshield": {
+              "fpr": 0.0296,
+              "recall": 0.6902
+            },
+            "sep": {
+              "fpr": 0.0006,
+              "recall": 0.304
+            }
+          }
+        }
+      }
+    },
+    "original_grid": {
+      "deepseek": [
+        0.5,
+        0.9,
+        0.95,
+        0.99,
+        0.999
+      ],
+      "high": [
+        0.99,
+        0.999,
+        0.9999
+      ],
+      "low": [
+        0.0001,
+        0.001,
+        0.01,
+        0.1,
+        0.2
+      ],
+      "maximum_calibration_fpr": 0.02,
+      "results": {
+        "lfm25-frozen-full-s42": {
+          "calibration_fpr": 0.0169,
+          "deepseek_call_rate": 0.6071,
+          "evaluation_fpr": 0.0151,
+          "evaluation_precision": 0.9657,
+          "evaluation_recall": 0.5684,
+          "thresholds": {
+            "deepseek": 0.95,
+            "high": 0.9999,
+            "low": 0.001
+          }
+        },
+        "mmbert-frozen-s42": {
+          "calibration_fpr": 0.0169,
+          "deepseek_call_rate": 0.6395,
+          "evaluation_fpr": 0.0129,
+          "evaluation_precision": 0.9709,
+          "evaluation_recall": 0.5741,
+          "thresholds": {
+            "deepseek": 0.95,
+            "high": 0.9999,
+            "low": 0.001
+          }
+        },
+        "mmbert-lora-full-s42": {
+          "calibration_fpr": 0.0227,
+          "deepseek_call_rate": 0.6014,
+          "evaluation_fpr": 0.0192,
+          "evaluation_precision": 0.9617,
+          "evaluation_recall": 0.6461,
+          "selection": "no feasible point; nearest minimum-FPR point",
+          "thresholds": {
+            "deepseek": 0.999,
+            "high": 0.9999,
+            "low": 0.0001
+          }
+        },
+        "mmbert-lora-s42": {
+          "calibration_fpr": 0.0198,
+          "deepseek_call_rate": 0.2679,
+          "evaluation_fpr": 0.017,
+          "evaluation_precision": 0.9646,
+          "evaluation_recall": 0.6182,
+          "thresholds": {
+            "deepseek": 0.9,
+            "high": 0.999,
+            "low": 0.2
+          }
+        }
+      },
+      "selection": "maximize calibration recall subject to the aggregate FPR cap"
+    },
+    "post_hoc_full_lora_extension": {
+      "calibration_fpr": 0.0198,
+      "deepseek_call_rate": 0.2217,
+      "evaluation_fpr": 0.0181,
+      "evaluation_precision": 0.965,
+      "evaluation_recall": 0.6679,
+      "slices": {
+        "canonical": {
+          "fpr": 0.0161,
+          "recall": 0.7869
+        },
+        "promptshield": {
+          "fpr": 0.0327,
+          "recall": 0.7751
+        },
+        "sep": {
+          "fpr": 0.0011,
+          "recall": 0.3863
+        }
+      },
+      "thresholds": {
+        "deepseek": 0.9,
+        "high": 0.99999,
+        "low": 0.2
+      }
+    }
+  },
+  "purpose": "hash-linked development-only encoder refresh over retained DeepSeek V4 Flash outputs",
+  "schema_version": 1
+}

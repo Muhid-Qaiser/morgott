@@ -46,10 +46,10 @@ machinery until a measured error analysis predicts what each addition should
 fix. Do not train every window of a positive document as positive without a
 known attack span.
 
-The repository owner authorized one bounded exception on 2026-07-28 after the external tail failure was measured.
-It covers the completed full-data frozen mmBERT head and one update-matched rank-8 mmBERT LoRA engineering gate.
-It does not authorize a LoRA sweep, a full-mixture LoRA claim, production calibration, or blocking.
-The maintained trainer can execute a full-mixture LoRA run if one is later authorized, but code availability is not evidence or approval.
+The repository owner authorized one bounded exception on 2026-07-28 after the external tail failure was measured and later authorized one full-mixture rank-8 LoRA seed.
+The completed scope contains the full-data frozen mmBERT head, one update-matched reduced-mixture LoRA engineering gate, and one full-mixture LoRA seed.
+It does not authorize more seeds, a LoRA sweep, production calibration, promotion, or blocking.
+The maintained trainer remains reproducibility code; code availability is not evidence or approval for another run.
 
 Exit condition: one reproducible shadow candidate improves on the cheap control
 across source-held-out evidence without unacceptable benign review load. This is
@@ -94,14 +94,15 @@ Treat the 0.101%/77.16% pair as an in-corpus artifact, not a detector result.
 
 ### July 2026 bounded generic first-pass artifacts
 
-The full-data frozen mmBERT recipe fits leakage-filtered canonical rows, PromptShield train, and the retained generated pairs with balanced BCE plus pair ranking.
+The full-data frozen mmBERT and full-mixture LoRA recipes fit leakage-filtered canonical rows, PromptShield train, and the retained generated pairs with balanced BCE plus pair ranking.
 Three frozen-head seeds are retained to show dispersion.
-One rank-8 LoRA seed is retained only as an update-matched engineering gate against a frozen control; it omits most canonical rows and all generated pairs.
+The reduced-mixture rank-8 LoRA is retained only as an update-matched engineering gate against a frozen control; it omits most canonical rows and all generated pairs.
+The full-mixture rank-8 LoRA is one seed selected at epoch 2 after 25,071 updates and is registered as an advisory research result without promotion.
 PromptShield validation selects checkpoints, while canonical calibration alone selects reported applied thresholds.
 PromptShield test is source-disjoint within its own release and remains already-consumed benchmark development data.
 Known cross-corpus overlap prevents a source-OOD claim relative to the complete Morgott plus PromptShield fit.
 SEP remains already-consumed transfer development data.
-All four downstream checkpoints are advisory and must be compared independently rather than combined into an unevaluated ensemble.
+All retained downstream checkpoints are advisory and must be compared independently rather than combined into an unevaluated ensemble.
 Every score is truncated to the first 512 normalized tokens, so long web, retrieval, and tool content remains an explicit evidence gap.
 
 ### July 2026 downstream cascade candidate
@@ -113,17 +114,20 @@ The `0.9` threshold was selected on the fixed 6,000-row calibration split and ap
 It is an operating threshold, not a calibrated production probability.
 Exact evidence, provider settings, metrics, and limitations are in [the OpenRouter downstream evaluation](../reports/openrouter-downstream-evaluation.md).
 
+The completed full-data LoRA cannot inherit the partial-LoRA score gates directly.
+The copied policy reaches 78.40% recall at 3.62% FPR, while a post-hoc `0.99999` high-gate extension reaches 66.79% recall at 1.81% FPR with 22.17% DeepSeek calls.
+The extension was not in the predeclared grid and does not replace the retained route without prospective recalibration.
+
 The maintained code currently provides mmBERT artifact loading and scoring plus a pure advisory routing function.
 The following integration work remains:
 
 1. Add a maintained orchestrator that sends text through `mmbert-lora-s42`, invokes the advisory route, and calls DeepSeek only for the middle zone.
 2. Add an OpenRouter adapter with the frozen subversion-only prompt, CoreWeave fp8 routing, reasoning disabled, strict integer JSON, and both decision-token log probabilities.
 3. Compute and retain raw decision-token log odds, convert them with the stable sigmoid helper, and pass `p_subversion` to the advisory route.
-4. Add bounded concurrency, timeouts, retry handling, and operational metrics; exhausted failures must restrict.
+4. Add bounded concurrency, timeouts, retry handling, and operational metrics keyed by versioned model, prompt, provider, and threshold hashes; exhausted failures must restrict.
 5. Map `restrict` to privilege reduction or deterministic reference-monitor policy rather than treating a learned score as authorization.
 6. Keep harmful non-injection classification separate from the subversion prompt and route.
 7. Shadow the complete pipeline on representative traffic and recalibrate before deployment.
-8. Evaluate the full-data LoRA under the identical contract after its independent training run finishes before considering an encoder replacement.
 
 The disposable OpenRouter experiment runner is reproducibility code, not the production adapter.
 Do not import it into the maintained package.

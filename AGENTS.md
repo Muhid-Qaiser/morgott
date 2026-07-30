@@ -31,8 +31,8 @@ active tree because they used an older corpus or ended in a stop decision. Their
 short conclusions remain in `reports/model-experiments.md`; Git history is the
 archive.
 
-On 2026-07-28 the repository owner authorized one bounded, artifact-only modelling exception.
-The exception fits a frozen mmBERT head on the complete leakage-filtered mixture and runs one update-matched rank-8 mmBERT LoRA engineering gate using PromptShield train.
+On 2026-07-28 the repository owner authorized one bounded, artifact-only modelling exception and subsequently authorized one full-mixture rank-8 LoRA seed.
+The completed scope fits a frozen mmBERT head on the complete leakage-filtered mixture, runs one update-matched reduced-mixture LoRA engineering gate, and runs one full-mixture LoRA with the retained pair-ranking objective.
 PromptShield validation selects checkpoints but does not fit parameters or select operating thresholds, and PromptShield test remains already-open, source-held-out benchmark development data.
 The retained weights use Git LFS and are listed in `model-artifacts.json`.
 They are advisory research shadows, are not wired into `morgott scan`, and are not approved for blocking or authorization.
@@ -256,7 +256,7 @@ Do not repeat context-length, document-bag, or BIPIA augmentation experiments on
 Before another encoder run, add realistic matched transaction tasks, paired multilingual transformations, known-span long-document attacks, and stronger same-source controls.
 Toxicity remains deferred until a second independent positive source and matched negatives exist.
 
-The completed 2026-07-28 frozen-head and one-seed LoRA experiments are the bounded exception recorded above.
+The completed frozen-head, reduced-mixture LoRA, and one-seed full-mixture LoRA experiments are the bounded exception recorded above.
 Their already-consumed PromptShield and SEP results are development evidence, not a prospective final test.
 The maintained mmBERT trainer exists for reproducibility and a future explicitly authorized run.
 The next encoder run remains deferred until the evidence requirements in this section are met.

@@ -1,7 +1,8 @@
-"""Load and score the two retained advisory mmBERT shadows."""
+"""Load and score the retained advisory mmBERT shadows."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -84,6 +85,26 @@ def _verify_historical_evidence(
     return source_commit
 
 
+def _verify_maintained_evidence(
+    entry: dict,
+    result: dict,
+    evaluation: dict,
+) -> str:
+    evidence = entry.get("source_evidence")
+    if (
+        not isinstance(evidence, dict)
+        or evidence.get("training") != result.get("provenance")
+        or evidence.get("evaluation") != evaluation.get("provenance")
+    ):
+        raise ValueError("maintained model source evidence mismatch")
+    encoded = json.dumps(
+        evidence,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def load_bundle(manifest_path: Path, model_key: str) -> dict:
     manifest_path = manifest_path.resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -117,22 +138,53 @@ def load_bundle(manifest_path: Path, model_key: str) -> dict:
         raise ValueError("model result contract failed")
 
     evaluation = json.loads(evaluation_path.read_text(encoding="utf-8"))
-    evaluation_inputs = evaluation.get("input_sha256", {})
     expected_adapter = entry.get("adapter", {}).get("files")
-    if (
-        evaluation.get("model_id") != MODEL_ID
-        or evaluation.get("model_revision") != MODEL_REVISION
-        or evaluation.get("adaptation") != adaptation
-        or evaluation_inputs.get("run_result") != entry["result"]["sha256"]
-        or evaluation_inputs.get("head") != entry["head"]["sha256"]
-        or evaluation_inputs.get("adapter_files") != expected_adapter
-    ):
-        raise ValueError("model evaluation contract failed")
-    source_commit = _verify_historical_evidence(
-        manifest,
-        evaluation_inputs,
-        adaptation,
-    )
+    source_evidence_sha256 = None
+    if entry.get("artifact_format") == "maintained-v1":
+        evaluation_inputs = evaluation.get("inputs", {})
+        training_inputs = result.get("provenance", {})
+        required_digests = (
+            "data_manifest_sha256",
+            "external_manifest_sha256",
+            "pair_archive_sha256",
+        )
+        if (
+            result.get("purpose") != "maintained full-data advisory mmBERT training"
+            or evaluation.get("purpose") != "advisory mmBERT development evaluation"
+            or evaluation.get("model_id") != MODEL_ID
+            or evaluation.get("model_revision") != MODEL_REVISION
+            or evaluation.get("adaptation") != adaptation
+            or evaluation.get("run_result_sha256") != entry["result"]["sha256"]
+            or any(
+                not isinstance(training_inputs.get(name), str)
+                or len(training_inputs[name]) != 64
+                or evaluation_inputs.get(name) != training_inputs[name]
+                for name in required_digests
+            )
+        ):
+            raise ValueError("model evaluation contract failed")
+        source_evidence_sha256 = _verify_maintained_evidence(
+            entry,
+            result,
+            evaluation,
+        )
+        source_commit = None
+    else:
+        evaluation_inputs = evaluation.get("input_sha256", {})
+        if (
+            evaluation.get("model_id") != MODEL_ID
+            or evaluation.get("model_revision") != MODEL_REVISION
+            or evaluation.get("adaptation") != adaptation
+            or evaluation_inputs.get("run_result") != entry["result"]["sha256"]
+            or evaluation_inputs.get("head") != entry["head"]["sha256"]
+            or evaluation_inputs.get("adapter_files") != expected_adapter
+        ):
+            raise ValueError("model evaluation contract failed")
+        source_commit = _verify_historical_evidence(
+            manifest,
+            evaluation_inputs,
+            adaptation,
+        )
 
     adapter_path = None
     if adaptation == "lora":
@@ -168,6 +220,7 @@ def load_bundle(manifest_path: Path, model_key: str) -> dict:
             dict(entry["adapter"]["files"]) if adaptation == "lora" else None
         ),
         "source_commit": source_commit,
+        "source_evidence_sha256": source_evidence_sha256,
     }
 
 
@@ -304,6 +357,9 @@ def score_file(
                                 "head_sha256": bundle["head_sha256"],
                                 "adapter_sha256": bundle["adapter_sha256"],
                                 "source_commit": bundle["source_commit"],
+                                "source_evidence_sha256": bundle[
+                                    "source_evidence_sha256"
+                                ],
                             },
                         },
                         sort_keys=True,

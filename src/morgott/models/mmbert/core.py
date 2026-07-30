@@ -104,6 +104,7 @@ def add_lora(encoder):
             lora_dropout=LORA_DROPOUT,
             bias="none",
             target_modules=LORA_TARGETS,
+            task_type="FEATURE_EXTRACTION",
         ),
     )
     modules = [module for module in model.modules() if hasattr(module, "lora_A")]
@@ -141,7 +142,7 @@ def batch_logits(
         return head(features)[:, 0]
 
 
-def score_texts(
+def score_logits(
     encoder,
     tokenizer,
     head,
@@ -168,7 +169,24 @@ def score_texts(
             logits.append(values.float().cpu().numpy())
     if not logits:
         return np.empty(0, dtype=np.float64)
-    values = np.concatenate(logits).astype(np.float64)
+    return np.concatenate(logits).astype(np.float64)
+
+
+def score_texts(
+    encoder,
+    tokenizer,
+    head,
+    texts: list[str],
+    *,
+    batch_size: int,
+) -> np.ndarray:
+    values = score_logits(
+        encoder,
+        tokenizer,
+        head,
+        texts,
+        batch_size=batch_size,
+    )
     scores = np.empty_like(values)
     positive = values >= 0
     scores[positive] = 1.0 / (1.0 + np.exp(-values[positive]))

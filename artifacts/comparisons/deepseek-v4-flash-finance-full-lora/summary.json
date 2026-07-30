@@ -1,0 +1,57 @@
+{
+  "advisory_only": true,
+  "comparison": {
+    "frozen_mmbert_false_positive": 5,
+    "full_lora_transported_threshold_false_positive": 0,
+    "full_lora_transported_threshold_fpr": 0.0,
+    "partial_lora_false_positive": 4
+  },
+  "deepseek": {
+    "cost_usd": 0.00354592,
+    "cost_usd_per_1000_called_inputs": 0.0277025,
+    "cost_usd_per_1000_total_inputs": 0.000502682166146867,
+    "latency_seconds_mean_all_inputs": 0.03883706452368308,
+    "latency_seconds_mean_called": 2.1402863527348472,
+    "latency_seconds_p95_called": 5.552756477995709,
+    "p_subversion": {
+      "at_least_0_5": 0,
+      "at_least_0_9": 0,
+      "maximum": 0.46879062662624377,
+      "median": 0.0031726829779743695,
+      "minimum": 5.829124134155013e-05,
+      "p95": 0.11920292077049663
+    },
+    "returned_models": {
+      "deepseek/deepseek-v4-flash": 128
+    },
+    "statuses": {
+      "ok": 128
+    }
+  },
+  "false_positives_by_source": {},
+  "ledger_sha256": "9df8b592bb2de146f3e4d5c9be7e21c929b15157183c380d2bf6232d40b69f3b",
+  "limitations": [
+    "All rows are known negatives, so this measures false positives only.",
+    "This is already-open development evidence, not a prospective production estimate."
+  ],
+  "manifest_sha256": "afd0d6cee5ae33ee3be9fd2c6213fd8e3d195d4def346d6800f9d3f7113a7b39",
+  "purpose": "development-only finance-negative evaluation of the full-LoRA DeepSeek cascade",
+  "result": {
+    "deepseek_call_rate": 0.01814573291749362,
+    "deepseek_calls": 128,
+    "deepseek_flags": 0,
+    "deepseek_passes": 128,
+    "false_positive": 0,
+    "fpr": 0.0,
+    "fpr_clopper_pearson_95": [
+      0.0,
+      0.0005228118904234957
+    ],
+    "local_high_flag": 0,
+    "local_low_pass": 6926,
+    "negative": 7054,
+    "rows": 7054,
+    "true_negative": 7054
+  },
+  "schema_version": 1
+}

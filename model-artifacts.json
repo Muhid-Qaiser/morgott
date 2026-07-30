@@ -56,6 +56,81 @@
         "path": "artifacts/models/mmbert-lora-s42/evaluation.json",
         "sha256": "c76956729eba694e378d5e8246f475dd6c4443a4c109b0550e49b4c13ade354e"
       }
+    },
+    "mmbert-lora-full-s42": {
+      "artifact_format": "maintained-v1",
+      "adaptation": "lora",
+      "result": {
+        "path": "artifacts/models/mmbert-lora-full-s42/result.json",
+        "sha256": "d1014af4256212d707f3fe6d6dc8f90a35f65a5086bb7feea2a63bdf703295a0"
+      },
+      "head": {
+        "path": "artifacts/models/mmbert-lora-full-s42/head.safetensors",
+        "sha256": "a40113a01347289f8a409b764b8e546af0e061a19fb0d9210c98590c26e83a41"
+      },
+      "adapter": {
+        "path": "artifacts/models/mmbert-lora-full-s42/adapter",
+        "files": {
+          "README.md": "25e02f4e1120370bcf76598ec974f12bebf1c24301f6312835a21aef037fba80",
+          "adapter_config.json": "cc404cd76eed420d5a489d52eafba146c74e9152b3f62e8b67a58e69930045d6",
+          "adapter_model.safetensors": "84f85ea8845720896dbe09b8b959e8e8858f23a8ff09fa3ac3e736ddcb5adb0d"
+        }
+      },
+      "evaluation": {
+        "path": "artifacts/models/mmbert-lora-full-s42/evaluation/evaluation.json",
+        "sha256": "ec378e29358aab50515b66d2f05612767dea810b388326f4ece86bc99c7c6e99"
+      },
+      "scores": {
+        "path": "artifacts/models/mmbert-lora-full-s42/evaluation/scores.npy",
+        "sha256": "b9ad82b94ffdfa8d2282bbe912b7e7316df4e299bfdee23724955b09cfcc2965"
+      },
+      "source_evidence": {
+        "training": {
+          "data_manifest_sha256": "27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81",
+          "external_manifest_sha256": "309cfe0da78b6f1b06220759b458306caa41740882ae10bba4ec3e2516917567",
+          "pair_archive_sha256": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+          "routing_views": {
+            "dev_test": {
+              "path": "views/routing/dev_test.jsonl",
+              "rows": 441649,
+              "sha256": "992f3f8b9467529261f929a115f8d83f99b0c411c81539778d6d7ec1492ac309"
+            },
+            "train": {
+              "path": "views/routing/train.jsonl",
+              "rows": 1478191,
+              "sha256": "682939d7b6a273888b049401cb2e9569027cd94c6cc944b1a13dd92065d5501a"
+            },
+            "validation": {
+              "path": "views/routing/validation.jsonl",
+              "rows": 202055,
+              "sha256": "ca16e7ad3364fb562ff1c9885b90b30902d57226ccfc77eaff5b6d2a223e8a7a"
+            }
+          },
+          "sources": {
+            "src/morgott/data.py": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e",
+            "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+            "src/morgott/models/mmbert/data.py": "d2d4a808994ffa9afb9a83409f16d950c898a9e704b007426751be5e5d9c4693",
+            "src/morgott/models/mmbert/external_data.py": "61d406b5c92bca8c70799b51727a38a1bbb53fe2e6820a0556af295d341b2f97",
+            "src/morgott/models/mmbert/train.py": "4af16c60d480e29ed3a7d906379c0ffb85e18f209db822c34835a4321d6c4574",
+            "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+            "src/morgott/overlap.py": "1be805cf673817948ee80b92084405f0d932dca6789e2c4aad1016eb61345645"
+          },
+          "uv_lock_sha256": "aae638be0b2a7255d599d15fd6ebba8387e3ddb8c48fda8a000663851a33c8b4"
+        },
+        "evaluation": {
+          "sources": {
+            "src/morgott/data.py": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e",
+            "src/morgott/models/detector.py": "71bf9486f128e5a6964b9d77f21f538949f2f1df922d4a76a7db624cfa2018a6",
+            "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+            "src/morgott/models/mmbert/data.py": "d2d4a808994ffa9afb9a83409f16d950c898a9e704b007426751be5e5d9c4693",
+            "src/morgott/models/mmbert/evaluate.py": "ff2102b4db4d869a168be06b04243944ac2dfd2b14a5c5322166e5bf1cbf1152",
+            "src/morgott/models/mmbert/train.py": "4af16c60d480e29ed3a7d906379c0ffb85e18f209db822c34835a4321d6c4574",
+            "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+            "src/morgott/overlap.py": "1be805cf673817948ee80b92084405f0d932dca6789e2c4aad1016eb61345645"
+          },
+          "uv_lock_sha256": "aae638be0b2a7255d599d15fd6ebba8387e3ddb8c48fda8a000663851a33c8b4"
+        }
+      }
     }
   },
   "evidence": {
@@ -105,6 +180,7 @@
     "Scores never grant authority and are not approved for blocking.",
     "Every input is strictly normalized and truncated to its first 512 tokens.",
     "PromptShield and SEP are already-consumed development evaluations.",
-    "The LoRA result is one seed on a reduced mixture without generated pairs."
+    "The partial LoRA is one seed on a reduced mixture without generated pairs.",
+    "The full-mixture LoRA is one seed and remains an unpromoted advisory result."
   ]
 }

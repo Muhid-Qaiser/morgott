@@ -753,12 +753,63 @@ It does not establish that LoRA is generally superior, and it does not yet repla
 It is not a strict Pareto win because SEP row FPR rises by 0.21 percentage points and canonical dev-test row FPR rises by 0.34 points at their transported thresholds.
 FinanceBench also moves from zero to one false positive among 150 rows even though aggregate finance false positives fall from nine to four.
 PromptShield row FPR remains 10.28% when the canonical threshold is transported, canonical same-test tail recall falls by 13.53 percentage points, and this gate excludes the generated pairs and most canonical training rows.
-The next model experiment, when modelling resumes, is one full-mixture LoRA run with the retained pair-ranking objective and the same external evaluator.
+This gate motivated the subsequently authorized full-mixture LoRA run below.
+
+### Full-mixture rank-8 LoRA completion
+
+The authorized full-mixture seed-42 run completed all 25,071 updates across three epochs and selected epoch 2 by the equal-domain mean of Morgott and PromptShield validation BCE.
+It fitted 1,069,607 leakage-filtered canonical rows, cycled all 18,197 PromptShield rows class-balanced, cycled all 11,041 matched pairs, and applied pair-ranking weight `0.25`.
+The run kept the pinned rank-8 adapter contract, BF16 mixed precision, microbatch 8, and disabled gradient checkpointing after the measured memory preflight.
+The machine-readable preflight is [retained with the experiment artifacts](../artifacts/mmbert/full-lora-runtime-benchmark.json) at SHA-256 `5158a674c884aca8643690f3f919bde2acedb42c1c91cf6b5b00c163f69b9a6a`.
+The selected epoch reached Morgott validation BCE 0.04548, PromptShield validation BCE 0.05638, and macro BCE 0.05093.
+The final result records 82,700 seconds of successful trainer runtime on the RTX 4050; interrupted lid-triggered and PTY work made campaign wall time longer.
+
+The primary comparison is the complete-mixture LoRA against `mmbert-frozen-s42`.
+The reduced-mixture LoRA remains historical context because its rows, update count, and missing pair loss differ materially.
+
+| Already-open development metric | Full-data frozen | Full-data rank-8 LoRA | Reduced-mixture rank-8 LoRA |
+|---|---:|---:|---:|
+| Canonical AUROC / PR-AUC | 0.9877 / 0.9839 | **0.9896** / 0.9838 | 0.9870 / 0.9815 |
+| Canonical descriptive TPR at approximately 1% row FPR | **73.84%** | 54.48% | 50.23% |
+| Canonical transported TPR / row FPR | 39.59% / **0.22%** | 85.95% / 1.48% | **87.93%** / 2.03% |
+| PromptShield AUROC / PR-AUC | 0.7634 / 0.5259 | **0.9015 / 0.8473** | 0.8410 / 0.7429 |
+| PromptShield descriptive TPR at approximately 1% row FPR | 3.22% | **47.36%** | 26.10% |
+| PromptShield transported TPR / row FPR | 0.35% / **0.16%** | **68.50%** / 4.96% | 64.29% / 10.28% |
+| SEP AUROC / PR-AUC | 0.8368 / 0.7838 | 0.8144 / 0.8627 | **0.8758 / 0.8857** |
+| SEP descriptive TPR at approximately 1% row FPR | 1.47% | **38.88%** | 32.48% |
+| SEP transported TPR / row FPR | 0.01% / **0.05%** | 30.71% / 0.48% | **31.71%** / 0.92% |
+| Finance false positives among 7,054 negatives | 5 | **0** | 4 |
+
+The full LoRA materially improves PromptShield ranking and tail recall over the frozen head, reaches zero false positives on the retained finance slice, and orders the attack above its clean counterpart in 83.35% of SEP pairs.
+It is not a strict win.
+Its canonical descriptive 1% tail recall is 19.36 points below frozen mmBERT, its canonical transported FPR rises from 0.22% to 1.48%, its PromptShield transported FPR rises from 0.16% to 4.96%, and its SEP AUROC is lower.
+The complete-mixture run also does not dominate the reduced-mixture LoRA on SEP ranking.
+
+The fixed downstream DeepSeek policy cannot simply inherit the partial-LoRA score gates because the encoder score scales differ.
+Copying `0.2 / 0.999 / 0.9` raises the full-LoRA evaluation result to 78.40% recall but also 3.62% FPR, including 8.40% PromptShield FPR.
+A post-hoc `0.99999` high-gate extension reaches 66.79% recall at 1.81% FPR with 22.17% DeepSeek calls, but it was not in the predeclared grid and remains already-open development evidence.
+The exact cascade comparison is in [the OpenRouter downstream evaluation](openrouter-downstream-evaluation.md).
+
+The pinned local Llama Prompt Guard 2 86M comparison used revision `a8ded8e697ce7c355e395a0df51f94adb4a2fd27`, FP16 inference, native tokenization, and the first 512 model tokens over the same 461,700 row identities.
+At its native 0.5 cutoff it reached 56.09% canonical recall at 1.81% FPR, 27.83% PromptShield recall at 2.76% FPR, and 0.02% SEP recall at zero FPR.
+Under the shared canonical component protocol at threshold `0.9740303159`, those figures fell to 50.49% / 1.38%, 22.46% / 2.33%, and 0% / 0%.
+Prompt Guard orders the SEP attack above its clean counterpart in 94.16% of pairs, but its score scale collapses near zero there and neither tested threshold converts that ranking into useful recall.
+It produced one false positive among the 7,054 retained finance negatives under both thresholds.
+Its local scorer processed 461,700 rows in 3,404 seconds with 2.18 GiB peak reserved memory; the complete inhibited service took 73.9 wall-clock minutes including preparation and publication.
+The verified evaluation JSON and score-array SHA-256 digests are `e3b82fba87d2ca8494254b10353cf63d8a4627943a842713d30df84d7587f842` and `a95f3132c94aa170fa37f46d64ccc3343999fd2d49ac7b21997d389dba43124a`.
+
+The maintained word n-gram routing baseline was rerun separately against manifest SHA-256 `27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81`.
+At its untouched 0.5 cutoff it reached 92.35% dev-test recall, 2.94% row FPR, 96.76% precision, and 0.9834 AUROC over its broad `routing_label` target.
+Its macro source recall and FPR were 80.12% and 13.12%, which exposes strong source variation hidden by the aggregate.
+The retained [JSON](routing-baseline.json) and [Markdown](routing-baseline.md) snapshots have SHA-256 digests `fdcac8d1e6836c524abb38411c542f1a642bcb06b1d745c2d838789ee3522125` and `e6dc4711846564c857989425610a7601de7f0f91d4743a88b17b334f19d27649`.
+This control is not directly comparable to the narrower instruction-subversion models because broad routing labels also include harmful intent, toxicity, and unresolved rows.
+
+Decision: register `mmbert-lora-full-s42` as a one-seed advisory research artifact without promoting it over the retained frozen model or the existing partial-LoRA downstream route.
+No learned model is approved for blocking, authorization, or privilege grants, and `morgott scan` remains advisory with `decision: allow`.
 
 ### Deferred improvement ledger
 
-1. Train one full-mixture LoRA run with the retained pair-ranking objective and repeat the same external evaluation.
-2. Run additional LoRA seeds only if that full-mixture externally applied result remains materially better.
-3. Build a prospective, lineage-grouped finance and Web3 suite with matched benign transaction tasks, realistic direct and indirect attacks, multilingual transformations, and a long-benign denominator.
-4. Report mutation ASR at multiple attempts beside clean recall before any deployment claim.
-5. Evaluate the deterministic policy monitor in AgentDojo Banking so the advisory sensor is measured as one layer rather than mistaken for the security boundary.
+1. Build a prospective, lineage-grouped finance and Web3 suite with matched benign transaction tasks, realistic direct and indirect attacks, multilingual transformations, and a long-benign denominator.
+2. Recalibrate the full-data LoRA only on new representative traffic if the downstream route is revisited.
+3. Report mutation ASR at multiple attempts beside clean recall before any deployment claim.
+4. Evaluate the deterministic policy monitor in AgentDojo Banking so the advisory sensor is measured as one layer rather than mistaken for the security boundary.

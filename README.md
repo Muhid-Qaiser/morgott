@@ -2,7 +2,7 @@
 
 morgott is a research POC for prompt-injection and agent-security work.
 The maintained deliverable is a reproducible, provenance-preserving data corpus.
-The current modelling deliverable is a versioned full-data frozen-mmBERT shadow plus a promising one-seed LoRA gate documented in `reports/model-experiments.md`.
+The current modelling deliverable is a versioned full-data frozen-mmBERT shadow, the historical reduced-mixture LoRA gate, and one completed full-mixture rank-8 LoRA seed documented in `reports/model-experiments.md`.
 Their small inference artifacts use Git LFS and are available through the explicit advisory `morgott shadow-score` command.
 No model is approved for blocking.
 
@@ -143,7 +143,7 @@ ignored. `morgott scan` is shadow-only and always returns `decision: allow`.
 It verifies inputs against the canonical manifest, uses the untouched 0.5 cutoff, and reports aggregate and per-source development metrics.
 Historical neural and data-ablation runners are not part of the active tree.
 Their metrics and stop decisions remain in the versioned reports and Git history.
-The selected frozen-mmBERT full-data pair-ranking candidate and the one-seed LoRA gate are retained only as advisory first-pass research shadows under `artifacts/models/`.
+The selected frozen-mmBERT full-data pair-ranking candidate, reduced-mixture LoRA gate, and completed full-mixture LoRA seed are retained only as advisory first-pass research shadows under `artifacts/models/`.
 Their external transfer evidence remains too weak for blocking, and every side effect still requires deterministic policy authorization.
 Both generic heads strictly normalize and truncate each input to its first 512 tokens.
 They do not chunk long documents or localize injected spans.
@@ -152,14 +152,20 @@ The maintained mmBERT package can prepare the pinned external data, preflight th
 
 ```bash
 uv run python -m morgott.models.mmbert.external_data
-uv run python -m morgott.models.mmbert.train --preflight-only
-uv run --extra encoder python -m morgott.models.mmbert.train --mode lora
+uv run python -m morgott.models.mmbert.train \
+  --preflight-only \
+  --no-gradient-checkpointing
+uv run --extra encoder python -m morgott.models.mmbert.train \
+  --mode lora \
+  --microbatch-size 8 \
+  --no-gradient-checkpointing
 uv run --extra encoder python -m morgott.models.mmbert.evaluate \
-  artifacts/mmbert/runs/mmbert-base-full-lora-s42
+  artifacts/mmbert/runs/mmbert-lora-full-s42
 ```
 
 The trainer streams every canonical training row with source-supported injection labels after the external leakage guard, then adds filtered PromptShield training rows and the retained matched pairs.
 Its frozen and LoRA modes share one data contract, loss, checkpoint rule, and artifact format.
+The registered full-mixture LoRA identity fails closed unless it uses microbatch 8 with gradient checkpointing disabled; a different execution recipe needs a different run identity.
 The single generic output treats direct injection, indirect injection, and jailbreak as positive instruction subversion and does not expose separate subtype scores.
 Source-supported harmful content without subversion may remain as a negative counterexample; this is not a harmfulness score.
 It keeps the retained SDPA attention contract; an FA2 run requires its own pinned kernel and mmBERT parity record.
@@ -176,7 +182,7 @@ uv run --extra encoder morgott shadow-score \
 
 Each input row must contain unique `id`, non-empty `text`, and trusted `input_channel` set to `direct_user` or `untrusted_content`.
 The output contains only the raw score, channel, model revision, and artifact hashes.
-Use `mmbert-frozen-s42` or `mmbert-lora-s42`.
+Use `mmbert-frozen-s42`, `mmbert-lora-s42`, or `mmbert-lora-full-s42`.
 Do not average or OR them without evaluating that new ensemble.
 
 The first proper routing experiment should stay deliberately small:
@@ -203,7 +209,7 @@ is promoted; their durable conclusions are summarized in
 - `src/morgott/normalization.py`: strict inference-side text normalization.
 - `src/morgott/policy.py`: deterministic authorization simulation.
 - `tests/`: maintained data, detector, and policy invariants.
-- `artifacts/models/`: the two registered advisory model artifacts.
+- `artifacts/models/`: the three registered advisory model artifacts.
 - `experiments/`: rules for disposable or study-specific experiments that do not belong in maintained model code.
 - `data/manifest.json`: sole versioned machine data manifest.
 - `reports/dataset-selection.md`: source inclusion and exclusion decisions.

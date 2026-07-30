@@ -1,0 +1,88 @@
+{
+  "attention_implementation": "sdpa",
+  "max_tokens": 512,
+  "minimum_headroom_bytes": 966367641,
+  "model_id": "jhu-clsp/mmBERT-base",
+  "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+  "precision": "BF16 mixed precision with FP32 optimizer state",
+  "purpose": "full-mixture rank-8 mmBERT LoRA runtime selection",
+  "representative_rows": {
+    "canonical": 128,
+    "matched_pairs": 32,
+    "promptshield": 64,
+    "selection": "largest raw text lengths from each fitting population"
+  },
+  "results": [
+    {
+      "device_total_bytes": 6053232640,
+      "eligible": false,
+      "gradient_checkpointing": false,
+      "headroom_bytes": 231538688,
+      "mean_full_update_seconds": 16.108673098497093,
+      "microbatch_size": 16,
+      "peak_allocated_bytes": 5727059456,
+      "peak_reserved_bytes": 5821693952,
+      "status": "ok"
+    },
+    {
+      "device_total_bytes": 6053232640,
+      "eligible": true,
+      "gradient_checkpointing": true,
+      "headroom_bytes": 4446814208,
+      "mean_full_update_seconds": 20.539617826500034,
+      "microbatch_size": 16,
+      "peak_allocated_bytes": 1554695168,
+      "peak_reserved_bytes": 1606418432,
+      "status": "ok"
+    },
+    {
+      "device_total_bytes": 6053232640,
+      "eligible": true,
+      "gradient_checkpointing": false,
+      "headroom_bytes": 1410138112,
+      "mean_full_update_seconds": 15.499867106998863,
+      "microbatch_size": 12,
+      "peak_allocated_bytes": 4560309760,
+      "peak_reserved_bytes": 4643094528,
+      "status": "ok"
+    },
+    {
+      "device_total_bytes": 6053232640,
+      "eligible": true,
+      "gradient_checkpointing": true,
+      "headroom_bytes": 4667015168,
+      "mean_full_update_seconds": 19.886443451996456,
+      "microbatch_size": 12,
+      "peak_allocated_bytes": 1338999808,
+      "peak_reserved_bytes": 1386217472,
+      "status": "ok"
+    },
+    {
+      "device_total_bytes": 6053232640,
+      "eligible": true,
+      "gradient_checkpointing": false,
+      "headroom_bytes": 2735538176,
+      "mean_full_update_seconds": 14.67846841550272,
+      "microbatch_size": 8,
+      "peak_allocated_bytes": 3202457088,
+      "peak_reserved_bytes": 3317694464,
+      "status": "ok"
+    },
+    {
+      "device_total_bytes": 6053232640,
+      "eligible": true,
+      "gradient_checkpointing": true,
+      "headroom_bytes": 4899799040,
+      "mean_full_update_seconds": 18.768527415501012,
+      "microbatch_size": 8,
+      "peak_allocated_bytes": 1112425472,
+      "peak_reserved_bytes": 1153433600,
+      "status": "ok"
+    }
+  ],
+  "schema_version": 1,
+  "selected": {
+    "gradient_checkpointing": false,
+    "microbatch_size": 8
+  }
+}

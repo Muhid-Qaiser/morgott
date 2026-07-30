@@ -16,6 +16,7 @@ from ...data import _fetch, text_hash
 from ...normalization import strict_normalize
 from ...overlap import NearIndex
 from .core import file_sha256, source_provenance
+from .data import EXTERNAL_DATA_SCHEMA_VERSION
 
 PROMPTSHIELD_REPOSITORY = "hendzh/PromptShield"
 PROMPTSHIELD_REVISION = "a5234cb1f5cdb256600cab64b8c961195b5e8404"
@@ -193,7 +194,7 @@ def _prepare(directory: Path) -> dict:
     }
     outputs["sep"] = _write(directory / "sep.jsonl", sep)
     manifest = {
-        "schema_version": 1,
+        "schema_version": EXTERNAL_DATA_SCHEMA_VERSION,
         "purpose": "mmBERT training and already-open external development evaluation",
         "inputs": {
             "promptshield": {

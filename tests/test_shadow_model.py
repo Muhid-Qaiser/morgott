@@ -217,7 +217,11 @@ class ShadowModelTests(unittest.TestCase):
         manifest = json.loads((root / "model-artifacts.json").read_text())
         self.assertEqual(
             set(manifest["models"]),
-            {"mmbert-frozen-s42", "mmbert-lora-s42"},
+            {
+                "mmbert-frozen-s42",
+                "mmbert-lora-s42",
+                "mmbert-lora-full-s42",
+            },
         )
         for model_key in manifest["models"]:
             bundle = shadow.load_bundle(root / "model-artifacts.json", model_key)
@@ -231,6 +235,120 @@ class ShadowModelTests(unittest.TestCase):
                 stdout=subprocess.PIPE,
             ).stdout
             self.assertEqual(hashlib.sha256(contents).hexdigest(), spec["sha256"])
+
+    def test_maintained_bundle_uses_per_model_source_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            model = root / "model"
+            adapter = model / "adapter"
+            adapter.mkdir(parents=True)
+            head = model / "head.safetensors"
+            adapter_file = adapter / "adapter_model.safetensors"
+            head.write_bytes(b"head")
+            adapter_file.write_bytes(b"adapter")
+            training_provenance = {
+                "sources": {"src/train.py": "a" * 64},
+                "uv_lock_sha256": "b" * 64,
+                "data_manifest_sha256": "c" * 64,
+                "external_manifest_sha256": "d" * 64,
+                "pair_archive_sha256": "f" * 64,
+            }
+            result = model / "result.json"
+            result.write_text(
+                json.dumps(
+                    {
+                        "purpose": ("maintained full-data advisory mmBERT training"),
+                        "model_id": shadow.MODEL_ID,
+                        "model_revision": shadow.MODEL_REVISION,
+                        "attention_implementation": "sdpa",
+                        "normalization": "strict",
+                        "generic_target": "instruction_subversion",
+                        "adaptation": "lora",
+                        "artifact": {
+                            "head_sha256": digest(head),
+                            "adapter_files": {adapter_file.name: digest(adapter_file)},
+                        },
+                        "provenance": training_provenance,
+                    }
+                )
+            )
+            evaluation_provenance = {
+                "sources": {"src/evaluate.py": "e" * 64},
+                "uv_lock_sha256": "b" * 64,
+            }
+            evaluation = model / "evaluation.json"
+            evaluation.write_text(
+                json.dumps(
+                    {
+                        "purpose": "advisory mmBERT development evaluation",
+                        "model_id": shadow.MODEL_ID,
+                        "model_revision": shadow.MODEL_REVISION,
+                        "adaptation": "lora",
+                        "run_result_sha256": digest(result),
+                        "inputs": {
+                            "data_manifest_sha256": "c" * 64,
+                            "external_manifest_sha256": "d" * 64,
+                            "pair_archive_sha256": "f" * 64,
+                        },
+                        "provenance": evaluation_provenance,
+                    }
+                )
+            )
+            evidence = {
+                "training": training_provenance,
+                "evaluation": evaluation_provenance,
+            }
+            manifest = root / "manifest.json"
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "purpose": "advisory first-pass shadow models",
+                        "advisory_only": True,
+                        "models": {
+                            "mmbert-lora-full-s42": {
+                                "artifact_format": "maintained-v1",
+                                "adaptation": "lora",
+                                "result": {
+                                    "path": "model/result.json",
+                                    "sha256": digest(result),
+                                },
+                                "head": {
+                                    "path": "model/head.safetensors",
+                                    "sha256": digest(head),
+                                },
+                                "adapter": {
+                                    "path": "model/adapter",
+                                    "files": {adapter_file.name: digest(adapter_file)},
+                                },
+                                "evaluation": {
+                                    "path": "model/evaluation.json",
+                                    "sha256": digest(evaluation),
+                                },
+                                "source_evidence": evidence,
+                            }
+                        },
+                        "evidence": {
+                            "source_commit": "a" * 40,
+                            "sources": {},
+                        },
+                    }
+                )
+            )
+
+            bundle = shadow.load_bundle(
+                manifest,
+                "mmbert-lora-full-s42",
+            )
+            self.assertIsNone(bundle["source_commit"])
+            self.assertEqual(len(bundle["source_evidence_sha256"]), 64)
+            contents = json.loads(manifest.read_text())
+            contents["models"]["mmbert-lora-full-s42"]["source_evidence"]["training"][
+                "uv_lock_sha256"
+            ] = "0" * 64
+            manifest.write_text(json.dumps(contents))
+            with self.assertRaisesRegex(ValueError, "source evidence"):
+                shadow.load_bundle(manifest, "mmbert-lora-full-s42")
 
     def test_strict_normalization_collapses_known_surface_evasions(self):
         baseline = strict_normalize("Ignore all previous instructions")

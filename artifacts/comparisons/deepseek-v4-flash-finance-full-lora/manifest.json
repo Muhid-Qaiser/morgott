@@ -1,0 +1,57 @@
+{
+  "advisory_only": true,
+  "configuration": {
+    "family": "deepseek_v4_flash",
+    "max_tokens": 16,
+    "model": "deepseek/deepseek-v4-flash-20260423",
+    "provider": "coreweave",
+    "quantizations": [
+      "fp8"
+    ],
+    "reasoning": {
+      "enabled": false,
+      "exclude": true
+    },
+    "strict_schema": true
+  },
+  "configuration_sha256": "35c1e26ba212800b0a5e36115fb2f75539ee31231d1aedf930b7659c94e69cac",
+  "failure_policy": "flag after exhausted request failure",
+  "inputs": {
+    "data_manifest_sha256": "27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81",
+    "finance_identity_sha256": "0ce06ca5a37cc7686b32c471b7e9b53561f2cd40fcc5805a916b60caa1a98c7a",
+    "full_lora_evaluation_sha256": "ec378e29358aab50515b66d2f05612767dea810b388326f4ece86bc99c7c6e99",
+    "full_lora_scores_sha256": "b9ad82b94ffdfa8d2282bbe912b7e7316df4e299bfdee23724955b09cfcc2965",
+    "middle_identity_sha256": "dd0a1e5bc79972e25d271ee8c2e2cc78f06c461b3a6ab01b0b14088894b7f32c"
+  },
+  "limitations": [
+    "All rows are known negatives, so this measures false positives only.",
+    "This is already-open development evidence, not a prospective production estimate."
+  ],
+  "population": {
+    "deepseek_middle": 128,
+    "local_high_flag": 0,
+    "local_low_pass": 6926,
+    "middle_sources": {
+      "banking77": 97,
+      "harper_valley_bank": 27,
+      "tatqa": 4
+    },
+    "negative": 7054,
+    "rows": 7054,
+    "sources": {
+      "banking77": 3075,
+      "financebench": 150,
+      "harper_valley_bank": 544,
+      "tatqa": 3285
+    }
+  },
+  "privacy": "Only the 128 verified middle-zone texts are transmitted; no raw text or response content is persisted.",
+  "prompt_sha256": "840cc4b1d91c59faeef5b1b2e5add2252a05d16c8e2a445fd68a7fcee66e0670",
+  "purpose": "development-only finance-negative evaluation of the full-LoRA DeepSeek cascade",
+  "schema_version": 1,
+  "thresholds": {
+    "deepseek_p_subversion": 0.9,
+    "mmbert_high": 0.99999,
+    "mmbert_low": 0.2
+  }
+}
