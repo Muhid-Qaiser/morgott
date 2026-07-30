@@ -223,9 +223,17 @@ class ShadowModelTests(unittest.TestCase):
                 "mmbert-lora-full-s42",
             },
         )
-        for model_key in manifest["models"]:
+        for model_key in ("mmbert-frozen-s42", "mmbert-lora-s42"):
             bundle = shadow.load_bundle(root / "model-artifacts.json", model_key)
             self.assertEqual(bundle["model_key"], model_key)
+        with self.assertRaisesRegex(
+            ValueError,
+            "training source src/morgott/models/mmbert/train.py hash mismatch",
+        ):
+            shadow.load_bundle(
+                root / "model-artifacts.json",
+                "mmbert-lora-full-s42",
+            )
         commit = manifest["evidence"]["source_commit"]
         for spec in manifest["evidence"]["sources"].values():
             contents = subprocess.run(
@@ -246,9 +254,16 @@ class ShadowModelTests(unittest.TestCase):
             adapter_file = adapter / "adapter_model.safetensors"
             head.write_bytes(b"head")
             adapter_file.write_bytes(b"adapter")
+            training_source = root / "src/train.py"
+            evaluation_source = root / "src/evaluate.py"
+            training_source.parent.mkdir()
+            training_source.write_bytes(b"training source")
+            evaluation_source.write_bytes(b"evaluation source")
+            lock = root / "uv.lock"
+            lock.write_bytes(b"dependencies")
             training_provenance = {
-                "sources": {"src/train.py": "a" * 64},
-                "uv_lock_sha256": "b" * 64,
+                "sources": {"src/train.py": digest(training_source)},
+                "uv_lock_sha256": digest(lock),
                 "data_manifest_sha256": "c" * 64,
                 "external_manifest_sha256": "d" * 64,
                 "pair_archive_sha256": "f" * 64,
@@ -273,8 +288,8 @@ class ShadowModelTests(unittest.TestCase):
                 )
             )
             evaluation_provenance = {
-                "sources": {"src/evaluate.py": "e" * 64},
-                "uv_lock_sha256": "b" * 64,
+                "sources": {"src/evaluate.py": digest(evaluation_source)},
+                "uv_lock_sha256": digest(lock),
             }
             evaluation = model / "evaluation.json"
             evaluation.write_text(
@@ -342,6 +357,10 @@ class ShadowModelTests(unittest.TestCase):
             )
             self.assertIsNone(bundle["source_commit"])
             self.assertEqual(len(bundle["source_evidence_sha256"]), 64)
+            training_source.write_bytes(b"different training source")
+            with self.assertRaisesRegex(ValueError, "training source .* hash mismatch"):
+                shadow.load_bundle(manifest, "mmbert-lora-full-s42")
+            training_source.write_bytes(b"training source")
             contents = json.loads(manifest.read_text())
             contents["models"]["mmbert-lora-full-s42"]["source_evidence"]["training"][
                 "uv_lock_sha256"

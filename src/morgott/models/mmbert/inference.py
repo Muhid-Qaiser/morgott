@@ -40,12 +40,32 @@ def _verified_path(root: Path, spec: dict, *, name: str) -> Path:
     expected = spec.get("sha256")
     if (
         not path.is_relative_to(root)
+        or not path.is_file()
         or not isinstance(expected, str)
         or len(expected) != 64
         or file_sha256(path) != expected
     ):
         raise ValueError(f"{name} hash mismatch")
     return path
+
+
+def _verify_source_provenance(root: Path, provenance: dict, *, name: str) -> None:
+    sources = provenance.get("sources")
+    if not isinstance(sources, dict) or not sources:
+        raise ValueError(f"{name} source provenance contract failed")
+    for path, digest in sources.items():
+        if not isinstance(path, str):
+            raise ValueError(f"{name} source provenance contract failed")
+        _verified_path(
+            root,
+            {"path": path, "sha256": digest},
+            name=f"{name} source {path}",
+        )
+    _verified_path(
+        root,
+        {"path": "uv.lock", "sha256": provenance.get("uv_lock_sha256")},
+        name=f"{name} dependency lock",
+    )
 
 
 def _verify_historical_evidence(
@@ -86,6 +106,7 @@ def _verify_historical_evidence(
 
 
 def _verify_maintained_evidence(
+    root: Path,
     entry: dict,
     result: dict,
     evaluation: dict,
@@ -97,6 +118,8 @@ def _verify_maintained_evidence(
         or evidence.get("evaluation") != evaluation.get("provenance")
     ):
         raise ValueError("maintained model source evidence mismatch")
+    _verify_source_provenance(root, evidence["training"], name="training")
+    _verify_source_provenance(root, evidence["evaluation"], name="evaluation")
     encoded = json.dumps(
         evidence,
         sort_keys=True,
@@ -164,6 +187,7 @@ def load_bundle(manifest_path: Path, model_key: str) -> dict:
         ):
             raise ValueError("model evaluation contract failed")
         source_evidence_sha256 = _verify_maintained_evidence(
+            root,
             entry,
             result,
             evaluation,
