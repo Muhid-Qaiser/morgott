@@ -1,0 +1,833 @@
+{
+  "format": "morgott-redteam-full-v1",
+  "positive_only": true,
+  "results": {
+    "deepseek": {
+      "attempts": 5132,
+      "detected_fail_closed": 2783,
+      "fail_closed_recall": 0.5422837100545597,
+      "failures": 0,
+      "valid_only_detected": 2783,
+      "valid_only_recall": 0.5422837100545597,
+      "valid_output_coverage": 1.0,
+      "valid_rows": 5132
+    },
+    "gpt_oss": {
+      "attempts": 5132,
+      "detected_fail_closed": 271,
+      "fail_closed_recall": 0.052805923616523774,
+      "failures": 6,
+      "valid_only_detected": 265,
+      "valid_only_recall": 0.051697229808817795,
+      "valid_output_coverage": 0.9988308651597818,
+      "valid_rows": 5126
+    },
+    "morgott": {
+      "attempts": 5132,
+      "detected_fail_closed": 2024,
+      "fail_closed_recall": 0.39438815276695244,
+      "failures": 0,
+      "valid_only_detected": 2024,
+      "valid_only_recall": 0.39438815276695244,
+      "valid_output_coverage": 1.0,
+      "valid_rows": 5132
+    },
+    "prompt_guard": {
+      "attempts": 5132,
+      "detected_fail_closed": 1012,
+      "fail_closed_recall": 0.19719407638347622,
+      "failures": 0,
+      "valid_only_detected": 1012,
+      "valid_only_recall": 0.19719407638347622,
+      "valid_output_coverage": 1.0,
+      "valid_rows": 5132
+    }
+  },
+  "rows": 5132,
+  "seconds": 835.4461792910006,
+  "slices": {
+    "attack_mode": {
+      "agentic": {
+        "attempts": 21,
+        "pipelines": {
+          "deepseek": {
+            "detected": 8,
+            "fail_closed_recall": 0.38095238095238093,
+            "failures": 0,
+            "valid": 21,
+            "valid_only_recall": 0.38095238095238093,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 21,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 8,
+            "fail_closed_recall": 0.38095238095238093,
+            "failures": 0,
+            "valid": 21,
+            "valid_only_recall": 0.38095238095238093,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 1,
+            "fail_closed_recall": 0.047619047619047616,
+            "failures": 0,
+            "valid": 21,
+            "valid_only_recall": 0.047619047619047616,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "batch": {
+        "attempts": 438,
+        "pipelines": {
+          "deepseek": {
+            "detected": 151,
+            "fail_closed_recall": 0.3447488584474886,
+            "failures": 0,
+            "valid": 438,
+            "valid_only_recall": 0.3447488584474886,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 2,
+            "fail_closed_recall": 0.0045662100456621,
+            "failures": 1,
+            "valid": 437,
+            "valid_only_recall": 0.002288329519450801,
+            "valid_output_coverage": 0.997716894977169
+          },
+          "morgott": {
+            "detected": 89,
+            "fail_closed_recall": 0.20319634703196346,
+            "failures": 0,
+            "valid": 438,
+            "valid_only_recall": 0.20319634703196346,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 16,
+            "fail_closed_recall": 0.0365296803652968,
+            "failures": 0,
+            "valid": 438,
+            "valid_only_recall": 0.0365296803652968,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "pair": {
+        "attempts": 770,
+        "pipelines": {
+          "deepseek": {
+            "detected": 334,
+            "fail_closed_recall": 0.43376623376623374,
+            "failures": 0,
+            "valid": 770,
+            "valid_only_recall": 0.43376623376623374,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 47,
+            "fail_closed_recall": 0.06103896103896104,
+            "failures": 1,
+            "valid": 769,
+            "valid_only_recall": 0.05981794538361508,
+            "valid_output_coverage": 0.9987012987012988
+          },
+          "morgott": {
+            "detected": 321,
+            "fail_closed_recall": 0.41688311688311686,
+            "failures": 0,
+            "valid": 770,
+            "valid_only_recall": 0.41688311688311686,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 180,
+            "fail_closed_recall": 0.23376623376623376,
+            "failures": 0,
+            "valid": 770,
+            "valid_only_recall": 0.23376623376623376,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "prefill": {
+        "attempts": 10,
+        "pipelines": {
+          "deepseek": {
+            "detected": 10,
+            "fail_closed_recall": 1.0,
+            "failures": 0,
+            "valid": 10,
+            "valid_only_recall": 1.0,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 10,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 10,
+            "fail_closed_recall": 1.0,
+            "failures": 0,
+            "valid": 10,
+            "valid_only_recall": 1.0,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 10,
+            "fail_closed_recall": 1.0,
+            "failures": 0,
+            "valid": 10,
+            "valid_only_recall": 1.0,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "single": {
+        "attempts": 1465,
+        "pipelines": {
+          "deepseek": {
+            "detected": 1044,
+            "fail_closed_recall": 0.7126279863481229,
+            "failures": 0,
+            "valid": 1465,
+            "valid_only_recall": 0.7126279863481229,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 21,
+            "fail_closed_recall": 0.014334470989761093,
+            "failures": 1,
+            "valid": 1464,
+            "valid_only_recall": 0.01366120218579235,
+            "valid_output_coverage": 0.9993174061433447
+          },
+          "morgott": {
+            "detected": 634,
+            "fail_closed_recall": 0.4327645051194539,
+            "failures": 0,
+            "valid": 1465,
+            "valid_only_recall": 0.4327645051194539,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 181,
+            "fail_closed_recall": 0.12354948805460751,
+            "failures": 0,
+            "valid": 1465,
+            "valid_only_recall": 0.12354948805460751,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "tap": {
+        "attempts": 2399,
+        "pipelines": {
+          "deepseek": {
+            "detected": 1231,
+            "fail_closed_recall": 0.5131304710295956,
+            "failures": 0,
+            "valid": 2399,
+            "valid_only_recall": 0.5131304710295956,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 200,
+            "fail_closed_recall": 0.08336807002917883,
+            "failures": 3,
+            "valid": 2396,
+            "valid_only_recall": 0.082220367278798,
+            "valid_output_coverage": 0.9987494789495623
+          },
+          "morgott": {
+            "detected": 958,
+            "fail_closed_recall": 0.39933305543976655,
+            "failures": 0,
+            "valid": 2399,
+            "valid_only_recall": 0.39933305543976655,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 619,
+            "fail_closed_recall": 0.2580241767403085,
+            "failures": 0,
+            "valid": 2399,
+            "valid_only_recall": 0.2580241767403085,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "unspecified": {
+        "attempts": 29,
+        "pipelines": {
+          "deepseek": {
+            "detected": 5,
+            "fail_closed_recall": 0.1724137931034483,
+            "failures": 0,
+            "valid": 29,
+            "valid_only_recall": 0.1724137931034483,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 1,
+            "fail_closed_recall": 0.034482758620689655,
+            "failures": 0,
+            "valid": 29,
+            "valid_only_recall": 0.034482758620689655,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 4,
+            "fail_closed_recall": 0.13793103448275862,
+            "failures": 0,
+            "valid": 29,
+            "valid_only_recall": 0.13793103448275862,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 5,
+            "fail_closed_recall": 0.1724137931034483,
+            "failures": 0,
+            "valid": 29,
+            "valid_only_recall": 0.1724137931034483,
+            "valid_output_coverage": 1.0
+          }
+        }
+      }
+    },
+    "category": {
+      "chemical_biological_harm": {
+        "attempts": 184,
+        "pipelines": {
+          "deepseek": {
+            "detected": 46,
+            "fail_closed_recall": 0.25,
+            "failures": 0,
+            "valid": 184,
+            "valid_only_recall": 0.25,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 184,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 12,
+            "fail_closed_recall": 0.06521739130434782,
+            "failures": 0,
+            "valid": 184,
+            "valid_only_recall": 0.06521739130434782,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 3,
+            "fail_closed_recall": 0.016304347826086956,
+            "failures": 0,
+            "valid": 184,
+            "valid_only_recall": 0.016304347826086956,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "cyber_misuse": {
+        "attempts": 977,
+        "pipelines": {
+          "deepseek": {
+            "detected": 552,
+            "fail_closed_recall": 0.5649948822927329,
+            "failures": 0,
+            "valid": 977,
+            "valid_only_recall": 0.5649948822927329,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 85,
+            "fail_closed_recall": 0.08700102354145343,
+            "failures": 1,
+            "valid": 976,
+            "valid_only_recall": 0.0860655737704918,
+            "valid_output_coverage": 0.9989764585465711
+          },
+          "morgott": {
+            "detected": 508,
+            "fail_closed_recall": 0.5199590583418628,
+            "failures": 0,
+            "valid": 977,
+            "valid_only_recall": 0.5199590583418628,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 436,
+            "fail_closed_recall": 0.44626407369498466,
+            "failures": 0,
+            "valid": 977,
+            "valid_only_recall": 0.44626407369498466,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "financial_fraud": {
+        "attempts": 410,
+        "pipelines": {
+          "deepseek": {
+            "detected": 238,
+            "fail_closed_recall": 0.5804878048780487,
+            "failures": 0,
+            "valid": 410,
+            "valid_only_recall": 0.5804878048780487,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 64,
+            "fail_closed_recall": 0.15609756097560976,
+            "failures": 0,
+            "valid": 410,
+            "valid_only_recall": 0.15609756097560976,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 223,
+            "fail_closed_recall": 0.5439024390243903,
+            "failures": 0,
+            "valid": 410,
+            "valid_only_recall": 0.5439024390243903,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 12,
+            "fail_closed_recall": 0.02926829268292683,
+            "failures": 0,
+            "valid": 410,
+            "valid_only_recall": 0.02926829268292683,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "financial_services": {
+        "attempts": 21,
+        "pipelines": {
+          "deepseek": {
+            "detected": 8,
+            "fail_closed_recall": 0.38095238095238093,
+            "failures": 0,
+            "valid": 21,
+            "valid_only_recall": 0.38095238095238093,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 21,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 8,
+            "fail_closed_recall": 0.38095238095238093,
+            "failures": 0,
+            "valid": 21,
+            "valid_only_recall": 0.38095238095238093,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 1,
+            "fail_closed_recall": 0.047619047619047616,
+            "failures": 0,
+            "valid": 21,
+            "valid_only_recall": 0.047619047619047616,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "general": {
+        "attempts": 373,
+        "pipelines": {
+          "deepseek": {
+            "detected": 177,
+            "fail_closed_recall": 0.4745308310991957,
+            "failures": 0,
+            "valid": 373,
+            "valid_only_recall": 0.4745308310991957,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 5,
+            "fail_closed_recall": 0.013404825737265416,
+            "failures": 1,
+            "valid": 372,
+            "valid_only_recall": 0.010752688172043012,
+            "valid_output_coverage": 0.9973190348525469
+          },
+          "morgott": {
+            "detected": 72,
+            "fail_closed_recall": 0.19302949061662197,
+            "failures": 0,
+            "valid": 373,
+            "valid_only_recall": 0.19302949061662197,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 18,
+            "fail_closed_recall": 0.04825737265415549,
+            "failures": 0,
+            "valid": 373,
+            "valid_only_recall": 0.04825737265415549,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "illicit_drugs": {
+        "attempts": 464,
+        "pipelines": {
+          "deepseek": {
+            "detected": 177,
+            "fail_closed_recall": 0.38146551724137934,
+            "failures": 0,
+            "valid": 464,
+            "valid_only_recall": 0.38146551724137934,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 5,
+            "fail_closed_recall": 0.010775862068965518,
+            "failures": 3,
+            "valid": 461,
+            "valid_only_recall": 0.004338394793926247,
+            "valid_output_coverage": 0.9935344827586207
+          },
+          "morgott": {
+            "detected": 48,
+            "fail_closed_recall": 0.10344827586206896,
+            "failures": 0,
+            "valid": 464,
+            "valid_only_recall": 0.10344827586206896,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 9,
+            "fail_closed_recall": 0.01939655172413793,
+            "failures": 0,
+            "valid": 464,
+            "valid_only_recall": 0.01939655172413793,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "physical_harm": {
+        "attempts": 2040,
+        "pipelines": {
+          "deepseek": {
+            "detected": 1048,
+            "fail_closed_recall": 0.5137254901960784,
+            "failures": 0,
+            "valid": 2040,
+            "valid_only_recall": 0.5137254901960784,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 57,
+            "fail_closed_recall": 0.027941176470588237,
+            "failures": 1,
+            "valid": 2039,
+            "valid_only_recall": 0.02746444335458558,
+            "valid_output_coverage": 0.9995098039215686
+          },
+          "morgott": {
+            "detected": 799,
+            "fail_closed_recall": 0.39166666666666666,
+            "failures": 0,
+            "valid": 2040,
+            "valid_only_recall": 0.39166666666666666,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 231,
+            "fail_closed_recall": 0.11323529411764706,
+            "failures": 0,
+            "valid": 2040,
+            "valid_only_recall": 0.11323529411764706,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "uncategorized": {
+        "attempts": 46,
+        "pipelines": {
+          "deepseek": {
+            "detected": 37,
+            "fail_closed_recall": 0.8043478260869565,
+            "failures": 0,
+            "valid": 46,
+            "valid_only_recall": 0.8043478260869565,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 46,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 17,
+            "fail_closed_recall": 0.3695652173913043,
+            "failures": 0,
+            "valid": 46,
+            "valid_only_recall": 0.3695652173913043,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 2,
+            "fail_closed_recall": 0.043478260869565216,
+            "failures": 0,
+            "valid": 46,
+            "valid_only_recall": 0.043478260869565216,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "weapons_and_explosives": {
+        "attempts": 617,
+        "pipelines": {
+          "deepseek": {
+            "detected": 500,
+            "fail_closed_recall": 0.8103727714748784,
+            "failures": 0,
+            "valid": 617,
+            "valid_only_recall": 0.8103727714748784,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 55,
+            "fail_closed_recall": 0.08914100486223663,
+            "failures": 0,
+            "valid": 617,
+            "valid_only_recall": 0.08914100486223663,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 337,
+            "fail_closed_recall": 0.546191247974068,
+            "failures": 0,
+            "valid": 617,
+            "valid_only_recall": 0.546191247974068,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 300,
+            "fail_closed_recall": 0.4862236628849271,
+            "failures": 0,
+            "valid": 617,
+            "valid_only_recall": 0.4862236628849271,
+            "valid_output_coverage": 1.0
+          }
+        }
+      }
+    },
+    "prompt_kind": {
+      "agentic_direct_attack_input": {
+        "attempts": 1,
+        "pipelines": {
+          "deepseek": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 1,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 1,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 1,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 1,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "agentic_tool_input": {
+        "attempts": 19,
+        "pipelines": {
+          "deepseek": {
+            "detected": 8,
+            "fail_closed_recall": 0.42105263157894735,
+            "failures": 0,
+            "valid": 19,
+            "valid_only_recall": 0.42105263157894735,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 19,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 8,
+            "fail_closed_recall": 0.42105263157894735,
+            "failures": 0,
+            "valid": 19,
+            "valid_only_recall": 0.42105263157894735,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 1,
+            "fail_closed_recall": 0.05263157894736842,
+            "failures": 0,
+            "valid": 19,
+            "valid_only_recall": 0.05263157894736842,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "agentic_user_input": {
+        "attempts": 1,
+        "pipelines": {
+          "deepseek": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 1,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 1,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 1,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 0,
+            "fail_closed_recall": 0.0,
+            "failures": 0,
+            "valid": 1,
+            "valid_only_recall": 0.0,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "attack_prompt": {
+        "attempts": 3506,
+        "pipelines": {
+          "deepseek": {
+            "detected": 1614,
+            "fail_closed_recall": 0.46035367940673133,
+            "failures": 0,
+            "valid": 3506,
+            "valid_only_recall": 0.46035367940673133,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 27,
+            "fail_closed_recall": 0.007701083856246435,
+            "failures": 6,
+            "valid": 3500,
+            "valid_only_recall": 0.006,
+            "valid_output_coverage": 0.9982886480319453
+          },
+          "morgott": {
+            "detected": 921,
+            "fail_closed_recall": 0.26269252709640617,
+            "failures": 0,
+            "valid": 3506,
+            "valid_only_recall": 0.26269252709640617,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 137,
+            "fail_closed_recall": 0.03907586993725043,
+            "failures": 0,
+            "valid": 3506,
+            "valid_only_recall": 0.03907586993725043,
+            "valid_output_coverage": 1.0
+          }
+        }
+      },
+      "concise_attack_prompt": {
+        "attempts": 1605,
+        "pipelines": {
+          "deepseek": {
+            "detected": 1161,
+            "fail_closed_recall": 0.7233644859813084,
+            "failures": 0,
+            "valid": 1605,
+            "valid_only_recall": 0.7233644859813084,
+            "valid_output_coverage": 1.0
+          },
+          "gpt_oss": {
+            "detected": 244,
+            "fail_closed_recall": 0.15202492211838006,
+            "failures": 0,
+            "valid": 1605,
+            "valid_only_recall": 0.15202492211838006,
+            "valid_output_coverage": 1.0
+          },
+          "morgott": {
+            "detected": 1095,
+            "fail_closed_recall": 0.6822429906542056,
+            "failures": 0,
+            "valid": 1605,
+            "valid_only_recall": 0.6822429906542056,
+            "valid_output_coverage": 1.0
+          },
+          "prompt_guard": {
+            "detected": 874,
+            "fail_closed_recall": 0.5445482866043614,
+            "failures": 0,
+            "valid": 1605,
+            "valid_only_recall": 0.5445482866043614,
+            "valid_output_coverage": 1.0
+          }
+        }
+      }
+    }
+  }
+}
