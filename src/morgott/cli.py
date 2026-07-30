@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
+import sys
+from dataclasses import asdict
 from pathlib import Path
 
 from .corpus import build_corpus, rebuild_routing
+from .models.cascade import CascadeScanner
 from .models.detector import run_benchmark, scan
 from .models.mmbert import score_file
 from .models.routing_baseline import (
@@ -53,15 +57,15 @@ def _parser() -> argparse.ArgumentParser:
     demo = subcommands.add_parser("demo", help="run the action-policy ablation")
     demo.add_argument("--reports-dir", type=Path, default=Path("reports"))
 
-    scanner = subcommands.add_parser("scan", help="score one input in shadow mode")
-    scanner.add_argument("text")
-    scanner.add_argument(
+    scan_parser = subcommands.add_parser("scan", help="score one input in shadow mode")
+    scan_parser.add_argument("text")
+    scan_parser.add_argument(
         "--channel",
         choices=("direct_user", "untrusted_content"),
         default="direct_user",
         help="trusted input provenance selecting the channel-specific sensor",
     )
-    scanner.add_argument(
+    scan_parser.add_argument(
         "--model",
         type=Path,
         default=Path("artifacts/guard_bundle.joblib"),
@@ -80,7 +84,55 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("model-artifacts.json"),
     )
+
+    cascade = subcommands.add_parser(
+        "cascade",
+        help="run the advisory mmBERT and DeepSeek shadow cascade",
+    )
+    cascade.add_argument("input", help="UTF-8 text file, or - for stdin")
+    cascade.add_argument(
+        "--input-channel",
+        choices=("direct_user", "untrusted_content"),
+        required=True,
+        help="trusted runtime provenance for this input",
+    )
+    cascade.add_argument(
+        "--manifest",
+        type=Path,
+        default=Path("model-artifacts.json"),
+    )
+    cascade.add_argument(
+        "--allow-remote",
+        action="store_true",
+        help="allow middle-zone text to be reviewed through OpenRouter",
+    )
     return parser
+
+
+async def _input_chunks(value: str):
+    owned = value != "-"
+    handle = Path(value).open(encoding="utf-8", newline="") if owned else sys.stdin
+    try:
+        while chunk := handle.read(1 << 20):
+            yield chunk
+    finally:
+        if owned:
+            handle.close()
+
+
+async def _run_cascade(args) -> dict:
+    scanner = CascadeScanner.from_artifacts(
+        manifest_path=args.manifest,
+        allow_remote=args.allow_remote,
+    )
+    try:
+        assessment = await scanner.assess_chunks(
+            _input_chunks(args.input),
+            input_channel=args.input_channel,
+        )
+        return asdict(assessment)
+    finally:
+        await scanner.aclose()
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -133,6 +185,8 @@ def main(argv: list[str] | None = None) -> None:
             "model": args.model,
             "output": str(args.output),
         }
+    elif args.command == "cascade":
+        summary = asyncio.run(_run_cascade(args))
     else:
         summary = scan(args.text, args.model, args.channel)
     print(json.dumps(summary, indent=2, sort_keys=True))

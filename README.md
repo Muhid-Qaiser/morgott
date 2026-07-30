@@ -19,6 +19,9 @@ effect must still pass deterministic policy using trusted runtime context.
 
 ## Development
 
+Morgott supports Python 3.12 and newer.
+The repository defaults to Python 3.12, while the pinned NOOA 0.0.8 cascade dependency currently supports Python 3.12 and 3.13.
+
 Install the locked environment and run the canonical local checks:
 
 ```bash
@@ -145,8 +148,8 @@ Historical neural and data-ablation runners are not part of the active tree.
 Their metrics and stop decisions remain in the versioned reports and Git history.
 The selected frozen-mmBERT full-data pair-ranking candidate, reduced-mixture LoRA gate, and completed full-mixture LoRA seed are retained only as advisory first-pass research shadows under `artifacts/models/`.
 Their external transfer evidence remains too weak for blocking, and every side effect still requires deterministic policy authorization.
-Both generic heads strictly normalize and truncate each input to its first 512 tokens.
-They do not chunk long documents or localize injected spans.
+The existing `shadow-score` path strictly normalizes and truncates each input to its first 512 tokens.
+The separate cascade path scans complete normalized artifacts using ordered 512-token windows with 128-token overlap.
 
 The maintained mmBERT package can prepare the pinned external data, preflight the complete canonical mixture, train either a frozen head or rank-8 LoRA, and evaluate a new run:
 
@@ -184,6 +187,75 @@ Each input row must contain unique `id`, non-empty `text`, and trusted `input_ch
 The output contains only the raw score, channel, model revision, and artifact hashes.
 Use `mmbert-frozen-s42`, `mmbert-lora-s42`, or `mmbert-lora-full-s42`.
 Do not average or OR them without evaluating that new ensemble.
+
+## Shadow cascade POC
+
+The maintained cascade serves the registered FP32 ONNX graph through OpenVINO BF16 on CPU.
+OpenVINO performs the BF16 lowering at startup, so there is one portable model artifact rather than a second precision-specific copy.
+It passes below `0.2`, restricts at or above `0.99999`, and sends every middle-zone window to DeepSeek V4 Flash.
+DeepSeek restricts at `p_subversion >= 0.9`, and invalid or exhausted reviews fail conservatively.
+Every result remains advisory: `decision` is always `allow`, and `advisory_route` never grants authority.
+
+Install the cascade on Python 3.12 or 3.13:
+
+```bash
+uv sync --locked --extra cascade
+```
+
+NOOA 0.0.8 currently declares support for Python 3.12 and 3.13.
+The rest of Morgott supports Python 3.12 and newer, and the cascade reports a clear startup error when that pinned NOOA release is unavailable.
+
+Export and verify a candidate CPU artifact offline:
+The export command intentionally fails unless the checkout and `uv.lock` match the registered source evidence.
+
+```bash
+uv run --extra encoder --extra encoder-export \
+  python -m morgott.models.mmbert.export_onnx export
+uv run --extra cascade \
+  python -m morgott.models.mmbert.export_onnx verify-panel
+uv run --extra cascade \
+  python -m morgott.models.mmbert.export_onnx benchmark
+```
+
+The benchmark prints deployment measurements to stdout and never overwrites registered evidence.
+The verification command also treats its evidence as write-once; use a fresh `--output` directory for a new candidate.
+The production constructor fails closed until the ONNX model and tokenizer hashes are registered under the full-LoRA model in `model-artifacts.json`.
+Register a serving runtime only after representative export parity, the frozen 20,000-row serving-equivalence gate, and deployment-CPU latency and throughput gates pass.
+The selected OpenVINO BF16 runtime changes 40 of 20,000 final routes, improves evaluation recall from 66.79% to 67.06%, changes FPR from 1.81% to 1.84%, and leaves the DeepSeek call rate effectively unchanged.
+Its calibration FPR is 2.01% rather than 1.98% because of one additional false positive.
+These are already-open shadow engineering results, not new production-quality claims.
+Later-window document behavior is new shadow evidence and is not covered by the retained 512-token evaluation.
+
+Run a local-only assessment:
+
+```bash
+uv run --extra cascade morgott cascade input.txt \
+  --input-channel direct_user
+```
+
+Add `--allow-remote` only when middle-zone text may leave the process and `OPENROUTER_API_KEY` is set.
+Files and stdin are read in bounded chunks, normalized only after the complete artifact arrives, and scanned without a configured maximum input length.
+The current whole-artifact normalization is intentionally O(N) memory.
+
+Applications use the same narrow async interface:
+
+```python
+scanner = CascadeScanner.from_artifacts(
+    manifest_path=Path("model-artifacts.json"),
+    allow_remote=True,
+)
+try:
+    assessment = await scanner.assess_text(text, input_channel="direct_user")
+finally:
+    await scanner.aclose()
+```
+
+The maintained remote path uses NOOA `CompletionClient` only.
+The Predict-only agent example is in `examples/nooa_preflight.py`; the rejected measured alternative is retained only as metrics and hashes in the evaluation report.
+Neither path uses CodeAct, generated Python, memory, plugins, or tracing.
+
+Before deployment, benchmark the target CPU and require a warm p95 below 500 ms for one 512-token local request plus sustained 5 QPS with zero errors.
+Use two identical worker processes if one process misses 5 QPS before considering schedulers or dynamic batching.
 
 The first proper routing experiment should stay deliberately small:
 

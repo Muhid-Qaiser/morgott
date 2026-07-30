@@ -35,13 +35,17 @@ ADAPTATION_EVIDENCE_SOURCE = {
 }
 
 
-def _verified_path(root: Path, spec: dict, *, name: str) -> Path:
-    path = (root / spec["path"]).resolve()
+def verified_artifact_path(root: Path, spec: object, *, name: str) -> Path:
+    if not isinstance(spec, dict):
+        raise ValueError(f"{name} registry entry is missing")
+    relative = spec.get("path")
     expected = spec.get("sha256")
+    if not isinstance(relative, str) or not isinstance(expected, str):
+        raise ValueError(f"{name} registry entry is invalid")
+    path = (root / relative).resolve()
     if (
         not path.is_relative_to(root)
         or not path.is_file()
-        or not isinstance(expected, str)
         or len(expected) != 64
         or file_sha256(path) != expected
     ):
@@ -56,12 +60,12 @@ def _verify_source_provenance(root: Path, provenance: dict, *, name: str) -> Non
     for path, digest in sources.items():
         if not isinstance(path, str):
             raise ValueError(f"{name} source provenance contract failed")
-        _verified_path(
+        verified_artifact_path(
             root,
             {"path": path, "sha256": digest},
             name=f"{name} source {path}",
         )
-    _verified_path(
+    verified_artifact_path(
         root,
         {"path": "uv.lock", "sha256": provenance.get("uv_lock_sha256")},
         name=f"{name} dependency lock",
@@ -145,9 +149,13 @@ def load_bundle(manifest_path: Path, model_key: str) -> dict:
         raise ValueError("model adaptation contract failed")
 
     root = manifest_path.parent
-    result_path = _verified_path(root, entry["result"], name="result")
-    head_path = _verified_path(root, entry["head"], name="head")
-    evaluation_path = _verified_path(root, entry["evaluation"], name="evaluation")
+    result_path = verified_artifact_path(root, entry["result"], name="result")
+    head_path = verified_artifact_path(root, entry["head"], name="head")
+    evaluation_path = verified_artifact_path(
+        root,
+        entry["evaluation"],
+        name="evaluation",
+    )
     result = json.loads(result_path.read_text(encoding="utf-8"))
     if (
         result.get("model_id") != MODEL_ID
@@ -222,7 +230,7 @@ def load_bundle(manifest_path: Path, model_key: str) -> dict:
         ):
             raise ValueError("adapter manifest differs from the training result")
         for filename, digest in files.items():
-            _verified_path(
+            verified_artifact_path(
                 root,
                 {
                     "path": str(Path(adapter["path"]) / filename),

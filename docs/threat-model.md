@@ -28,21 +28,24 @@ Trusted:
 Untrusted:
 
 - users, models, planners, retrieved documents, email, web pages, tool output,
-  memory, summaries, classifier scores, and generated labels.
+  memory, summaries, classifier scores, generated labels, and remote model responses.
 
-The POC uses simulated commits. It has no real credentials, wallet, email
-connector, network egress, or model API. It does not yet bind capabilities to a
-task/user identity, issue expirations, or propagate provenance through a live
-agent runtime.
+The POC uses simulated commits and has no wallet, email connector, or live capability runtime.
+The optional shadow cascade makes an OpenRouter model API call only when `--allow-remote` is set and `OPENROUTER_API_KEY` is available.
+Middle-zone text leaves the process for that review, while the API key remains inside the provider client.
+Remote responses are untrusted, strictly parsed, and converted to a conservative incomplete assessment when invalid.
+Without `--allow-remote`, no artifact text leaves the maintained cascade.
+The completed PredictStrategy evaluation used the same provider boundary and recorded only hashes, parsed values, timings, usage, and cost.
+The POC does not yet bind capabilities to a task or user identity, issue expirations, or propagate provenance through a live agent runtime.
 
 ## Assets and sinks
 
 | Kind | Examples |
 |---|---|
-| Assets | tenant data, secrets, durable memory, funds, external identity |
+| Assets | tenant data, secrets, OpenRouter API key, durable memory, funds, external identity |
 | Actors | legitimate user, malicious user, hostile content author, compromised tool |
 | Untrusted sources | prompt, email, RAG document, web page, tool result, memory |
-| Sinks | response, email, file, memory, transaction, external API |
+| Sinks | response, email, file, memory, transaction, OpenRouter model API |
 
 ## Invariants
 
@@ -69,6 +72,8 @@ agent runtime.
 | Harmful content is confused with injection | independent label axes and masked subtype supervision |
 | Source ambiguity becomes a benign label | nullable labels and separate uncertain/auxiliary roles |
 | Train/evaluation leakage inflates results | grouped splits, exact blocking, near-overlap quarantine |
+| Malformed or adversarial provider response changes routing | strict schema and logprob parsing plus conservative incomplete restriction |
+| NOOA tracing persists corpus text | refuse configured tracing and never retain raw provider payloads |
 | Retrieved text changes a recipient or transfers funds | exact tool and argument constraints |
 | Retrieved text exfiltrates a secret | sensitive-data egress policy |
 | Retrieved text writes durable memory | capability denial or quarantined memory writes |

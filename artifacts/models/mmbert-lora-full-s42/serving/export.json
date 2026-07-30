@@ -1,0 +1,39 @@
+{
+  "export_attention_implementation": "eager",
+  "format": "onnx-fp32-v1",
+  "model_id": "jhu-clsp/mmBERT-base",
+  "model_key": "mmbert-lora-full-s42",
+  "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+  "onnx": {
+    "bytes": 1231920511,
+    "path": "artifacts/models/mmbert-lora-full-s42/serving/model.onnx",
+    "sha256": "262f7b5f377c2c30e017e2f18204a9a8222c7dc5799a185f20437fa0137098e3"
+  },
+  "opset": 18,
+  "representative_parity": {
+    "atol": 0.0001,
+    "includes_512_token_input": true,
+    "includes_short_input": true,
+    "max_abs_logit_error": 7.3909759521484375e-06,
+    "max_abs_probability_error": 1.7881393432617188e-06,
+    "rows": 3,
+    "rtol": 0.0001,
+    "sequence_lengths": [
+      11,
+      512
+    ]
+  },
+  "source_adapter_sha256": {
+    "README.md": "25e02f4e1120370bcf76598ec974f12bebf1c24301f6312835a21aef037fba80",
+    "adapter_config.json": "cc404cd76eed420d5a489d52eafba146c74e9152b3f62e8b67a58e69930045d6",
+    "adapter_model.safetensors": "84f85ea8845720896dbe09b8b959e8e8858f23a8ff09fa3ac3e736ddcb5adb0d"
+  },
+  "source_attention_implementation": "sdpa",
+  "source_head_sha256": "a40113a01347289f8a409b764b8e546af0e061a19fb0d9210c98590c26e83a41",
+  "source_result_sha256": "d1014af4256212d707f3fe6d6dc8f90a35f65a5086bb7feea2a63bdf703295a0",
+  "tokenizer": {
+    "bytes": 17525329,
+    "path": "artifacts/models/mmbert-lora-full-s42/serving/tokenizer.json",
+    "sha256": "197d4cc5406ee12cc50c8b5511f2393cc32d9db321545979ce041c1199178356"
+  }
+}

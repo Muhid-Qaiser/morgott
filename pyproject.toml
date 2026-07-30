@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "morgott"
 version = "0.1.0"
 description = "Reproducible jailbreak detection and agent action-policy POC"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
   "datasets>=5.0.0,<6",
   "ijson>=3.4,<4",
@@ -22,6 +22,17 @@ encoder = [
     "safetensors>=0.4",
     "peft>=0.19,<0.20",
 ]
+cascade = [
+    "nooa==0.0.8; python_version < '3.14'",
+    "litellm==1.90.2; python_version < '3.14'",
+    "numpy>=2,<3",
+    "openvino==2026.2.1",
+    "tokenizers>=0.22,<1",
+]
+encoder-export = [
+    "onnx>=1.17,<2",
+    "onnxruntime>=1.20,<2",
+]
 
 [dependency-groups]
 dev = [
@@ -36,7 +47,7 @@ morgott = "morgott.cli:main"
 where = ["src"]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I"]

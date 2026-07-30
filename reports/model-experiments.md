@@ -798,6 +798,27 @@ It produced one false positive among the 7,054 retained finance negatives under 
 Its local scorer processed 461,700 rows in 3,404 seconds with 2.18 GiB peak reserved memory; the complete inhibited service took 73.9 wall-clock minutes including preparation and publication.
 The verified evaluation JSON and score-array SHA-256 digests are `e3b82fba87d2ca8494254b10353cf63d8a4627943a842713d30df84d7587f842` and `a95f3132c94aa170fa37f46d64ccc3343999fd2d49ac7b21997d389dba43124a`.
 
+### Full-LoRA serving precision study
+
+The retained post-hoc cascade was replayed over the frozen 20,000-row panel to select a CPU serving runtime.
+This is already-open shadow engineering evidence, not a new model evaluation or a production claim.
+The owner explicitly accepted a small paired numerical difference instead of requiring exact route parity.
+
+| Runtime | Calibration FPR | Evaluation recall / FPR / precision | DeepSeek call rate | 512-token CPU p95 / QPS |
+|---|---:|---:|---:|---:|
+| Retained FP32 reference | 1.98% | 66.79% / 1.81% / 96.50% | 22.17% | ONNX Runtime: 400 ms / 2.59 |
+| OpenVINO CPU BF16 | 2.01% | **67.06%** / 1.84% / 96.47% | **22.16%** | **155 ms / 6.66** |
+| ONNX Runtime dynamic INT8 | 2.04% | 60.95% / **1.72%** / 96.36% | 32.71% | 224 ms / 4.74 |
+
+OpenVINO BF16 changed 40 of 20,000 final routes, added one calibration false positive, improved evaluation recall by 0.27 points, increased evaluation FPR by 0.025 points, and left the provider call rate effectively unchanged.
+It consumes the single registered FP32 ONNX graph and lowers eligible operations to BF16 at startup, so no second precision-specific model artifact is stored.
+Dynamic INT8 reduced the model from 1.232 GB to 309.6 MB, but changed 846 final routes, lost 5.84 evaluation recall points, exceeded 2% calibration FPR, and raised provider calls by 10.54 points.
+OpenVINO BF16 is therefore the selected shadow serving runtime, while INT8 is rejected and the temporary INT8 model is not retained.
+
+A full-panel NOOA PredictStrategy comparison was also rejected in favor of the maintained `CompletionClient` path.
+Its copied `p=0.9` threshold improved evaluation recall from 66.79% to 71.22% but exceeded the calibration cap at 2.21% FPR, while its feasible `p=0.9706877673` threshold fell to 61.89% evaluation recall.
+PredictStrategy also reduced valid-output coverage from 99.955% to 97.12% and increased prompt tokens, latency, and cost; the detailed results are in [the OpenRouter downstream evaluation](openrouter-downstream-evaluation.md#nooa-predictstrategy-comparison-2026-07-30).
+
 The maintained word n-gram routing baseline was rerun separately against manifest SHA-256 `27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81`.
 At its untouched 0.5 cutoff it reached 92.35% dev-test recall, 2.94% row FPR, 96.76% precision, and 0.9834 AUROC over its broad `routing_label` target.
 Its macro source recall and FPR were 80.12% and 13.12%, which exposes strong source variation hidden by the aggregate.

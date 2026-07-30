@@ -84,6 +84,30 @@
         "path": "artifacts/models/mmbert-lora-full-s42/evaluation/scores.npy",
         "sha256": "b9ad82b94ffdfa8d2282bbe912b7e7316df4e299bfdee23724955b09cfcc2965"
       },
+      "serving": {
+        "format": "onnx-openvino-bf16-v1",
+        "inference_precision": "bf16",
+        "onnx": {
+          "path": "artifacts/models/mmbert-lora-full-s42/serving/model.onnx",
+          "sha256": "262f7b5f377c2c30e017e2f18204a9a8222c7dc5799a185f20437fa0137098e3"
+        },
+        "tokenizer": {
+          "path": "artifacts/models/mmbert-lora-full-s42/serving/tokenizer.json",
+          "sha256": "197d4cc5406ee12cc50c8b5511f2393cc32d9db321545979ce041c1199178356"
+        },
+        "export": {
+          "path": "artifacts/models/mmbert-lora-full-s42/serving/export.json",
+          "sha256": "42f70856ce7999eb122a2fb303390ab19c1f84fdc93d45fa72374b5049b289c8"
+        },
+        "verification": {
+          "path": "artifacts/models/mmbert-lora-full-s42/serving/verification.json",
+          "sha256": "573249ba74be2da75fb141ddedca929c15ea6eb6c319c54f5efdd2217181b8dc"
+        },
+        "benchmark": {
+          "path": "artifacts/models/mmbert-lora-full-s42/serving/benchmark.json",
+          "sha256": "f3a10ef81e08d59b22281cdec5d00f239f56bb2076565a44a1e6b7c7da4ec52d"
+        }
+      },
       "source_evidence": {
         "training": {
           "data_manifest_sha256": "27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81",

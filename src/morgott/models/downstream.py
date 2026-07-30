@@ -1,12 +1,25 @@
-"""Advisory routing for the selected ``mmbert-lora-s42`` cascade."""
+"""Advisory routing for the selected ``mmbert-lora-full-s42`` cascade."""
 
+import hashlib
+import json
 import math
 from dataclasses import dataclass
 from typing import Literal
 
 MMBERT_LOW = 0.2
-MMBERT_HIGH = 0.999
+MMBERT_HIGH = 0.99999
 LLM_FLAG_PROBABILITY = 0.9
+THRESHOLD_SHA256 = hashlib.sha256(
+    json.dumps(
+        {
+            "mmbert_low": MMBERT_LOW,
+            "mmbert_high": MMBERT_HIGH,
+            "deepseek_flag": LLM_FLAG_PROBABILITY,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
 
 
 @dataclass(frozen=True)

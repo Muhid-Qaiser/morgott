@@ -11,17 +11,19 @@ class DownstreamRouteTests(unittest.TestCase):
         self.assertEqual((result.route, result.reason), ("pass", "mmbert_low"))
 
     def test_high_mmbert_score_restricts_without_deepseek(self):
-        result = route(0.999)
+        result = route(0.99999)
 
         self.assertEqual((result.route, result.reason), ("restrict", "mmbert_high"))
 
     def test_middle_mmbert_score_requests_deepseek_review(self):
-        result = route(0.2)
+        for score in (0.2, math.nextafter(0.99999, 0.0)):
+            with self.subTest(score=score):
+                result = route(score)
 
-        self.assertEqual(
-            (result.route, result.reason),
-            ("review", "deepseek_required"),
-        )
+                self.assertEqual(
+                    (result.route, result.reason),
+                    ("review", "deepseek_required"),
+                )
 
     def test_middle_deepseek_probability_below_threshold_passes(self):
         result = route(0.5, llm_probability=0.899)
@@ -71,7 +73,7 @@ class DownstreamRouteTests(unittest.TestCase):
                 route(0.5, **arguments)
 
     def test_deepseek_result_is_only_valid_in_middle_zone(self):
-        for score in (0.1, 0.999):
+        for score in (0.1, 0.99999):
             with self.subTest(score=score), self.assertRaises(ValueError):
                 route(score, llm_probability=0.5)
 

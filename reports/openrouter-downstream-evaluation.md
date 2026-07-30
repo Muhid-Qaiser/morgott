@@ -484,6 +484,40 @@ Only the full-data frozen-head LFM2.5 artifact exists.
 No LFM2.5 partial-data LoRA, full-data LoRA, or all-weights fine-tune was trained, and the retained mmBERT LoRA adapter contract does not match LFM2.5 attention modules.
 Producing those missing numbers requires newly authorized training runs and a separate pinned LFM adapter implementation; they cannot be inferred from the frozen-head result.
 
+### NOOA PredictStrategy comparison (2026-07-30)
+
+The disposable NOOA `PredictStrategy` experiment replayed the frozen 6,000-row calibration and 14,000-row evaluation panel through 32 stateless agents.
+It reused the maintained prompt, CoreWeave fp8 route, strict log-probability parser, and three-call retry ceiling.
+The ledger contains 20,000 unique panel IDs, stores no corpus text or raw provider response, and cost `$1.84803752` for the full-panel experiment.
+
+| Downstream path | Valid output coverage | Calibration FPR | Evaluation recall / FPR / panel precision | Projected call rate |
+|---|---:|---:|---:|---:|
+| Maintained `CompletionClient`, `p >= 0.9` | **99.955%** | **1.981%** | 66.79% / 1.81% / 96.50% | 22.17% |
+| `PredictStrategy`, copied `p >= 0.9` | 97.12% | 2.214% | **71.22%** / 1.91% / 96.54% | 22.17% |
+| `PredictStrategy`, calibration-selected `p >= 0.9706877673` | 97.12% | 1.952% | 61.89% / **1.67%** / 96.51% | 22.17% |
+
+The copied Predict threshold gains 4.42 evaluation recall points over the maintained route, but it violates the predeclared 1.98% calibration FPR cap.
+Selecting the highest-recall feasible Predict threshold loses 4.91 recall points relative to `CompletionClient`.
+Its canonical, PromptShield, and SEP evaluation recall / FPR pairs are 77.34% / 1.45%, 65.70% / 3.04%, and 30.86% / 0.17%.
+
+| Full-panel downstream measurement | Maintained `CompletionClient` | NOOA `PredictStrategy` |
+|---|---:|---:|
+| Successful outputs | 19,991 / 20,000 | 19,424 / 20,000 |
+| Mean prompt tokens on successful outputs | **366.69** | 663.59 |
+| Mean / p95 client latency | **2.98 s / 7.99 s** | 8.19 s / 13.44 s |
+| Actual cost for 20,000 calls | **$1.06983170** | $1.84803752 |
+| Projected cascade cost per 1,000 inputs | **$0.0192** | $0.0280 |
+
+Across 19,415 jointly valid rows, verdict agreement was 91.17%, probability mean absolute error was `0.10287`, and probability correlation was `0.89965`.
+CompletionClient versus PredictStrategy AUROC was `0.93791` versus `0.93614`, and average precision was `0.92073` versus `0.91204`, on those common rows.
+PredictStrategy's concrete advantage is its typed Pydantic return and its higher copied-threshold recall.
+Its typed result does not expose the decision-token alternatives needed by this cascade, so the experiment still required a captured raw completion for strict probability parsing.
+That leaves more integration code while measured coverage, ranking, latency, prompt tokens, and cost are worse.
+
+Decision: do not promote `PredictStrategy`; retain NOOA `CompletionClient` in the maintained cascade.
+The PredictStrategy machine-summary SHA-256 is `48494bd95b540b8f374561af7d061196617935b40f46a8f3937632b4c6a82629`.
+Its parsed append-only ledger has SHA-256 `8254cad13f48f3ce4a4b2dc52f5931b26abccb7bb9b0560bb8758aa3445bdb73`, configuration SHA-256 `c1addf24929cbd23a6918e609d7c60dac54834c0202df9a93e6172438864c264`, and no raw content.
+
 ### Discarded fusion diagnostics
 
 Two-feature logistic fusion raised the partial-LoRA aggregate result from 61.82% recall at 1.70% FPR to 67.45% recall at 1.84% FPR with the same 26.79% LLM call rate.
