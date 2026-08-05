@@ -11,6 +11,7 @@ __pycache__/
 # Rebuilt from pinned public sources. Track only the canonical manifest.
 data/*
 !data/manifest.json
+!data/README.md
 
 # Rebuilt by `make benchmark`.
 artifacts/

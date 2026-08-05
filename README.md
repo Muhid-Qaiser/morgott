@@ -93,6 +93,18 @@ Their first frozen local evaluation rejected the registered high gate and stoppe
 The often-mentioned roughly 7,000 rows were the negative side of an old grouped
 validation split. They were never a download cap, corpus cap, or context limit.
 
+## Data sync (Azure)
+
+The cloud source of truth is Azure Blob Storage: account `vulsightdata`,
+container `morgott`, mirroring repo paths (`data/sources`, `data/views`,
+`data/quarantine`, `data/audits`, `data-archive`, `artifacts/models`, plus
+`data/manifest.json` and the data card `data/README.md` at the container root).
+Feature caches (`artifacts/combined_generic/`) are rebuildable and not uploaded.
+
+The rule: **any data change → `uv run morgott data` → `scripts/azsync.sh push`.**
+Commands, auth, and new-machine bootstrap (e.g. RunPod: azcopy + the
+`MORGOTT_SAS_URL` line from `.env`, no Azure CLI needed) are in `data/README.md`.
+
 ## Labels and roles
 
 The first-stage target is conservative binary routing without throwing away why
