@@ -1,0 +1,29 @@
+{
+  "fit_overlap_counts": {
+    "near": 4,
+    "normalized_exact": 16
+  },
+  "rule": "Exclude the complete four-row group when any projected row overlaps a full-LoRA fit candidate.",
+  "source_row_ids": [
+    "slack:user_task_7:injection_task_3:benign",
+    "travel:user_task_10:injection_task_0:benign",
+    "travel:user_task_10:injection_task_1:benign",
+    "travel:user_task_10:injection_task_2:benign",
+    "travel:user_task_10:injection_task_3:benign",
+    "travel:user_task_10:injection_task_6:benign",
+    "travel:user_task_8:injection_task_0:benign",
+    "travel:user_task_8:injection_task_4:benign",
+    "workspace:user_task_32:injection_task_11:benign",
+    "workspace:user_task_32:injection_task_12:benign",
+    "workspace:user_task_32:injection_task_13:benign",
+    "workspace:user_task_32:injection_task_1:benign",
+    "workspace:user_task_32:injection_task_5:benign",
+    "workspace:user_task_32:injection_task_6:benign",
+    "workspace:user_task_32:injection_task_7:benign",
+    "workspace:user_task_32:injection_task_8:benign",
+    "workspace:user_task_37:injection_task_10:benign",
+    "workspace:user_task_37:injection_task_13:benign",
+    "workspace:user_task_37:injection_task_8:benign",
+    "workspace:user_task_37:injection_task_9:benign"
+  ]
+}

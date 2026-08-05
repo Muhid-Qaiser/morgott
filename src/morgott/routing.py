@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sqlite3
 import tempfile
 import zlib
 from collections import Counter, defaultdict
+from itertools import batched
+from multiprocessing import get_context
 from pathlib import Path
 
-from .data import SOURCES, deduplicate, file_sha256, manifest_output_path, text_hash
-from .overlap import NEAR_METHOD, NearIndex, fingerprint
+from .data import SOURCES, deduplicate, manifest_output_path, text_hash
+from .overlap import NEAR_METHOD, NearIndex, fingerprint, leakage_text_hash
 
 TRAIN = 0
 VALIDATION = 1
@@ -20,6 +23,12 @@ PARTITION_NAMES = {
     DEV_TEST: "dev_test",
 }
 TARGET_RATIOS = {TRAIN: 0.7, VALIDATION: 0.1, DEV_TEST: 0.2}
+OVERLAP_BATCH_SIZE = 512
+OVERLAP_WORKERS = min(6, os.cpu_count() or 1)
+
+
+def _overlap_values(text: str) -> tuple[str, int | None]:
+    return leakage_text_hash(text), fingerprint(text)
 
 
 class _JsonlWriter:
@@ -136,6 +145,7 @@ def _open_index(path: Path) -> sqlite3.Connection:
             eligible INTEGER NOT NULL,
             normalized_hash TEXT NOT NULL,
             group_id INTEGER,
+            source TEXT NOT NULL,
             routing_label INTEGER NOT NULL,
             payload BLOB NOT NULL
         );
@@ -157,22 +167,19 @@ def _ingest_sources(
         if row_batch:
             connection.executemany(
                 "INSERT INTO rows(source_role, eligible, normalized_hash, group_id, "
-                "routing_label, payload) VALUES (?, ?, ?, ?, ?, ?)",
+                "source, routing_label, payload) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 row_batch,
             )
             row_batch.clear()
 
     for source, output in sorted(source_outputs.items()):
         path = manifest_output_path(data_dir, output)
-        digest = file_sha256(path)
-        if digest != output["sha256"]:
-            raise RuntimeError(
-                f"{source} source shard changed: expected {output['sha256']}, got {digest}"
-            )
+        digest = hashlib.sha256()
         source_ids = set()
         rows_seen = 0
         with path.open("rb") as handle:
             for line_number, line in enumerate(handle, 1):
+                digest.update(line)
                 if not line.strip():
                     raise ValueError(f"{source}:{line_number} has a blank row")
                 row = json.loads(line)
@@ -230,6 +237,7 @@ def _ingest_sources(
                         int(eligible),
                         normalized_hash,
                         group_id,
+                        source,
                         routing_label,
                         zlib.compress(line.rstrip(b"\r\n"), level=1),
                     )
@@ -237,6 +245,12 @@ def _ingest_sources(
                 if len(row_batch) >= 2_000:
                     flush()
         flush()
+        actual_sha256 = digest.hexdigest()
+        if actual_sha256 != output["sha256"]:
+            raise RuntimeError(
+                f"{source} source shard changed: expected {output['sha256']}, "
+                f"got {actual_sha256}"
+            )
         if rows_seen != output.get("rows"):
             raise RuntimeError(
                 f"{source} source shard row count changed: "
@@ -255,18 +269,25 @@ def _ingest_sources(
 
 def _eligible_exact_groups(connection: sqlite3.Connection):
     cursor = connection.execute(
-        "SELECT normalized_hash, source_role, group_id, payload "
+        "SELECT normalized_hash, source_role, group_id, source, routing_label, payload "
         "FROM rows INDEXED BY rows_hash WHERE eligible = 1 "
         "ORDER BY normalized_hash, seq"
     )
     current_hash = None
     rows = []
-    for normalized_hash, source_role, group_id, payload in cursor:
+    for (
+        normalized_hash,
+        source_role,
+        group_id,
+        source,
+        routing_label,
+        payload,
+    ) in cursor:
         if current_hash is not None and normalized_hash != current_hash:
             yield current_hash, rows
             rows = []
         current_hash = normalized_hash
-        rows.append((source_role, group_id, json.loads(zlib.decompress(payload))))
+        rows.append((source_role, group_id, source, routing_label, payload))
     if rows:
         yield current_hash, rows
 
@@ -292,41 +313,51 @@ def _prepare_supervised_rows(
     stats = Counter()
     batch = []
     for normalized_hash, indexed_rows in _eligible_exact_groups(connection):
-        group_ids = {group_id for _, group_id, _ in indexed_rows}
+        group_ids = {group_id for _, group_id, _, _, _ in indexed_rows}
         fixed = any(group_id in fixed_groups for group_id in group_ids)
-        indexed_rows.sort(
-            key=lambda item: (
-                item[1] not in fixed_groups,
-                item[0] != "dev_test",
-                item[2]["source"],
-                item[2]["split_group_id"],
-                item[2]["id"],
+        if len(indexed_rows) == 1:
+            _, selected_group, source, routing_label, payload = indexed_rows[0]
+            stats["input_rows"] += 1
+        else:
+            decoded_rows = [
+                (role, group_id, json.loads(zlib.decompress(payload)))
+                for role, group_id, _, _, payload in indexed_rows
+            ]
+            decoded_rows.sort(
+                key=lambda item: (
+                    item[1] not in fixed_groups,
+                    item[0] != "dev_test",
+                    item[2]["source"],
+                    item[2]["split_group_id"],
+                    item[2]["id"],
+                )
             )
-        )
-        selected_group = indexed_rows[0][1]
-        row = _merge_exact(
-            [candidate for _, _, candidate in indexed_rows], quarantine, stats
-        )
-        if row is None:
-            continue
-        if len(group_ids) > 1:
-            stats["cross_lineage_exact_duplicates"] += 1
-            selected_group = len(group_names)
-            group_name = f"exact:{normalized_hash}"
-            group_names.append(group_name)
-        if fixed and any(role == "candidate" for role, _, _ in indexed_rows):
+            selected_group = decoded_rows[0][1]
+            row = _merge_exact(
+                [candidate for _, _, candidate in decoded_rows], quarantine, stats
+            )
+            if row is None:
+                continue
+            if len(group_ids) > 1:
+                stats["cross_lineage_exact_duplicates"] += 1
+                selected_group = len(group_names)
+                group_names.append(f"exact:{normalized_hash}")
+            row["split_group_id"] = group_names[selected_group]
+            source = row["source"]
+            routing_label = row["routing_label"]
+            payload = zlib.compress(
+                json.dumps(row, ensure_ascii=False, sort_keys=True).encode(), 1
+            )
+        if fixed and any(role == "candidate" for role, _, _, _, _ in indexed_rows):
             stats["candidate_exact_rows_fixed_by_official_lineage"] += 1
-        row["split_group_id"] = group_names[selected_group]
         batch.append(
             (
                 normalized_hash,
                 int(fixed),
                 selected_group,
-                row["source"],
-                row["routing_label"],
-                zlib.compress(
-                    json.dumps(row, ensure_ascii=False, sort_keys=True).encode(), 1
-                ),
+                source,
+                routing_label,
+                payload,
             )
         )
         if len(batch) == 2_000:
@@ -530,6 +561,8 @@ def _merge_exact(
     rows: list[dict], quarantine: _JsonlWriter, stats: Counter
 ) -> dict | None:
     stats["input_rows"] += len(rows)
+    if len(rows) == 1:
+        return dict(rows[0])
     merged, merge_stats = deduplicate(rows, label_fields=("routing_label",))
     if not merged:
         stats["exact_conflict_rows_quarantined"] += len(rows)
@@ -548,30 +581,74 @@ def _write_supervised_views(
     stats = Counter()
     dev_index = NearIndex()
     train_index = NearIndex()
-    for partition in (DEV_TEST, TRAIN, VALIDATION):
-        name = PARTITION_NAMES[partition]
-        for row in _partition_rows(connection, partition):
-            near_value = fingerprint(row["text"])
-            matches = []
-            reason = None
-            if partition != DEV_TEST and near_value is not None:
-                matches = dev_index.query(row, value=near_value)
-                if matches:
-                    reason = "near_dev_test_overlap"
-            if partition == VALIDATION and not matches and near_value is not None:
-                matches = train_index.query(row, value=near_value)
-                if matches:
-                    reason = "near_train_overlap"
-            if matches:
-                stats[f"{reason}_rows_quarantined"] += 1
-                _quarantine(quarantine, row, reason, matches)
-                continue
-            row["data_role"] = name
-            writers[name].write(row)
-            if partition == DEV_TEST and near_value is not None:
-                dev_index.add(row, dataset="routing_dev_test", value=near_value)
-            elif partition == TRAIN and near_value is not None:
-                train_index.add(row, dataset="routing_train", value=near_value)
+    dev_strict = set()
+    train_strict = set()
+    row_count = connection.execute("SELECT COUNT(*) FROM merged").fetchone()[0]
+    pool = (
+        get_context("spawn").Pool(OVERLAP_WORKERS)
+        if row_count >= OVERLAP_BATCH_SIZE * OVERLAP_WORKERS and OVERLAP_WORKERS > 1
+        else None
+    )
+    try:
+        for partition in (DEV_TEST, TRAIN, VALIDATION):
+            name = PARTITION_NAMES[partition]
+            for rows in batched(
+                _partition_rows(connection, partition), OVERLAP_BATCH_SIZE
+            ):
+                values = (
+                    pool.map(
+                        _overlap_values,
+                        (row["text"] for row in rows),
+                        chunksize=16,
+                    )
+                    if pool is not None
+                    else map(_overlap_values, (row["text"] for row in rows))
+                )
+                for row, (strict_hash, near_value) in zip(rows, values, strict=True):
+                    matches = []
+                    reason = None
+                    if partition != DEV_TEST and strict_hash in dev_strict:
+                        reason = "strict_dev_test_overlap"
+                    elif partition == VALIDATION and strict_hash in train_strict:
+                        reason = "strict_train_overlap"
+                    if (
+                        reason is None
+                        and partition != DEV_TEST
+                        and near_value is not None
+                    ):
+                        matches = dev_index.query(row, value=near_value)
+                        if matches:
+                            reason = "near_dev_test_overlap"
+                    if (
+                        reason is None
+                        and partition == VALIDATION
+                        and near_value is not None
+                    ):
+                        matches = train_index.query(row, value=near_value)
+                        if matches:
+                            reason = "near_train_overlap"
+                    if reason is not None:
+                        stats[f"{reason}_rows_quarantined"] += 1
+                        _quarantine(quarantine, row, reason, matches)
+                        continue
+                    row["data_role"] = name
+                    writers[name].write(row)
+                    if partition == DEV_TEST:
+                        dev_strict.add(strict_hash)
+                        if near_value is not None:
+                            dev_index.add(
+                                row, dataset="routing_dev_test", value=near_value
+                            )
+                    elif partition == TRAIN:
+                        train_strict.add(strict_hash)
+                        if near_value is not None:
+                            train_index.add(
+                                row, dataset="routing_train", value=near_value
+                            )
+    finally:
+        if pool is not None:
+            pool.close()
+            pool.join()
     return dict(sorted(stats.items()))
 
 

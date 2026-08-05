@@ -276,7 +276,7 @@ def _load_run(run: Path) -> tuple[dict, object, object, object]:
         or result.get("model_revision") != MODEL_REVISION
         or result.get("attention_implementation") != ATTENTION_IMPLEMENTATION
         or result.get("normalization") != "strict"
-        or mode not in {"frozen", "lora"}
+        or mode not in {"frozen", "lora", "lpft"}
         or not head_path.is_relative_to(run)
         or file_sha256(head_path) != artifact.get("head_sha256")
     ):
@@ -315,6 +315,25 @@ def _load_run(run: Path) -> tuple[dict, object, object, object]:
             or parameters != result["lora"]["adapter_parameters"]
         ):
             raise ValueError("LoRA identity mismatch")
+    elif mode == "lpft":
+        encoder_name = artifact.get("encoder")
+        if not isinstance(encoder_name, str):
+            raise ValueError("run has no LP-FT encoder artifact")
+        encoder_path = (run / encoder_name).resolve()
+        if not encoder_path.is_relative_to(run) or file_sha256(
+            encoder_path
+        ) != artifact.get("encoder_sha256"):
+            raise ValueError("LP-FT encoder hash mismatch")
+        state = load_file(str(encoder_path))
+        if set(state) != set(result.get("lpft", {}).get("trainable_names", ())):
+            raise ValueError("LP-FT encoder identity mismatch")
+        unexpected = encoder.load_state_dict(state, strict=False).unexpected_keys
+        if (
+            unexpected
+            or sum(value.numel() for value in state.values())
+            != result["lpft"]["trainable_parameters"]
+        ):
+            raise ValueError("LP-FT encoder state mismatch")
     encoder.eval()
     for parameter in encoder.parameters():
         parameter.requires_grad = False
@@ -384,7 +403,7 @@ def _real_finance_mask(scored: dict) -> np.ndarray:
             list(_REAL_FINANCE_SOURCES),
         )
     )
-    if int(selected.sum()) != 7_054:
+    if int(selected.sum()) != 7_043:
         raise ValueError("real-finance negative population changed")
     return selected
 
@@ -501,6 +520,7 @@ def evaluate(
     data_dir: Path,
     external_dir: Path,
     pairs: Path,
+    additional_pairs: Path | None,
     output: Path,
     batch_size: int,
 ) -> Path:
@@ -516,6 +536,7 @@ def evaluate(
         external_dir,
         pairs,
         seed=result["seed"],
+        additional_pair_archive=additional_pairs,
     )
     provenance = result.get("provenance", {})
     if (
@@ -523,6 +544,8 @@ def evaluate(
         or provenance.get("external_manifest_sha256")
         != prepared.external_manifest_sha256
         or provenance.get("pair_archive_sha256") != file_sha256(pairs)
+        or provenance.get("additional_pair_archive_sha256")
+        != (file_sha256(additional_pairs) if additional_pairs is not None else None)
     ):
         raise ValueError("evaluation data digest differs from the training run")
     calibration_rows = prepared.calibration
@@ -599,6 +622,11 @@ def evaluate(
                 "data_manifest_sha256": file_sha256(data_dir / "manifest.json"),
                 "external_manifest_sha256": file_sha256(external_dir / "manifest.json"),
                 "pair_archive_sha256": file_sha256(pairs),
+                "additional_pair_archive_sha256": (
+                    file_sha256(additional_pairs)
+                    if additional_pairs is not None
+                    else None
+                ),
                 "routing_views": {
                     split: {
                         "sha256": spec["sha256"],
@@ -715,6 +743,7 @@ def main() -> int:
         type=Path,
         default=Path("data-archive/matched_pairs_20260726.jsonl.gz"),
     )
+    parser.add_argument("--additional-pairs", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--batch-size", type=int, default=8)
     args = parser.parse_args()
@@ -727,6 +756,7 @@ def main() -> int:
             data_dir=args.data_dir,
             external_dir=args.external_dir,
             pairs=args.pairs,
+            additional_pairs=args.additional_pairs,
             output=output,
             batch_size=args.batch_size,
         )

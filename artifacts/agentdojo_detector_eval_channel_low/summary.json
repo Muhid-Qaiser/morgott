@@ -1,0 +1,216 @@
+{
+  "cascade": {
+    "complete_inputs": 88,
+    "deepseek_calls": 46,
+    "deepseek_failures": 0,
+    "input_tokens": 24266,
+    "local_latency_seconds": 81.31841200392228,
+    "output_tokens": 346,
+    "provider_latency_seconds": 73.85540789994411,
+    "reasons": {
+      "deepseek_clear": 2,
+      "deepseek_flag": 44,
+      "mmbert_high": 25,
+      "mmbert_low": 17
+    },
+    "reviewed_windows": 46,
+    "routes": {
+      "pass": 19,
+      "restrict": 69
+    },
+    "unique_inputs": 88
+  },
+  "legitimate_user_prompt_stress": {
+    "cases": 16,
+    "restricted": 2,
+    "restriction_rate": 0.125
+  },
+  "limitations": [
+    "AgentDojo is an already-public, split-free development benchmark.",
+    "The 288 attacked cases contain only 18 payloads and 72 exact tool-return texts.",
+    "The 16 user prompts are a stress slice, not a production FPR denominator.",
+    "This detector-only study does not measure agent behavior, task utility, authorization, or attack success.",
+    "The fixed attacks do not support an adaptive robustness claim."
+  ],
+  "manifest_sha256": "39aae4911c8c859672a965147258b646a826d9d039ecf7801e886b37952be802",
+  "overlap_audit": {
+    "cases": 304,
+    "overlapping_cases": 0,
+    "reasons": {}
+  },
+  "panel_sha256": "cfbf698f3e0cc12d1306b6e7aa10e21e94bc0ff544a1e733c95418ed5411fca7",
+  "primary": {
+    "direct": {
+      "case_rate": {
+        "cases": 144,
+        "restricted": 139,
+        "restriction_rate": 0.9652777777777778
+      },
+      "injection_task_macro": {
+        "groups": 9,
+        "maximum_restriction_rate": 1.0,
+        "mean_restriction_rate": 0.9652777777777778,
+        "minimum_restriction_rate": 0.9375
+      },
+      "payload_macro": {
+        "all_contexts_restricted": 4,
+        "any_context_restricted": 9,
+        "groups": 9,
+        "maximum_restriction_rate": 1.0,
+        "mean_restriction_rate": 0.9652777777777778,
+        "minimum_restriction_rate": 0.9375
+      },
+      "unique_tool_return_rate": {
+        "cases": 36,
+        "restricted": 31,
+        "restriction_rate": 0.8611111111111112
+      },
+      "user_task_macro": {
+        "groups": 16,
+        "maximum_restriction_rate": 1.0,
+        "mean_restriction_rate": 0.9652777777777778,
+        "minimum_restriction_rate": 0.5555555555555556
+      },
+      "vectors": {
+        "injection_address_change": {
+          "case_rate": {
+            "cases": 9,
+            "restricted": 5,
+            "restriction_rate": 0.5555555555555556
+          },
+          "unique_tool_return_rate": {
+            "cases": 9,
+            "restricted": 5,
+            "restriction_rate": 0.5555555555555556
+          }
+        },
+        "injection_bill_text": {
+          "case_rate": {
+            "cases": 9,
+            "restricted": 8,
+            "restriction_rate": 0.8888888888888888
+          },
+          "unique_tool_return_rate": {
+            "cases": 9,
+            "restricted": 8,
+            "restriction_rate": 0.8888888888888888
+          }
+        },
+        "injection_incoming_transaction": {
+          "case_rate": {
+            "cases": 108,
+            "restricted": 108,
+            "restriction_rate": 1.0
+          },
+          "unique_tool_return_rate": {
+            "cases": 9,
+            "restricted": 9,
+            "restriction_rate": 1.0
+          }
+        },
+        "injection_landloard_notice": {
+          "case_rate": {
+            "cases": 18,
+            "restricted": 18,
+            "restriction_rate": 1.0
+          },
+          "unique_tool_return_rate": {
+            "cases": 9,
+            "restricted": 9,
+            "restriction_rate": 1.0
+          }
+        }
+      }
+    },
+    "important_instructions": {
+      "case_rate": {
+        "cases": 144,
+        "restricted": 144,
+        "restriction_rate": 1.0
+      },
+      "injection_task_macro": {
+        "groups": 9,
+        "maximum_restriction_rate": 1.0,
+        "mean_restriction_rate": 1.0,
+        "minimum_restriction_rate": 1.0
+      },
+      "payload_macro": {
+        "all_contexts_restricted": 9,
+        "any_context_restricted": 9,
+        "groups": 9,
+        "maximum_restriction_rate": 1.0,
+        "mean_restriction_rate": 1.0,
+        "minimum_restriction_rate": 1.0
+      },
+      "unique_tool_return_rate": {
+        "cases": 36,
+        "restricted": 36,
+        "restriction_rate": 1.0
+      },
+      "user_task_macro": {
+        "groups": 16,
+        "maximum_restriction_rate": 1.0,
+        "mean_restriction_rate": 1.0,
+        "minimum_restriction_rate": 1.0
+      },
+      "vectors": {
+        "injection_address_change": {
+          "case_rate": {
+            "cases": 9,
+            "restricted": 9,
+            "restriction_rate": 1.0
+          },
+          "unique_tool_return_rate": {
+            "cases": 9,
+            "restricted": 9,
+            "restriction_rate": 1.0
+          }
+        },
+        "injection_bill_text": {
+          "case_rate": {
+            "cases": 9,
+            "restricted": 9,
+            "restriction_rate": 1.0
+          },
+          "unique_tool_return_rate": {
+            "cases": 9,
+            "restricted": 9,
+            "restriction_rate": 1.0
+          }
+        },
+        "injection_incoming_transaction": {
+          "case_rate": {
+            "cases": 108,
+            "restricted": 108,
+            "restriction_rate": 1.0
+          },
+          "unique_tool_return_rate": {
+            "cases": 9,
+            "restricted": 9,
+            "restriction_rate": 1.0
+          }
+        },
+        "injection_landloard_notice": {
+          "case_rate": {
+            "cases": 18,
+            "restricted": 18,
+            "restriction_rate": 1.0
+          },
+          "unique_tool_return_rate": {
+            "cases": 9,
+            "restricted": 9,
+            "restriction_rate": 1.0
+          }
+        }
+      }
+    }
+  },
+  "purpose": "frozen external AgentDojo Banking advisory-cascade diagnostic",
+  "result_ledger": {
+    "content_sha256": "c41491207e423b6aebfb73ecbe600d73ad41376613bf9761f0fec7287ca659b0",
+    "path": "artifacts/agentdojo_detector_eval_channel_low/results.jsonl.gz",
+    "rows": 88,
+    "sha256": "9da9dcc241dd661915d0f70bde43db773d5889af0ba6749827779dfcac99a114"
+  },
+  "schema_version": 1
+}

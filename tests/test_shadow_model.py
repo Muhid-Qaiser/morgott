@@ -212,7 +212,7 @@ class ShadowModelTests(unittest.TestCase):
             ):
                 shadow.load_bundle(manifest, "mmbert-frozen-s42")
 
-    def test_registry_sources_match_the_recorded_git_commit(self):
+    def test_registered_models_load_and_historical_sources_match_commit(self):
         root = Path(__file__).resolve().parents[1]
         manifest = json.loads((root / "model-artifacts.json").read_text())
         self.assertEqual(
@@ -223,17 +223,9 @@ class ShadowModelTests(unittest.TestCase):
                 "mmbert-lora-full-s42",
             },
         )
-        for model_key in ("mmbert-frozen-s42", "mmbert-lora-s42"):
+        for model_key in manifest["models"]:
             bundle = shadow.load_bundle(root / "model-artifacts.json", model_key)
             self.assertEqual(bundle["model_key"], model_key)
-        with self.assertRaisesRegex(
-            ValueError,
-            "training source src/morgott/models/mmbert/train.py hash mismatch",
-        ):
-            shadow.load_bundle(
-                root / "model-artifacts.json",
-                "mmbert-lora-full-s42",
-            )
         commit = manifest["evidence"]["source_commit"]
         for spec in manifest["evidence"]["sources"].values():
             contents = subprocess.run(
@@ -244,7 +236,7 @@ class ShadowModelTests(unittest.TestCase):
             ).stdout
             self.assertEqual(hashlib.sha256(contents).hexdigest(), spec["sha256"])
 
-    def test_maintained_bundle_uses_per_model_source_evidence(self):
+    def test_maintained_bundle_checks_runtime_sources_not_provenance_files(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             model = root / "model"
@@ -259,10 +251,19 @@ class ShadowModelTests(unittest.TestCase):
             training_source.parent.mkdir()
             training_source.write_bytes(b"training source")
             evaluation_source.write_bytes(b"evaluation source")
+            runtime_sources = {}
+            for relative in shadow.RUNTIME_SOURCE_PATHS:
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(relative.encode())
+                runtime_sources[relative] = digest(path)
             lock = root / "uv.lock"
             lock.write_bytes(b"dependencies")
             training_provenance = {
-                "sources": {"src/train.py": digest(training_source)},
+                "sources": {
+                    "src/train.py": digest(training_source),
+                    **runtime_sources,
+                },
                 "uv_lock_sha256": digest(lock),
                 "data_manifest_sha256": "c" * 64,
                 "external_manifest_sha256": "d" * 64,
@@ -288,7 +289,10 @@ class ShadowModelTests(unittest.TestCase):
                 )
             )
             evaluation_provenance = {
-                "sources": {"src/evaluate.py": digest(evaluation_source)},
+                "sources": {
+                    "src/evaluate.py": digest(evaluation_source),
+                    **runtime_sources,
+                },
                 "uv_lock_sha256": digest(lock),
             }
             evaluation = model / "evaluation.json"
@@ -358,9 +362,13 @@ class ShadowModelTests(unittest.TestCase):
             self.assertIsNone(bundle["source_commit"])
             self.assertEqual(len(bundle["source_evidence_sha256"]), 64)
             training_source.write_bytes(b"different training source")
-            with self.assertRaisesRegex(ValueError, "training source .* hash mismatch"):
+            lock.write_bytes(b"different dependencies")
+            shadow.load_bundle(manifest, "mmbert-lora-full-s42")
+            runtime_source = root / shadow.RUNTIME_SOURCE_PATHS[0]
+            runtime_source.write_bytes(b"different runtime source")
+            with self.assertRaisesRegex(ValueError, "runtime source .* hash mismatch"):
                 shadow.load_bundle(manifest, "mmbert-lora-full-s42")
-            training_source.write_bytes(b"training source")
+            runtime_source.write_bytes(shadow.RUNTIME_SOURCE_PATHS[0].encode())
             contents = json.loads(manifest.read_text())
             contents["models"]["mmbert-lora-full-s42"]["source_evidence"]["training"][
                 "uv_lock_sha256"

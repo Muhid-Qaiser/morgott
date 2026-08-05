@@ -33,6 +33,10 @@ ADAPTATION_EVIDENCE_SOURCE = {
     "frozen": "full_training_helper",
     "lora": "lora_training_runner",
 }
+RUNTIME_SOURCE_PATHS = (
+    "src/morgott/models/mmbert/core.py",
+    "src/morgott/normalization.py",
+)
 
 
 def verified_artifact_path(root: Path, spec: object, *, name: str) -> Path:
@@ -53,23 +57,38 @@ def verified_artifact_path(root: Path, spec: object, *, name: str) -> Path:
     return path
 
 
-def _verify_source_provenance(root: Path, provenance: dict, *, name: str) -> None:
+def _source_provenance(provenance: dict, *, name: str) -> dict:
     sources = provenance.get("sources")
-    if not isinstance(sources, dict) or not sources:
+    if (
+        not isinstance(sources, dict)
+        or not sources
+        or not isinstance(provenance.get("uv_lock_sha256"), str)
+        or len(provenance["uv_lock_sha256"]) != 64
+        or any(
+            not isinstance(path, str)
+            or not isinstance(digest, str)
+            or len(digest) != 64
+            for path, digest in sources.items()
+        )
+    ):
         raise ValueError(f"{name} source provenance contract failed")
-    for path, digest in sources.items():
-        if not isinstance(path, str):
-            raise ValueError(f"{name} source provenance contract failed")
+    return sources
+
+
+def _verify_runtime_sources(root: Path, evidence: dict) -> None:
+    sources = {
+        name: _source_provenance(evidence[name], name=name)
+        for name in ("training", "evaluation")
+    }
+    for path in RUNTIME_SOURCE_PATHS:
+        digests = {source.get(path) for source in sources.values()}
+        if None in digests or len(digests) != 1:
+            raise ValueError(f"runtime source evidence mismatch: {path}")
         verified_artifact_path(
             root,
-            {"path": path, "sha256": digest},
-            name=f"{name} source {path}",
+            {"path": path, "sha256": digests.pop()},
+            name=f"runtime source {path}",
         )
-    verified_artifact_path(
-        root,
-        {"path": "uv.lock", "sha256": provenance.get("uv_lock_sha256")},
-        name=f"{name} dependency lock",
-    )
 
 
 def _verify_historical_evidence(
@@ -122,8 +141,7 @@ def _verify_maintained_evidence(
         or evidence.get("evaluation") != evaluation.get("provenance")
     ):
         raise ValueError("maintained model source evidence mismatch")
-    _verify_source_provenance(root, evidence["training"], name="training")
-    _verify_source_provenance(root, evidence["evaluation"], name="evaluation")
+    _verify_runtime_sources(root, evidence)
     encoded = json.dumps(
         evidence,
         sort_keys=True,

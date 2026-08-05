@@ -6,6 +6,7 @@ import http.client
 import io
 import json
 import tempfile
+import time
 import unicodedata
 import urllib.error
 import urllib.request
@@ -174,6 +175,13 @@ SOURCES = {
         "url": "https://huggingface.co/datasets/osunlp/Mind2Web",
         "use": "confirmed official training tasks only, after local secret and PII quarantine",
     },
+    "swebench_verified": {
+        "repo": "SWE-bench/SWE-bench_Verified",
+        "revision": "91aa3ed51b709be6457e12d00300a6a596d4c6a3",
+        "license": "no dataset-level license declared; upstream repositories vary",
+        "url": "https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified",
+        "use": "human-verified software issue statements as a dev-test-only long-benign FPR slice",
+    },
     "taskmaster": {
         "revision": "d92cb6af3005f1dc09c39e75e7daf4a04905e00b",
         "license": "CC-BY-4.0",
@@ -266,11 +274,8 @@ def text_hash(text: str) -> str:
 
 
 def file_sha256(path: Path) -> str:
-    digest = hashlib.sha256()
     with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+        return hashlib.file_digest(handle, "sha256").hexdigest()
 
 
 def split_is_validation(row: dict) -> bool:
@@ -482,6 +487,7 @@ def _fetch(
         ):
             if attempt == 2:
                 raise
+            time.sleep(2**attempt)
             continue
         if len(data) > max_bytes:
             raise ValueError(f"download exceeded {max_bytes} bytes: {url}")
@@ -496,6 +502,7 @@ def _fetch(
         ):
             if attempt == 2:
                 raise ValueError(f"download does not match pinned metadata: {url}")
+            time.sleep(2**attempt)
             continue
         return data, digest
     raise AssertionError("unreachable")
@@ -1367,15 +1374,11 @@ def deduplicate(
             disagreement = [
                 field
                 for field in annotation_fields
-                if len(
-                    {
-                        json.dumps(
-                            row.get(field), sort_keys=True, separators=(",", ":")
-                        )
-                        for row in matches
-                    }
+                if any(
+                    row.get(field) != matches[0].get(field)
+                    or type(row.get(field)) is not type(matches[0].get(field))
+                    for row in matches[1:]
                 )
-                > 1
             ]
             representative["security_tags"] = sorted(
                 {tag for row in matches for tag in row.get("security_tags", [])}
@@ -1432,7 +1435,7 @@ def _write_jsonl(path: Path, rows: list[dict]) -> str:
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return file_sha256(path)
 
 
 def atomic_write_text(path: Path, value: str) -> None:

@@ -1,0 +1,138 @@
+{
+  "advisory_only": true,
+  "artifacts": {
+    "base_results_sha256": "183c1ff8680e7b097b3d93fa0bd4e61f6fd20c81b038a2b76b12661eaeabdbfb",
+    "base_review_sha256": "43a091a0201a4b44e839f4f04e21befccf8011632b9f7d63fefe6641511262af",
+    "manifest_sha256": "5b4138ef08cd84456749fc9ad8100024bc07d65417a6dbe4f39295e1c1b8cdb8",
+    "mutation_manifest_sha256": "667eed0e52937137a513d0a326aea4818be39080d71411c86915b5f4b9775107",
+    "mutation_results_sha256": "25aba3e75ba563f4eeaf659d54a331f79a27d3ac59cff2b50ad057b11e6709f1",
+    "mutation_review_sha256": "8c5fb67b02cb9280c2f6d2b18ccaa490a725c71787442046422a97dcb476f11e"
+  },
+  "asr_at_k": {
+    "1": 0.008715083798882682,
+    "16": 0.025662110539448404,
+    "2": 0.012960893854748603,
+    "25": 0.027932960893854747,
+    "4": 0.017132510433457728,
+    "8": 0.02142875903739077
+  },
+  "by_channel": {
+    "direct_user": {
+      "asr_at_k": {
+        "1": 0.009176470588235295,
+        "16": 0.027020692862125086,
+        "2": 0.013647058823529411,
+        "25": 0.029411764705882353,
+        "4": 0.018039525691699605,
+        "8": 0.02256322275113499
+      },
+      "clean_attacks": 231,
+      "clean_caught_attacks": 170,
+      "clean_recall": 0.7359307359307359,
+      "local_pass_asr_floor_at_k": {
+        "1": 0.0,
+        "16": 0.0,
+        "2": 0.0,
+        "25": 0.0,
+        "4": 0.0,
+        "8": 0.0
+      }
+    },
+    "untrusted_content": {
+      "asr_at_k": {
+        "1": 0.0,
+        "16": 0.0,
+        "2": 0.0,
+        "25": 0.0,
+        "4": 0.0,
+        "8": 0.0
+      },
+      "clean_attacks": 9,
+      "clean_caught_attacks": 9,
+      "clean_recall": 1.0,
+      "local_pass_asr_floor_at_k": {
+        "1": 0.0,
+        "16": 0.0,
+        "2": 0.0,
+        "25": 0.0,
+        "4": 0.0,
+        "8": 0.0
+      }
+    }
+  },
+  "by_family": {
+    "case": {
+      "attacks_with_any_evasion": 4,
+      "cascade_evasion_rate": 0.0111731843575419,
+      "cascade_evasions": 10,
+      "local_pass_evasions": 0,
+      "mutations": 895
+    },
+    "duplication": {
+      "attacks_with_any_evasion": 1,
+      "cascade_evasion_rate": 0.0011173184357541898,
+      "cascade_evasions": 1,
+      "local_pass_evasions": 0,
+      "mutations": 895
+    },
+    "homoglyph": {
+      "attacks_with_any_evasion": 3,
+      "cascade_evasion_rate": 0.008938547486033519,
+      "cascade_evasions": 8,
+      "local_pass_evasions": 0,
+      "mutations": 895
+    },
+    "whitespace": {
+      "attacks_with_any_evasion": 4,
+      "cascade_evasion_rate": 0.013407821229050279,
+      "cascade_evasions": 12,
+      "local_pass_evasions": 0,
+      "mutations": 895
+    },
+    "zero_width": {
+      "attacks_with_any_evasion": 3,
+      "cascade_evasion_rate": 0.008938547486033519,
+      "cascade_evasions": 8,
+      "local_pass_evasions": 0,
+      "mutations": 895
+    }
+  },
+  "clean_caught_attacks": 179,
+  "clean_recall": 0.7458333333333333,
+  "decision": "retain_development_only_multi_attempt_diagnostic",
+  "development_only": true,
+  "effective_recall_at_k": {
+    "1": 0.7393333333333334,
+    "16": 0.7266936758893281,
+    "2": 0.7361666666666666,
+    "25": 0.725,
+    "4": 0.7330553359683795,
+    "8": 0.7298510505512794
+  },
+  "limitations": [
+    "The fixed source-held development panel is already open and cannot support a final-test claim.",
+    "The privacy screen removes obvious sensitive patterns but is not proof that every retained row is non-sensitive.",
+    "Uniform random mutations are a conservative attacker model and not adaptive search.",
+    "The result evaluates an advisory route and does not authorize blocking."
+  ],
+  "local_pass_asr_floor_at_k": {
+    "1": 0.0,
+    "16": 0.0,
+    "2": 0.0,
+    "25": 0.0,
+    "4": 0.0,
+    "8": 0.0
+  },
+  "mutation_rows": 4475,
+  "mutations_per_caught_attack": 25,
+  "privacy_clean_base_attacks": 240,
+  "privacy_excluded_base_attacks": 60,
+  "provider": {
+    "base_attempts": 99,
+    "failures": 0,
+    "model": "deepseek/deepseek-v4-flash-0731",
+    "mutation_attempts": 789,
+    "provider": "cloudflare"
+  },
+  "schema_version": 1
+}

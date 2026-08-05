@@ -21,6 +21,7 @@ from .deepseek_nooa import (
     WindowReview,
 )
 from .downstream import (
+    LLM_FLAG_PROBABILITY,
     THRESHOLD_SHA256,
     route,
     subversion_probability,
@@ -29,6 +30,7 @@ from .mmbert.core import MODEL_ID, MODEL_REVISION
 from .mmbert.serving import DEFAULT_MODEL_KEY, MmbertRuntime, PreparedText, Window
 
 MAX_REMOTE_WINDOWS = 128
+FULL_CONTEXT_REVIEW_INDEX = -1
 ALLOWED_CHANNELS = frozenset({"direct_user", "untrusted_content"})
 
 
@@ -96,7 +98,12 @@ class _WindowScorer(Protocol):
 
 
 class _WindowReviewer(Protocol):
-    async def review(self, text: str) -> WindowReview: ...
+    async def review(
+        self,
+        text: str,
+        *,
+        input_channel: Literal["direct_user", "untrusted_content"],
+    ) -> WindowReview: ...
 
     async def aclose(self) -> None: ...
 
@@ -112,6 +119,21 @@ class ReviewedWindow:
     input_tokens: int | None
     output_tokens: int | None
     failure_code: str | None
+
+
+def _review_record(index: int, review: WindowReview) -> ReviewedWindow:
+    review = _validated_review(review)
+    return ReviewedWindow(
+        index=index,
+        status=review.status,
+        probability=review.probability,
+        log_odds=review.log_odds,
+        attempts=review.attempts,
+        latency_ms=review.latency_ms,
+        input_tokens=review.input_tokens,
+        output_tokens=review.output_tokens,
+        failure_code=review.failure_code,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -249,7 +271,9 @@ class CascadeScanner:
                 await asyncio.gather(local_task, return_exceptions=True)
                 raise
         local_latency_ms = (time.perf_counter() - local_started) * 1000
-        local_routes = tuple(route(score) for score in scores)
+        local_routes = tuple(
+            route(score, input_channel=input_channel) for score in scores
+        )
         low_windows = sum(result.route == "pass" for result in local_routes)
         high_windows = sum(result.route == "restrict" for result in local_routes)
         middle_windows = sum(result.route == "review" for result in local_routes)
@@ -303,7 +327,12 @@ class CascadeScanner:
 
         if high_windows:
             return finish("restrict", True, "mmbert_high")
-        if low_windows == len(scores):
+        full_context_review = (
+            self._reviewer is not None
+            and input_channel == "untrusted_content"
+            and len(prepared.windows) > 1
+        )
+        if not full_context_review and low_windows == len(scores):
             return finish("pass", True, "mmbert_low")
         if self._reviewer is None:
             return finish("restrict", False, "remote_review_disabled")
@@ -318,69 +347,127 @@ class CascadeScanner:
             )
             if result.route == "review"
         )
-        if len(pending_reviews) > MAX_REMOTE_WINDOWS:
+        if (
+            len(prepared.windows) if full_context_review else len(pending_reviews)
+        ) > MAX_REMOTE_WINDOWS:
             return finish("restrict", False, "deepseek_window_limit")
 
         provider_started = time.perf_counter()
-        raw_reviews = await asyncio.gather(
-            *(
-                self._review_window(
-                    text
-                    if len(prepared.windows) == 1
-                    else prepared.normalized_text[window.char_start : window.char_end]
+        reviews = []
+        if full_context_review:
+            full_review = _review_record(
+                FULL_CONTEXT_REVIEW_INDEX,
+                await self._review_window(
+                    prepared.normalized_text,
+                    input_channel=input_channel,
+                ),
+            )
+            reviews.append(full_review)
+            provider_latency_ms = (time.perf_counter() - provider_started) * 1000
+            if full_review.status == "failed":
+                return finish(
+                    "restrict",
+                    False,
+                    "deepseek_failed",
+                    reviews=tuple(reviews),
+                    provider_latency_ms=provider_latency_ms,
                 )
-                for window, _ in pending_reviews
+            if (
+                full_review.probability is not None
+                and full_review.probability >= LLM_FLAG_PROBABILITY
+            ):
+                return finish(
+                    "restrict",
+                    True,
+                    "deepseek_full_context_flag",
+                    reviews=tuple(reviews),
+                    provider_latency_ms=provider_latency_ms,
+                )
+            if not pending_reviews:
+                return finish(
+                    "pass",
+                    True,
+                    "deepseek_full_context_clear",
+                    reviews=tuple(reviews),
+                    provider_latency_ms=provider_latency_ms,
+                )
+
+        outcome = None
+        for offset in range(0, len(pending_reviews), REMOTE_CONCURRENCY):
+            batch = pending_reviews[offset : offset + REMOTE_CONCURRENCY]
+            raw_reviews = await asyncio.gather(
+                *(
+                    self._review_window(
+                        (
+                            text
+                            if len(prepared.windows) == 1
+                            else prepared.normalized_text[
+                                window.char_start : window.char_end
+                            ]
+                        ),
+                        input_channel=input_channel,
+                    )
+                    for window, _ in batch
+                )
             )
-        )
-        provider_latency_ms = (time.perf_counter() - provider_started) * 1000
-        reviews = tuple(
-            ReviewedWindow(
-                index=window.index,
-                status=review.status,
-                probability=review.probability,
-                log_odds=review.log_odds,
-                attempts=review.attempts,
-                latency_ms=review.latency_ms,
-                input_tokens=review.input_tokens,
-                output_tokens=review.output_tokens,
-                failure_code=review.failure_code,
+            batch_reviews = tuple(
+                _review_record(window.index, review)
+                for (window, _), review in zip(
+                    batch,
+                    raw_reviews,
+                    strict=True,
+                )
             )
-            for (window, _), review in zip(
-                pending_reviews,
-                map(_validated_review, raw_reviews),
-                strict=True,
+            batch_routes = tuple(
+                route(
+                    score,
+                    input_channel=input_channel,
+                    llm_probability=(
+                        review.probability if review.status == "ok" else None
+                    ),
+                    llm_failed=review.status == "failed",
+                )
+                for (_, score), review in zip(batch, batch_reviews, strict=True)
             )
-        )
-        review_routes = tuple(
-            route(
-                score,
-                llm_probability=(review.probability if review.status == "ok" else None),
-                llm_failed=review.status == "failed",
-            )
-            for (_, score), review in zip(pending_reviews, reviews, strict=True)
-        )
-        outcome = next(
-            (result for result in review_routes if result.reason == "deepseek_failed"),
-            None,
-        )
-        if outcome is None:
+            reviews.extend(batch_reviews)
             outcome = next(
-                (result for result in review_routes if result.route == "restrict"),
-                review_routes[0],
+                (
+                    result
+                    for result in batch_routes
+                    if result.reason == "deepseek_failed"
+                ),
+                None,
             )
+            if outcome is None:
+                outcome = next(
+                    (result for result in batch_routes if result.route == "restrict"),
+                    None,
+                )
+            if outcome is not None:
+                break
+            outcome = batch_routes[0]
+        provider_latency_ms = (time.perf_counter() - provider_started) * 1000
         return finish(
             outcome.route,
             outcome.reason != "deepseek_failed",
             outcome.reason,
-            reviews=reviews,
+            reviews=tuple(reviews),
             provider_latency_ms=provider_latency_ms,
         )
 
-    async def _review_window(self, text: str) -> WindowReview:
+    async def _review_window(
+        self,
+        text: str,
+        *,
+        input_channel: Literal["direct_user", "untrusted_content"],
+    ) -> WindowReview:
         if self._reviewer is None:
             raise AssertionError("remote reviewer is not configured")
         async with self._remote_semaphore:
-            return await self._reviewer.review(text)
+            return await self._reviewer.review(
+                text,
+                input_channel=input_channel,
+            )
 
     def _prepare_and_score(
         self,

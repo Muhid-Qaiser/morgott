@@ -1,0 +1,10 @@
+{
+  "correction": {
+    "correct_value": "insertion boundary + 26; the payload begins one character before every recorded attack_span_start",
+    "field": "pairs[].attack_span_start",
+    "incorrect_value": "insertion boundary + 27"
+  },
+  "manifest_sha256": "1f3a7dfdf9a35c4910f2762cc8b971dc54cdf1af1036b754a2753b4d2f0fb45b",
+  "reason": "The frozen pair archives bind the completed LP-FT training and held-out evidence and must not be rewritten; no retained consumer reads the span field.",
+  "schema_version": 1
+}

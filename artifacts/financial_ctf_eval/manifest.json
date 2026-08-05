@@ -1,0 +1,80 @@
+{
+  "analysis_contract": {
+    "clean_diagnostic": "conversation restriction rate on nonoverlap zero-strategy rows; not a production FPR",
+    "primary": "conversation restriction recall on nonoverlap source-labelled instruction_override conversations",
+    "secondary": [
+      "restriction rate by source strategy, level, leakage outcome, and Azure flag",
+      "participant-macro rates",
+      "provider calls, failures, tokens, and route reasons"
+    ],
+    "threshold_selection": "none; use the registered cascade unchanged"
+  },
+  "cascade_contract": {
+    "model_registry_sha256": "bfb1f01480ac6a920504db1cda385097c8a988504e961d86a9dd1d2428953254",
+    "prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+    "request_sha256": "91cebeab5f248fe21677bf3b30afd6fe4df8bee61d2271852ac6a67c1c664b3e",
+    "threshold_sha256": "d75b25e472bb7219ce7a4948ee9abff77b04c2100dee1aa4875a0e02ceac8fb7"
+  },
+  "overlap_contract": {
+    "artifacts/mmbert/data/manifest.json": "309cfe0da78b6f1b06220759b458306caa41740882ae10bba4ec3e2516917567",
+    "data-archive/matched_pairs_20260726.jsonl.gz": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+    "data/manifest.json": "27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81",
+    "src/morgott/data.py": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e",
+    "src/morgott/models/mmbert/data.py": "d2d4a808994ffa9afb9a83409f16d950c898a9e704b007426751be5e5d9c4693",
+    "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+    "src/morgott/overlap.py": "1be805cf673817948ee80b92084405f0d932dca6789e2c4aad1016eb61345645"
+  },
+  "panel": {
+    "content_sha256": "495b48ea9b5480c103b91d805c256c87cb9be8c42d8f6f5e816e3f27827776bd",
+    "path": "artifacts/financial_ctf_eval/panel.jsonl.gz",
+    "rows": 1435,
+    "sha256": "67cba9167068f3a3a37516edd65b09ffad3b12e5724551a38a81aeed77fff4c6"
+  },
+  "population": {
+    "conversations": 400,
+    "instruction_override_conversations": 36,
+    "nonoverlap_conversations": 385,
+    "nonoverlap_instruction_override_conversations": 36,
+    "nonoverlap_zero_strategy_conversations": 35,
+    "participants": 22,
+    "turns": 1435,
+    "zero_strategy_conversations": 40
+  },
+  "projection": {
+    "conversation_route": "restrict when any incoming user turn restricts",
+    "excluded_from_input": [
+      "defender_system_prompt",
+      "protected goal records",
+      "assistant output",
+      "flag submissions"
+    ],
+    "input": "each non-empty incoming user turn scored independently",
+    "input_channel": "direct_user from source message role",
+    "source_label_note": "GPT-4.1 conversation strategies are weak source labels; only instruction_override is treated as an aligned positive diagnostic"
+  },
+  "purpose": "frozen external financial CTF advisory-cascade diagnostic",
+  "schema_version": 1,
+  "selection": {
+    "fit_overlap_filter": "exclude a complete conversation if any user turn has normalized, strict, or conservative near overlap with a full-LoRA fit candidate",
+    "overlapping_conversations": 15,
+    "overlapping_turns": 15,
+    "reference_rows": {
+      "canonical_train": 1073330,
+      "matched_pairs": 22092,
+      "promptshield_train": 18284
+    },
+    "removed_turns_by_reason": {
+      "near": 3,
+      "normalized_exact": 6,
+      "strict_exact": 6
+    }
+  },
+  "source": {
+    "dataset": "verno-labs/financial-ai-ctf-dataset",
+    "license": "CC-BY-4.0",
+    "path": "data/conversations.jsonl",
+    "revision": "44fa97e18ec106c2b51c6917975a9aab756f8aa1",
+    "rows": 400,
+    "sha256": "4276a6e7b86f065e57a708a9231cb1a579c138d94c7a7ac518ea3c6984499770"
+  }
+}

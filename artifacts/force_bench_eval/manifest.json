@@ -1,0 +1,85 @@
+{
+  "analysis_contract": {
+    "claim_boundary": "251 public and partly templated finance tasks cannot establish a production false-positive rate",
+    "decision_gate": "reject if observed restriction rate exceeds 1%; otherwise retain only as bounded benign-finance evidence",
+    "incomplete_rule": "any incomplete assessment or provider failure makes the result inconclusive",
+    "primary": "fixed-cascade restriction rate over all 251 source tasks",
+    "secondary": [
+      "restriction rate and Wilson upper bound by plugin",
+      "diagnostic rates by source segment and scenario",
+      "diagnostic rates by fixed word-length bucket",
+      "route reasons, model and reviewer scores, latency, tokens, and failures"
+    ],
+    "threshold_selection": "none; use the registered cascade unchanged"
+  },
+  "cascade_contract": {
+    "model_registry_sha256": "ddbe62b373a3837a7b0016de8e05e7cf82bdc2d38d570260a90f234a75298a74",
+    "prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+    "request_sha256": "91cebeab5f248fe21677bf3b30afd6fe4df8bee61d2271852ac6a67c1c664b3e",
+    "threshold_sha256": "0d7edddf5fa86d791d4457a7e59cf229b03b093e826dd19ffc8556919f70b1ae"
+  },
+  "experiment_contract": {
+    "experiments/force_bench_eval/README.md": "8d0b6211a900044acccb12e6093932dfba1a77226e9a29e62d28df55d7a2003e",
+    "experiments/force_bench_eval/run.py": "d6b454475a8e1cf81e427a0cbae59548ab58efed3baefbcd874281aec2947240",
+    "experiments/force_bench_eval/test_run.py": "9a1b21f57595684bbe88805504b08483c3d940d5751bc6cbf89e88e04c9ca087"
+  },
+  "overlap_contract": {
+    "artifacts/mmbert/data/manifest.json": "309cfe0da78b6f1b06220759b458306caa41740882ae10bba4ec3e2516917567",
+    "data-archive/matched_pairs_20260726.jsonl.gz": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+    "data/manifest.json": "27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81",
+    "src/morgott/data.py": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e",
+    "src/morgott/models/mmbert/data.py": "e0a21c54016dd8e7d224071521fa24f9f45bb3d39226222463d980ed95887270",
+    "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+    "src/morgott/overlap.py": "06be042816a7e754dd70b5d9130ec8643be00b5a2d96bd802a76bff9a6e715c2"
+  },
+  "panel": {
+    "content_sha256": "9a58ecb08e61cabaac0f1a76ed2cea8b08d6a081e5e248209cf61363388a903f",
+    "path": "artifacts/force_bench_eval/panel.jsonl.gz",
+    "rows": 251,
+    "sha256": "920a1820cd9b9f1bc03d6fd354ee06fc9897ea4590fedf6388a62fb2f9f05ba9"
+  },
+  "population": {
+    "maximum_words": 167,
+    "minimum_words": 5,
+    "normalized_query_duplicates": 0,
+    "plugins": {
+      "business_brief": 25,
+      "erp_qa": 100,
+      "finance_qa": 126
+    },
+    "rows": 251
+  },
+  "projection": {
+    "excluded": [
+      "rubric assertions",
+      "ground-truth values",
+      "agent answers"
+    ],
+    "input": "query only",
+    "input_channel": "direct_user from benchmark task role",
+    "label_basis": "published legitimate enterprise-finance benchmark tasks",
+    "raw_text_retained_in_artifacts": false
+  },
+  "purpose": "prospectively frozen external benign-finance cascade diagnostic",
+  "schema_version": 1,
+  "selection": {
+    "fit_overlap_filter": "normalized, audit-strict, and conservative near overlap against every full-LoRA fit candidate",
+    "reference_rows": {
+      "canonical_train": 1073330,
+      "matched_pairs": 22092,
+      "promptshield_train": 18284
+    },
+    "removed_by_reason": {},
+    "retained": 251
+  },
+  "source": {
+    "license": "MIT",
+    "paper": "https://arxiv.org/abs/2607.19409",
+    "path": "data/dataset.yaml",
+    "repository": "microsoft/FinanceBenchmark",
+    "revision": "6ced62b961d4c18b2ba53f268b443eb852fb73ca",
+    "rows": 251,
+    "sha256": "a795468c028b5511582e68683e3c879a577a92c9259afc045b93d0e78ae5ebd6",
+    "url": "https://raw.githubusercontent.com/microsoft/FinanceBenchmark/6ced62b961d4c18b2ba53f268b443eb852fb73ca/data/dataset.yaml"
+  }
+}

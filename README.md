@@ -16,6 +16,10 @@ proposed tool action             -> reference monitor   -> approve or deny
 A detector may miss an attack or flag a benign prompt. It therefore never grants
 tool, data, network, memory, credential, or financial authority. Every side
 effect must still pass deterministic policy using trusted runtime context.
+User-visible model output is an egress action in the policy simulation, so a trusted sensitive-data label can deny protected output without treating every confidentiality request as prompt injection.
+The policy simulator can bind variable action arguments to exact runtime source identities.
+The small `morgott.runtime` module now unions trusted source, provenance, and sensitivity labels across explicit transformations and invokes a synchronous effect only after policy authorization.
+It still relies on trusted runtime instrumentation to identify every input and is not a live agent, connector, or automatic taint-discovery system.
 
 ## Development
 
@@ -82,6 +86,10 @@ recorded in the manifest. Every exact-unique routing-eligible projection enters
 a grouped development partition unless conflict or leakage rules quarantine it.
 Sampling and source weighting belong to a future model recipe.
 
+SWE-bench Verified problem statements are retained only as a repository-grouped, dev-test long-benign direct-user slice.
+They are not training data, a threshold-selection set, or a matched long-context attack benchmark.
+Their first frozen local evaluation rejected the registered high gate and stopped before remote review, so the maintained cascade remains unchanged.
+
 The often-mentioned roughly 7,000 rows were the negative side of an old grouped
 validation split. They were never a download cap, corpus cap, or context limit.
 
@@ -143,7 +151,7 @@ smoke test, but it is not the intended routing model and its generated report is
 ignored. `morgott scan` is shadow-only and always returns `decision: allow`.
 
 `morgott routing-baseline` trains one reproducible unweighted word 1-2 gram linear control on source-supported direct-user rows.
-It verifies inputs against the canonical manifest, uses the untouched 0.5 cutoff, and reports aggregate and per-source development metrics.
+It verifies inputs against the canonical manifest, uses the untouched 0.5 cutoff, and reports confusion counts plus aggregate, origin-membership source, fixed-prevalence, and normalized-character length development metrics.
 Historical neural and data-ablation runners are not part of the active tree.
 Their metrics and stop decisions remain in the versioned reports and Git history.
 The selected frozen-mmBERT full-data pair-ranking candidate, reduced-mixture LoRA gate, and completed full-mixture LoRA seed are retained only as advisory first-pass research shadows under `artifacts/models/`.
@@ -151,7 +159,12 @@ Their external transfer evidence remains too weak for blocking, and every side e
 The existing `shadow-score` path strictly normalizes and truncates each input to its first 512 tokens.
 The separate cascade path scans complete normalized artifacts using ordered 512-token windows with 128-token overlap.
 
-The maintained mmBERT package can prepare the pinned external data, preflight the complete canonical mixture, train either a frozen head or rank-8 LoRA, and evaluate a new run:
+The later owner-authorized LP-FT comparison added repository-grouped SWE-rebench V2 matched pairs and substantially reduced long-task clean flags, but it collapsed on PromptShield transfer and indirect-document recall.
+That candidate was rejected, its weights are not registered, and the maintained LoRA and cascade remain unchanged.
+Its weights, scores, result records, and reproduction code are retained only for later comparison; the progress checkpoint was deleted after its digest was recorded.
+None of these artifacts authorize another training run, and exact findings and limitations are in `reports/model-experiments.md`.
+
+The maintained mmBERT package can prepare the pinned external data, preflight the complete canonical mixture, train a frozen head or rank-8 LoRA, reproduce the completed LP-FT comparison, and evaluate a run:
 
 ```bash
 uv run python -m morgott.models.mmbert.external_data
@@ -167,7 +180,9 @@ uv run --extra encoder python -m morgott.models.mmbert.evaluate \
 ```
 
 The trainer streams every canonical training row with source-supported injection labels after the external leakage guard, then adds filtered PromptShield training rows and the retained matched pairs.
-Its frozen and LoRA modes share one data contract, loss, checkpoint rule, and artifact format.
+Future preflights use a separate, stricter audit fingerprint for overlap filtering without changing canonical hashes or registered model input.
+Its frozen, LoRA, and LP-FT modes share one data contract, loss, checkpoint rule, and artifact format.
+LP-FT and additional-pair support are retained only to reproduce the completed rejected comparison.
 The registered full-mixture LoRA identity fails closed unless it uses microbatch 8 with gradient checkpointing disabled; a different execution recipe needs a different run identity.
 The single generic output treats direct injection, indirect injection, and jailbreak as positive instruction subversion and does not expose separate subtype scores.
 Source-supported harmful content without subversion may remain as a negative counterexample; this is not a harmfulness score.
@@ -192,8 +207,15 @@ Do not average or OR them without evaluating that new ensemble.
 
 The maintained cascade serves the registered FP32 ONNX graph through OpenVINO BF16 on CPU.
 OpenVINO performs the BF16 lowering at startup, so there is one portable model artifact rather than a second precision-specific copy.
-It passes below `0.2`, restricts at or above `0.99999`, and sends every middle-zone window to DeepSeek V4 Flash.
-DeepSeek restricts at `p_subversion >= 0.9`, and invalid or exhausted reviews fail conservatively.
+It passes direct-user scores below `0.2` and untrusted-content scores below `0.1`, and it restricts local scores at or above `0.99999`.
+With remote review enabled, multi-window untrusted content without a local high first sends the complete normalized artifact to DeepSeek V4 Flash.
+A full-context flag restricts immediately, while a clear result falls back to the existing middle-zone window reviews in batches of up to 4.
+Direct-user and single-window behavior remain unchanged, and the 128-window cap applies to the complete multi-window artifact.
+The synthetic full-context review record uses window index `-1`; ordinary window records retain their nonnegative tokenizer-window indexes.
+An exhausted review fails safe immediately, while a confirmed reviewer flag completes the advisory restrict without starting later calls.
+The selected reviewer is `deepseek/deepseek-v4-flash-0731` through Cloudflare.
+DeepSeek receives the trusted input channel and restricts at `p_subversion >= 0.6224593312`; invalid or exhausted reviews fail conservatively.
+Production initialization suppresses LiteLLM's unsolicited error banners so `morgott cascade` keeps stdout as one JSON document even when a retry is needed.
 Every result remains advisory: `decision` is always `allow`, and `advisory_route` never grants authority.
 
 Install the cascade on Python 3.12 or 3.13:
@@ -206,13 +228,16 @@ NOOA 0.0.8 currently declares support for Python 3.12 and 3.13.
 The rest of Morgott supports Python 3.12 and newer, and the cascade reports a clear startup error when that pinned NOOA release is unavailable.
 
 Export and verify a candidate CPU artifact offline:
-The export command intentionally fails unless the checkout and `uv.lock` match the registered source evidence.
+The export command verifies the registered artifacts plus the exact model-core and normalization sources that execute during scoring.
+Historical trainer, evaluator, and lockfile hashes remain immutable provenance without making ordinary runtime maintenance disable the registered model.
 
 ```bash
 uv run --extra encoder --extra encoder-export \
   python -m morgott.models.mmbert.export_onnx export
 uv run --extra cascade \
-  python -m morgott.models.mmbert.export_onnx verify-panel
+  python -m morgott.models.mmbert.export_onnx verify-panel \
+  --deepseek-evidence \
+  artifacts/openrouter_downstream_eval/deepseek_0731_runtime_evidence.jsonl.gz
 uv run --extra cascade \
   python -m morgott.models.mmbert.export_onnx benchmark
 ```
@@ -221,10 +246,13 @@ The benchmark prints deployment measurements to stdout and never overwrites regi
 The verification command also treats its evidence as write-once; use a fresh `--output` directory for a new candidate.
 The production constructor fails closed until the ONNX model and tokenizer hashes are registered under the full-LoRA model in `model-artifacts.json`.
 Register a serving runtime only after representative export parity, the frozen 20,000-row serving-equivalence gate, and deployment-CPU latency and throughput gates pass.
-The selected OpenVINO BF16 runtime changes 40 of 20,000 final routes, improves evaluation recall from 66.79% to 67.06%, changes FPR from 1.81% to 1.84%, and leaves the DeepSeek call rate effectively unchanged.
-Its calibration FPR is 2.01% rather than 1.98% because of one additional false positive.
+The verifier binds every provider record to the current prompt, request, model, provider, panel row, and trusted channel; stale prompt evidence fails closed.
 These are already-open shadow engineering results, not new production-quality claims.
 Later-window document behavior is new shadow evidence and is not covered by the retained 512-token evaluation.
+
+DeepSeek V4 Flash 0731 replaces the April reviewer under the owner's aggregate-quality criterion, but the gain is not uniform and all results remain advisory.
+The exact replacement evidence is in `reports/deepseek-v4-flash-0731-research.md`; the broader model, workload, robustness, and rejected-candidate findings are in `reports/model-experiments.md`; stateful containment findings are in `reports/agentdojo-integration-research.md` and `reports/agent-security-benchmark-options.md`.
+Keep exact experiment metrics in those reports so this operational README does not become a second model ledger.
 
 Run a local-only assessment:
 
@@ -233,7 +261,8 @@ uv run --extra cascade morgott cascade input.txt \
   --input-channel direct_user
 ```
 
-Add `--allow-remote` only when middle-zone text may leave the process and `OPENROUTER_API_KEY` is set.
+Add `--allow-remote` only when eligible text may leave the process and `OPENROUTER_API_KEY` is set.
+For multi-window untrusted content, eligible text includes the complete normalized artifact before any middle-zone fallback.
 Files and stdin are read in bounded chunks, normalized only after the complete artifact arrives, and scanned without a configured maximum input length.
 The current whole-artifact normalization is intentionally O(N) memory.
 
@@ -281,7 +310,7 @@ is promoted; their durable conclusions are summarized in
 - `src/morgott/normalization.py`: strict inference-side text normalization.
 - `src/morgott/policy.py`: deterministic authorization simulation.
 - `tests/`: maintained data, detector, and policy invariants.
-- `artifacts/models/`: the three registered advisory model artifacts.
+- `artifacts/models/`: the registered advisory model artifacts plus the retained unregistered LP-FT comparison candidate.
 - `experiments/`: rules for disposable or study-specific experiments that do not belong in maintained model code.
 - `data/manifest.json`: sole versioned machine data manifest.
 - `reports/dataset-selection.md`: source inclusion and exclusion decisions.

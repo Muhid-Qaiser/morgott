@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections import defaultdict
+import unicodedata
+from collections import Counter, defaultdict
+from functools import lru_cache
 
 import numpy as np
 
-from .data import normalize_text, text_hash
+from .data import text_hash
+from .normalization import strict_normalize
 
 NEAR_BITS = 128
 NEAR_BANDS = 8
@@ -19,6 +22,23 @@ NEAR_METHOD = (
     "contiguous 8,000-character head, middle, and tail windows"
 )
 _WORD = re.compile(r"\w+", re.UNICODE)
+_LEAKAGE_TRANSLATION = dict.fromkeys((0x034F, *range(0xE0100, 0xE01F0)))
+LEAKAGE_NORMALIZATION_METHOD = (
+    "strict_normalize plus removal of U+034F and U+E0100-U+E01EF; leakage audit only"
+)
+
+
+# ponytail: bound each worker's common-word cache; raise only after a measured
+# full-build win justifies the extra memory.
+@lru_cache(maxsize=10_000)
+def _word_digest(word: str) -> bytes:
+    return hashlib.blake2b(word.encode(), digest_size=NEAR_BITS // 8).digest()
+
+
+def leakage_text_hash(text: str) -> str:
+    """Hash the audit-only transform without changing registered model input."""
+    normalized = strict_normalize(text.translate(_LEAKAGE_TRANSLATION))
+    return hashlib.sha256(normalized.encode()).hexdigest()
 
 
 def fingerprint(text: str) -> int | None:
@@ -32,23 +52,29 @@ def fingerprint(text: str) -> int | None:
             text[middle - window // 2 : middle + window // 2],
             text[-window:],
         ]
-    word_windows = [_WORD.findall(normalize_text(window)) for window in windows]
+    word_windows = [
+        _WORD.findall(unicodedata.normalize("NFKC", window).casefold())
+        for window in windows
+    ]
     if sum(map(len, word_windows)) < NEAR_MIN_WORDS:
         return None
-    features = [word for words in word_windows for word in words]
-    features.extend(
+    words = [word for window in word_windows for word in window]
+    bigrams = [
         f"{left}\0{right}"
-        for words in word_windows
-        for left, right in zip(words, words[1:])
-    )
+        for window in word_windows
+        for left, right in zip(window, window[1:])
+    ]
     digests = b"".join(
-        hashlib.blake2b(feature.encode(), digest_size=NEAR_BITS // 8).digest()
-        for feature in features
+        [_word_digest(word) for word in words]
+        + [
+            hashlib.blake2b(bigram.encode(), digest_size=NEAR_BITS // 8).digest()
+            for bigram in bigrams
+        ]
     )
     bits = np.unpackbits(
         np.frombuffer(digests, dtype=np.uint8), bitorder="little"
     ).reshape(-1, NEAR_BITS)
-    majority = bits.sum(axis=0) * 2 >= len(features)
+    majority = bits.sum(axis=0) * 2 >= len(words) + len(bigrams)
     return int.from_bytes(np.packbits(majority, bitorder="little").tobytes(), "little")
 
 
@@ -106,12 +132,14 @@ class NearIndex:
             or row.get("normalized_text_sha256")
             or text_hash(row["text"])
         )
-        candidates: set[int] = set()
+        candidates = Counter()
         for band in range(NEAR_BANDS):
             key = (value >> (band * 16)) & 0xFFFF
             candidates.update(self.buckets[band].get(key, ()))
         matches = []
-        for index in candidates:
+        for index, matching_bands in candidates.items():
+            if matching_bands < NEAR_BANDS - NEAR_MAX_HAMMING:
+                continue
             candidate, candidate_hash, record = self.records[index]
             distance = (candidate ^ value).bit_count()
             if candidate_hash != normalized_hash and distance <= NEAR_MAX_HAMMING:

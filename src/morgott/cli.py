@@ -104,7 +104,7 @@ def _parser() -> argparse.ArgumentParser:
     cascade.add_argument(
         "--allow-remote",
         action="store_true",
-        help="allow middle-zone text to be reviewed through OpenRouter",
+        help="allow eligible artifact text to be reviewed through OpenRouter",
     )
     return parser
 

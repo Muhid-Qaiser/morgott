@@ -129,6 +129,12 @@ FILES = {
             "717b40e632290cefa2c0dd60dc304a702f1196002349bbd1a1689b555d233bb8",
         ),
     },
+    "swebench_verified": {
+        "dev_test": (
+            "data/test-00000-of-00001.parquet",
+            "43ed5a3d1d98da36472c1ade65ddd2085d7b4ff694fcaf6a023a07c5c1f32f21",
+        ),
+    },
     "false_reject": {
         "train": (
             "train.jsonl",

@@ -36,7 +36,11 @@ The completed scope fits a frozen mmBERT head on the complete leakage-filtered m
 PromptShield validation selects checkpoints but does not fit parameters or select operating thresholds, and PromptShield test remains already-open, source-held-out benchmark development data.
 The retained weights use Git LFS and are listed in `model-artifacts.json`.
 They are advisory research shadows, are not wired into `morgott scan`, and are not approved for blocking or authorization.
-The compact maintained recipe in `src/morgott/models/mmbert/` supports full-data frozen-head and LoRA retraining without reviving the historical runners.
+On 2026-08-05 the owner separately authorized one LP-FT comparison on the rebuilt mixture plus repository-grouped SWE-rebench V2 matched pairs.
+That run substantially reduced long-task clean flags but collapsed on PromptShield transfer and indirect-document recall, so the candidate was rejected and its weights were not registered.
+Its final weights and scores are retained through Git LFS, while its evaluation records remain versioned for later comparison; the resumable progress checkpoint was deleted once the run was rejected, and the retained artifacts remain outside `model-artifacts.json` and cannot be selected by maintained inference.
+The compact maintained recipe in `src/morgott/models/mmbert/` supports reproducing the completed frozen-head, LoRA, and LP-FT runs without reviving the historical runners.
+LP-FT and additional-pair support exist only for reproduction of the completed rejected comparison.
 Code availability is not authorization to execute or promote another encoder run.
 No further encoder sweep or model promotion is authorized by this exception.
 
@@ -259,7 +263,8 @@ Toxicity remains deferred until a second independent positive source and matched
 The completed frozen-head, reduced-mixture LoRA, and one-seed full-mixture LoRA experiments are the bounded exception recorded above.
 Their already-consumed PromptShield and SEP results are development evidence, not a prospective final test.
 The maintained mmBERT trainer exists for reproducibility and a future explicitly authorized run.
-The next encoder run remains deferred until the evidence requirements in this section are met.
+The completed LP-FT exception does not satisfy those broader evidence requirements: its matched long-task data improved its same-source workload while external transfer regressed.
+The next encoder run remains deferred and requires a new explicit authorization and prospectively frozen, same-row comparison protocol.
 
 Before promoting auxiliary rows, follow the diagnostic-first OASST1 and
 WildJailbreak procedure in `reports/dataset-selection.md`; those rows must not
@@ -291,7 +296,7 @@ credentials, raw provider responses, or sensitive prompts.
 - `src/morgott/overlap.py`: conservative near-overlap checks.
 - `src/morgott/models/detector.py`: optional shadow-control model.
 - `src/morgott/models/routing_baseline.py`: minimal broad-routing word n-gram control.
-- `src/morgott/models/mmbert/`: maintained external-data preparation, full-data frozen/LoRA training, evaluation, and inference.
+- `src/morgott/models/mmbert/`: maintained external-data preparation, full-data frozen/LoRA/LP-FT reproduction, evaluation, and inference.
 - `src/morgott/normalization.py`: strict inference-side text normalization.
 - `src/morgott/policy.py`: deterministic reference-monitor simulation.
 - `tests/`: maintained invariants.
@@ -303,8 +308,7 @@ credentials, raw provider responses, or sensitive prompts.
 - `experiments/`: placement rule for disposable or study-specific work that is not maintained model behavior.
 - Git commit `91e8c829c8b39c8ff37a6ca2479c8fc057168d39`: immutable source provenance for the completed July 2026 model runs.
 - `artifacts/models/`: selected frozen and LoRA inference artifacts plus immutable result and evaluation records.
-- `model-artifacts.json`: sole registry for the owner-approved LFS research
-  weights and their hashes.
+- `model-artifacts.json`: sole registry for owner-approved LFS research weights loadable by maintained inference; the rejected comparison-only exception documented above remains intentionally outside it.
 - `docs/threat-model.md` and `docs/roadmap.md`: current architecture and plan.
 
 Before handing off a data change:

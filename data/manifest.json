@@ -207,6 +207,7 @@
     "notinject/datasets/NotInject_three.json": "ef01eff0d761d2e34571b3fdbcec08c30cd93efe8d0e1a2eb5c2baeb1873b070",
     "notinject/datasets/NotInject_two.json": "6043d94e75b48d8e7682d25dc79eaf45359e1e561ce520e3b8fd5625a91060c6",
     "schema_guided_dialogue/schema_guided_dialogue.tar.gz": "ff97a9ab52b4cc9f25e1a093c96431512465e8377f9a1f57dc710a10484d2188",
+    "swebench_verified/data/test-00000-of-00001.parquet": "43ed5a3d1d98da36472c1ade65ddd2085d7b4ff694fcaf6a023a07c5c1f32f21",
     "taskmaster/taskmaster.tar.gz": "c7e4774798ace96e3b413a9beef6d2a706458d66c4e87ef1061e9426db1a3c46",
     "tatqa/dataset_raw/tatqa_dataset_dev.json": "8da095a819af6db3c14877c6df2d4d29960e41d1a63dd1fa853507bd2a616af5",
     "tatqa/dataset_raw/tatqa_dataset_test.json": "6efcf044cedeba3661eb70b1b93595673fd3f3dfcc1f78288ec5115682e7a96c",
@@ -528,8 +529,10 @@
       "reasons": {
         "exact_label_conflict": 76202,
         "exact_supervised_overlap": 3962,
-        "near_dev_test_overlap": 58239,
-        "near_train_overlap": 7675
+        "near_dev_test_overlap": 58067,
+        "near_train_overlap": 8023,
+        "strict_dev_test_overlap": 961,
+        "strict_train_overlap": 170
       },
       "representative_source_routing": {
         "banking77": {
@@ -541,7 +544,7 @@
           "non_benign": 2
         },
         "browsesafe": {
-          "benign": 51,
+          "benign": 50,
           "non_benign": 63
         },
         "do_not_answer": {
@@ -550,22 +553,22 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 10620
+          "non_benign": 10922
         },
         "harper_valley_bank": {
-          "benign": 1861,
+          "benign": 1862,
           "non_benign": 0
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 24712
+          "non_benign": 24277
         },
         "lmsys_arena": {
-          "benign": 2371,
+          "benign": 2375,
           "non_benign": 36
         },
         "massive_en": {
-          "benign": 161,
+          "benign": 162,
           "non_benign": 0
         },
         "oasst1": {
@@ -577,11 +580,11 @@
           "non_benign": 6
         },
         "schema_guided_dialogue": {
-          "benign": 7223,
+          "benign": 7226,
           "non_benign": 0
         },
         "taskmaster": {
-          "benign": 59621,
+          "benign": 59777,
           "non_benign": 0
         },
         "tatqa": {
@@ -590,40 +593,40 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 39135
+          "non_benign": 40414
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 11
+          "non_benign": 13
         },
         "wildjailbreak": {
-          "benign": 43,
+          "benign": 38,
           "non_benign": 25
         }
       },
       "representative_sources": {
         "banking77": 37,
         "bipia": 2,
-        "browsesafe": 114,
+        "browsesafe": 113,
         "do_not_answer": 3,
-        "hackaprompt": 10620,
-        "harper_valley_bank": 1861,
-        "llmail": 24712,
-        "lmsys_arena": 2407,
-        "massive_en": 161,
+        "hackaprompt": 10922,
+        "harper_valley_bank": 1862,
+        "llmail": 24277,
+        "lmsys_arena": 2411,
+        "massive_en": 162,
         "oasst1": 47,
         "prompt_injections": 6,
-        "schema_guided_dialogue": 7223,
-        "taskmaster": 59621,
+        "schema_guided_dialogue": 7226,
+        "taskmaster": 59777,
         "tatqa": 50,
-        "tensor_trust_raw": 39135,
-        "toxic_chat": 11,
-        "wildjailbreak": 68
+        "tensor_trust_raw": 40414,
+        "toxic_chat": 13,
+        "wildjailbreak": 63
       },
-      "routing_benign": 71418,
-      "routing_non_benign": 74660,
-      "rows": 146078,
-      "sha256": "1875e8ae54ed0f8959a2965d08b441323359d7e191c99564a368b4590c6080b7",
+      "routing_benign": 71577,
+      "routing_non_benign": 75808,
+      "rows": 147385,
+      "sha256": "34e739af6242fbd13f410179d3500c4b447b4cf77eb097ea18485f0dfef98e42",
       "source_membership_routing": {
         "banking77": {
           "benign": 37,
@@ -634,7 +637,7 @@
           "non_benign": 2
         },
         "browsesafe": {
-          "benign": 51,
+          "benign": 50,
           "non_benign": 63
         },
         "do_not_answer": {
@@ -643,22 +646,22 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 10620
+          "non_benign": 10922
         },
         "harper_valley_bank": {
-          "benign": 1861,
+          "benign": 1862,
           "non_benign": 0
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 24712
+          "non_benign": 24277
         },
         "lmsys_arena": {
-          "benign": 2371,
+          "benign": 2375,
           "non_benign": 36
         },
         "massive_en": {
-          "benign": 164,
+          "benign": 162,
           "non_benign": 0
         },
         "oasst1": {
@@ -670,11 +673,11 @@
           "non_benign": 6
         },
         "schema_guided_dialogue": {
-          "benign": 7227,
+          "benign": 7231,
           "non_benign": 0
         },
         "taskmaster": {
-          "benign": 60227,
+          "benign": 60383,
           "non_benign": 0
         },
         "tatqa": {
@@ -683,81 +686,91 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 39174
+          "non_benign": 40495
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 12
+          "non_benign": 14
         },
         "wildjailbreak": {
-          "benign": 43,
+          "benign": 38,
           "non_benign": 25
         }
       },
       "source_memberships": {
         "banking77": 37,
         "bipia": 2,
-        "browsesafe": 114,
+        "browsesafe": 113,
         "do_not_answer": 3,
-        "hackaprompt": 10620,
-        "harper_valley_bank": 1861,
-        "llmail": 24712,
-        "lmsys_arena": 2407,
-        "massive_en": 164,
+        "hackaprompt": 10922,
+        "harper_valley_bank": 1862,
+        "llmail": 24277,
+        "lmsys_arena": 2411,
+        "massive_en": 162,
         "oasst1": 47,
         "prompt_injections": 6,
-        "schema_guided_dialogue": 7227,
-        "taskmaster": 60227,
+        "schema_guided_dialogue": 7231,
+        "taskmaster": 60383,
         "tatqa": 50,
-        "tensor_trust_raw": 39174,
-        "toxic_chat": 12,
-        "wildjailbreak": 68
+        "tensor_trust_raw": 40495,
+        "toxic_chat": 14,
+        "wildjailbreak": 63
       }
+    },
+    "swebench_verified_sensitive": {
+      "path": "quarantine/swebench_verified_sensitive.jsonl",
+      "reasons": {
+        "potential_secret_or_pii": 8
+      },
+      "rows": 8,
+      "sha256": "16c2523bba734daca57a9d8880913e9fc3a60623b62c5f09454e480c453ea9b3"
     }
   },
   "routing_deduplication": {
     "actual_ratios": {
-      "dev_test": 0.20813895126761692,
-      "train": 0.6966372040086809,
-      "validation": 0.09522384472370216
+      "dev_test": 0.20833537631772495,
+      "train": 0.6967214815094197,
+      "validation": 0.09494314217285534
     },
     "actual_rows": {
-      "dev_test": 441649,
-      "train": 1478191,
-      "validation": 202055
+      "dev_test": 441896,
+      "train": 1477802,
+      "validation": 201382
     },
     "candidate_exact_rows_fixed_by_official_lineage": 119549,
     "candidate_partition_rows": {
-      "dev_test": 140125,
-      "train": 1529422,
-      "validation": 216738
+      "dev_test": 139880,
+      "train": 1529693,
+      "validation": 216712
     },
     "cross_lineage_exact_duplicates": 88664,
     "exact_conflict_rows_quarantined": 76202,
     "exact_duplicate_rows_merged": 1277695,
-    "input_rows": 3541706,
+    "input_rows": 3542198,
     "near_method": "128-bit SimHash over word unigrams+bigrams, eight 16-bit bands, Hamming <= 6, five-word minimum; documents over 24,000 characters use contiguous 8,000-character head, middle, and tail windows",
-    "official_dev_test_rows": 301524,
+    "official_dev_test_rows": 302016,
     "partition_method": "exact deduplication, official-dev locking, 70/10/20 iterative source/label targets, then deterministic weighted lineage placement",
     "planned_ratios": {
-      "dev_test": 0.20186817039330215,
-      "train": 0.6990655948485448,
-      "validation": 0.09906623475815302
+      "dev_test": 0.2019356569320217,
+      "train": 0.6990322629290943,
+      "validation": 0.099032080138884
     },
     "planned_rows": {
-      "dev_test": 441649,
-      "train": 1529422,
-      "validation": 216738
+      "dev_test": 441896,
+      "train": 1529693,
+      "validation": 216712
     },
     "ratio_deviation": {
-      "dev_test": 0.008138951267616906,
-      "train": -0.0033627959913190564,
-      "validation": -0.00477615527629785
+      "dev_test": 0.008335376317724935,
+      "train": -0.003278518490580251,
+      "validation": -0.00505685782714467
     },
     "storage": "temporary SQLite index; canonical JSONL source shards remain authoritative",
     "supervised": {
-      "near_dev_test_overlap_rows_quarantined": 58239,
-      "near_train_overlap_rows_quarantined": 7675
+      "near_dev_test_overlap_rows_quarantined": 58067,
+      "near_train_overlap_rows_quarantined": 8023,
+      "strict_dev_test_overlap_rows_quarantined": 961,
+      "strict_train_overlap_rows_quarantined": 170
     },
     "target_ratios": {
       "dev_test": 0.2,
@@ -773,7 +786,7 @@
   "routing_views": {
     "dev_test": {
       "largest_split_group": {
-        "partition_share": 0.07831784969511989,
+        "partition_share": 0.07827407353766497,
         "rows": 34589,
         "split_group_sha256": "47942d9d5938b37e2eb2ab172b6aae6fcc2bd537d7e3ff4ccf79aaf7d6ed2fb8"
       },
@@ -800,7 +813,7 @@
           "non_benign": 6312
         },
         "false_reject": {
-          "benign": 2530,
+          "benign": 2525,
           "non_benign": 0
         },
         "financebench": {
@@ -820,7 +833,7 @@
           "non_benign": 400
         },
         "harper_valley_bank": {
-          "benign": 976,
+          "benign": 973,
           "non_benign": 0
         },
         "jailbreaks_over_time": {
@@ -833,10 +846,10 @@
         },
         "llmail": {
           "benign": 160,
-          "non_benign": 25740
+          "non_benign": 25723
         },
         "lmsys_arena": {
-          "benign": 12922,
+          "benign": 12885,
           "non_benign": 0
         },
         "massive_en": {
@@ -867,8 +880,12 @@
           "benign": 104219,
           "non_benign": 0
         },
+        "swebench_verified": {
+          "benign": 492,
+          "non_benign": 0
+        },
         "taskmaster": {
-          "benign": 133505,
+          "benign": 133499,
           "non_benign": 0
         },
         "tatqa": {
@@ -881,7 +898,7 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 37453
+          "non_benign": 37346
         },
         "toxic_chat": {
           "benign": 0,
@@ -892,8 +909,8 @@
           "non_benign": 754
         },
         "wildjailbreak": {
-          "benign": 6957,
-          "non_benign": 19301
+          "benign": 6937,
+          "non_benign": 19251
         },
         "xstest": {
           "benign": 250,
@@ -906,16 +923,16 @@
         "browsesafe": 3680,
         "coconot": 379,
         "do_not_answer": 6312,
-        "false_reject": 2530,
+        "false_reject": 2525,
         "financebench": 330,
         "gandalf": 223,
         "hackaprompt": 55622,
         "harmbench": 400,
-        "harper_valley_bank": 976,
+        "harper_valley_bank": 973,
         "jailbreaks_over_time": 3901,
         "jbb_benign": 100,
-        "llmail": 25900,
-        "lmsys_arena": 12922,
+        "llmail": 25883,
+        "lmsys_arena": 12885,
         "massive_en": 4954,
         "mind2web": 133,
         "multi_turn": 6536,
@@ -923,19 +940,20 @@
         "notinject": 339,
         "prompt_injections": 59,
         "schema_guided_dialogue": 104219,
-        "taskmaster": 133505,
+        "swebench_verified": 492,
+        "taskmaster": 133499,
         "tatqa": 6368,
         "tensor_trust": 2254,
-        "tensor_trust_raw": 37453,
+        "tensor_trust_raw": 37346,
         "toxic_chat": 352,
         "wildguardmix": 1244,
-        "wildjailbreak": 26258,
+        "wildjailbreak": 26188,
         "xstest": 450
       },
-      "routing_benign": 281943,
-      "routing_non_benign": 159706,
-      "rows": 441649,
-      "sha256": "992f3f8b9467529261f929a115f8d83f99b0c411c81539778d6d7ec1492ac309",
+      "routing_benign": 282364,
+      "routing_non_benign": 159532,
+      "rows": 441896,
+      "sha256": "0f0f08854aeeb974e617204157621422b2d5c1c0889c4e1aa07e8e37fcf34501",
       "source_membership_routing": {
         "banking77": {
           "benign": 3077,
@@ -958,7 +976,7 @@
           "non_benign": 6312
         },
         "false_reject": {
-          "benign": 2530,
+          "benign": 2525,
           "non_benign": 0
         },
         "financebench": {
@@ -978,7 +996,7 @@
           "non_benign": 400
         },
         "harper_valley_bank": {
-          "benign": 1110,
+          "benign": 1107,
           "non_benign": 0
         },
         "jailbreaks_over_time": {
@@ -991,14 +1009,14 @@
         },
         "llmail": {
           "benign": 160,
-          "non_benign": 25740
+          "non_benign": 25723
         },
         "lmsys_arena": {
-          "benign": 13005,
+          "benign": 12968,
           "non_benign": 0
         },
         "massive_en": {
-          "benign": 4974,
+          "benign": 4980,
           "non_benign": 0
         },
         "mind2web": {
@@ -1022,11 +1040,15 @@
           "non_benign": 59
         },
         "schema_guided_dialogue": {
-          "benign": 105642,
+          "benign": 105644,
+          "non_benign": 0
+        },
+        "swebench_verified": {
+          "benign": 492,
           "non_benign": 0
         },
         "taskmaster": {
-          "benign": 137533,
+          "benign": 137524,
           "non_benign": 0
         },
         "tatqa": {
@@ -1039,7 +1061,7 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 38367
+          "non_benign": 38260
         },
         "toxic_chat": {
           "benign": 0,
@@ -1050,8 +1072,8 @@
           "non_benign": 754
         },
         "wildjailbreak": {
-          "benign": 6964,
-          "non_benign": 19301
+          "benign": 6944,
+          "non_benign": 19251
         },
         "xstest": {
           "benign": 250,
@@ -1064,37 +1086,38 @@
         "browsesafe": 3680,
         "coconot": 379,
         "do_not_answer": 6312,
-        "false_reject": 2530,
+        "false_reject": 2525,
         "financebench": 330,
         "gandalf": 223,
         "hackaprompt": 55626,
         "harmbench": 400,
-        "harper_valley_bank": 1110,
+        "harper_valley_bank": 1107,
         "jailbreaks_over_time": 3901,
         "jbb_benign": 100,
-        "llmail": 25900,
-        "lmsys_arena": 13005,
-        "massive_en": 4974,
+        "llmail": 25883,
+        "lmsys_arena": 12968,
+        "massive_en": 4980,
         "mind2web": 133,
         "multi_turn": 6536,
         "nemotron_agentic_ipi": 676,
         "notinject": 339,
         "prompt_injections": 59,
-        "schema_guided_dialogue": 105642,
-        "taskmaster": 137533,
+        "schema_guided_dialogue": 105644,
+        "swebench_verified": 492,
+        "taskmaster": 137524,
         "tatqa": 6370,
         "tensor_trust": 2254,
-        "tensor_trust_raw": 38367,
+        "tensor_trust_raw": 38260,
         "toxic_chat": 352,
         "wildguardmix": 1244,
-        "wildjailbreak": 26265,
+        "wildjailbreak": 26195,
         "xstest": 450
       }
     },
     "train": {
       "largest_split_group": {
-        "partition_share": 0.05900590654387694,
-        "rows": 87222,
+        "partition_share": 0.059011288386400886,
+        "rows": 87207,
         "split_group_sha256": "9249785f5c0d33f877f0fb05da17879204c823082435c6d7999d1a3258f18049"
       },
       "path": "views/routing/train.jsonl",
@@ -1108,7 +1131,7 @@
           "non_benign": 436
         },
         "browsesafe": {
-          "benign": 4831,
+          "benign": 4832,
           "non_benign": 4735
         },
         "coconot": {
@@ -1116,7 +1139,7 @@
           "non_benign": 0
         },
         "false_reject": {
-          "benign": 11621,
+          "benign": 11625,
           "non_benign": 0
         },
         "gandalf": {
@@ -1125,22 +1148,22 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 270704
+          "non_benign": 270595
         },
         "harper_valley_bank": {
-          "benign": 5197,
+          "benign": 5211,
           "non_benign": 0
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 84276
+          "non_benign": 85032
         },
         "lmsys_arena": {
-          "benign": 69767,
+          "benign": 69800,
           "non_benign": 0
         },
         "massive_en": {
-          "benign": 9880,
+          "benign": 9879,
           "non_benign": 0
         },
         "mind2web": {
@@ -1152,11 +1175,11 @@
           "non_benign": 173
         },
         "schema_guided_dialogue": {
-          "benign": 195738,
+          "benign": 195731,
           "non_benign": 0
         },
         "taskmaster": {
-          "benign": 468119,
+          "benign": 467992,
           "non_benign": 0
         },
         "tatqa": {
@@ -1165,42 +1188,42 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 181790
+          "non_benign": 180772
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 290
+          "non_benign": 289
         },
         "wildjailbreak": {
-          "benign": 37586,
-          "non_benign": 101039
+          "benign": 37608,
+          "non_benign": 101083
         }
       },
       "representative_sources": {
         "banking77": 8720,
         "bipia": 436,
-        "browsesafe": 9566,
+        "browsesafe": 9567,
         "coconot": 804,
-        "false_reject": 11621,
+        "false_reject": 11625,
         "gandalf": 679,
-        "hackaprompt": 270704,
-        "harper_valley_bank": 5197,
-        "llmail": 84276,
-        "lmsys_arena": 69767,
-        "massive_en": 9880,
+        "hackaprompt": 270595,
+        "harper_valley_bank": 5211,
+        "llmail": 85032,
+        "lmsys_arena": 69800,
+        "massive_en": 9879,
         "mind2web": 721,
         "prompt_injections": 173,
-        "schema_guided_dialogue": 195738,
-        "taskmaster": 468119,
+        "schema_guided_dialogue": 195731,
+        "taskmaster": 467992,
         "tatqa": 21085,
-        "tensor_trust_raw": 181790,
-        "toxic_chat": 290,
-        "wildjailbreak": 138625
+        "tensor_trust_raw": 180772,
+        "toxic_chat": 289,
+        "wildjailbreak": 138691
       },
-      "routing_benign": 834069,
-      "routing_non_benign": 644122,
-      "rows": 1478191,
-      "sha256": "682939d7b6a273888b049401cb2e9569027cd94c6cc944b1a13dd92065d5501a",
+      "routing_benign": 834008,
+      "routing_non_benign": 643794,
+      "rows": 1477802,
+      "sha256": "7c01d8bc5f0789f464fa2bdcae11098b2abb21a69ac872c7e27417bdcaec9443",
       "source_membership_routing": {
         "banking77": {
           "benign": 8720,
@@ -1211,7 +1234,7 @@
           "non_benign": 436
         },
         "browsesafe": {
-          "benign": 4831,
+          "benign": 4832,
           "non_benign": 4735
         },
         "coconot": {
@@ -1219,7 +1242,7 @@
           "non_benign": 0
         },
         "false_reject": {
-          "benign": 11621,
+          "benign": 11625,
           "non_benign": 0
         },
         "gandalf": {
@@ -1228,22 +1251,22 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 270705
+          "non_benign": 270596
         },
         "harper_valley_bank": {
-          "benign": 5197,
+          "benign": 5211,
           "non_benign": 0
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 84276
+          "non_benign": 85032
         },
         "lmsys_arena": {
-          "benign": 69768,
+          "benign": 69800,
           "non_benign": 0
         },
         "massive_en": {
-          "benign": 9891,
+          "benign": 9885,
           "non_benign": 0
         },
         "mind2web": {
@@ -1255,11 +1278,11 @@
           "non_benign": 173
         },
         "schema_guided_dialogue": {
-          "benign": 195747,
+          "benign": 195735,
           "non_benign": 0
         },
         "taskmaster": {
-          "benign": 469255,
+          "benign": 469118,
           "non_benign": 0
         },
         "tatqa": {
@@ -1268,37 +1291,37 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 182111
+          "non_benign": 181087
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 290
+          "non_benign": 289
         },
         "wildjailbreak": {
-          "benign": 37586,
-          "non_benign": 101039
+          "benign": 37608,
+          "non_benign": 101083
         }
       },
       "source_memberships": {
         "banking77": 8720,
         "bipia": 436,
-        "browsesafe": 9566,
+        "browsesafe": 9567,
         "coconot": 804,
-        "false_reject": 11621,
+        "false_reject": 11625,
         "gandalf": 679,
-        "hackaprompt": 270705,
-        "harper_valley_bank": 5197,
-        "llmail": 84276,
-        "lmsys_arena": 69768,
-        "massive_en": 9891,
+        "hackaprompt": 270596,
+        "harper_valley_bank": 5211,
+        "llmail": 85032,
+        "lmsys_arena": 69800,
+        "massive_en": 9885,
         "mind2web": 721,
         "prompt_injections": 173,
-        "schema_guided_dialogue": 195747,
-        "taskmaster": 469255,
+        "schema_guided_dialogue": 195735,
+        "taskmaster": 469118,
         "tatqa": 21085,
-        "tensor_trust_raw": 182111,
-        "toxic_chat": 290,
-        "wildjailbreak": 138625
+        "tensor_trust_raw": 181087,
+        "toxic_chat": 289,
+        "wildjailbreak": 138691
       }
     },
     "uncertain": {
@@ -1358,8 +1381,8 @@
     },
     "validation": {
       "largest_split_group": {
-        "partition_share": 0.1134047660290515,
-        "rows": 22914,
+        "partition_share": 0.11347588165774498,
+        "rows": 22852,
         "split_group_sha256": "78166f61073578e5c64a0042fc47c7b2789e2837ef73a6d05b3ceef698166b18"
       },
       "path": "views/routing/validation.jsonl",
@@ -1381,7 +1404,7 @@
           "non_benign": 0
         },
         "false_reject": {
-          "benign": 1660,
+          "benign": 1661,
           "non_benign": 0
         },
         "gandalf": {
@@ -1390,15 +1413,15 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 34430
+          "non_benign": 34237
         },
         "harper_valley_bank": {
-          "benign": 706,
+          "benign": 694,
           "non_benign": 0
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 11515
+          "non_benign": 11211
         },
         "lmsys_arena": {
           "benign": 9913,
@@ -1417,11 +1440,11 @@
           "non_benign": 25
         },
         "schema_guided_dialogue": {
-          "benign": 26649,
+          "benign": 26653,
           "non_benign": 0
         },
         "taskmaster": {
-          "benign": 63955,
+          "benign": 63932,
           "non_benign": 0
         },
         "tatqa": {
@@ -1430,15 +1453,15 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 25990
+          "non_benign": 25836
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 41
+          "non_benign": 40
         },
         "wildjailbreak": {
-          "benign": 5359,
-          "non_benign": 14434
+          "benign": 5362,
+          "non_benign": 14440
         }
       },
       "representative_sources": {
@@ -1446,26 +1469,26 @@
         "bipia": 63,
         "browsesafe": 1357,
         "coconot": 115,
-        "false_reject": 1660,
+        "false_reject": 1661,
         "gandalf": 97,
-        "hackaprompt": 34430,
-        "harper_valley_bank": 706,
-        "llmail": 11515,
+        "hackaprompt": 34237,
+        "harper_valley_bank": 694,
+        "llmail": 11211,
         "lmsys_arena": 9913,
         "massive_en": 1404,
         "mind2web": 103,
         "prompt_injections": 25,
-        "schema_guided_dialogue": 26649,
-        "taskmaster": 63955,
+        "schema_guided_dialogue": 26653,
+        "taskmaster": 63932,
         "tatqa": 3002,
-        "tensor_trust_raw": 25990,
-        "toxic_chat": 41,
-        "wildjailbreak": 19793
+        "tensor_trust_raw": 25836,
+        "toxic_chat": 40,
+        "wildjailbreak": 19802
       },
-      "routing_benign": 114785,
-      "routing_non_benign": 87270,
-      "rows": 202055,
-      "sha256": "ca16e7ad3364fb562ff1c9885b90b30902d57226ccfc77eaff5b6d2a223e8a7a",
+      "routing_benign": 114758,
+      "routing_non_benign": 86624,
+      "rows": 201382,
+      "sha256": "e022f15d0dccca50d00ef5b267558187d9c2b271fa9ae478b98e9f5cbcb5d944",
       "source_membership_routing": {
         "banking77": {
           "benign": 1237,
@@ -1484,7 +1507,7 @@
           "non_benign": 0
         },
         "false_reject": {
-          "benign": 1660,
+          "benign": 1661,
           "non_benign": 0
         },
         "gandalf": {
@@ -1493,22 +1516,22 @@
         },
         "hackaprompt": {
           "benign": 0,
-          "non_benign": 34430
+          "non_benign": 34237
         },
         "harper_valley_bank": {
-          "benign": 706,
+          "benign": 694,
           "non_benign": 0
         },
         "llmail": {
           "benign": 0,
-          "non_benign": 11515
+          "non_benign": 11211
         },
         "lmsys_arena": {
-          "benign": 9913,
+          "benign": 9914,
           "non_benign": 0
         },
         "massive_en": {
-          "benign": 1408,
+          "benign": 1410,
           "non_benign": 0
         },
         "mind2web": {
@@ -1520,11 +1543,11 @@
           "non_benign": 25
         },
         "schema_guided_dialogue": {
-          "benign": 26651,
+          "benign": 26657,
           "non_benign": 0
         },
         "taskmaster": {
-          "benign": 64905,
+          "benign": 64895,
           "non_benign": 0
         },
         "tatqa": {
@@ -1533,15 +1556,15 @@
         },
         "tensor_trust_raw": {
           "benign": 0,
-          "non_benign": 26300
+          "non_benign": 26110
         },
         "toxic_chat": {
           "benign": 0,
-          "non_benign": 41
+          "non_benign": 40
         },
         "wildjailbreak": {
-          "benign": 5359,
-          "non_benign": 14434
+          "benign": 5362,
+          "non_benign": 14440
         }
       },
       "source_memberships": {
@@ -1549,21 +1572,21 @@
         "bipia": 63,
         "browsesafe": 1357,
         "coconot": 115,
-        "false_reject": 1660,
+        "false_reject": 1661,
         "gandalf": 97,
-        "hackaprompt": 34430,
-        "harper_valley_bank": 706,
-        "llmail": 11515,
-        "lmsys_arena": 9913,
-        "massive_en": 1408,
+        "hackaprompt": 34237,
+        "harper_valley_bank": 694,
+        "llmail": 11211,
+        "lmsys_arena": 9914,
+        "massive_en": 1410,
         "mind2web": 103,
         "prompt_injections": 25,
-        "schema_guided_dialogue": 26651,
-        "taskmaster": 64905,
+        "schema_guided_dialogue": 26657,
+        "taskmaster": 64895,
         "tatqa": 3002,
-        "tensor_trust_raw": 26300,
-        "toxic_chat": 41,
-        "wildjailbreak": 19793
+        "tensor_trust_raw": 26110,
+        "toxic_chat": 40,
+        "wildjailbreak": 19802
       }
     }
   },
@@ -1909,6 +1932,19 @@
         "benign": 463282
       },
       "sha256": "70310ce83df19daee4b45e1f7316c65d41299628b943fa7d648e480ab624f046"
+    },
+    "swebench_verified": {
+      "path": "sources/swebench_verified.jsonl",
+      "roles": {
+        "dev_test": 492
+      },
+      "routing_benign": 492,
+      "routing_non_benign": 0,
+      "rows": 492,
+      "security_labels": {
+        "benign": 492
+      },
+      "sha256": "d58d730d5d7562c3f4c0bd16f07d9576d82f2e131615e6969a423928e98e49e0"
     },
     "taskmaster": {
       "path": "sources/taskmaster.jsonl",
@@ -2459,6 +2495,41 @@
         "train": 329964
       }
     },
+    "swebench_verified": {
+      "evaluation_limit": "benign FPR slice only; no same-format attack arm or aggregate performance claim",
+      "excluded": "patch, test patch, test names, hints, and all repository contents",
+      "label_limit": "human validation establishes a legitimate solvable software task, not a safety annotation",
+      "official_tasks_by_repository": {
+        "astropy/astropy": 22,
+        "django/django": 231,
+        "matplotlib/matplotlib": 34,
+        "mwaskom/seaborn": 2,
+        "pallets/flask": 1,
+        "psf/requests": 8,
+        "pydata/xarray": 22,
+        "pylint-dev/pylint": 10,
+        "pytest-dev/pytest": 19,
+        "scikit-learn/scikit-learn": 32,
+        "sphinx-doc/sphinx": 44,
+        "sympy/sympy": 75
+      },
+      "official_test_tasks": 500,
+      "privacy_check": "the same local secret and PII screen used for Mind2Web; suspicious issue text is quarantined without redaction",
+      "privacy_limit": "pattern checks reduce obvious exposure but do not prove that retained public issue text contains no personal data",
+      "projection": "problem_statement plus repository, instance, commit, time, version, and difficulty lineage",
+      "quarantine_reasons": {
+        "credential_value": 2,
+        "email_address": 6
+      },
+      "quarantined_tasks": 8,
+      "retained_length_characters": {
+        "at_least_1024": 276,
+        "at_least_2048": 119,
+        "at_least_4096": 32,
+        "maximum": 24770
+      },
+      "retained_tasks": 492
+    },
     "taskmaster": {
       "empty_speaker_turns_omitted": 55,
       "empty_text_turns_omitted": 66,
@@ -2695,6 +2766,13 @@
       "sha256": "ff97a9ab52b4cc9f25e1a093c96431512465e8377f9a1f57dc710a10484d2188",
       "url": "https://github.com/google-research-datasets/dstc8-schema-guided-dialogue",
       "use": "English crowdworker task-dialogue turns for benign routing balance"
+    },
+    "swebench_verified": {
+      "license": "no dataset-level license declared; upstream repositories vary",
+      "repo": "SWE-bench/SWE-bench_Verified",
+      "revision": "91aa3ed51b709be6457e12d00300a6a596d4c6a3",
+      "url": "https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified",
+      "use": "human-verified software issue statements as a dev-test-only long-benign FPR slice"
     },
     "taskmaster": {
       "archive_url": "https://codeload.github.com/google-research-datasets/Taskmaster/tar.gz/d92cb6af3005f1dc09c39e75e7daf4a04905e00b",

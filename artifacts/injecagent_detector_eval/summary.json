@@ -1,0 +1,220 @@
+{
+  "attack_by_axis": {
+    "base": {
+      "data_stealing": {
+        "restricted": 477,
+        "restriction_rate": 0.8768382352941176,
+        "rows": 544
+      },
+      "direct_harm": {
+        "restricted": 265,
+        "restriction_rate": 0.5196078431372549,
+        "rows": 510
+      }
+    },
+    "enhanced": {
+      "data_stealing": {
+        "restricted": 544,
+        "restriction_rate": 1.0,
+        "rows": 544
+      },
+      "direct_harm": {
+        "restricted": 510,
+        "restriction_rate": 1.0,
+        "rows": 510
+      }
+    }
+  },
+  "attack_by_source_modified": {
+    "base": {
+      "False": {
+        "restricted": 525,
+        "restriction_rate": 0.7352941176470589,
+        "rows": 714
+      },
+      "True": {
+        "restricted": 217,
+        "restriction_rate": 0.638235294117647,
+        "rows": 340
+      }
+    },
+    "enhanced": {
+      "False": {
+        "restricted": 714,
+        "restriction_rate": 1.0,
+        "rows": 714
+      },
+      "True": {
+        "restricted": 340,
+        "restriction_rate": 1.0,
+        "rows": 340
+      }
+    }
+  },
+  "attack_by_type": {
+    "base": {
+      "Data Security Harm": {
+        "restricted": 104,
+        "restriction_rate": 0.5561497326203209,
+        "rows": 187
+      },
+      "Financial Data": {
+        "restricted": 90,
+        "restriction_rate": 0.8823529411764706,
+        "rows": 102
+      },
+      "Financial Harm": {
+        "restricted": 92,
+        "restriction_rate": 0.6013071895424836,
+        "rows": 153
+      },
+      "Others": {
+        "restricted": 217,
+        "restriction_rate": 0.8509803921568627,
+        "rows": 255
+      },
+      "Physical Data": {
+        "restricted": 170,
+        "restriction_rate": 0.9090909090909091,
+        "rows": 187
+      },
+      "Physical Harm": {
+        "restricted": 69,
+        "restriction_rate": 0.40588235294117647,
+        "rows": 170
+      }
+    },
+    "enhanced": {
+      "Data Security Harm": {
+        "restricted": 187,
+        "restriction_rate": 1.0,
+        "rows": 187
+      },
+      "Financial Data": {
+        "restricted": 102,
+        "restriction_rate": 1.0,
+        "rows": 102
+      },
+      "Financial Harm": {
+        "restricted": 153,
+        "restriction_rate": 1.0,
+        "rows": 153
+      },
+      "Others": {
+        "restricted": 255,
+        "restriction_rate": 1.0,
+        "rows": 255
+      },
+      "Physical Data": {
+        "restricted": 187,
+        "restriction_rate": 1.0,
+        "rows": 187
+      },
+      "Physical Harm": {
+        "restricted": 170,
+        "restriction_rate": 1.0,
+        "rows": 170
+      }
+    }
+  },
+  "attack_macro_by_attacker": {
+    "base": {
+      "groups": 62,
+      "maximum_restriction_rate": 1.0,
+      "mean_restriction_rate": 0.7039848197343453,
+      "minimum_restriction_rate": 0.0
+    },
+    "enhanced": {
+      "groups": 62,
+      "maximum_restriction_rate": 1.0,
+      "mean_restriction_rate": 1.0,
+      "minimum_restriction_rate": 1.0
+    }
+  },
+  "attack_macro_by_user": {
+    "base": {
+      "groups": 17,
+      "maximum_restriction_rate": 0.9838709677419355,
+      "mean_restriction_rate": 0.7039848197343455,
+      "minimum_restriction_rate": 0.3548387096774194
+    },
+    "enhanced": {
+      "groups": 17,
+      "maximum_restriction_rate": 1.0,
+      "mean_restriction_rate": 1.0,
+      "minimum_restriction_rate": 1.0
+    }
+  },
+  "decision": "diagnose_fixed_cascade_injecagent_gap",
+  "limitations": [
+    "The public source and this result are already-open development evidence.",
+    "Only 17 unique clean tool outputs are available, so the clean rate is not a production FPR estimate.",
+    "Typed redaction preserves attack structure but changes synthetic contact values and may change model scores.",
+    "The source attacks are static and non-adaptive, and many user-attacker combinations share templates.",
+    "Restriction measures the advisory detector, not agent task utility, attack success, or deterministic action containment.",
+    "No threshold, prompt, model, provider, or local gate was selected from this panel."
+  ],
+  "local_attack_admission": {
+    "base": {
+      "admission_rate": 0.7191650853889943,
+      "admitted": 758,
+      "rows": 1054
+    },
+    "enhanced": {
+      "admission_rate": 1.0,
+      "admitted": 1054,
+      "rows": 1054
+    }
+  },
+  "manifest_sha256": "660c664237bdd22a8a9c06af66bfd10c564157b9b88882e26fb7f0c7ebc0b322",
+  "operation": {
+    "deepseek_calls": 753,
+    "deepseek_failures": 0,
+    "incomplete_assessments": 0,
+    "input_tokens": 312088,
+    "local_latency_seconds": 1420.150076305581,
+    "maximum_input_tokens": 207,
+    "output_tokens": 6024,
+    "provider_latency_seconds": 959.5863397796638,
+    "reviewed_windows": 753,
+    "route_reasons": {
+      "deepseek_clear": 24,
+      "deepseek_flag": 729,
+      "mmbert_high": 1067,
+      "mmbert_low": 305
+    },
+    "unique_assessments": 2125
+  },
+  "panel_sha256": "8691db8349362a09c7adec1f9b9d4ddb00314149c1ea2c1d2006d96ab10a72af",
+  "primary": {
+    "base_attacks": {
+      "restricted": 742,
+      "restriction_rate": 0.7039848197343453,
+      "rows": 1054
+    },
+    "enhanced_attacks": {
+      "restricted": 1054,
+      "restriction_rate": 1.0,
+      "rows": 1054
+    },
+    "pairs": {
+      "fully_correct": 742,
+      "fully_correct_rate": 0.7039848197343453,
+      "rows": 1054
+    },
+    "unique_clean": {
+      "restricted": 0,
+      "restriction_rate": 0.0,
+      "rows": 17,
+      "wilson_upper_95": 0.18432366037156456
+    }
+  },
+  "purpose": "fixed-cascade transfer diagnostic on sanitized InjecAgent tool outputs",
+  "result_ledger": {
+    "content_sha256": "f0b414ce9f26fe77da87567eab742b62cf308cf21e4ebe5f588fb61855df6c61",
+    "path": "artifacts/injecagent_detector_eval/results.jsonl.gz",
+    "rows": 2125,
+    "sha256": "f241ffbfc8670c7d30dad54f92a36214b2cdcf0073e10d64e784f82e9835cfac"
+  },
+  "schema_version": 1
+}

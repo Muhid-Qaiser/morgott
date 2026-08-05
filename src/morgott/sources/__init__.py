@@ -22,6 +22,7 @@ from .tasks import (
     _massive_rows,
     _mind2web_rows,
     _schema_guided_dialogue_rows,
+    _swebench_verified_rows,
     _taskmaster_rows,
 )
 
@@ -39,6 +40,7 @@ LOADERS = {
     "tatqa": _tatqa_rows,
     "financebench": _financebench_rows,
     "mind2web": _mind2web_rows,
+    "swebench_verified": _swebench_verified_rows,
     "taskmaster": _taskmaster_rows,
     "banking77": _banking77_rows,
     "false_reject": _false_reject_rows,

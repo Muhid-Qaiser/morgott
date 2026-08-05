@@ -1,0 +1,2394 @@
+{
+  "by_agent": {
+    "Agent": {
+      "all_low": 8,
+      "candidate_review": 15,
+      "candidate_review_rate": 0.625,
+      "candidate_review_windows": 32,
+      "items": 24,
+      "local_high": 1,
+      "local_high_rate": 0.041666666666666664,
+      "local_high_wilson_upper_95": 0.2024222624884223
+    },
+    "Claude Code": {
+      "all_low": 1994,
+      "candidate_review": 2138,
+      "candidate_review_rate": 0.5112386417981827,
+      "candidate_review_windows": 4782,
+      "items": 4182,
+      "local_high": 50,
+      "local_high_rate": 0.011956001912960305,
+      "local_high_wilson_upper_95": 0.015726886538871276
+    },
+    "Codex": {
+      "all_low": 157,
+      "candidate_review": 45,
+      "candidate_review_rate": 0.215311004784689,
+      "candidate_review_windows": 85,
+      "items": 209,
+      "local_high": 7,
+      "local_high_rate": 0.03349282296650718,
+      "local_high_wilson_upper_95": 0.0675090600090571
+    },
+    "Copilot CLI": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "Cursor": {
+      "all_low": 3,
+      "candidate_review": 16,
+      "candidate_review_rate": 0.8421052631578947,
+      "candidate_review_windows": 28,
+      "items": 19,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.16818436536845052
+    },
+    "Gemini CLI": {
+      "all_low": 3,
+      "candidate_review": 7,
+      "candidate_review_rate": 0.7,
+      "candidate_review_windows": 7,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "OpenCode": {
+      "all_low": 190,
+      "candidate_review": 432,
+      "candidate_review_rate": 0.6945337620578779,
+      "candidate_review_windows": 1106,
+      "items": 622,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.006138294418268135
+    },
+    "Roger Roger Agent": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "claude-code": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "opencode": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "unknown": {
+      "all_low": 30,
+      "candidate_review": 21,
+      "candidate_review_rate": 0.4117647058823529,
+      "candidate_review_windows": 21,
+      "items": 51,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.07004901388726806
+    }
+  },
+  "by_language": {
+    "CHINESE": {
+      "all_low": 82,
+      "candidate_review": 63,
+      "candidate_review_rate": 0.4315068493150685,
+      "candidate_review_windows": 72,
+      "items": 146,
+      "local_high": 1,
+      "local_high_rate": 0.00684931506849315,
+      "local_high_wilson_upper_95": 0.037775102238693715
+    },
+    "ENGLISH": {
+      "all_low": 1298,
+      "candidate_review": 1805,
+      "candidate_review_rate": 0.5759412890874283,
+      "candidate_review_windows": 4295,
+      "items": 3134,
+      "local_high": 31,
+      "local_high_rate": 0.009891512444160817,
+      "local_high_wilson_upper_95": 0.01400583404652948
+    },
+    "FRENCH": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 6,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "JAPANESE": {
+      "all_low": 25,
+      "candidate_review": 65,
+      "candidate_review_rate": 0.7142857142857143,
+      "candidate_review_windows": 109,
+      "items": 91,
+      "local_high": 1,
+      "local_high_rate": 0.01098901098901099,
+      "local_high_wilson_upper_95": 0.05965080359061392
+    },
+    "KOREAN": {
+      "all_low": 2,
+      "candidate_review": 10,
+      "candidate_review_rate": 0.7142857142857143,
+      "candidate_review_windows": 13,
+      "items": 14,
+      "local_high": 2,
+      "local_high_rate": 0.14285714285714285,
+      "local_high_wilson_upper_95": 0.399419077638637
+    },
+    "PORTUGUESE": {
+      "all_low": 4,
+      "candidate_review": 12,
+      "candidate_review_rate": 0.75,
+      "candidate_review_windows": 21,
+      "items": 16,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.19361341827271994
+    },
+    "RUSSIAN": {
+      "all_low": 0,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.8,
+      "candidate_review_windows": 4,
+      "items": 5,
+      "local_high": 1,
+      "local_high_rate": 0.2,
+      "local_high_wilson_upper_95": 0.6244717358814612
+    },
+    "unannotated": {
+      "all_low": 976,
+      "candidate_review": 716,
+      "candidate_review_rate": 0.4177362893815636,
+      "candidate_review_windows": 1543,
+      "items": 1714,
+      "local_high": 22,
+      "local_high_rate": 0.012835472578763127,
+      "local_high_wilson_upper_95": 0.019358364059408866
+    }
+  },
+  "by_length": {
+    "16_to_63_words": {
+      "all_low": 1216,
+      "candidate_review": 455,
+      "candidate_review_rate": 0.26986951364175565,
+      "candidate_review_windows": 455,
+      "items": 1686,
+      "local_high": 15,
+      "local_high_rate": 0.008896797153024912,
+      "local_high_wilson_upper_95": 0.014627576339400336
+    },
+    "256_words_or_more": {
+      "all_low": 61,
+      "candidate_review": 1174,
+      "candidate_review_rate": 0.9347133757961783,
+      "candidate_review_windows": 4531,
+      "items": 1256,
+      "local_high": 21,
+      "local_high_rate": 0.016719745222929936,
+      "local_high_wilson_upper_95": 0.025425430110743844
+    },
+    "64_to_255_words": {
+      "all_low": 327,
+      "candidate_review": 251,
+      "candidate_review_rate": 0.4225589225589226,
+      "candidate_review_windows": 281,
+      "items": 594,
+      "local_high": 16,
+      "local_high_rate": 0.026936026936026935,
+      "local_high_wilson_upper_95": 0.04330487069651373
+    },
+    "under_16_words": {
+      "all_low": 783,
+      "candidate_review": 796,
+      "candidate_review_rate": 0.5022082018927445,
+      "candidate_review_windows": 796,
+      "items": 1585,
+      "local_high": 6,
+      "local_high_rate": 0.0037854889589905363,
+      "local_high_wilson_upper_95": 0.008234514969997348
+    }
+  },
+  "by_prompt_intent": {
+    "connect": {
+      "all_low": 47,
+      "candidate_review": 23,
+      "candidate_review_rate": 0.323943661971831,
+      "candidate_review_windows": 25,
+      "items": 71,
+      "local_high": 1,
+      "local_high_rate": 0.014084507042253521,
+      "local_high_wilson_upper_95": 0.0755623084793829
+    },
+    "create new code": {
+      "all_low": 466,
+      "candidate_review": 738,
+      "candidate_review_rate": 0.6024489795918367,
+      "candidate_review_windows": 2084,
+      "items": 1225,
+      "local_high": 21,
+      "local_high_rate": 0.017142857142857144,
+      "local_high_wilson_upper_95": 0.02606531319810463
+    },
+    "debug": {
+      "all_low": 524,
+      "candidate_review": 364,
+      "candidate_review_rate": 0.4039955604883463,
+      "candidate_review_windows": 930,
+      "items": 901,
+      "local_high": 13,
+      "local_high_rate": 0.014428412874583796,
+      "local_high_wilson_upper_95": 0.024528830061805947
+    },
+    "git": {
+      "all_low": 277,
+      "candidate_review": 249,
+      "candidate_review_rate": 0.4680451127819549,
+      "candidate_review_windows": 278,
+      "items": 532,
+      "local_high": 6,
+      "local_high_rate": 0.011278195488721804,
+      "local_high_wilson_upper_95": 0.024385165532841202
+    },
+    "other": {
+      "all_low": 232,
+      "candidate_review": 676,
+      "candidate_review_rate": 0.7436743674367436,
+      "candidate_review_windows": 1192,
+      "items": 909,
+      "local_high": 1,
+      "local_high_rate": 0.0011001100110011,
+      "local_high_wilson_upper_95": 0.006205139948947032
+    },
+    "refactor": {
+      "all_low": 292,
+      "candidate_review": 323,
+      "candidate_review_rate": 0.5184590690208668,
+      "candidate_review_windows": 880,
+      "items": 623,
+      "local_high": 8,
+      "local_high_rate": 0.012841091492776886,
+      "local_high_wilson_upper_95": 0.02513253852615871
+    },
+    "review": {
+      "all_low": 2,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "test": {
+      "all_low": 128,
+      "candidate_review": 93,
+      "candidate_review_rate": 0.4189189189189189,
+      "candidate_review_windows": 188,
+      "items": 222,
+      "local_high": 1,
+      "local_high_rate": 0.0045045045045045045,
+      "local_high_wilson_upper_95": 0.02507033841895019
+    },
+    "unannotated": {
+      "all_low": 66,
+      "candidate_review": 32,
+      "candidate_review_rate": 0.32653061224489793,
+      "candidate_review_windows": 96,
+      "items": 98,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.037721324095458045
+    },
+    "understand": {
+      "all_low": 353,
+      "candidate_review": 178,
+      "candidate_review_rate": 0.3308550185873606,
+      "candidate_review_windows": 390,
+      "items": 538,
+      "local_high": 7,
+      "local_high_rate": 0.013011152416356878,
+      "local_high_wilson_upper_95": 0.026611196148045243
+    }
+  },
+  "by_repository": {
+    "135yshr/documents": {
+      "all_low": 15,
+      "candidate_review": 44,
+      "candidate_review_rate": 0.7333333333333333,
+      "candidate_review_windows": 62,
+      "items": 60,
+      "local_high": 1,
+      "local_high_rate": 0.016666666666666666,
+      "local_high_wilson_upper_95": 0.08855338226779479
+    },
+    "135yshr/savanna-vet-go": {
+      "all_low": 1,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.8333333333333334,
+      "candidate_review_windows": 6,
+      "items": 6,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3903430336530645
+    },
+    "1natsu-vacation/agent-skills": {
+      "all_low": 1,
+      "candidate_review": 10,
+      "candidate_review_rate": 0.9090909090909091,
+      "candidate_review_windows": 12,
+      "items": 11,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2588400172488141
+    },
+    "4gray/iptvnator": {
+      "all_low": 11,
+      "candidate_review": 11,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 143,
+      "items": 22,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.14865952572596122
+    },
+    "A-5ingh/resume": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "AI-Stats/AI-Stats": {
+      "all_low": 15,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 15,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.20388926630434784
+    },
+    "ASRagab/optimize-anything": {
+      "all_low": 7,
+      "candidate_review": 9,
+      "candidate_review_rate": 0.5625,
+      "candidate_review_windows": 9,
+      "items": 16,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.19361341827271994
+    },
+    "AndreaPT1/mkdownEditor": {
+      "all_low": 2,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "BIDEquity/outbid-dirigent": {
+      "all_low": 16,
+      "candidate_review": 10,
+      "candidate_review_rate": 0.37037037037037035,
+      "candidate_review_windows": 16,
+      "items": 27,
+      "local_high": 1,
+      "local_high_rate": 0.037037037037037035,
+      "local_high_wilson_upper_95": 0.1828385393415652
+    },
+    "Brickell-Research/caffeine_lang": {
+      "all_low": 11,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.26666666666666666,
+      "candidate_review_windows": 14,
+      "items": 15,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.20388926630434784
+    },
+    "CPS-IT/quality-tools": {
+      "all_low": 2,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.6,
+      "candidate_review_windows": 3,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "ChetanReddyC/Shila-Murti": {
+      "all_low": 9,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.1,
+      "candidate_review_windows": 5,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "ClusterCockpit/cc-backend": {
+      "all_low": 35,
+      "candidate_review": 41,
+      "candidate_review_rate": 0.5394736842105263,
+      "candidate_review_windows": 103,
+      "items": 76,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.04811526823109757
+    },
+    "ClusterCockpit/cc-metric-store": {
+      "all_low": 5,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.16666666666666666,
+      "candidate_review_windows": 1,
+      "items": 6,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3903430336530645
+    },
+    "Diogenesoftoronto/dellij": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "DrDonik/ai-recipe-planner": {
+      "all_low": 15,
+      "candidate_review": 7,
+      "candidate_review_rate": 0.3181818181818182,
+      "candidate_review_windows": 7,
+      "items": 22,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.14865952572596122
+    },
+    "EntityProcess/agentv": {
+      "all_low": 3,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "FSM1/cipher-box": {
+      "all_low": 109,
+      "candidate_review": 117,
+      "candidate_review_rate": 0.5109170305676856,
+      "candidate_review_windows": 153,
+      "items": 229,
+      "local_high": 3,
+      "local_high_rate": 0.013100436681222707,
+      "local_high_wilson_upper_95": 0.03780229048775917
+    },
+    "GaetanJuvin/camoufox-ruby": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 9,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "Guibibi/Fireside": {
+      "all_low": 5,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 17,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "HikaruEgashira/pleno-audit": {
+      "all_low": 1,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 1,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "KhanShaheb34/trak": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "Lightprotocol/light-protocol": {
+      "all_low": 8,
+      "candidate_review": 28,
+      "candidate_review_rate": 0.7567567567567568,
+      "candidate_review_windows": 110,
+      "items": 37,
+      "local_high": 1,
+      "local_high_rate": 0.02702702702702703,
+      "local_high_wilson_upper_95": 0.13824378437563367
+    },
+    "LitMc/gc-playground": {
+      "all_low": 5,
+      "candidate_review": 8,
+      "candidate_review_rate": 0.6153846153846154,
+      "candidate_review_windows": 13,
+      "items": 13,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.22810184305529166
+    },
+    "Martian-Engineering/maniple": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "Mathews-Tom/no-magic": {
+      "all_low": 2,
+      "candidate_review": 8,
+      "candidate_review_rate": 0.8,
+      "candidate_review_windows": 36,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "Nagi-ovo/gemini-voyager": {
+      "all_low": 46,
+      "candidate_review": 40,
+      "candidate_review_rate": 0.45977011494252873,
+      "candidate_review_windows": 53,
+      "items": 87,
+      "local_high": 1,
+      "local_high_rate": 0.011494252873563218,
+      "local_high_wilson_upper_95": 0.06227348486014921
+    },
+    "Neo-sk01/Linguistics": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "Obmondo/gfetch": {
+      "all_low": 2,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 6,
+      "items": 6,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3903430336530645
+    },
+    "PackmindHub/context-evaluator": {
+      "all_low": 23,
+      "candidate_review": 73,
+      "candidate_review_rate": 0.7604166666666666,
+      "candidate_review_windows": 162,
+      "items": 96,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.03847694748481595
+    },
+    "PanthroCorp-Limited/openclaw-skills": {
+      "all_low": 6,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.14285714285714285,
+      "candidate_review_windows": 1,
+      "items": 7,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.35433884297520657
+    },
+    "Pavel401/BugViper": {
+      "all_low": 1,
+      "candidate_review": 9,
+      "candidate_review_rate": 0.9,
+      "candidate_review_windows": 26,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "ProjectAI00/imi-agent": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "Riggd/ladtok": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "Safecast/safecast-map-MCP": {
+      "all_low": 19,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.17391304347826086,
+      "candidate_review_windows": 4,
+      "items": 23,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.14312112541726274
+    },
+    "Safecast/safecast-new-map": {
+      "all_low": 33,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.13157894736842105,
+      "candidate_review_windows": 21,
+      "items": 38,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.09181293258383999
+    },
+    "Sagit-chu/flvx": {
+      "all_low": 37,
+      "candidate_review": 19,
+      "candidate_review_rate": 0.3392857142857143,
+      "candidate_review_windows": 19,
+      "items": 56,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.06419614448811528
+    },
+    "SnowingFox/macos-island": {
+      "all_low": 0,
+      "candidate_review": 4,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 4,
+      "items": 4,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.48990002040399916
+    },
+    "Tiryoh/entireio-local-viewer": {
+      "all_low": 3,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 3,
+      "items": 6,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3903430336530645
+    },
+    "Whiteknight07/AiTutor": {
+      "all_low": 2,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.7142857142857143,
+      "candidate_review_windows": 5,
+      "items": 7,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.35433884297520657
+    },
+    "YoungY620/memo": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 4,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "adhishthite/anthropic-clio-impl": {
+      "all_low": 1,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 1,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "aditiohri/horary": {
+      "all_low": 1,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 16,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "adrientaudiere/MiscMetabar": {
+      "all_low": 5,
+      "candidate_review": 9,
+      "candidate_review_rate": 0.6428571428571429,
+      "candidate_review_windows": 10,
+      "items": 14,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.21531701192718142
+    },
+    "adrinorosario/equity-risk-intelligence-management": {
+      "all_low": 2,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "aicuai/aicubench": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "alexinslc/hickory": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "anchoo2kewl/SprintSpark": {
+      "all_low": 11,
+      "candidate_review": 8,
+      "candidate_review_rate": 0.42105263157894735,
+      "candidate_review_windows": 10,
+      "items": 19,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.16818436536845052
+    },
+    "andrefurt/safo": {
+      "all_low": 3,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.4,
+      "candidate_review_windows": 4,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "annie-mei/annie-mei": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "annrie/Nuxtation": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "araitatsuya-code/atena-print": {
+      "all_low": 1,
+      "candidate_review": 18,
+      "candidate_review_rate": 0.9473684210526315,
+      "candidate_review_windows": 18,
+      "items": 19,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.16818436536845052
+    },
+    "armelhbobdad/bmad-module-skill-forge": {
+      "all_low": 66,
+      "candidate_review": 76,
+      "candidate_review_rate": 0.5352112676056338,
+      "candidate_review_windows": 85,
+      "items": 142,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.02634090684688045
+    },
+    "asinomasimple/panopticon_scraping": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "balkhaev/yep": {
+      "all_low": 1,
+      "candidate_review": 6,
+      "candidate_review_rate": 0.75,
+      "candidate_review_windows": 11,
+      "items": 8,
+      "local_high": 1,
+      "local_high_rate": 0.125,
+      "local_high_wilson_upper_95": 0.4708948057698615
+    },
+    "baotoq/micro-commerce": {
+      "all_low": 8,
+      "candidate_review": 23,
+      "candidate_review_rate": 0.7419354838709677,
+      "candidate_review_windows": 23,
+      "items": 31,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.11025900073475385
+    },
+    "bas/entire-test": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "basher83/lunar-claude": {
+      "all_low": 4,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.5555555555555556,
+      "candidate_review_windows": 5,
+      "items": 9,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2991527535509594
+    },
+    "basher83/tailnet-microservices": {
+      "all_low": 0,
+      "candidate_review": 5,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 5,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "bids-standard/bids-utils": {
+      "all_low": 4,
+      "candidate_review": 9,
+      "candidate_review_rate": 0.6923076923076923,
+      "candidate_review_windows": 9,
+      "items": 13,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.22810184305529166
+    },
+    "blittle/pressy": {
+      "all_low": 10,
+      "candidate_review": 12,
+      "candidate_review_rate": 0.5454545454545454,
+      "candidate_review_windows": 30,
+      "items": 22,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.14865952572596122
+    },
+    "bravegeek/ai-workshop": {
+      "all_low": 2,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 2,
+      "items": 4,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.48990002040399916
+    },
+    "bryanhiestand/ferrous-comics": {
+      "all_low": 1,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.8333333333333334,
+      "candidate_review_windows": 6,
+      "items": 6,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3903430336530645
+    },
+    "camkeith/cameronkeithgolf": {
+      "all_low": 8,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.1111111111111111,
+      "candidate_review_windows": 1,
+      "items": 9,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2991527535509594
+    },
+    "chuhemiao/portfolio": {
+      "all_low": 10,
+      "candidate_review": 12,
+      "candidate_review_rate": 0.5454545454545454,
+      "candidate_review_windows": 14,
+      "items": 22,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.14865952572596122
+    },
+    "ckeith26/cameronkeithgolf": {
+      "all_low": 3,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.625,
+      "candidate_review_windows": 16,
+      "items": 8,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3244156195108769
+    },
+    "cyyeh/duckdb-data-agent": {
+      "all_low": 162,
+      "candidate_review": 97,
+      "candidate_review_rate": 0.36742424242424243,
+      "candidate_review_windows": 203,
+      "items": 264,
+      "local_high": 5,
+      "local_high_rate": 0.01893939393939394,
+      "local_high_wilson_upper_95": 0.043562186934026526
+    },
+    "cyyeh/duckdb-web": {
+      "all_low": 3,
+      "candidate_review": 6,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 6,
+      "items": 9,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2991527535509594
+    },
+    "daqifi/daqifi-nyquist-firmware": {
+      "all_low": 1,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 14,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "daydreamsai/lucid-agents": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "dayhaysoos/nimbus": {
+      "all_low": 159,
+      "candidate_review": 394,
+      "candidate_review_rate": 0.7124773960216998,
+      "candidate_review_windows": 1009,
+      "items": 553,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.006898909851562814
+    },
+    "desplega-ai/agent-swarm": {
+      "all_low": 21,
+      "candidate_review": 17,
+      "candidate_review_rate": 0.4473684210526316,
+      "candidate_review_windows": 50,
+      "items": 38,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.09181293258383999
+    },
+    "dipasqualew/vibereq": {
+      "all_low": 6,
+      "candidate_review": 11,
+      "candidate_review_rate": 0.6470588235294118,
+      "candidate_review_windows": 17,
+      "items": 17,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.18432366037156456
+    },
+    "dr-yst/org-x": {
+      "all_low": 1,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 1,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "eneakllomollari/mpad": {
+      "all_low": 5,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.375,
+      "candidate_review_windows": 3,
+      "items": 8,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3244156195108769
+    },
+    "entireio/cli": {
+      "all_low": 381,
+      "candidate_review": 455,
+      "candidate_review_rate": 0.5397390272835113,
+      "candidate_review_windows": 909,
+      "items": 843,
+      "local_high": 7,
+      "local_high_rate": 0.00830367734282325,
+      "local_high_wilson_upper_95": 0.01704043929747927
+    },
+    "entireio/roger-roger": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "evorto-app/app": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "f/prompts.chat": {
+      "all_low": 2,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.3333333333333333,
+      "candidate_review_windows": 1,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "femto/mcp-chrome": {
+      "all_low": 1,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.75,
+      "candidate_review_windows": 6,
+      "items": 4,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.48990002040399916
+    },
+    "foxytanuki/rcode": {
+      "all_low": 0,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 9,
+      "items": 3,
+      "local_high": 1,
+      "local_high_rate": 0.3333333333333333,
+      "local_high_wilson_upper_95": 0.7923450448735121
+    },
+    "frank-fs/frank": {
+      "all_low": 2,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "gagan114662/openfang": {
+      "all_low": 3,
+      "candidate_review": 8,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 9,
+      "items": 12,
+      "local_high": 1,
+      "local_high_rate": 0.08333333333333333,
+      "local_high_wilson_upper_95": 0.35388592179859524
+    },
+    "galexy/edgar-diff": {
+      "all_low": 8,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.1111111111111111,
+      "candidate_review_windows": 1,
+      "items": 9,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2991527535509594
+    },
+    "go-git/x": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "gregszero/open-fang": {
+      "all_low": 14,
+      "candidate_review": 33,
+      "candidate_review_rate": 0.7021276595744681,
+      "candidate_review_windows": 83,
+      "items": 47,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.0755601711983887
+    },
+    "hackers-pub/android": {
+      "all_low": 7,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.36363636363636365,
+      "candidate_review_windows": 4,
+      "items": 11,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2588400172488141
+    },
+    "heath0xFF/hChat": {
+      "all_low": 11,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.08333333333333333,
+      "candidate_review_windows": 1,
+      "items": 12,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2425007574992425
+    },
+    "henryph24/neuralips26": {
+      "all_low": 12,
+      "candidate_review": 8,
+      "candidate_review_rate": 0.4,
+      "candidate_review_windows": 22,
+      "items": 20,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.1611301254949332
+    },
+    "hutusi/amytis": {
+      "all_low": 27,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.12903225806451613,
+      "candidate_review_windows": 6,
+      "items": 31,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.11025900073475385
+    },
+    "iamngoni/WhatTheLoad": {
+      "all_low": 1,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 5,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "iqbalmineraltown/pr-review-cli": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "ishaan812/devlog": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 5,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "itsmaleen/dispatch": {
+      "all_low": 8,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.1111111111111111,
+      "candidate_review_windows": 1,
+      "items": 9,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2991527535509594
+    },
+    "itsmaleen/merry": {
+      "all_low": 2,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.6,
+      "candidate_review_windows": 3,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "jamesdanielwhitford/docusign-ax-test": {
+      "all_low": 3,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "jbouder/acolyte": {
+      "all_low": 1,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 2,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "jcleira/entire-local": {
+      "all_low": 4,
+      "candidate_review": 12,
+      "candidate_review_rate": 0.75,
+      "candidate_review_windows": 22,
+      "items": 16,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.19361341827271994
+    },
+    "jdblackstar/relay": {
+      "all_low": 1,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 1,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "jdsingh122918/forge": {
+      "all_low": 19,
+      "candidate_review": 16,
+      "candidate_review_rate": 0.45714285714285713,
+      "candidate_review_windows": 25,
+      "items": 35,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.09890426758938868
+    },
+    "jeevanpillay/dual": {
+      "all_low": 4,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 4,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.48990002040399916
+    },
+    "jfmoe/react-native-live-text-view": {
+      "all_low": 0,
+      "candidate_review": 2,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 2,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "jukellam/dispersal-draft": {
+      "all_low": 11,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.21428571428571427,
+      "candidate_review_windows": 3,
+      "items": 14,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.21531701192718142
+    },
+    "junjiezhou1122/ClawCorp": {
+      "all_low": 0,
+      "candidate_review": 6,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 18,
+      "items": 6,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3903430336530645
+    },
+    "kgcrom/agent-foundry": {
+      "all_low": 0,
+      "candidate_review": 10,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 16,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "kgcrom/cluefin": {
+      "all_low": 2,
+      "candidate_review": 10,
+      "candidate_review_rate": 0.7142857142857143,
+      "candidate_review_windows": 51,
+      "items": 14,
+      "local_high": 2,
+      "local_high_rate": 0.14285714285714285,
+      "local_high_wilson_upper_95": 0.399419077638637
+    },
+    "kozo2/btmsp2table": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "kubokawa-dev/million-pocket-orchestra": {
+      "all_low": 5,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.4444444444444444,
+      "candidate_review_windows": 6,
+      "items": 9,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2991527535509594
+    },
+    "liatrio-labs/ai-prompts": {
+      "all_low": 26,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.13333333333333333,
+      "candidate_review_windows": 4,
+      "items": 30,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.11351709139047801
+    },
+    "libfunc/rapira": {
+      "all_low": 0,
+      "candidate_review": 2,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 2,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "lightfastai/climode": {
+      "all_low": 3,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.625,
+      "candidate_review_windows": 8,
+      "items": 8,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3244156195108769
+    },
+    "lightfastai/lightfast": {
+      "all_low": 140,
+      "candidate_review": 45,
+      "candidate_review_rate": 0.24324324324324326,
+      "candidate_review_windows": 175,
+      "items": 185,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.02034297527663396
+    },
+    "loyal-labs/solana-telegram-transactions": {
+      "all_low": 2,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "m0nhawk/poeman": {
+      "all_low": 0,
+      "candidate_review": 2,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 7,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "mager/beatbrain-web": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "maoxiaoke/nazha": {
+      "all_low": 1,
+      "candidate_review": 6,
+      "candidate_review_rate": 0.8571428571428571,
+      "candidate_review_windows": 6,
+      "items": 7,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.35433884297520657
+    },
+    "marcus-sa/brain": {
+      "all_low": 46,
+      "candidate_review": 69,
+      "candidate_review_rate": 0.5948275862068966,
+      "candidate_review_windows": 162,
+      "items": 116,
+      "local_high": 1,
+      "local_high_rate": 0.008620689655172414,
+      "local_high_wilson_upper_95": 0.04722099396744623
+    },
+    "marin-community/marin": {
+      "all_low": 32,
+      "candidate_review": 35,
+      "candidate_review_rate": 0.5223880597014925,
+      "candidate_review_windows": 256,
+      "items": 67,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.05422802421176257
+    },
+    "matthsena/reef-coder": {
+      "all_low": 2,
+      "candidate_review": 18,
+      "candidate_review_rate": 0.9,
+      "candidate_review_windows": 36,
+      "items": 20,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.1611301254949332
+    },
+    "melagiri/code-insights": {
+      "all_low": 47,
+      "candidate_review": 26,
+      "candidate_review_rate": 0.3561643835616438,
+      "candidate_review_windows": 66,
+      "items": 73,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.04999375338358388
+    },
+    "mhavelock/white-hat-label": {
+      "all_low": 4,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.2,
+      "candidate_review_windows": 1,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "mheers/opencode-sandbox": {
+      "all_low": 7,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.36363636363636365,
+      "candidate_review_windows": 5,
+      "items": 11,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2588400172488141
+    },
+    "moltis-org/moltis": {
+      "all_low": 111,
+      "candidate_review": 59,
+      "candidate_review_rate": 0.34502923976608185,
+      "candidate_review_windows": 263,
+      "items": 171,
+      "local_high": 1,
+      "local_high_rate": 0.005847953216374269,
+      "local_high_wilson_upper_95": 0.03237778525843867
+    },
+    "moven0831/anonbook": {
+      "all_low": 3,
+      "candidate_review": 7,
+      "candidate_review_rate": 0.7,
+      "candidate_review_windows": 10,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "musicofhel/dev-loop": {
+      "all_low": 3,
+      "candidate_review": 5,
+      "candidate_review_rate": 0.625,
+      "candidate_review_windows": 46,
+      "items": 8,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3244156195108769
+    },
+    "ngngardner/readaloud": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "nivalis-studio/biome-config": {
+      "all_low": 2,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.3333333333333333,
+      "candidate_review_windows": 9,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "nomhiro/entire-poc": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "nosman/gossamer": {
+      "all_low": 24,
+      "candidate_review": 12,
+      "candidate_review_rate": 0.3333333333333333,
+      "candidate_review_windows": 19,
+      "items": 36,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.09642183044857634
+    },
+    "nsega/.emacs.d": {
+      "all_low": 4,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 4,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.48990002040399916
+    },
+    "nsega/mcp-obsidian": {
+      "all_low": 7,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.125,
+      "candidate_review_windows": 5,
+      "items": 8,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3244156195108769
+    },
+    "nsega/mcp-todoist": {
+      "all_low": 8,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.1111111111111111,
+      "candidate_review_windows": 2,
+      "items": 9,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2991527535509594
+    },
+    "nuclom/nuclom": {
+      "all_low": 3,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.5714285714285714,
+      "candidate_review_windows": 12,
+      "items": 7,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.35433884297520657
+    },
+    "nuri428/patent_board_full": {
+      "all_low": 2,
+      "candidate_review": 10,
+      "candidate_review_rate": 0.8333333333333334,
+      "candidate_review_windows": 10,
+      "items": 12,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2425007574992425
+    },
+    "nuttycc/LuminTime": {
+      "all_low": 6,
+      "candidate_review": 7,
+      "candidate_review_rate": 0.5384615384615384,
+      "candidate_review_windows": 11,
+      "items": 13,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.22810184305529166
+    },
+    "nylanalyn/jeeves": {
+      "all_low": 1,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 1,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "obsessiondb/rudel": {
+      "all_low": 34,
+      "candidate_review": 31,
+      "candidate_review_rate": 0.47692307692307695,
+      "candidate_review_windows": 52,
+      "items": 65,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.055803467670710726
+    },
+    "oddessentials/ado-git-repo-insights": {
+      "all_low": 38,
+      "candidate_review": 9,
+      "candidate_review_rate": 0.1875,
+      "candidate_review_windows": 11,
+      "items": 48,
+      "local_high": 1,
+      "local_high_rate": 0.020833333333333332,
+      "local_high_wilson_upper_95": 0.10899469137531158
+    },
+    "oozoofrog/oozoofrog.github.io": {
+      "all_low": 0,
+      "candidate_review": 6,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 26,
+      "items": 6,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3903430336530645
+    },
+    "osabiohq/osabio": {
+      "all_low": 6,
+      "candidate_review": 17,
+      "candidate_review_rate": 0.7083333333333334,
+      "candidate_review_windows": 23,
+      "items": 24,
+      "local_high": 1,
+      "local_high_rate": 0.041666666666666664,
+      "local_high_wilson_upper_95": 0.2024222624884223
+    },
+    "osvauld/osvauld": {
+      "all_low": 4,
+      "candidate_review": 12,
+      "candidate_review_rate": 0.75,
+      "candidate_review_windows": 56,
+      "items": 16,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.19361341827271994
+    },
+    "otomarukanta/slk": {
+      "all_low": 0,
+      "candidate_review": 8,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 18,
+      "items": 8,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3244156195108769
+    },
+    "pablo-health/pablo-companion": {
+      "all_low": 15,
+      "candidate_review": 12,
+      "candidate_review_rate": 0.4444444444444444,
+      "candidate_review_windows": 36,
+      "items": 27,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.1245590371446358
+    },
+    "pambrose/srcref": {
+      "all_low": 2,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 4,
+      "items": 4,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.48990002040399916
+    },
+    "paretoimproved/local-roots": {
+      "all_low": 0,
+      "candidate_review": 12,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 27,
+      "items": 12,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2425007574992425
+    },
+    "partio-io/cli": {
+      "all_low": 1,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.75,
+      "candidate_review_windows": 22,
+      "items": 4,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.48990002040399916
+    },
+    "partio-io/site": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "pc035860/agent-tail": {
+      "all_low": 5,
+      "candidate_review": 11,
+      "candidate_review_rate": 0.6875,
+      "candidate_review_windows": 12,
+      "items": 16,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.19361341827271994
+    },
+    "pc035860/cee": {
+      "all_low": 14,
+      "candidate_review": 20,
+      "candidate_review_rate": 0.5555555555555556,
+      "candidate_review_windows": 28,
+      "items": 36,
+      "local_high": 2,
+      "local_high_rate": 0.05555555555555555,
+      "local_high_wilson_upper_95": 0.18144974107611211
+    },
+    "pengx17/bazaar-leaderboard": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "petercr/ccw": {
+      "all_low": 7,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 7,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.35433884297520657
+    },
+    "pskoett/measuring-ai-proficiency": {
+      "all_low": 0,
+      "candidate_review": 2,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 19,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "punt-labs/koch-trainer-swift": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "punt-labs/langlearn-tts": {
+      "all_low": 1,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.8,
+      "candidate_review_windows": 11,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "raman325/lock_code_manager": {
+      "all_low": 4,
+      "candidate_review": 6,
+      "candidate_review_rate": 0.6,
+      "candidate_review_windows": 22,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "ravencloak-org/ravencloak": {
+      "all_low": 4,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.42857142857142855,
+      "candidate_review_windows": 3,
+      "items": 7,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.35433884297520657
+    },
+    "reflexdemon/resume-vpv": {
+      "all_low": 0,
+      "candidate_review": 3,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 6,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "ronnnnn/cc": {
+      "all_low": 3,
+      "candidate_review": 17,
+      "candidate_review_rate": 0.85,
+      "candidate_review_windows": 17,
+      "items": 20,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.1611301254949332
+    },
+    "roo-oliv/claude-assisted-review-plugin": {
+      "all_low": 0,
+      "candidate_review": 3,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 10,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "roo-oliv/monodreams": {
+      "all_low": 2,
+      "candidate_review": 47,
+      "candidate_review_rate": 0.9591836734693877,
+      "candidate_review_windows": 151,
+      "items": 49,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.07270029673590504
+    },
+    "s4lly/splitzy": {
+      "all_low": 5,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "savekirk/session-bridge": {
+      "all_low": 16,
+      "candidate_review": 8,
+      "candidate_review_rate": 0.3333333333333333,
+      "candidate_review_windows": 20,
+      "items": 24,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.13798057582897535
+    },
+    "schmalle/secman": {
+      "all_low": 25,
+      "candidate_review": 51,
+      "candidate_review_rate": 0.6710526315789473,
+      "candidate_review_windows": 104,
+      "items": 76,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.04811526823109757
+    },
+    "serg-alexv/rhea-project": {
+      "all_low": 2,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 4,
+      "items": 6,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3903430336530645
+    },
+    "shunkakinoki/dotfiles": {
+      "all_low": 34,
+      "candidate_review": 52,
+      "candidate_review_rate": 0.5777777777777777,
+      "candidate_review_windows": 86,
+      "items": 90,
+      "local_high": 4,
+      "local_high_rate": 0.044444444444444446,
+      "local_high_wilson_upper_95": 0.1087701467709492
+    },
+    "sintezcs/jetcodesync": {
+      "all_low": 2,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "snhryt-neo/dotfiles": {
+      "all_low": 1,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.6666666666666666,
+      "candidate_review_windows": 2,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "sparkling/claude-flow-patch": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "stat-guy/imessage-mail": {
+      "all_low": 1,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 1,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "symonbaikov/lumio": {
+      "all_low": 0,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 1,
+      "local_high_rate": 1.0,
+      "local_high_wilson_upper_95": 1.0
+    },
+    "sztwiorok/entire-project": {
+      "all_low": 0,
+      "candidate_review": 1,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 1,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "ta93abe/dbt-jobs": {
+      "all_low": 2,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.3333333333333333,
+      "candidate_review_windows": 1,
+      "items": 3,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.5615060804490177
+    },
+    "terryso/polymarket-trader": {
+      "all_low": 5,
+      "candidate_review": 6,
+      "candidate_review_rate": 0.5454545454545454,
+      "candidate_review_windows": 6,
+      "items": 11,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2588400172488141
+    },
+    "timelabs-npo/rhea-project": {
+      "all_low": 1,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.8,
+      "candidate_review_windows": 4,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "tominaga-h/jarvis-shell": {
+      "all_low": 4,
+      "candidate_review": 14,
+      "candidate_review_rate": 0.7368421052631579,
+      "candidate_review_windows": 27,
+      "items": 19,
+      "local_high": 1,
+      "local_high_rate": 0.05263157894736842,
+      "local_high_wilson_upper_95": 0.24639215336545212
+    },
+    "tpmjs/tpmjs": {
+      "all_low": 6,
+      "candidate_review": 15,
+      "candidate_review_rate": 0.6818181818181818,
+      "candidate_review_windows": 59,
+      "items": 22,
+      "local_high": 1,
+      "local_high_rate": 0.045454545454545456,
+      "local_high_wilson_upper_95": 0.21798489499518056
+    },
+    "tslateman/duet": {
+      "all_low": 7,
+      "candidate_review": 7,
+      "candidate_review_rate": 0.4666666666666667,
+      "candidate_review_windows": 8,
+      "items": 15,
+      "local_high": 1,
+      "local_high_rate": 0.06666666666666667,
+      "local_high_wilson_upper_95": 0.29817077552423993
+    },
+    "tslateman/reck": {
+      "all_low": 5,
+      "candidate_review": 16,
+      "candidate_review_rate": 0.64,
+      "candidate_review_windows": 35,
+      "items": 25,
+      "local_high": 4,
+      "local_high_rate": 0.16,
+      "local_high_wilson_upper_95": 0.34654013980238163
+    },
+    "tvararu/tuicraft": {
+      "all_low": 17,
+      "candidate_review": 21,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 23,
+      "items": 42,
+      "local_high": 4,
+      "local_high_rate": 0.09523809523809523,
+      "local_high_wilson_upper_95": 0.2206539522505333
+    },
+    "twilwa/meetup-2.25-kdense": {
+      "all_low": 1,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 1,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.7934567085261071
+    },
+    "ujuc/agent-stuff": {
+      "all_low": 1,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.8,
+      "candidate_review_windows": 8,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "ujuc/dotrc": {
+      "all_low": 0,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 15,
+      "items": 8,
+      "local_high": 4,
+      "local_high_rate": 0.5,
+      "local_high_wilson_upper_95": 0.7847874731755581
+    },
+    "upamune/xi": {
+      "all_low": 2,
+      "candidate_review": 8,
+      "candidate_review_rate": 0.8,
+      "candidate_review_windows": 23,
+      "items": 10,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2775401687666165
+    },
+    "vaayne/agent-kit": {
+      "all_low": 2,
+      "candidate_review": 0,
+      "candidate_review_rate": 0.0,
+      "candidate_review_windows": 0,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "vaayne/anna": {
+      "all_low": 13,
+      "candidate_review": 9,
+      "candidate_review_rate": 0.4090909090909091,
+      "candidate_review_windows": 9,
+      "items": 22,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.14865952572596122
+    },
+    "vancityAyush/sshx": {
+      "all_low": 0,
+      "candidate_review": 2,
+      "candidate_review_rate": 1.0,
+      "candidate_review_windows": 2,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "vfaraji89/tokalator": {
+      "all_low": 6,
+      "candidate_review": 3,
+      "candidate_review_rate": 0.3333333333333333,
+      "candidate_review_windows": 3,
+      "items": 9,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2991527535509594
+    },
+    "wanshicheng/duckdb-data-agent": {
+      "all_low": 3,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.4,
+      "candidate_review_windows": 3,
+      "items": 5,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.43449149475208104
+    },
+    "wodsmith/thewodapp": {
+      "all_low": 16,
+      "candidate_review": 10,
+      "candidate_review_rate": 0.38461538461538464,
+      "candidate_review_windows": 14,
+      "items": 26,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.12873304380462175
+    },
+    "xiaosha007/my-life-go": {
+      "all_low": 1,
+      "candidate_review": 1,
+      "candidate_review_rate": 0.5,
+      "candidate_review_windows": 1,
+      "items": 2,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.6576280471103807
+    },
+    "yonyon-web/sodateru-wiki": {
+      "all_low": 1,
+      "candidate_review": 6,
+      "candidate_review_rate": 0.75,
+      "candidate_review_windows": 6,
+      "items": 8,
+      "local_high": 1,
+      "local_high_rate": 0.125,
+      "local_high_wilson_upper_95": 0.4708948057698615
+    },
+    "yorrick/claude-code-plugins": {
+      "all_low": 17,
+      "candidate_review": 7,
+      "candidate_review_rate": 0.2916666666666667,
+      "candidate_review_windows": 11,
+      "items": 24,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.13798057582897535
+    },
+    "zchee/agent": {
+      "all_low": 6,
+      "candidate_review": 2,
+      "candidate_review_rate": 0.25,
+      "candidate_review_windows": 2,
+      "items": 8,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.3244156195108769
+    },
+    "zchee/spanner-manager": {
+      "all_low": 8,
+      "candidate_review": 4,
+      "candidate_review_rate": 0.3333333333333333,
+      "candidate_review_windows": 4,
+      "items": 12,
+      "local_high": 0,
+      "local_high_rate": 0.0,
+      "local_high_wilson_upper_95": 0.2425007574992425
+    },
+    "zchee/zmux": {
+      "all_low": 59,
+      "candidate_review": 42,
+      "candidate_review_rate": 0.3888888888888889,
+      "candidate_review_windows": 93,
+      "items": 108,
+      "local_high": 7,
+      "local_high_rate": 0.06481481481481481,
+      "local_high_wilson_upper_95": 0.12777782835528215
+    }
+  },
+  "by_source_month": {
+    "2026-01": {
+      "all_low": 107,
+      "candidate_review": 44,
+      "candidate_review_rate": 0.2894736842105263,
+      "candidate_review_windows": 48,
+      "items": 152,
+      "local_high": 1,
+      "local_high_rate": 0.006578947368421052,
+      "local_high_wilson_upper_95": 0.03632195333328236
+    },
+    "2026-02": {
+      "all_low": 616,
+      "candidate_review": 903,
+      "candidate_review_rate": 0.585603112840467,
+      "candidate_review_windows": 2361,
+      "items": 1542,
+      "local_high": 23,
+      "local_high_rate": 0.014915693904020753,
+      "local_high_wilson_upper_95": 0.022282971344144194
+    },
+    "2026-03": {
+      "all_low": 879,
+      "candidate_review": 956,
+      "candidate_review_rate": 0.5145317545748116,
+      "candidate_review_windows": 1706,
+      "items": 1858,
+      "local_high": 23,
+      "local_high_rate": 0.012378902045209902,
+      "local_high_wilson_upper_95": 0.018507322355654596
+    },
+    "2026-04": {
+      "all_low": 303,
+      "candidate_review": 208,
+      "candidate_review_rate": 0.40388349514563104,
+      "candidate_review_windows": 514,
+      "items": 515,
+      "local_high": 4,
+      "local_high_rate": 0.007766990291262136,
+      "local_high_wilson_upper_95": 0.019798742855461342
+    },
+    "unannotated": {
+      "all_low": 482,
+      "candidate_review": 565,
+      "candidate_review_rate": 0.5360531309297912,
+      "candidate_review_windows": 1434,
+      "items": 1054,
+      "local_high": 7,
+      "local_high_rate": 0.006641366223908918,
+      "local_high_wilson_upper_95": 0.013645339690018353
+    }
+  },
+  "decision": "reject_local_high_restriction_load",
+  "limitations": [
+    "SWE-chat has no prompt-injection or benignity adjudication, so this is review-load evidence rather than a false-positive rate.",
+    "The source is opt-in public open-source traffic and is not representative of proprietary or enterprise coding-agent use.",
+    "A large fraction of the source comes from Entire.io repositories.",
+    "Only the earliest non-continuation human prompt is assessed; later turns, tool returns, and code are excluded.",
+    "Source-side and local privacy screens reduce exposure but cannot prove that every retained public prompt is free of personal data.",
+    "No source text was sent to OpenRouter or retained in the result artifacts.",
+    "The panel is development evidence and must not select a threshold or model after opening."
+  ],
+  "manifest_sha256": "434e60cb72891bf2a6df4ba45fa8ca2af4f9ec22c0091e87c2375db5fde0ece1",
+  "operation": {
+    "local_latency_seconds": 769.827666247962,
+    "maximum_tokens": 50168,
+    "maximum_windows": 131,
+    "remote_provider_calls": 0,
+    "route_reasons": {
+      "mmbert_high": 58,
+      "mmbert_low": 2212,
+      "remote_review_disabled": 2031
+    }
+  },
+  "primary_session_weighted": {
+    "all_low": 2387,
+    "candidate_review": 2676,
+    "candidate_review_rate": 0.5225541886350322,
+    "candidate_review_windows": 6063,
+    "items": 5121,
+    "local_high": 58,
+    "local_high_rate": 0.011325912907635228,
+    "local_high_wilson_upper_95": 0.014612494252301498
+  },
+  "purpose": "prospectively frozen traffic-like direct-user local cascade diagnostic",
+  "result_ledger": {
+    "content_sha256": "ab33343dfc7f9ef94264e9853e1023ed1797f2492b54bc7eabb43c86753f0706",
+    "path": "artifacts/swechat_traffic_eval/results.jsonl.gz",
+    "rows": 4301,
+    "sha256": "51b69c19ac7cd5fea62f1cb40ad78b442bb12824d4e1c3c3369d318f19c58df4"
+  },
+  "schema_version": 1,
+  "unique_normalized_prompts": {
+    "all_low": 2212,
+    "candidate_review": 2031,
+    "candidate_review_rate": 0.4722157637758661,
+    "candidate_review_windows": 4797,
+    "items": 4301,
+    "local_high": 58,
+    "local_high_rate": 0.013485235991629853,
+    "local_high_wilson_upper_95": 0.01739219295935486
+  }
+}

@@ -44,9 +44,10 @@ Inspect the resulting manifest hashes, counts, split invariants, and quarantine 
 
 ## Data and credentials
 
-Never commit credentials, `.env` files, raw provider responses, ignored corpus outputs, or unregistered local model artifacts.
-The only model-artifact exception is the owner-approved advisory research set listed in `model-artifacts.json`.
-Its binary weights must use Git LFS, retain SHA-256 provenance, and remain separate from the public base encoder and raw training data.
+Never commit credentials, `.env` files, raw provider responses, ignored corpus outputs, or unapproved local model artifacts.
+The only model-artifact exceptions are the owner-approved advisory research set listed in `model-artifacts.json` and comparison-only binaries explicitly authorized in `AGENTS.md`.
+Their binary weights must use Git LFS, retain SHA-256 provenance, and remain separate from the public base encoder and raw training data.
+Comparison-only binaries must remain outside maintained inference and the model registry.
 Adding or replacing a registered artifact requires explicit owner approval plus a licensing, privacy, and reproducibility review.
 Do not push the registered LFS objects to an external remote until the mixed-corpus redistribution review is complete.
 Only `data/manifest.json` is versioned from the local data tree.

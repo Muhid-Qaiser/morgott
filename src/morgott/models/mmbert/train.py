@@ -1,4 +1,4 @@
-"""Train the maintained full-data frozen-head or rank-8 LoRA mmBERT recipe."""
+"""Train the frozen-head, rank-8 LoRA, or bounded LP-FT mmBERT recipe."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import os
 import shutil
 import tempfile
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
 from importlib.metadata import version
 from itertools import chain
@@ -38,6 +39,7 @@ from .core import (
 from .data import (
     OverlapGuard,
     _strict_hash,
+    additional_matched_pairs,
     batches,
     canonical_rows,
     external_rows,
@@ -52,20 +54,49 @@ from .data import (
 
 DOMAIN_WEIGHT = 1.0 / 3.0
 FULL_POPULATION = {
-    "canonical_rows": 1_069_607,
-    "promptshield_rows": 18_197,
+    "canonical_rows": 1_070_137,
+    "promptshield_rows": 18_202,
     "matched_pairs": 11_041,
-    "checkpoint_rows": 29_293,
-    "calibration_rows": 116_488,
-    "validation_components": 36_695,
-    "promptshield_validation_rows": 985,
+    "checkpoint_rows": 28_953,
+    "calibration_rows": 116_138,
+    "validation_components": 36_722,
+    "promptshield_validation_rows": 984,
 }
+NEW_LPFT_PAIR_ARCHIVE_SHA256 = (
+    "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba"
+)
+NEW_LPFT_POPULATION = {**FULL_POPULATION, "matched_pairs": 33_757}
+LPFT_TOP_LAYERS = 2
+LPFT_INITIAL_HEAD_SHA256 = (
+    "a3007323edb6da1d671b80ea1f7f46451384ddb2f45abeb2cae9d645404f5813"
+)
+CHECKPOINT_UPDATE_INTERVAL = 500
 
 
 def _run_name(mode: str, seed: int) -> str:
     if mode == "lora":
         return f"mmbert-lora-full-s{seed}"
     return f"mmbert-base-full-{mode}-s{seed}"
+
+
+def _configure_lpft(encoder) -> tuple[list[str], int]:
+    if (
+        not hasattr(encoder, "layers")
+        or len(encoder.layers) < LPFT_TOP_LAYERS
+        or not hasattr(encoder, "final_norm")
+    ):
+        raise ValueError("LP-FT encoder contract failed")
+    for parameter in encoder.parameters():
+        parameter.requires_grad = False
+    for module in (*encoder.layers[-LPFT_TOP_LAYERS:], encoder.final_norm):
+        for parameter in module.parameters():
+            parameter.requires_grad = True
+    names = sorted(
+        name for name, value in encoder.named_parameters() if value.requires_grad
+    )
+    return names, sum(
+        value.numel() for value in encoder.parameters() if value.requires_grad
+    )
 
 
 def _save_checkpoint(path: Path, *, identity: dict, state: dict) -> None:
@@ -111,6 +142,69 @@ def _load_checkpoint(path: Path, *, identity: dict) -> dict:
     return payload["state"]
 
 
+def _skip_resumed_batches(
+    batch_iterator: Iterator[list[dict]],
+    *,
+    batches_consumed: int,
+    canonical_seen: int,
+) -> int:
+    skipped = 0
+    for _ in range(batches_consumed):
+        batch = next(batch_iterator, None)
+        if batch is None:
+            raise ValueError("resume position exceeds the epoch stream")
+        skipped += len(batch)
+    if skipped != canonical_seen:
+        raise ValueError(
+            f"resumed epoch replay saw {skipped} canonical rows, "
+            f"expected {canonical_seen}"
+        )
+    return skipped
+
+
+def _progress_state(
+    *,
+    mode: str,
+    completed_epochs: int,
+    epoch_updates: int,
+    epoch_losses: list,
+    epoch_canonical_seen: int,
+    updates: int,
+    promptshield_draws: int,
+    pair_draws: int,
+    runtime_seconds: float,
+    curve: list,
+    best: dict | None,
+    head,
+    encoder,
+    optimizer,
+    promptshield_cycle,
+    pair_cycle,
+) -> dict:
+    import torch
+
+    return {
+        "next_epoch": completed_epochs,
+        "epoch_updates": epoch_updates,
+        "epoch_losses": [float(value) for value in epoch_losses],
+        "epoch_canonical_seen": epoch_canonical_seen,
+        "updates": updates,
+        "promptshield_draws": promptshield_draws,
+        "pair_draws": pair_draws,
+        "runtime_seconds": runtime_seconds,
+        "curve": curve,
+        "best": best,
+        "head": _cpu_state(head),
+        "adapter": _adapter_state(encoder) if mode == "lora" else None,
+        "encoder": _lpft_state(encoder) if mode == "lpft" else None,
+        "optimizer": optimizer.state_dict(),
+        "promptshield_cycle": promptshield_cycle.state_dict(),
+        "pair_cycle": pair_cycle.state_dict(),
+        "torch_rng_state": torch.get_rng_state(),
+        "cuda_rng_states": torch.cuda.get_rng_state_all(),
+    }
+
+
 def _training_identity(args: argparse.Namespace, data: TrainingData) -> dict:
     return {
         "schema_version": 1,
@@ -124,12 +218,22 @@ def _training_identity(args: argparse.Namespace, data: TrainingData) -> dict:
         "adapter_learning_rate": args.adapter_learning_rate,
         "pair_ranking_weight": args.pair_ranking_weight,
         "gradient_checkpointing": (
-            args.mode == "lora" and not args.no_gradient_checkpointing
+            args.mode in {"lora", "lpft"} and not args.no_gradient_checkpointing
+        ),
+        "initial_head_sha256": (
+            file_sha256(args.initial_head)
+            if getattr(args, "initial_head", None) is not None
+            else None
         ),
         "data": {
             "manifest_sha256": data.data_manifest_sha256,
             "external_manifest_sha256": data.external_manifest_sha256,
             "pair_archive_sha256": file_sha256(args.pairs),
+            "additional_pair_archive_sha256": (
+                file_sha256(args.additional_pairs)
+                if args.additional_pairs is not None
+                else None
+            ),
             "routing_views": {
                 split: spec["sha256"] for split, (_, spec) in data.views.items()
             },
@@ -176,30 +280,25 @@ def prepare_training_data(
     pair_archive: Path,
     *,
     seed: int = 42,
+    additional_pair_archive: Path | None = None,
 ) -> TrainingData:
     views = routing_views(data_dir)
     external, _ = external_rows(external_dir)
     original_pairs = matched_pairs(pair_archive)
+    if additional_pair_archive is not None:
+        original_pairs += additional_matched_pairs(additional_pair_archive)
     candidates = {
         "promptshield": external["promptshield_train"],
         "promptshield_validation": external["promptshield_validation"],
         "pairs": [row for pair in original_pairs for row in pair],
     }
+    guard = OverlapGuard(())
     kept, small_removed = filter_small_training_sets(
         candidates,
         _references(views, external),
+        reference_guard=guard,
     )
-    guard = OverlapGuard(
-        chain(
-            kept["promptshield"],
-            kept["promptshield_validation"],
-            external["promptshield_test"],
-            external["sep"],
-        )
-    )
-    for split in ("validation", "dev_test"):
-        path, spec = views[split]
-        guard.add(canonical_rows(path, spec, split=split, eligible_only=False))
+    guard.add(chain(kept["promptshield"], kept["promptshield_validation"]))
     train_path, train_spec = views["train"]
     (
         counts,
@@ -297,6 +396,7 @@ def _report(data: TrainingData) -> dict:
         "checkpoint_rows": len(data.checkpoint),
         "calibration_rows": len(data.calibration),
         "validation_components": data.validation_partition["components"],
+        "leakage_fingerprint": data.validation_partition["leakage_fingerprint"],
         "promptshield_validation_rows": len(data.promptshield_validation),
         "removed_for_overlap": data.removed,
     }
@@ -304,7 +404,20 @@ def _report(data: TrainingData) -> dict:
 
 def _validate_full_recipe(args: argparse.Namespace, report: dict) -> None:
     population = {key: report.get(key) for key in FULL_POPULATION}
-    if population != FULL_POPULATION:
+    additional_pairs = getattr(args, "additional_pairs", None)
+    expected_population = (
+        NEW_LPFT_POPULATION if additional_pairs is not None else FULL_POPULATION
+    )
+    additional_pairs_valid = (additional_pairs is not None) == (
+        args.mode == "lpft"
+    ) and (
+        additional_pairs is None
+        or (
+            additional_pairs.is_file()
+            and file_sha256(additional_pairs) == NEW_LPFT_PAIR_ARCHIVE_SHA256
+        )
+    )
+    if population != expected_population or not additional_pairs_valid:
         raise ValueError(f"full-mixture population contract failed: {population!r}")
     configuration = {
         "seed": args.seed,
@@ -312,7 +425,7 @@ def _validate_full_recipe(args: argparse.Namespace, report: dict) -> None:
         "batch_size": args.batch_size,
         "microbatch_size": args.microbatch_size,
         "gradient_checkpointing": (
-            args.mode == "lora" and not args.no_gradient_checkpointing
+            args.mode in {"lora", "lpft"} and not args.no_gradient_checkpointing
         ),
         "shuffle_buffer": args.shuffle_buffer,
         "head_learning_rate": args.head_learning_rate,
@@ -326,13 +439,21 @@ def _validate_full_recipe(args: argparse.Namespace, report: dict) -> None:
         "microbatch_size": 8,
         "gradient_checkpointing": False,
         "shuffle_buffer": 8192,
-        "head_learning_rate": 3e-4,
-        "adapter_learning_rate": 1e-4,
+        "head_learning_rate": 3e-5 if args.mode == "lpft" else 3e-4,
+        "adapter_learning_rate": 1e-5 if args.mode == "lpft" else 1e-4,
         "pair_ranking_weight": 0.25,
     }
+    initial_head = getattr(args, "initial_head", None)
+    initial_head_valid = (
+        initial_head is not None
+        and initial_head.is_file()
+        and file_sha256(initial_head) == LPFT_INITIAL_HEAD_SHA256
+    )
     if (
         configuration != expected
-        or (args.mode != "lora" and args.no_gradient_checkpointing)
+        or (args.mode == "frozen" and args.no_gradient_checkpointing)
+        or (args.mode == "lpft" and not initial_head_valid)
+        or (args.mode != "lpft" and initial_head is not None)
         or (args.resume and args.preflight_only)
     ):
         raise ValueError(
@@ -588,6 +709,23 @@ def _adapter_state(encoder) -> dict:
     }
 
 
+def _lpft_state(encoder) -> dict:
+    return {
+        name: value.detach().contiguous().cpu().clone()
+        for name, value in encoder.named_parameters()
+        if value.requires_grad
+    }
+
+
+def _restore_lpft_state(encoder, state: dict) -> None:
+    current = dict(encoder.named_parameters())
+    expected = {name for name, value in current.items() if value.requires_grad}
+    if set(state) != expected:
+        raise ValueError("LP-FT state contract failed")
+    for name, value in state.items():
+        current[name].data.copy_(value)
+
+
 def _save_run(
     output: Path,
     *,
@@ -623,6 +761,10 @@ def _save_run(
                 for path in sorted(adapter.iterdir())
                 if path.is_file()
             }
+        lpft_path = None
+        if mode == "lpft":
+            lpft_path = temporary / "encoder.safetensors"
+            save_file(_lpft_state(encoder), str(lpft_path))
         targeted_modules = (
             sorted(
                 name
@@ -663,6 +805,24 @@ def _save_run(
                 if mode == "lora"
                 else None
             ),
+            "lpft": (
+                {
+                    "top_layers": LPFT_TOP_LAYERS,
+                    "trainable_parameters": sum(
+                        parameter.numel()
+                        for parameter in encoder.parameters()
+                        if parameter.requires_grad
+                    ),
+                    "trainable_names": sorted(
+                        name
+                        for name, parameter in encoder.named_parameters()
+                        if parameter.requires_grad
+                    ),
+                    "initial_head_sha256": file_sha256(args.initial_head),
+                }
+                if mode == "lpft"
+                else None
+            ),
             "objective": {
                 "domains": {
                     "morgott": DOMAIN_WEIGHT,
@@ -682,11 +842,14 @@ def _save_run(
                 "microbatch_size": args.microbatch_size,
                 "mixed_precision": "bfloat16",
                 "gradient_checkpointing": (
-                    mode == "lora" and not args.no_gradient_checkpointing
+                    mode in {"lora", "lpft"} and not args.no_gradient_checkpointing
                 ),
                 "head_learning_rate": args.head_learning_rate,
                 "adapter_learning_rate": (
                     args.adapter_learning_rate if mode == "lora" else None
+                ),
+                "encoder_learning_rate": (
+                    args.adapter_learning_rate if mode == "lpft" else None
                 ),
                 "shuffle_buffer": args.shuffle_buffer,
                 "within_batch_order": "raw_character_length_ascending",
@@ -722,6 +885,8 @@ def _save_run(
                 "head_sha256": file_sha256(head_path),
                 "adapter": "adapter" if adapter_files else None,
                 "adapter_files": adapter_files,
+                "encoder": lpft_path.name if lpft_path else None,
+                "encoder_sha256": file_sha256(lpft_path) if lpft_path else None,
             },
             "provenance": {
                 "routing_views": {
@@ -735,6 +900,11 @@ def _save_run(
                 "data_manifest_sha256": data.data_manifest_sha256,
                 "external_manifest_sha256": data.external_manifest_sha256,
                 "pair_archive_sha256": file_sha256(args.pairs),
+                "additional_pair_archive_sha256": (
+                    file_sha256(args.additional_pairs)
+                    if args.additional_pairs is not None
+                    else None
+                ),
                 **source_provenance(
                     Path(__file__),
                     Path(__file__).with_name("core.py"),
@@ -765,22 +935,28 @@ def _save_run(
 
 def train(args: argparse.Namespace, data: TrainingData) -> Path:
     import torch
+    from safetensors.torch import load_file
 
     torch.manual_seed(args.seed)
     encoder, tokenizer = load_base_model()
-    train_encoder = args.mode == "lora"
+    train_encoder = args.mode in {"lora", "lpft"}
     if train_encoder:
         if not args.no_gradient_checkpointing:
             encoder.gradient_checkpointing_enable(
                 gradient_checkpointing_kwargs={"use_reentrant": False}
             )
             encoder.enable_input_require_grads()
-        encoder = add_lora(encoder)
+        if args.mode == "lora":
+            encoder = add_lora(encoder)
+        else:
+            _configure_lpft(encoder)
     else:
         encoder.gradient_checkpointing_disable()
         for parameter in encoder.parameters():
             parameter.requires_grad = False
     head = new_head(encoder.config.hidden_size, args.seed).to("cuda")
+    if args.mode == "lpft":
+        head.load_state_dict(load_file(str(args.initial_head)), strict=True)
     head_parameters = list(head.parameters())
     parameters = [{"params": head_parameters, "lr": args.head_learning_rate}]
     if train_encoder:
@@ -813,11 +989,17 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
     checkpoint = args.output / f".{_run_name(args.mode, args.seed)}.checkpoint.pt"
     identity = _training_identity(args, data)
 
+    resume_epoch_updates = 0
+    resume_epoch_losses: list[float] = []
+    resume_epoch_canonical_seen = 0
     if args.resume:
         if not checkpoint.is_file():
             raise FileNotFoundError(f"resume checkpoint does not exist: {checkpoint}")
         state = _load_checkpoint(checkpoint, identity=identity)
         next_epoch = state["next_epoch"]
+        resume_epoch_updates = state["epoch_updates"]
+        resume_epoch_losses = state["epoch_losses"]
+        resume_epoch_canonical_seen = state["epoch_canonical_seen"]
         updates = state["updates"]
         promptshield_draws = state["promptshield_draws"]
         pair_draws = state["pair_draws"]
@@ -826,9 +1008,12 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
         best = state["best"]
         head.load_state_dict(state["head"], strict=True)
         if train_encoder:
-            from peft import set_peft_model_state_dict
+            if args.mode == "lora":
+                from peft import set_peft_model_state_dict
 
-            set_peft_model_state_dict(encoder, state["adapter"])
+                set_peft_model_state_dict(encoder, state["adapter"])
+            else:
+                _restore_lpft_state(encoder, state["encoder"])
         optimizer.load_state_dict(state["optimizer"])
         promptshield_cycle.load_state_dict(state["promptshield_cycle"])
         pair_cycle.load_state_dict(state["pair_cycle"])
@@ -836,15 +1021,23 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
         torch.cuda.set_rng_state_all(state["cuda_rng_states"])
         if (
             type(next_epoch) is not int
-            or not 0 < next_epoch <= args.epochs
-            or updates != next_epoch * updates_per_epoch
+            or type(resume_epoch_updates) is not int
+            or type(resume_epoch_canonical_seen) is not int
+            or not isinstance(resume_epoch_losses, list)
+            or not 0 <= next_epoch <= args.epochs
+            or not 0 <= resume_epoch_updates < updates_per_epoch
+            or (next_epoch == args.epochs and resume_epoch_updates != 0)
+            or updates != next_epoch * updates_per_epoch + resume_epoch_updates
+            or updates == 0
             or len(curve) != next_epoch
-            or best is None
+            or len(resume_epoch_losses) != resume_epoch_updates
+            or (best is None and next_epoch > 0)
         ):
             raise ValueError("resume checkpoint progress contract failed")
         print(
             f"resuming at epoch {next_epoch + 1}/{args.epochs}, "
-            f"update {updates}/{expected_updates}",
+            f"update {updates}/{expected_updates}, "
+            f"epoch batch {resume_epoch_updates}/{updates_per_epoch}",
             flush=True,
         )
     elif checkpoint.exists():
@@ -869,7 +1062,15 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
             seed=args.seed + epoch_index,
             buffer_size=args.shuffle_buffer,
         )
-        for morgott in batches(stream, args.batch_size):
+        batch_iterator = batches(stream, args.batch_size)
+        if epoch_index == next_epoch and resume_epoch_updates:
+            canonical_seen = _skip_resumed_batches(
+                batch_iterator,
+                batches_consumed=resume_epoch_updates,
+                canonical_seen=resume_epoch_canonical_seen,
+            )
+            losses = [float(value) for value in resume_epoch_losses]
+        for morgott in batch_iterator:
             morgott.sort(key=lambda row: len(row["text"]))
             canonical_seen += len(morgott)
             optimizer.zero_grad(set_to_none=True)
@@ -934,6 +1135,37 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
                     f"peak_vram={torch.cuda.max_memory_reserved() / (1 << 30):.2f}GiB",
                     flush=True,
                 )
+            if (
+                updates % CHECKPOINT_UPDATE_INTERVAL == 0
+                and updates % updates_per_epoch != 0
+            ):
+                _save_checkpoint(
+                    checkpoint,
+                    identity=identity,
+                    state=_progress_state(
+                        mode=args.mode,
+                        completed_epochs=epoch_index,
+                        epoch_updates=updates - epoch_index * updates_per_epoch,
+                        epoch_losses=losses,
+                        epoch_canonical_seen=canonical_seen,
+                        updates=updates,
+                        promptshield_draws=promptshield_draws,
+                        pair_draws=pair_draws,
+                        runtime_seconds=(prior_seconds + time.perf_counter() - started),
+                        curve=curve,
+                        best=best,
+                        head=head,
+                        encoder=encoder,
+                        optimizer=optimizer,
+                        promptshield_cycle=promptshield_cycle,
+                        pair_cycle=pair_cycle,
+                    ),
+                )
+                print(
+                    f"saved progress checkpoint at update "
+                    f"{updates}/{expected_updates}: {checkpoint}",
+                    flush=True,
+                )
 
         if canonical_seen != sum(data.canonical_counts.values()):
             raise ValueError(
@@ -970,28 +1202,31 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
                 "loss": row["validation_macro_bce"],
                 "epoch": epoch,
                 "head": _cpu_state(head),
-                "adapter": _adapter_state(encoder) if train_encoder else None,
+                "adapter": _adapter_state(encoder) if args.mode == "lora" else None,
+                "encoder": _lpft_state(encoder) if args.mode == "lpft" else None,
             }
         elapsed = prior_seconds + time.perf_counter() - started
         _save_checkpoint(
             checkpoint,
             identity=identity,
-            state={
-                "next_epoch": epoch,
-                "updates": updates,
-                "promptshield_draws": promptshield_draws,
-                "pair_draws": pair_draws,
-                "runtime_seconds": elapsed,
-                "curve": curve,
-                "best": best,
-                "head": _cpu_state(head),
-                "adapter": _adapter_state(encoder) if train_encoder else None,
-                "optimizer": optimizer.state_dict(),
-                "promptshield_cycle": promptshield_cycle.state_dict(),
-                "pair_cycle": pair_cycle.state_dict(),
-                "torch_rng_state": torch.get_rng_state(),
-                "cuda_rng_states": torch.cuda.get_rng_state_all(),
-            },
+            state=_progress_state(
+                mode=args.mode,
+                completed_epochs=epoch,
+                epoch_updates=0,
+                epoch_losses=[],
+                epoch_canonical_seen=0,
+                updates=updates,
+                promptshield_draws=promptshield_draws,
+                pair_draws=pair_draws,
+                runtime_seconds=elapsed,
+                curve=curve,
+                best=best,
+                head=head,
+                encoder=encoder,
+                optimizer=optimizer,
+                promptshield_cycle=promptshield_cycle,
+                pair_cycle=pair_cycle,
+            ),
         )
         print(
             f"saved epoch {epoch}/{args.epochs} checkpoint: {checkpoint}",
@@ -1006,18 +1241,23 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
         raise ValueError("training update or auxiliary draw contract failed")
     head.load_state_dict(best["head"], strict=True)
     if train_encoder:
-        from peft import (
-            get_peft_model_state_dict,
-            set_peft_model_state_dict,
-        )
+        if args.mode == "lora":
+            from peft import (
+                get_peft_model_state_dict,
+                set_peft_model_state_dict,
+            )
 
-        set_peft_model_state_dict(encoder, best["adapter"])
-        restored = get_peft_model_state_dict(encoder)
-        if restored.keys() != best["adapter"].keys() or any(
-            not torch.equal(restored[name].cpu(), best["adapter"][name])
-            for name in restored
+            set_peft_model_state_dict(encoder, best["adapter"])
+            restored = get_peft_model_state_dict(encoder)
+            selected = best["adapter"]
+        else:
+            _restore_lpft_state(encoder, best["encoder"])
+            restored = _lpft_state(encoder)
+            selected = best["encoder"]
+        if restored.keys() != selected.keys() or any(
+            not torch.equal(restored[name].cpu(), selected[name]) for name in restored
         ):
-            raise ValueError("restored adapter differs from the selected epoch")
+            raise ValueError("restored encoder differs from the selected epoch")
     return _save_run(
         args.output,
         mode=args.mode,
@@ -1035,7 +1275,7 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=("frozen", "lora"), default="lora")
+    parser.add_argument("--mode", choices=("frozen", "lora", "lpft"), default="lora")
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
     parser.add_argument(
         "--external-dir",
@@ -1047,6 +1287,7 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("data-archive/matched_pairs_20260726.jsonl.gz"),
     )
+    parser.add_argument("--additional-pairs", type=Path)
     parser.add_argument("--output", type=Path, default=Path("artifacts/mmbert/runs"))
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--epochs", type=int, default=3)
@@ -1055,6 +1296,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--shuffle-buffer", type=int, default=8192)
     parser.add_argument("--head-learning-rate", type=float, default=3e-4)
     parser.add_argument("--adapter-learning-rate", type=float, default=1e-4)
+    parser.add_argument("--initial-head", type=Path)
     parser.add_argument("--pair-ranking-weight", type=float, default=0.25)
     parser.add_argument("--no-gradient-checkpointing", action="store_true")
     parser.add_argument("--resume", action="store_true")
@@ -1085,6 +1327,7 @@ def main() -> int:
         args.external_dir,
         args.pairs,
         seed=args.seed,
+        additional_pair_archive=args.additional_pairs,
     )
     report = _report(data)
     _validate_full_recipe(args, report)

@@ -1,14 +1,20 @@
+import hashlib
+import json
 import unittest
+from pathlib import Path
 
 import numpy as np
 
 from morgott.models.routing_baseline import (
     MAX_BATCH_CHARACTERS,
     _cap_rows,
-    _direct_strength,
+    _evaluate,
+    _is_weak_label,
     _metrics,
     _row_batches,
 )
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _row(source: str, label: int, index: int) -> dict:
@@ -18,14 +24,21 @@ def _row(source: str, label: int, index: int) -> dict:
         "source": source,
         "group": f"{source}:{index}",
         "hash": f"{index:064x}",
-        "strength": "strong",
     }
 
 
 class RoutingBaselineTests(unittest.TestCase):
-    def test_recipe_excludes_only_all_weak_origins(self):
+    def test_versioned_report_tracks_the_canonical_manifest(self):
+        manifest = (ROOT / "data" / "manifest.json").read_bytes()
+        report = json.loads((ROOT / "reports" / "routing-baseline.json").read_text())
+
         self.assertEqual(
-            _direct_strength(
+            report["data_manifest_sha256"], hashlib.sha256(manifest).hexdigest()
+        )
+
+    def test_recipe_excludes_only_all_weak_origins(self):
+        self.assertFalse(
+            _is_weak_label(
                 {
                     "routing_label": 0,
                     "origins": [
@@ -41,17 +54,15 @@ class RoutingBaselineTests(unittest.TestCase):
                         },
                     ],
                 }
-            ),
-            "strong",
+            )
         )
-        self.assertEqual(
-            _direct_strength(
+        self.assertTrue(
+            _is_weak_label(
                 {
                     "routing_label": 0,
                     "label_basis": "automated_weak_benign",
                 }
-            ),
-            "weak_label",
+            )
         )
 
     def test_cap_is_deterministic_per_source_and_label(self):
@@ -85,6 +96,89 @@ class RoutingBaselineTests(unittest.TestCase):
         )
         self.assertEqual(metrics["recall"], 0.5)
         self.assertEqual(metrics["fpr"], 0.5)
+        self.assertEqual(
+            {
+                key: metrics[key]
+                for key in (
+                    "true_positive",
+                    "false_positive",
+                    "true_negative",
+                    "false_negative",
+                )
+            },
+            {
+                "true_positive": 1,
+                "false_positive": 1,
+                "true_negative": 1,
+                "false_negative": 1,
+            },
+        )
+        self.assertAlmostEqual(
+            metrics["expected_precision_at_attack_prevalence"]["0.1%"],
+            0.001,
+        )
+
+    def test_single_class_metrics_keep_prevalence_report_shape(self):
+        metrics = _metrics(np.asarray([0, 0]), np.asarray([0.1, 0.2]))
+
+        self.assertEqual(
+            metrics["expected_precision_at_attack_prevalence"],
+            {"0.1%": None, "1%": None, "5%": None},
+        )
+
+    def test_source_metrics_include_every_exact_merge_membership(self):
+        class Vectorizer:
+            def transform(self, texts):
+                return texts
+
+        class Classifier:
+            def predict_proba(self, texts):
+                return np.asarray([[0.1, 0.9] for _ in texts])
+
+        result = _evaluate(
+            [
+                {
+                    "text": "merged attack",
+                    "label": 1,
+                    "source": "representative",
+                    "sources": ("representative", "second_source"),
+                }
+            ],
+            Vectorizer(),
+            Classifier(),
+        )
+
+        self.assertEqual(result["all"]["rows"], 1)
+        self.assertEqual(result["by_source"]["representative"]["rows"], 1)
+        self.assertEqual(result["by_source"]["second_source"]["rows"], 1)
+        self.assertEqual(result["by_normalized_character_length"]["0-256"]["rows"], 1)
+
+    def test_length_slices_keep_boundaries_disjoint(self):
+        class Vectorizer:
+            def transform(self, texts):
+                return texts
+
+        class Classifier:
+            def predict_proba(self, texts):
+                return np.asarray([[0.1, 0.9] for _ in texts])
+
+        result = _evaluate(
+            [
+                {"text": "a" * 256, "label": 1, "source": "source"},
+                {"text": "a" * 257, "label": 1, "source": "source"},
+                {"text": "a" * 4_097, "label": 1, "source": "source"},
+            ],
+            Vectorizer(),
+            Classifier(),
+        )
+
+        self.assertEqual(
+            {
+                name: metrics["rows"]
+                for name, metrics in result["by_normalized_character_length"].items()
+            },
+            {"0-256": 1, "257-1024": 1, "1025-4096": 0, "4097+": 1},
+        )
 
 
 if __name__ == "__main__":

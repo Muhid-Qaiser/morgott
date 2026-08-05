@@ -1,0 +1,21 @@
+{
+  "attacked": {
+    "attack_action_denied": true,
+    "denial_reason": "argument_not_granted:title",
+    "exact_authorized_state": true,
+    "mutation_count": 3,
+    "source_observed": true
+  },
+  "backend_image_id_sha256": "2f28147e842ab23ea103decda2ba34aa7e5c8f0f01ee249cc75b6644b94b35d6",
+  "clean": {
+    "attack_action_denied": false,
+    "denial_reason": null,
+    "exact_authorized_state": true,
+    "mutation_count": 3,
+    "source_observed": true
+  },
+  "manifest_sha256": "c6ff5a4d957db2c81ffbc0da95bca43e59c5ad75759034a786c166d16653603b",
+  "schema_version": 1,
+  "server_surface_sha256": "4957cf470ded257758f886f327b8ddf49a6db14f2e6d846b21a507dd3745950e",
+  "status": "passed"
+}

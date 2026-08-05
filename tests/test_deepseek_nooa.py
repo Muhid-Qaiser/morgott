@@ -13,6 +13,8 @@ from morgott.models.deepseek_nooa import (
     PROMPT,
     PROMPT_SHA256,
     PROVIDER,
+    REMOTE_CONCURRENCY,
+    REQUEST_SHA256,
     DeepSeekReviewer,
     refuse_nooa_tracing,
 )
@@ -151,6 +153,31 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
         ):
             DeepSeekReviewer.from_env()
 
+    @unittest.skipUnless(
+        importlib.util.find_spec("nooa"),
+        "NOOA cascade extra is not installed",
+    )
+    def test_production_reviewer_suppresses_litellm_error_banners(self):
+        import litellm
+
+        previous = litellm.suppress_debug_info
+        litellm.suppress_debug_info = False
+        try:
+            with (
+                mock.patch.dict(
+                    "os.environ",
+                    {"OPENROUTER_API_KEY": "not-a-secret"},
+                    clear=True,
+                ),
+                mock.patch("morgott.models.deepseek_nooa.refuse_nooa_tracing"),
+                mock.patch("nooa.unifiedllm.CompletionClient"),
+            ):
+                DeepSeekReviewer.from_env()
+
+            self.assertTrue(litellm.suppress_debug_info)
+        finally:
+            litellm.suppress_debug_info = previous
+
     async def test_reviewer_closes_its_http_client(self):
         client = _ClosingClient(_Response(_raw_response()))
         reviewer = DeepSeekReviewer(client)
@@ -159,10 +186,16 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(client.closed)
 
+    async def test_review_rejects_untyped_input_channel(self):
+        reviewer = DeepSeekReviewer(_Client(_Response(_raw_response())))
+
+        with self.assertRaisesRegex(ValueError, "trusted runtime metadata"):
+            await reviewer.review("classify me", input_channel="model_output")
+
     async def test_valid_binary_logprobs_return_a_typed_review(self):
         reviewer = DeepSeekReviewer(_Client(_Response(_raw_response())))
 
-        review = await reviewer.review("classify me")
+        review = await reviewer.review("classify me", input_channel="direct_user")
 
         self.assertEqual(review.status, "ok")
         self.assertEqual(review.attempts, 1)
@@ -176,7 +209,7 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
         valid = _Response(_raw_response(verdict=0))
         reviewer = DeepSeekReviewer(_SequenceClient([invalid, valid]))
 
-        review = await reviewer.review("classify me")
+        review = await reviewer.review("classify me", input_channel="direct_user")
 
         self.assertEqual(review.status, "ok")
         self.assertEqual(review.attempts, 2)
@@ -195,11 +228,28 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             "morgott.models.deepseek_nooa.asyncio.sleep",
             new_callable=mock.AsyncMock,
         ) as sleep:
-            review = await reviewer.review("classify me")
+            review = await reviewer.review("classify me", input_channel="direct_user")
 
         self.assertEqual(review.status, "ok")
         self.assertEqual(review.attempts, 2)
         sleep.assert_awaited_once_with(0.0)
+
+    async def test_rate_limit_without_retry_after_uses_longer_backoff(self):
+        reviewer = DeepSeekReviewer(
+            _SequenceClient([_HttpError(429), _Response(_raw_response())])
+        )
+
+        with (
+            mock.patch("morgott.models.deepseek_nooa.random.random", return_value=0.5),
+            mock.patch(
+                "morgott.models.deepseek_nooa.asyncio.sleep",
+                new_callable=mock.AsyncMock,
+            ) as sleep,
+        ):
+            review = await reviewer.review("classify me", input_channel="direct_user")
+
+        self.assertEqual((review.status, review.attempts), ("ok", 2))
+        sleep.assert_awaited_once_with(5.0)
 
     async def test_retry_after_delay_is_finite_and_bounded(self):
         for value in ("inf", "999999999999"):
@@ -222,7 +272,10 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
                         new_callable=mock.AsyncMock,
                     ) as sleep,
                 ):
-                    review = await reviewer.review("classify me")
+                    review = await reviewer.review(
+                        "classify me",
+                        input_channel="direct_user",
+                    )
 
                 self.assertEqual(review.status, "ok")
                 delay = sleep.await_args.args[0]
@@ -243,7 +296,7 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             "morgott.models.deepseek_nooa.asyncio.sleep",
             new_callable=mock.AsyncMock,
         ):
-            review = await reviewer.review("classify me")
+            review = await reviewer.review("classify me", input_channel="direct_user")
 
         self.assertEqual((review.status, review.attempts), ("ok", 2))
 
@@ -252,7 +305,10 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             with self.subTest(status=status):
                 reviewer = DeepSeekReviewer(_SequenceClient([_HttpError(status)]))
 
-                review = await reviewer.review("classify me")
+                review = await reviewer.review(
+                    "classify me",
+                    input_channel="direct_user",
+                )
 
                 self.assertEqual(
                     (review.status, review.attempts, review.failure_code),
@@ -265,7 +321,7 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             _SequenceClient([RuntimeError(f"provider exposed {secret}")])
         )
 
-        review = await reviewer.review("classify me")
+        review = await reviewer.review("classify me", input_channel="direct_user")
 
         self.assertEqual(review.failure_code, "transport_error")
         self.assertNotIn(secret, repr(review))
@@ -276,7 +332,7 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             _SequenceClient([invalid, invalid, invalid]),
         )
 
-        review = await reviewer.review("classify me")
+        review = await reviewer.review("classify me", input_channel="direct_user")
 
         self.assertEqual(
             (review.status, review.attempts, review.failure_code),
@@ -286,7 +342,7 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
     async def test_missing_raw_response_exhausts_as_an_invalid_response(self):
         reviewer = DeepSeekReviewer(_Client(object()))
 
-        review = await reviewer.review("classify me")
+        review = await reviewer.review("classify me", input_channel="direct_user")
 
         self.assertEqual(
             (review.status, review.attempts, review.failure_code),
@@ -317,6 +373,12 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
         nonfinite["choices"][0]["logprobs"]["content"][0]["top_logprobs"][0][
             "logprob"
         ] = math.nan
+        inconsistent_decision = _raw_response()
+        alternatives = inconsistent_decision["choices"][0]["logprobs"]["content"][0][
+            "top_logprobs"
+        ]
+        alternatives[0]["logprob"] = math.log(0.9)
+        alternatives[1]["logprob"] = math.log(0.1)
         multiple_decisions = _raw_response()
         multiple_decisions["choices"][0]["logprobs"]["content"].append(
             copy.deepcopy(multiple_decisions["choices"][0]["logprobs"]["content"][0])
@@ -337,6 +399,7 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             missing_class,
             duplicate_class,
             nonfinite,
+            inconsistent_decision,
             multiple_decisions,
             missing_bytes,
             whitespace_bytes,
@@ -347,7 +410,10 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
                     _SequenceClient([response, response, response])
                 )
 
-                review = await reviewer.review("classify me")
+                review = await reviewer.review(
+                    "classify me",
+                    input_channel="direct_user",
+                )
 
                 self.assertEqual(
                     (review.status, review.failure_code),
@@ -396,7 +462,10 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             ),
         )
         try:
-            review = await DeepSeekReviewer(client).review("classify me")
+            review = await DeepSeekReviewer(client).review(
+                "classify me",
+                input_channel="untrusted_content",
+            )
         finally:
             await client.aclose()
             server.shutdown()
@@ -404,10 +473,16 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             server.server_close()
 
         self.assertEqual(review.status, "ok")
-        self.assertEqual(MODEL, "deepseek/deepseek-v4-flash-20260423")
+        self.assertEqual(MODEL, "deepseek/deepseek-v4-flash-0731")
+        self.assertEqual(PROVIDER, "cloudflare")
+        self.assertEqual(REMOTE_CONCURRENCY, 4)
+        self.assertEqual(
+            REQUEST_SHA256,
+            "b5df77d444d1c16cce2aca82d35abf5a9d07869ad61fc11a051fc4a792a0619b",
+        )
         self.assertEqual(
             PROMPT_SHA256,
-            "840cc4b1d91c59faeef5b1b2e5add2252a05d16c8e2a445fd68a7fcee66e0670",
+            "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
         )
         self.assertEqual(captured["path"], "/v1/chat/completions")
         self.assertEqual(
@@ -415,7 +490,10 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
             {
                 "model": MODEL,
                 "messages": [
-                    {"role": "system", "content": PROMPT},
+                    {
+                        "role": "system",
+                        "content": PROMPT.format(input_channel="untrusted_content"),
+                    },
                     {"role": "user", "content": "classify me"},
                 ],
                 "temperature": 0,

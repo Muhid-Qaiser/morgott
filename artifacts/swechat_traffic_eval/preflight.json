@@ -1,0 +1,37 @@
+{
+  "cascade_contract": {
+    "model_registry_sha256": "dd1c546a8a30a34b3a3865edc7774ff34de80ddcee0fdbb516e3a667c07a1b0f",
+    "prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+    "request_sha256": "b5df77d444d1c16cce2aca82d35abf5a9d07869ad61fc11a051fc4a792a0619b",
+    "threshold_sha256": "89ac994922b6fb014179aa30df40b79001359f7e8df1de62ef6c3ec4a604d6f2"
+  },
+  "decision": "reject_local_high_restriction_load",
+  "local_latency_seconds": 769.827666247962,
+  "manifest_sha256": "434e60cb72891bf2a6df4ba45fa8ca2af4f9ec22c0091e87c2375db5fde0ece1",
+  "maximum_review_windows_for_one_prompt": 131,
+  "remote_provider_calls": 0,
+  "results": {
+    "content_sha256": "ab33343dfc7f9ef94264e9853e1023ed1797f2492b54bc7eabb43c86753f0706",
+    "path": "artifacts/swechat_traffic_eval/results.jsonl.gz",
+    "rows": 4301,
+    "sha256": "51b69c19ac7cd5fea62f1cb40ad78b442bb12824d4e1c3c3369d318f19c58df4"
+  },
+  "runtime_contract": {
+    "model-artifacts.json": "dd1c546a8a30a34b3a3865edc7774ff34de80ddcee0fdbb516e3a667c07a1b0f",
+    "src/morgott/models/cascade.py": "40c423c28f6e95451e8c67621ef03e81492830922362293a19fa9be3babb46ae",
+    "src/morgott/models/deepseek_nooa.py": "0488f064b509b74d389d44a3aacc182dd81e7890343d01162da47791274a0fef",
+    "src/morgott/models/downstream.py": "becd382a482e5746fff9bfec61ed43d5ace46d5b576f90525d5d9a3afb7bdc3c",
+    "src/morgott/models/mmbert/serving.py": "804ce5253ec54ac61baeb160da936139f88e8d3ae6c7d18642c00a11c0a636c9"
+  },
+  "schema_version": 1,
+  "traffic": {
+    "all_low": 2387,
+    "candidate_review": 2676,
+    "candidate_review_rate": 0.5225541886350322,
+    "candidate_review_windows": 6063,
+    "items": 5121,
+    "local_high": 58,
+    "local_high_rate": 0.011325912907635228,
+    "local_high_wilson_upper_95": 0.014612494252301498
+  }
+}

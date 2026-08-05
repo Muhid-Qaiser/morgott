@@ -66,6 +66,8 @@ and independent tags preserve why a row is routed.
   HarperValleyBank is simulated and narrow.
   TAT-QA and FinanceBench annotations establish finance-QA correctness and relevance, not arbitrary prompt safety.
   Mind2Web annotations establish executable web tasks; retained tasks pass a local high-precision sensitive-text screen, while suspicious tasks remain outside supervised views in quarantine.
+- SWE-bench Verified human review establishes legitimate solvable software tasks, which is the source authority for routing label `0` rather than an absence-of-attack assumption.
+  It is not a safety annotation, stays entirely in dev-test, and supports only repository- and length-sliced legitimate-workload diagnostics after the local sensitive-text screen.
 - TAT-QA report paragraphs and tables and FinanceBench evidence are clean controls only in their published finance-task context.
   They do not prove that arbitrary retrieved financial text is safe, and their trusted `untrusted_content` channel comes from the adapter rather than text.
 - FinanceBench is dev-test only and has already influenced source selection.

@@ -1,24 +1,41 @@
 import math
 import unittest
 
-from morgott.models.downstream import route, subversion_probability
+from morgott.models.downstream import (
+    LLM_FLAG_PROBABILITY,
+    route,
+    subversion_probability,
+)
 
 
 class DownstreamRouteTests(unittest.TestCase):
+    def test_0731_reviewer_uses_its_calibrated_threshold(self):
+        self.assertEqual(LLM_FLAG_PROBABILITY, 0.6224593312018547)
+
+    def test_untrusted_content_uses_a_lower_review_floor(self):
+        direct = route(0.1, input_channel="direct_user")
+        untrusted = route(0.1, input_channel="untrusted_content")
+
+        self.assertEqual((direct.route, direct.reason), ("pass", "mmbert_low"))
+        self.assertEqual(
+            (untrusted.route, untrusted.reason),
+            ("review", "deepseek_required"),
+        )
+
     def test_low_mmbert_score_passes_without_deepseek(self):
-        result = route(0.199)
+        result = route(0.199, input_channel="direct_user")
 
         self.assertEqual((result.route, result.reason), ("pass", "mmbert_low"))
 
     def test_high_mmbert_score_restricts_without_deepseek(self):
-        result = route(0.99999)
+        result = route(0.99999, input_channel="direct_user")
 
         self.assertEqual((result.route, result.reason), ("restrict", "mmbert_high"))
 
     def test_middle_mmbert_score_requests_deepseek_review(self):
         for score in (0.2, math.nextafter(0.99999, 0.0)):
             with self.subTest(score=score):
-                result = route(score)
+                result = route(score, input_channel="direct_user")
 
                 self.assertEqual(
                     (result.route, result.reason),
@@ -26,12 +43,20 @@ class DownstreamRouteTests(unittest.TestCase):
                 )
 
     def test_middle_deepseek_probability_below_threshold_passes(self):
-        result = route(0.5, llm_probability=0.899)
+        result = route(
+            0.5,
+            input_channel="direct_user",
+            llm_probability=math.nextafter(LLM_FLAG_PROBABILITY, 0.0),
+        )
 
         self.assertEqual((result.route, result.reason), ("pass", "deepseek_clear"))
 
     def test_middle_deepseek_probability_at_threshold_restricts(self):
-        result = route(0.5, llm_probability=0.9)
+        result = route(
+            0.5,
+            input_channel="direct_user",
+            llm_probability=LLM_FLAG_PROBABILITY,
+        )
 
         self.assertEqual(
             (result.route, result.reason),
@@ -48,7 +73,7 @@ class DownstreamRouteTests(unittest.TestCase):
         self.assertEqual(subversion_probability(-1000.0, 0.0), 1.0)
 
     def test_exhausted_middle_deepseek_failure_restricts(self):
-        result = route(0.5, llm_failed=True)
+        result = route(0.5, input_channel="direct_user", llm_failed=True)
 
         self.assertEqual(
             (result.route, result.reason),
@@ -58,7 +83,7 @@ class DownstreamRouteTests(unittest.TestCase):
     def test_invalid_mmbert_scores_are_rejected(self):
         for score in (-0.1, 1.1, math.nan, True):
             with self.subTest(score=score), self.assertRaises(ValueError):
-                route(score)
+                route(score, input_channel="direct_user")
 
     def test_invalid_deepseek_results_are_rejected(self):
         invalid = (
@@ -70,12 +95,30 @@ class DownstreamRouteTests(unittest.TestCase):
         )
         for arguments in invalid:
             with self.subTest(arguments=arguments), self.assertRaises(ValueError):
-                route(0.5, **arguments)
+                route(0.5, input_channel="direct_user", **arguments)
 
     def test_deepseek_result_is_only_valid_in_middle_zone(self):
         for score in (0.1, 0.99999):
             with self.subTest(score=score), self.assertRaises(ValueError):
-                route(score, llm_probability=0.5)
+                route(
+                    score,
+                    input_channel="direct_user",
+                    llm_probability=0.5,
+                )
+
+    def test_middle_zone_floor_is_channel_specific(self):
+        # 0.15 is below the 0.2 direct_user floor but inside the 0.1
+        # untrusted_content middle zone.
+        result = route(0.15, input_channel="untrusted_content", llm_probability=0.5)
+        self.assertEqual(result.route, "pass")
+        with self.assertRaises(ValueError):
+            route(0.15, input_channel="direct_user", llm_probability=0.5)
+        with self.assertRaises(ValueError):
+            route(0.05, input_channel="untrusted_content", llm_probability=0.5)
+
+    def test_invalid_input_channel_is_rejected(self):
+        with self.assertRaises(ValueError):
+            route(0.5, input_channel="attacker_controlled")
 
 
 if __name__ == "__main__":

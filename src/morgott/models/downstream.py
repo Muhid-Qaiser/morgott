@@ -6,13 +6,16 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
-MMBERT_LOW = 0.2
+MMBERT_LOW_BY_CHANNEL = {
+    "direct_user": 0.2,
+    "untrusted_content": 0.1,
+}
 MMBERT_HIGH = 0.99999
-LLM_FLAG_PROBABILITY = 0.9
+LLM_FLAG_PROBABILITY = 0.6224593312018547
 THRESHOLD_SHA256 = hashlib.sha256(
     json.dumps(
         {
-            "mmbert_low": MMBERT_LOW,
+            "mmbert_low_by_channel": MMBERT_LOW_BY_CHANNEL,
             "mmbert_high": MMBERT_HIGH,
             "deepseek_flag": LLM_FLAG_PROBABILITY,
         },
@@ -49,6 +52,7 @@ def subversion_probability(logprob_0: float, logprob_1: float) -> float:
 def route(
     mmbert_score: float,
     *,
+    input_channel: Literal["direct_user", "untrusted_content"],
     llm_probability: float | None = None,
     llm_failed: bool = False,
 ) -> RouteResult:
@@ -62,6 +66,9 @@ def route(
         raise ValueError("mmbert_score must be a finite probability")
     if not isinstance(llm_failed, bool):
         raise ValueError("llm_failed must be a boolean")
+    if input_channel not in MMBERT_LOW_BY_CHANNEL:
+        raise ValueError("input_channel must come from trusted runtime metadata")
+    low = MMBERT_LOW_BY_CHANNEL[input_channel]
     if llm_failed and llm_probability is not None:
         raise ValueError("DeepSeek result and failure are mutually exclusive")
     if llm_probability is not None and (
@@ -72,10 +79,10 @@ def route(
     ):
         raise ValueError("llm_probability must be a finite probability")
     if (llm_probability is not None or llm_failed) and not (
-        MMBERT_LOW <= mmbert_score < MMBERT_HIGH
+        low <= mmbert_score < MMBERT_HIGH
     ):
         raise ValueError("DeepSeek result is only valid in the middle zone")
-    if mmbert_score < MMBERT_LOW:
+    if mmbert_score < low:
         return RouteResult("pass", "mmbert_low")
     if mmbert_score >= MMBERT_HIGH:
         return RouteResult("restrict", "mmbert_high")

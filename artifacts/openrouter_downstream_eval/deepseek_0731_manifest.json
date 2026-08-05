@@ -1,0 +1,299 @@
+{
+  "advisory_only": true,
+  "candidate": {
+    "contracts": {
+      "cloudflare": {
+        "sha256": "b5df77d444d1c16cce2aca82d35abf5a9d07869ad61fc11a051fc4a792a0619b",
+        "value": {
+          "request": {
+            "cache_control_injection_points": [],
+            "extra_body": {
+              "provider": {
+                "allow_fallbacks": false,
+                "order": [
+                  "cloudflare"
+                ],
+                "quantizations": [
+                  "fp8"
+                ],
+                "require_parameters": true
+              },
+              "reasoning": {
+                "enabled": false,
+                "exclude": true
+              }
+            },
+            "logprobs": true,
+            "max_tokens": 16,
+            "response_format": {
+              "json_schema": {
+                "name": "instruction_subversion",
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "subversion": {
+                      "enum": [
+                        0,
+                        1
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "subversion"
+                  ],
+                  "type": "object"
+                },
+                "strict": true
+              },
+              "type": "json_schema"
+            },
+            "temperature": 0,
+            "top_logprobs": 20
+          },
+          "transport_model": "openai/deepseek/deepseek-v4-flash-0731"
+        }
+      },
+      "deepseek": {
+        "sha256": "5c4255d0dbf3241055dfe9cf499d532d448f0ffaa07027d88b26a7993bd38d3e",
+        "value": {
+          "request": {
+            "cache_control_injection_points": [],
+            "extra_body": {
+              "provider": {
+                "allow_fallbacks": false,
+                "order": [
+                  "deepseek"
+                ],
+                "quantizations": [
+                  "fp8"
+                ],
+                "require_parameters": true
+              },
+              "reasoning": {
+                "enabled": false,
+                "exclude": true
+              }
+            },
+            "logprobs": true,
+            "max_tokens": 16,
+            "response_format": {
+              "json_schema": {
+                "name": "instruction_subversion",
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "subversion": {
+                      "enum": [
+                        0,
+                        1
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "subversion"
+                  ],
+                  "type": "object"
+                },
+                "strict": true
+              },
+              "type": "json_schema"
+            },
+            "temperature": 0,
+            "top_logprobs": 20
+          },
+          "transport_model": "openai/deepseek/deepseek-v4-flash-0731"
+        }
+      },
+      "gmicloud": {
+        "sha256": "51466e4be70954edf77a47364aeda68a3edddc6612bb0d3f01cb1503458604cf",
+        "value": {
+          "request": {
+            "cache_control_injection_points": [],
+            "extra_body": {
+              "provider": {
+                "allow_fallbacks": false,
+                "order": [
+                  "gmicloud"
+                ],
+                "quantizations": [
+                  "fp8"
+                ],
+                "require_parameters": true
+              },
+              "reasoning": {
+                "enabled": false,
+                "exclude": true
+              }
+            },
+            "logprobs": true,
+            "max_tokens": 16,
+            "response_format": {
+              "json_schema": {
+                "name": "instruction_subversion",
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "subversion": {
+                      "enum": [
+                        0,
+                        1
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "subversion"
+                  ],
+                  "type": "object"
+                },
+                "strict": true
+              },
+              "type": "json_schema"
+            },
+            "temperature": 0,
+            "top_logprobs": 20
+          },
+          "transport_model": "openai/deepseek/deepseek-v4-flash-0731"
+        }
+      },
+      "novita": {
+        "sha256": "ea09f22f5b8ab9089caa28bdafcad6070651700d260aa772b28d10820fcb0929",
+        "value": {
+          "request": {
+            "cache_control_injection_points": [],
+            "extra_body": {
+              "provider": {
+                "allow_fallbacks": false,
+                "order": [
+                  "novita"
+                ],
+                "quantizations": [
+                  "fp8"
+                ],
+                "require_parameters": true
+              },
+              "reasoning": {
+                "enabled": false,
+                "exclude": true
+              }
+            },
+            "logprobs": true,
+            "max_tokens": 16,
+            "response_format": {
+              "json_schema": {
+                "name": "instruction_subversion",
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "subversion": {
+                      "enum": [
+                        0,
+                        1
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "subversion"
+                  ],
+                  "type": "object"
+                },
+                "strict": true
+              },
+              "type": "json_schema"
+            },
+            "temperature": 0,
+            "top_logprobs": 20
+          },
+          "transport_model": "openai/deepseek/deepseek-v4-flash-0731"
+        }
+      }
+    },
+    "hugging_face_model": "deepseek-ai/DeepSeek-V4-Flash-0731",
+    "hugging_face_release_revision": "9e165c30e2704aec5d9d593cce3eebd58bbef1cb",
+    "hugging_face_revision": "7872f01b1d1fe23eabc4c98b48bffcef5a386062",
+    "openrouter_model": "deepseek/deepseek-v4-flash-0731",
+    "provider_probe_order": [
+      "gmicloud",
+      "novita",
+      "cloudflare",
+      "deepseek"
+    ],
+    "provider_selection": "Require 20/20 valid canary outputs under the production parser, then select the lowest median client latency without labels."
+  },
+  "current": {
+    "model": "deepseek/deepseek-v4-flash-20260423",
+    "prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+    "provider": "coreweave",
+    "request_sha256": "91cebeab5f248fe21677bf3b30afd6fe4df8bee61d2271852ac6a67c1c664b3e",
+    "reviewer_threshold": 0.7310585786300049
+  },
+  "date": "2026-08-03",
+  "development_only": true,
+  "frozen_pipeline": {
+    "direct_user_low": 0.2,
+    "fair_reference": "current model recalibrated by the same rule",
+    "high": 0.99999,
+    "threshold_selection": "For each model separately on calibration, maximize cascade true positives under 2% FPR, then minimize false positives.",
+    "untrusted_content_low": 0.1
+  },
+  "inputs": {
+    "current_results": {
+      "path": "artifacts/openrouter_downstream_eval/outer_intent_hybrid_results.jsonl.gz",
+      "sha256": "ac030484c5472b4500b2ad7f9bad1fb7b5f818276a9a630fa156f4707a064a5e"
+    },
+    "evaluation": {
+      "path": "artifacts/models/mmbert-lora-full-s42/evaluation/evaluation.json",
+      "sha256": "ec378e29358aab50515b66d2f05612767dea810b388326f4ece86bc99c7c6e99"
+    },
+    "panel": {
+      "path": "artifacts/openrouter_downstream_eval/panel.jsonl.gz",
+      "sha256": "25d55cabd284ac6220abceb8298521ca0aeffdc39f92bd918c353b4252f4428f"
+    },
+    "scores": {
+      "path": "artifacts/models/mmbert-lora-full-s42/evaluation/scores.npy",
+      "sha256": "b9ad82b94ffdfa8d2282bbe912b7e7316df4e299bfdee23724955b09cfcc2965"
+    },
+    "split_manifest": {
+      "path": "artifacts/openrouter_downstream_eval/followup_manifest.json",
+      "sha256": "fe20a42462d1c4929b1f3927bdd34692a44175d3ef9853daee81090f562ac64a"
+    }
+  },
+  "limitations": [
+    "The 6,000/14,000 split is already-open development evidence.",
+    "Reported vendor benchmarks do not test Morgott's classification task.",
+    "Provider selection uses schema validity and latency, never labels.",
+    "Nominal cost excludes cache discounts and OpenRouter routing changes.",
+    "Passing these gates would retain an advisory research shadow, not approve blocking."
+  ],
+  "nominal_endpoint_prices_usd_per_million_tokens": {
+    "candidate_cloudflare": {
+      "input": 0.14,
+      "output": 0.28
+    },
+    "current_coreweave": {
+      "input": 0.14,
+      "output": 0.28
+    }
+  },
+  "purpose": "preregistered old-vs-0731 reviewer replacement decision",
+  "replacement_gates": {
+    "material_fpr_reduction": 0.0025,
+    "material_recall_gain": 0.005,
+    "maximum_auroc_drop": 0.005,
+    "maximum_average_precision_drop": 0.005,
+    "maximum_calibration_fpr": 0.02,
+    "maximum_evaluation_fpr_increase": 0.001,
+    "maximum_evaluation_precision_drop": 0.0025,
+    "maximum_evaluation_recall_drop": 0.0025,
+    "maximum_nominal_cost_ratio": 1.5,
+    "maximum_p95_latency_ratio": 2.0,
+    "maximum_slice_fpr_increase": 0.002,
+    "maximum_slice_recall_drop": 0.005,
+    "valid_rows": 20000
+  },
+  "runner_sha256": "af0f7595ed9d81019c15cc1891260b67236689b86154dc8d0145451264cd079f",
+  "schema_version": 1
+}

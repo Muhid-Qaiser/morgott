@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import shutil
@@ -13,8 +12,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from ...data import _fetch, text_hash
-from ...normalization import strict_normalize
-from ...overlap import NearIndex
+from ...overlap import LEAKAGE_NORMALIZATION_METHOD, NearIndex, leakage_text_hash
 from .core import file_sha256, source_provenance
 from .data import EXTERNAL_DATA_SCHEMA_VERSION
 
@@ -45,10 +43,6 @@ SEP_URL = (
 SEP_RAW_SHA256 = "9f81a52ba089073251793f8499fbb79bb4112e94cf48d31b7f8805e8b44fa3ce"
 SEP_ROWS = 18_320
 SEP_LICENSE = "CC-BY-4.0"
-
-
-def _strict_hash(text: str) -> str:
-    return hashlib.sha256(strict_normalize(text).encode()).hexdigest()
 
 
 def _promptshield_rows(split: str, rows: Iterable[dict]) -> list[dict]:
@@ -117,7 +111,7 @@ def _filter(
     references: list[dict],
 ) -> tuple[list[dict], dict[str, int]]:
     normalized = {text_hash(row["text"]) for row in references}
-    strict = {_strict_hash(row["text"]) for row in references}
+    strict = {leakage_text_hash(row["text"]) for row in references}
     near = NearIndex()
     for row in references:
         near.add(row, dataset="heldout")
@@ -127,7 +121,7 @@ def _filter(
     seen = set()
     for row in candidates:
         normalized_hash = text_hash(row["text"])
-        strict_hash = _strict_hash(row["text"])
+        strict_hash = leakage_text_hash(row["text"])
         if normalized_hash in normalized:
             removed["normalized_exact"] += 1
         elif strict_hash in strict:
@@ -212,6 +206,7 @@ def _prepare(directory: Path) -> dict:
             },
         },
         "filter": {
+            "leakage_fingerprint": LEAKAGE_NORMALIZATION_METHOD,
             "promptshield_train_against_validation_and_test": train_removed,
             "promptshield_validation_against_test": validation_removed,
         },

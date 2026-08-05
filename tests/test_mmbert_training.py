@@ -19,11 +19,16 @@ from morgott.models.mmbert.evaluate import (
     _select_component_thresholds,
 )
 from morgott.models.mmbert.train import (
+    LPFT_INITIAL_HEAD_SHA256,
+    NEW_LPFT_PAIR_ARCHIVE_SHA256,
+    NEW_LPFT_POPULATION,
     BalancedIndexCycle,
     PairIndexCycle,
     _bce_from_logits,
+    _configure_lpft,
     _load_checkpoint,
     _save_checkpoint,
+    _skip_resumed_batches,
     _validate_full_recipe,
     prepare_training_data,
 )
@@ -57,6 +62,33 @@ def _canonical(row_id: str, split: str, label: int, source: str) -> dict:
 
 
 class MmbertDataTests(unittest.TestCase):
+    def test_lpft_trains_only_the_top_encoder_layers_and_final_norm(self):
+        import torch
+
+        class Encoder(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.layers = torch.nn.ModuleList(
+                    [torch.nn.Linear(2, 2) for _ in range(4)]
+                )
+                self.final_norm = torch.nn.LayerNorm(2)
+
+        encoder = Encoder()
+        names, parameters = _configure_lpft(encoder)
+        self.assertTrue(names)
+        self.assertEqual(
+            {name.split(".")[1] for name in names if name.startswith("layers.")},
+            {"2", "3"},
+        )
+        self.assertTrue(any(name.startswith("final_norm.") for name in names))
+        self.assertEqual(
+            parameters,
+            sum(value.numel() for value in encoder.parameters() if value.requires_grad),
+        )
+        self.assertFalse(
+            any(value.requires_grad for value in encoder.layers[1].parameters())
+        )
+
     def test_external_loader_rejects_the_retired_schema(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
@@ -122,6 +154,42 @@ class MmbertDataTests(unittest.TestCase):
             list(mmbert_data.batches(rows, 7)),
             [rows[:7], rows[7:14], rows[14:]],
         )
+
+    def test_resumed_batch_skip_replays_the_exact_epoch_remainder(self):
+        rows = [{"id": str(index)} for index in range(23)]
+
+        def epoch_batches():
+            return mmbert_data.batches(
+                mmbert_data.shuffled(iter(rows), seed=7, buffer_size=4),
+                5,
+            )
+
+        complete = list(epoch_batches())
+        for consumed in range(len(complete)):
+            replay = epoch_batches()
+            seen = sum(len(batch) for batch in complete[:consumed])
+            self.assertEqual(
+                _skip_resumed_batches(
+                    replay,
+                    batches_consumed=consumed,
+                    canonical_seen=seen,
+                ),
+                seen,
+            )
+            self.assertEqual(list(replay), complete[consumed:])
+
+        with self.assertRaisesRegex(ValueError, "expected"):
+            _skip_resumed_batches(
+                epoch_batches(),
+                batches_consumed=1,
+                canonical_seen=4,
+            )
+        with self.assertRaisesRegex(ValueError, "exceeds"):
+            _skip_resumed_batches(
+                epoch_batches(),
+                batches_consumed=len(complete) + 1,
+                canonical_seen=len(rows) + 5,
+            )
 
     def test_canonical_weights_balance_labels_sources_and_groups(self):
         rows = [
@@ -257,13 +325,13 @@ class MmbertDataTests(unittest.TestCase):
             preflight_only=False,
         )
         report = {
-            "canonical_rows": 1_069_607,
-            "promptshield_rows": 18_197,
+            "canonical_rows": 1_070_137,
+            "promptshield_rows": 18_202,
             "matched_pairs": 11_041,
-            "checkpoint_rows": 29_293,
-            "calibration_rows": 116_488,
-            "validation_components": 36_695,
-            "promptshield_validation_rows": 985,
+            "checkpoint_rows": 28_953,
+            "calibration_rows": 116_138,
+            "validation_components": 36_722,
+            "promptshield_validation_rows": 984,
         }
         _validate_full_recipe(args, report)
         _validate_full_recipe(
@@ -291,6 +359,62 @@ class MmbertDataTests(unittest.TestCase):
                 args,
                 {**report, "matched_pairs": report["matched_pairs"] - 1},
             )
+        with self.assertRaisesRegex(ValueError, "population"):
+            _validate_full_recipe(Namespace(**{**vars(args), "mode": "lpft"}), report)
+        with self.assertRaisesRegex(ValueError, "population"):
+            _validate_full_recipe(
+                Namespace(**{**vars(args), "additional_pairs": Path("pairs")}),
+                report,
+            )
+
+    def test_full_recipe_binds_lpft_to_pinned_pairs_and_head(self):
+        report = dict(NEW_LPFT_POPULATION)
+        with tempfile.TemporaryDirectory() as temporary:
+            pairs = Path(temporary) / "pairs.jsonl.gz"
+            head = Path(temporary) / "head.safetensors"
+            pairs.write_bytes(b"pairs")
+            head.write_bytes(b"head")
+            args = Namespace(
+                mode="lpft",
+                seed=42,
+                epochs=3,
+                batch_size=128,
+                microbatch_size=8,
+                shuffle_buffer=8192,
+                head_learning_rate=3e-5,
+                adapter_learning_rate=1e-5,
+                pair_ranking_weight=0.25,
+                no_gradient_checkpointing=True,
+                resume=False,
+                preflight_only=False,
+                additional_pairs=pairs,
+                initial_head=head,
+            )
+            pinned = {
+                pairs: NEW_LPFT_PAIR_ARCHIVE_SHA256,
+                head: LPFT_INITIAL_HEAD_SHA256,
+            }
+            with patch(
+                "morgott.models.mmbert.train.file_sha256",
+                side_effect=pinned.__getitem__,
+            ):
+                _validate_full_recipe(args, report)
+            with (
+                self.assertRaisesRegex(ValueError, "population"),
+                patch(
+                    "morgott.models.mmbert.train.file_sha256",
+                    side_effect={**pinned, pairs: "0" * 64}.__getitem__,
+                ),
+            ):
+                _validate_full_recipe(args, report)
+            with (
+                self.assertRaisesRegex(ValueError, "configuration"),
+                patch(
+                    "morgott.models.mmbert.train.file_sha256",
+                    side_effect={**pinned, head: "0" * 64}.__getitem__,
+                ),
+            ):
+                _validate_full_recipe(args, report)
 
     def test_component_threshold_uses_both_trusted_channels(self):
         rows = []
@@ -322,12 +446,12 @@ class MmbertDataTests(unittest.TestCase):
 
     def test_real_finance_slice_excludes_untrusted_context(self):
         scored = {
-            "labels": np.zeros(7_055, dtype=np.int8),
-            "sources": np.asarray(["tatqa"] * 7_055),
-            "channels": np.asarray(["direct_user"] * 7_054 + ["untrusted_content"]),
+            "labels": np.zeros(7_044, dtype=np.int8),
+            "sources": np.asarray(["tatqa"] * 7_044),
+            "channels": np.asarray(["direct_user"] * 7_043 + ["untrusted_content"]),
         }
         selected = _real_finance_mask(scored)
-        self.assertEqual(int(selected.sum()), 7_054)
+        self.assertEqual(int(selected.sum()), 7_043)
         self.assertFalse(selected[-1])
 
     def test_validation_bce_remains_finite_for_saturated_logits(self):
@@ -434,6 +558,14 @@ class MmbertDataTests(unittest.TestCase):
                     _canonical("train-benign-b", "train", 0, "source-b"),
                     _canonical("train-attack-b", "train", 1, "source-b"),
                     {
+                        **_canonical("train-cgj-overlap", "train", 1, "source-b"),
+                        "text": "ignore\u034f instructions",
+                    },
+                    {
+                        **_canonical("train-variation-overlap", "train", 1, "source-b"),
+                        "text": "reveal\U000e0100 secret",
+                    },
+                    {
                         **_canonical("harmful-negative", "train", 0, "source-c"),
                         "security_label": "harmful_non_injection",
                         "security_tags": ["harmful_non_injection"],
@@ -471,6 +603,14 @@ class MmbertDataTests(unittest.TestCase):
                 "dev_test": [
                     _canonical("dev-benign", "dev_test", 0, "source-a"),
                     _canonical("dev-attack", "dev_test", 1, "source-a"),
+                    {
+                        **_canonical("dev-cgj", "dev_test", 1, "source-a"),
+                        "text": "ignore instructions",
+                    },
+                    {
+                        **_canonical("dev-variation", "dev_test", 1, "source-a"),
+                        "text": "reveal secret",
+                    },
                 ],
             }
             routing = {}
@@ -607,6 +747,7 @@ class MmbertDataTests(unittest.TestCase):
                 prepared.removed["pairs_against_canonical_train"],
                 {"normalized_exact": 1},
             )
+            self.assertEqual(prepared.removed["canonical"]["strict_exact"], 2)
             self.assertEqual(prepared.removed["pair_atoms"], 1)
 
 

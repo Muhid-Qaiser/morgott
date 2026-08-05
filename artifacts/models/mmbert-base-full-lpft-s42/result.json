@@ -1,0 +1,213 @@
+{
+  "adaptation": "lpft",
+  "artifact": {
+    "adapter": null,
+    "adapter_files": null,
+    "encoder": "encoder.safetensors",
+    "encoder_sha256": "271df253cd4fc807c6060059e9bb62dc85e0c317aed15a892be5c7186cf3d515",
+    "head": "head.safetensors",
+    "head_sha256": "2b5dbd647484e8753441118bf45bccd7c3836982474978f653c2de606bef98b5"
+  },
+  "attention_implementation": "sdpa",
+  "generic_target": "instruction_subversion",
+  "limitations": [
+    "This is development evidence, not a production calibration.",
+    "PromptShield and SEP are already-open development benchmarks.",
+    "Inputs are truncated to the first 512 normalized tokens.",
+    "The score is advisory and is not approved for blocking."
+  ],
+  "lora": null,
+  "lpft": {
+    "initial_head_sha256": "a3007323edb6da1d671b80ea1f7f46451384ddb2f45abeb2cae9d645404f5813",
+    "top_layers": 2,
+    "trainable_names": [
+      "final_norm.weight",
+      "layers.20.attn.Wo.weight",
+      "layers.20.attn.Wqkv.weight",
+      "layers.20.attn_norm.weight",
+      "layers.20.mlp.Wi.weight",
+      "layers.20.mlp.Wo.weight",
+      "layers.20.mlp_norm.weight",
+      "layers.21.attn.Wo.weight",
+      "layers.21.attn.Wqkv.weight",
+      "layers.21.attn_norm.weight",
+      "layers.21.mlp.Wi.weight",
+      "layers.21.mlp.Wo.weight",
+      "layers.21.mlp_norm.weight"
+    ],
+    "trainable_parameters": 10030848
+  },
+  "max_tokens": 512,
+  "model_id": "jhu-clsp/mmBERT-base",
+  "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+  "normalization": "strict",
+  "objective": {
+    "canonical_weighting": "label_source_group_balanced",
+    "domains": {
+      "matched_pairs": 0.3333333333333333,
+      "morgott": 0.3333333333333333,
+      "promptshield": 0.3333333333333333
+    },
+    "matched_pair_sampling": "complete_pair_cycle",
+    "pair_ranking_weight": 0.25,
+    "promptshield_sampling": "class_balanced_cycle"
+  },
+  "packages": {
+    "numpy": "2.4.6",
+    "peft": "0.19.1",
+    "safetensors": "0.8.0",
+    "torch": "2.13.0",
+    "transformers": "5.14.1"
+  },
+  "populations": {
+    "calibration_rows": 116138,
+    "canonical_rows": 1070137,
+    "canonical_strata": {
+      "banking77:0": 8720,
+      "bipia:1": 435,
+      "browsesafe:0": 4832,
+      "browsesafe:1": 4735,
+      "gandalf:1": 679,
+      "hackaprompt:1": 268547,
+      "harper_valley_bank:0": 2949,
+      "llmail:1": 84982,
+      "lmsys_arena:0": 7,
+      "massive_en:0": 9872,
+      "mind2web:0": 721,
+      "prompt_injections:1": 173,
+      "schema_guided_dialogue:0": 95692,
+      "taskmaster:0": 247931,
+      "tatqa:0": 21084,
+      "tensor_trust_raw:1": 179798,
+      "toxic_chat:0": 210,
+      "toxic_chat:1": 79,
+      "wildjailbreak:0": 69114,
+      "wildjailbreak:1": 69577
+    },
+    "checkpoint_rows": 28953,
+    "leakage_fingerprint": "strict_normalize plus removal of U+034F and U+E0100-U+E01EF; leakage audit only",
+    "matched_pairs": 33757,
+    "promptshield_rows": 18202,
+    "promptshield_validation_rows": 984,
+    "removed_for_overlap": {
+      "canonical": {
+        "near": 468,
+        "normalized_exact": 14,
+        "strict_duplicate": 2609,
+        "strict_label_conflict": 2
+      },
+      "pair_atoms": 8,
+      "pairs": {
+        "near": 5
+      },
+      "pairs_against_canonical_train": {
+        "near": 7
+      },
+      "promptshield": {
+        "near": 81,
+        "normalized_exact": 1
+      },
+      "promptshield_validation": {
+        "near": 14
+      },
+      "validation": {
+        "near": 3,
+        "normalized_exact": 6,
+        "strict_duplicate": 103
+      }
+    },
+    "validation_components": 36722
+  },
+  "positive_classes": [
+    "direct_prompt_injection",
+    "indirect_prompt_injection",
+    "direct_jailbreak"
+  ],
+  "provenance": {
+    "additional_pair_archive_sha256": "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba",
+    "data_manifest_sha256": "8432adedea4e2fec4c80140e2a73f6e5d82cf9f0803a3057498589e7c418c557",
+    "external_manifest_sha256": "309cfe0da78b6f1b06220759b458306caa41740882ae10bba4ec3e2516917567",
+    "pair_archive_sha256": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+    "routing_views": {
+      "dev_test": {
+        "path": "views/routing/dev_test.jsonl",
+        "rows": 441896,
+        "sha256": "0f0f08854aeeb974e617204157621422b2d5c1c0889c4e1aa07e8e37fcf34501"
+      },
+      "train": {
+        "path": "views/routing/train.jsonl",
+        "rows": 1477802,
+        "sha256": "7c01d8bc5f0789f464fa2bdcae11098b2abb21a69ac872c7e27417bdcaec9443"
+      },
+      "validation": {
+        "path": "views/routing/validation.jsonl",
+        "rows": 201382,
+        "sha256": "e022f15d0dccca50d00ef5b267558187d9c2b271fa9ae478b98e9f5cbcb5d944"
+      }
+    },
+    "sources": {
+      "src/morgott/data.py": "f144a77fb0fec411c845d5300315e63ba0e25af48215ec5861938d08b046fd0c",
+      "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+      "src/morgott/models/mmbert/data.py": "3e4530714251def94fe2d09c4122a7c0eb67c0f61bf0b0efe21e71ea759426f6",
+      "src/morgott/models/mmbert/external_data.py": "40f5a0100315eea94e6e7bfd7119d2c034cf862be78bca460aa12eb606315b6d",
+      "src/morgott/models/mmbert/train.py": "2d6a08d3ea6afac4f3716b6ce5c659c0a0d4f888e5b4e317b600cebc69a69f37",
+      "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+      "src/morgott/overlap.py": "deaa059691ca107e07ff1d320010ad4ee7fa9e561facf520bbfcde898512bc33"
+    },
+    "uv_lock_sha256": "4b2a198e367c3241e6b4eb5ab4d1a5aa5768c5dc3fa740243304c5ecc36a8a25"
+  },
+  "purpose": "maintained full-data advisory mmBERT training",
+  "runtime": {
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "peak_allocated_bytes": 1012356608,
+    "peak_reserved_bytes": 1119879168,
+    "seconds": 36400.40624803101
+  },
+  "runtime_seconds": 36400.40624803101,
+  "schema_version": 1,
+  "seed": 42,
+  "token_budget": 4096,
+  "training": {
+    "adapter_learning_rate": null,
+    "batch_size": 128,
+    "checkpoint_selection": "minimum equal-domain mean of Morgott and PromptShield validation BCE",
+    "curve": [
+      {
+        "canonical_rows_seen": 1070137,
+        "epoch": 1,
+        "training_loss": 0.1674902754150854,
+        "validation_macro_bce": 0.08855770511716962,
+        "validation_morgott_bce": 0.08510151239070088,
+        "validation_promptshield_bce": 0.09201389784363835
+      },
+      {
+        "canonical_rows_seen": 1070137,
+        "epoch": 2,
+        "training_loss": 0.15641782271773566,
+        "validation_macro_bce": 0.09101981093144679,
+        "validation_morgott_bce": 0.0831355046120471,
+        "validation_promptshield_bce": 0.09890411725084647
+      },
+      {
+        "canonical_rows_seen": 1070137,
+        "epoch": 3,
+        "training_loss": 0.13516206326801453,
+        "validation_macro_bce": 0.08477698530025911,
+        "validation_morgott_bce": 0.08519981707735692,
+        "validation_promptshield_bce": 0.0843541535231613
+      }
+    ],
+    "encoder_learning_rate": 1e-05,
+    "epochs": 3,
+    "gradient_checkpointing": false,
+    "head_learning_rate": 3e-05,
+    "microbatch_size": 8,
+    "mixed_precision": "bfloat16",
+    "pair_batch_pairs": 32,
+    "promptshield_batch_size": 64,
+    "selected_epoch": 3,
+    "shuffle_buffer": 8192,
+    "updates": 25083,
+    "within_batch_order": "raw_character_length_ascending"
+  }
+}

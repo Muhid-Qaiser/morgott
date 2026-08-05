@@ -1,0 +1,115 @@
+{
+  "analysis_contract": {
+    "claim_boundary": "review-load evidence on a public coding-agent traffic proxy, not a false-positive rate or representative production estimate",
+    "local_high_gate": "reject if more than 1% of retained sessions are local-high",
+    "per_prompt_gate": "reject if one unique prompt needs more than 128 review windows",
+    "primary": "session-weighted local hard-restriction and candidate remote-review load",
+    "remote_provider_calls": 0,
+    "review_gate": "reject if more than 25% of retained sessions need review",
+    "threshold_selection": "none; use the registered cascade unchanged",
+    "window_gate": "reject above 4096 session-weighted review windows"
+  },
+  "cascade_contract": {
+    "model_registry_sha256": "dd1c546a8a30a34b3a3865edc7774ff34de80ddcee0fdbb516e3a667c07a1b0f",
+    "prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+    "request_sha256": "b5df77d444d1c16cce2aca82d35abf5a9d07869ad61fc11a051fc4a792a0619b",
+    "threshold_sha256": "89ac994922b6fb014179aa30df40b79001359f7e8df1de62ef6c3ec4a604d6f2"
+  },
+  "experiment_contract": {
+    "experiments/force_bench_eval/run.py": "d6b454475a8e1cf81e427a0cbae59548ab58efed3baefbcd874281aec2947240",
+    "experiments/swechat_traffic_eval/README.md": "0ae5c32a33236baa722263190fa9261ceaf5344a815026016fd6ae4ba858a93e",
+    "experiments/swechat_traffic_eval/run.py": "1875caa4bc44f1b57d39603ba0e35467d8c0f52a22cd579f8fdc64a5c498ebf6",
+    "experiments/swechat_traffic_eval/test_run.py": "c30b0a4f403d76d03d85051c723d1d88169faaa84f2474e6af3a79f0037814c9"
+  },
+  "overlap_contract": {
+    "artifacts/mmbert/data/manifest.json": "309cfe0da78b6f1b06220759b458306caa41740882ae10bba4ec3e2516917567",
+    "data-archive/matched_pairs_20260726.jsonl.gz": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+    "data/manifest.json": "8432adedea4e2fec4c80140e2a73f6e5d82cf9f0803a3057498589e7c418c557",
+    "src/morgott/data.py": "f144a77fb0fec411c845d5300315e63ba0e25af48215ec5861938d08b046fd0c",
+    "src/morgott/models/mmbert/data.py": "ae102823a97ca3b99c6b66d5304dafa616fd24b3799d3ec5002607b403ff2d3c",
+    "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+    "src/morgott/overlap.py": "deaa059691ca107e07ff1d320010ad4ee7fa9e561facf520bbfcde898512bc33",
+    "src/morgott/sources/tasks.py": "9db5aa253eeb7939695fabbedcf57b4b4823ad4711e7cd446d251efcd946a20c"
+  },
+  "panel": {
+    "content_sha256": "f31105603146fb2667b571235a2e74c88bb82cc61d90f23a3fa9d94eaf22eb66",
+    "path": "artifacts/swechat_traffic_eval/panel.jsonl.gz",
+    "rows": 4301,
+    "sha256": "2d28fd3c23da331d1e7e08133859e3d30c8502da45e6c9bb4dfc6ed4e108cb3e"
+  },
+  "population": {
+    "eligible_source_rows": 5135,
+    "exact_duplicate_rows_collapsed": 821,
+    "normalization_only_duplicates_collapsed": 9,
+    "privacy_blocked_normalized_groups": 646,
+    "privacy_blocked_rows": 659,
+    "privacy_reasons": {
+      "credential_value": 23,
+      "email_address": 562,
+      "government_or_vehicle_id": 73,
+      "payment_credential": 1,
+      "provider_token": 1,
+      "street_address": 3,
+      "transaction_identifier": 3
+    },
+    "privacy_trigger_rows": 659,
+    "sessions_after_privacy_and_fit_overlap": 5121,
+    "sessions_removed_by_fit_overlap": 14,
+    "source_exact_duplicate_turn_rows_collapsed": 39,
+    "source_noncontinuation_user_prompt_rows": 61473,
+    "source_rows": 5794,
+    "source_sessions_with_first_prompt": 5794,
+    "unannotated_language_rows": 1764,
+    "unannotated_timestamp_rows": 1061,
+    "unique_prompts_after_fit_overlap": 4301,
+    "unique_prompts_before_fit_overlap": 4305
+  },
+  "projection": {
+    "excluded": [
+      "continuation messages",
+      "later user turns",
+      "assistant responses and thinking",
+      "tool inputs and results",
+      "system and metadata events",
+      "code, diffs, commits, and repository files"
+    ],
+    "input": "earliest non-continuation user_prompt per session",
+    "input_channel": "direct_user from public opt-in coding-agent sessions",
+    "label_basis": "real public opt-in coding-agent traffic proxy with source-side PII and secret redaction but no injection adjudication",
+    "raw_text_retained_in_artifacts": false
+  },
+  "purpose": "prospectively frozen traffic-like direct-user local cascade diagnostic",
+  "runtime_contract": {
+    "model-artifacts.json": "dd1c546a8a30a34b3a3865edc7774ff34de80ddcee0fdbb516e3a667c07a1b0f",
+    "src/morgott/models/cascade.py": "40c423c28f6e95451e8c67621ef03e81492830922362293a19fa9be3babb46ae",
+    "src/morgott/models/deepseek_nooa.py": "0488f064b509b74d389d44a3aacc182dd81e7890343d01162da47791274a0fef",
+    "src/morgott/models/downstream.py": "becd382a482e5746fff9bfec61ed43d5ace46d5b576f90525d5d9a3afb7bdc3c",
+    "src/morgott/models/mmbert/serving.py": "804ce5253ec54ac61baeb160da936139f88e8d3ae6c7d18642c00a11c0a636c9"
+  },
+  "schema_version": 1,
+  "selection": {
+    "deduplication": "score normalized text once and preserve source-session frequency for traffic-weighted analysis",
+    "fit_overlap_filter": "normalized, audit-strict, and conservative near overlap against every full-LoRA fit candidate",
+    "privacy_rule": "exclude a complete normalized-text group when any source origin triggers the local sensitive-text screen",
+    "reference_rows": {
+      "canonical_train": 1073230,
+      "matched_pairs": 22092,
+      "promptshield_train": 18284
+    },
+    "unique_prompts_removed_by_fit_overlap": {
+      "normalized_exact": 4
+    }
+  },
+  "source": {
+    "access": "authenticated Hugging Face automatic gate",
+    "bytes": 1311422253,
+    "file": "conversations.parquet",
+    "homepage": "https://www.swe-chat.com/",
+    "license": "ODC-By-1.0",
+    "repository": "SALT-NLP/SWE-chat",
+    "revision": "f66cca95b14caaa4177f7ed5eaa424608dadcffa",
+    "rows": 2692480,
+    "sessions": 5851,
+    "sha256": "9ee1d937dbf7eb73a8dad75071c69a4f6b5aac7f4120bd8ef3799ee50f4f1c36"
+  }
+}

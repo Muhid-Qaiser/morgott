@@ -16,7 +16,24 @@ from pathlib import Path
 
 import numpy as np
 
-from ..downstream import LLM_FLAG_PROBABILITY, MMBERT_HIGH, MMBERT_LOW, route
+from ..deepseek_nooa import (
+    MAX_ATTEMPTS,
+    PROMPT_SHA256,
+    REQUEST_SHA256,
+)
+from ..deepseek_nooa import (
+    MODEL as DEEPSEEK_MODEL,
+)
+from ..deepseek_nooa import (
+    PROVIDER as DEEPSEEK_PROVIDER,
+)
+from ..downstream import (
+    LLM_FLAG_PROBABILITY,
+    MMBERT_HIGH,
+    MMBERT_LOW_BY_CHANNEL,
+    route,
+    subversion_probability,
+)
 from .core import (
     ATTENTION_IMPLEMENTATION,
     MODEL_ID,
@@ -32,8 +49,26 @@ ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_MANIFEST = ROOT / "model-artifacts.json"
 DEFAULT_OUTPUT = ROOT / "artifacts/models/mmbert-lora-full-s42/serving"
 OPSET_VERSION = 18
-VERIFICATION_FORMAT = "openvino-cpu-bf16-panel-study-v1"
+VERIFICATION_FORMAT = "openvino-cpu-bf16-panel-study-v2"
 BENCHMARK_FORMAT = "openvino-bf16-cpu-benchmark-v1"
+REMOTE_EVIDENCE_FIELDS = {
+    "attempts",
+    "client_seconds",
+    "dataset",
+    "failure_code",
+    "input_channel",
+    "input_tokens",
+    "job_id",
+    "log_odds_subversion",
+    "model",
+    "output_tokens",
+    "p_subversion",
+    "panel_id",
+    "prompt_sha256",
+    "provider",
+    "request_sha256",
+    "status",
+}
 
 
 def _load_model(manifest_path: Path):
@@ -251,6 +286,8 @@ def verify_panel(
     manifest_path: Path = DEFAULT_MANIFEST,
     panel_dir: Path = ROOT / "artifacts/openrouter_downstream_eval",
     output: Path = DEFAULT_OUTPUT,
+    *,
+    deepseek_evidence_path: Path,
 ) -> dict:
     from .data import canonical_rows, external_rows, routing_views
 
@@ -325,7 +362,13 @@ def verify_panel(
         expected = float(reference[start + row["source_index"]])
         candidate_scores.append(score)
         reference_scores.append(expected)
-        if route(score).route != route(expected).route:
+        if (
+            route(score, input_channel=row["input_channel"]).route
+            != route(
+                expected,
+                input_channel=row["input_channel"],
+            ).route
+        ):
             mismatch_count += 1
         if position % 1000 == 0:
             print(
@@ -340,7 +383,12 @@ def verify_panel(
                 flush=True,
             )
     panel_seconds = time.perf_counter() - panel_started
-    records, calibration_ids = _deepseek_evidence(panel_dir, panel_manifest)
+    records, calibration_ids = _deepseek_evidence(
+        panel_dir,
+        panel_manifest,
+        evidence_path=deepseek_evidence_path,
+        panel=panel,
+    )
     candidate_metrics = _cascade_metrics(
         panel,
         np.asarray(candidate_scores),
@@ -374,6 +422,13 @@ def verify_panel(
         "source_onnx_sha256": runtime.identity.onnx_sha256,
         "tokenizer_sha256": runtime.identity.tokenizer_sha256,
         "panel_sha256": panel_manifest["panel"]["sha256"],
+        "deepseek_evidence": {
+            "model": DEEPSEEK_MODEL,
+            "provider": DEEPSEEK_PROVIDER,
+            "prompt_sha256": PROMPT_SHA256,
+            "request_sha256": REQUEST_SHA256,
+            "sha256": _jsonl_sha256(deepseek_evidence_path),
+        },
         "rows": len(panel),
         "long_rows": long_rows,
         "local_zone_mismatches": mismatch_count,
@@ -400,30 +455,93 @@ def verify_panel(
 def _deepseek_evidence(
     panel_dir: Path,
     panel_manifest: dict,
+    *,
+    evidence_path: Path,
+    panel: list[dict],
 ) -> tuple[dict[str, dict], set[str]]:
-    summary = json.loads(
-        (panel_dir / "followup_summary.json").read_text(encoding="utf-8")
-    )
-    ledger_path = panel_dir / "followup_results.jsonl"
-    if summary.get("panel_sha256") != panel_manifest["panel"][
-        "sha256"
-    ] or _jsonl_sha256(ledger_path) != summary.get("result_ledger_sha256"):
-        raise ValueError("retained DeepSeek evidence changed")
-    expected_configuration = summary["configuration_sha256s"]["deepseek_coreweave"]
-    records = {}
-    for record in _jsonl_rows(ledger_path):
-        if (
-            record.get("configuration") == "deepseek_coreweave"
-            and record.get("configuration_sha256") == expected_configuration
-        ):
-            records[record["panel_id"]] = record
     followup_path = panel_dir / "followup_manifest.json"
-    if file_sha256(followup_path) != summary.get("followup_manifest_sha256"):
-        raise ValueError("retained DeepSeek split changed")
     followup = json.loads(followup_path.read_text(encoding="utf-8"))
     if followup.get("panel_sha256") != panel_manifest["panel"]["sha256"]:
         raise ValueError("retained DeepSeek split changed")
-    return records, set(followup["split"]["calibration_panel_ids"])
+    calibration_ids = set(followup["split"]["calibration_panel_ids"])
+    records = {}
+    for record in _jsonl_rows(evidence_path):
+        _validate_remote_evidence(record)
+        panel_id = record["panel_id"]
+        if panel_id in records:
+            raise ValueError(f"duplicate DeepSeek evidence for {panel_id}")
+        records[panel_id] = record
+    expected = {
+        row["panel_id"]: (row["dataset"], row["input_channel"]) for row in panel
+    }
+    if set(records) != set(expected) or any(
+        (record["dataset"], record["input_channel"]) != expected[panel_id]
+        for panel_id, record in records.items()
+    ):
+        raise ValueError("DeepSeek evidence does not match the frozen panel")
+    if not calibration_ids <= set(expected):
+        raise ValueError("retained DeepSeek split changed")
+    return records, calibration_ids
+
+
+def _validate_remote_evidence(record: dict) -> None:
+    if not isinstance(record, dict) or set(record) != REMOTE_EVIDENCE_FIELDS:
+        raise ValueError("DeepSeek evidence has an unexpected schema")
+    panel_id = record["panel_id"]
+    if (
+        not isinstance(panel_id, str)
+        or not panel_id
+        or record["prompt_sha256"] != PROMPT_SHA256
+        or record["request_sha256"] != REQUEST_SHA256
+        or record["model"] != DEEPSEEK_MODEL
+        or record["provider"] != DEEPSEEK_PROVIDER
+        or record["job_id"]
+        != hashlib.sha256(
+            f"{PROMPT_SHA256}\0{REQUEST_SHA256}\0{panel_id}".encode()
+        ).hexdigest()
+        or record["input_channel"] not in {"direct_user", "untrusted_content"}
+        or not isinstance(record["dataset"], str)
+        or not record["dataset"]
+        or type(record["attempts"]) is not int
+        or not 1 <= record["attempts"] <= MAX_ATTEMPTS
+        or not isinstance(record["client_seconds"], int | float)
+        or not math.isfinite(record["client_seconds"])
+        or record["client_seconds"] < 0
+        or any(
+            value is not None and (type(value) is not int or value < 0)
+            for value in (record["input_tokens"], record["output_tokens"])
+        )
+    ):
+        raise ValueError("DeepSeek evidence identity is invalid")
+    if record["status"] == "ok":
+        probability = record["p_subversion"]
+        log_odds = record["log_odds_subversion"]
+        valid = (
+            isinstance(probability, int | float)
+            and not isinstance(probability, bool)
+            and math.isfinite(probability)
+            and 0 <= probability <= 1
+            and isinstance(log_odds, int | float)
+            and not isinstance(log_odds, bool)
+            and math.isfinite(log_odds)
+            and math.isclose(
+                probability,
+                subversion_probability(0.0, log_odds),
+                rel_tol=1e-9,
+                abs_tol=1e-12,
+            )
+            and record["failure_code"] is None
+        )
+    else:
+        valid = (
+            record["status"] == "failed"
+            and record["p_subversion"] is None
+            and record["log_odds_subversion"] is None
+            and isinstance(record["failure_code"], str)
+            and bool(record["failure_code"])
+        )
+    if not valid:
+        raise ValueError("DeepSeek evidence result is invalid")
 
 
 def _cascade_metrics(
@@ -440,21 +558,28 @@ def _cascade_metrics(
     valid = np.asarray(
         [records[row["panel_id"]].get("status") == "ok" for row in panel]
     )
-    probabilities = np.asarray(
+    calibration = np.asarray([row["panel_id"] in calibration_ids for row in panel])
+    local_routes = np.asarray(
         [
-            (
-                float(records[row["panel_id"]]["p_subversion"])
-                if records[row["panel_id"]].get("status") == "ok"
-                else np.nan
-            )
-            for row in panel
+            route(float(score), input_channel=row["input_channel"]).route
+            for row, score in zip(panel, scores, strict=True)
         ]
     )
-    calibration = np.asarray([row["panel_id"] in calibration_ids for row in panel])
-    low = scores < MMBERT_LOW
-    high = scores >= MMBERT_HIGH
-    middle = ~(low | high)
-    final_routes = high | (middle & (~valid | (probabilities >= LLM_FLAG_PROBABILITY)))
+    low = local_routes == "pass"
+    high = local_routes == "restrict"
+    middle = local_routes == "review"
+    final_routes = high.copy()
+    for index in np.flatnonzero(middle):
+        record = records[panel[index]["panel_id"]]
+        final_routes[index] = (
+            route(
+                float(scores[index]),
+                input_channel=panel[index]["input_channel"],
+                llm_probability=(record["p_subversion"] if valid[index] else None),
+                llm_failed=not bool(valid[index]),
+            ).route
+            == "restrict"
+        )
 
     def summarize(mask: np.ndarray) -> dict:
         return {
@@ -473,7 +598,7 @@ def _cascade_metrics(
     evaluation = ~calibration
     return {
         "thresholds": {
-            "mmbert_low": MMBERT_LOW,
+            "mmbert_low_by_channel": MMBERT_LOW_BY_CHANNEL,
             "mmbert_high": MMBERT_HIGH,
             "deepseek": LLM_FLAG_PROBABILITY,
         },
@@ -684,11 +809,8 @@ def _jsonl_rows(path: Path):
 def _jsonl_sha256(path: Path) -> str:
     stored = _stored_jsonl(path)
     opener = gzip.open if stored.suffix == ".gz" else Path.open
-    digest = hashlib.sha256()
     with opener(stored, "rb") as handle:
-        for block in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(block)
-    return digest.hexdigest()
+        return hashlib.file_digest(handle, "sha256").hexdigest()
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -704,13 +826,21 @@ def main(argv: list[str] | None = None) -> None:
         type=Path,
         default=ROOT / "artifacts/openrouter_downstream_eval",
     )
+    parser.add_argument("--deepseek-evidence", type=Path)
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--requests", type=int, default=100)
     args = parser.parse_args(argv)
     if args.command == "export":
         result = export(args.manifest, args.output)
     elif args.command == "verify-panel":
-        result = verify_panel(args.manifest, args.panel_dir, args.output)
+        if args.deepseek_evidence is None:
+            parser.error("verify-panel requires --deepseek-evidence")
+        result = verify_panel(
+            args.manifest,
+            args.panel_dir,
+            args.output,
+            deepseek_evidence_path=args.deepseek_evidence,
+        )
     else:
         result = benchmark(
             args.manifest,

@@ -759,6 +759,9 @@ This gate motivated the subsequently authorized full-mixture LoRA run below.
 
 The authorized full-mixture seed-42 run completed all 25,071 updates across three epochs and selected epoch 2 by the equal-domain mean of Morgott and PromptShield validation BCE.
 It fitted 1,069,607 leakage-filtered canonical rows, cycled all 18,197 PromptShield rows class-balanced, cycled all 11,041 matched pairs, and applied pair-ranking weight `0.25`.
+Those counts describe the immutable completed run.
+The 2026-08-02 audit preflight used an audit-only fingerprint that additionally removes U+034F and supplementary variation selectors, exposing one same-label intra-training HackAPrompt duplicate and yielding 1,069,606 prospective canonical fit rows under that recorded preparation revision.
+This does not alter the retained weights or their registered runtime normalizer.
 The run kept the pinned rank-8 adapter contract, BF16 mixed precision, microbatch 8, and disabled gradient checkpointing after the measured memory preflight.
 The machine-readable preflight is [retained with the experiment artifacts](../artifacts/mmbert/full-lora-runtime-benchmark.json) at SHA-256 `5158a674c884aca8643690f3f919bde2acedb42c1c91cf6b5b00c163f69b9a6a`.
 The selected epoch reached Morgott validation BCE 0.04548, PromptShield validation BCE 0.05638, and macro BCE 0.05093.
@@ -814,23 +817,208 @@ OpenVINO BF16 changed 40 of 20,000 final routes, added one calibration false pos
 It consumes the single registered FP32 ONNX graph and lowers eligible operations to BF16 at startup, so no second precision-specific model artifact is stored.
 Dynamic INT8 reduced the model from 1.232 GB to 309.6 MB, but changed 846 final routes, lost 5.84 evaluation recall points, exceeded 2% calibration FPR, and raised provider calls by 10.54 points.
 OpenVINO BF16 is therefore the selected shadow serving runtime, while INT8 is rejected and the temporary INT8 model is not retained.
+A provider-free dynamic-batch probe over sixteen full 512-token windows preserved every BF16 probability exactly, but batch size two improved throughput by only 1.27% from 6.661 to 6.745 windows per second and batch sizes four and eight were slower.
+Dynamic batching is rejected as immaterial for the registered latency-oriented CPU runtime, so the simpler one-window inference loop remains unchanged.
 
 A full-panel NOOA PredictStrategy comparison was also rejected in favor of the maintained `CompletionClient` path.
 Its copied `p=0.9` threshold improved evaluation recall from 66.79% to 71.22% but exceeded the calibration cap at 2.21% FPR, while its feasible `p=0.9706877673` threshold fell to 61.89% evaluation recall.
 PredictStrategy also reduced valid-output coverage from 99.955% to 97.12% and increased prompt tokens, latency, and cost; the detailed results are in [the OpenRouter downstream evaluation](openrouter-downstream-evaluation.md#nooa-predictstrategy-comparison-2026-07-30).
 
-The maintained word n-gram routing baseline was rerun separately against manifest SHA-256 `27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81`.
-At its untouched 0.5 cutoff it reached 92.35% dev-test recall, 2.94% row FPR, 96.76% precision, and 0.9834 AUROC over its broad `routing_label` target.
-Its macro source recall and FPR were 80.12% and 13.12%, which exposes strong source variation hidden by the aggregate.
-The retained [JSON](routing-baseline.json) and [Markdown](routing-baseline.md) snapshots have SHA-256 digests `fdcac8d1e6836c524abb38411c542f1a642bcb06b1d745c2d838789ee3522125` and `e6dc4711846564c857989425610a7601de7f0f91d4743a88b17b334f19d27649`.
+The maintained word n-gram routing baseline was rerun separately against the strict-cross-role-clean canonical manifest recorded in the retained JSON snapshot.
+At its untouched 0.5 cutoff it reached 92.46% dev-test recall, 3.18% row FPR, 96.49% precision, and 0.9827 AUROC over its broad `routing_label` target.
+At that cutoff the validation TP/FP/TN/FN counts are 69,576/974/55,758/5,099, and the dev-test counts are 119,699/4,352/132,428/9,765.
+Its origin-membership macro source recall and FPR were 80.02% and 15.24%, which exposes strong source variation hidden by the aggregate.
+Exact-merged rows count once in aggregate metrics and in every applicable origin source slice, rather than only under the arbitrary representative source.
+Substituting its measured dev-test recall and FPR gives only 2.83%, 22.69%, and 60.46% expected precision at 0.1%, 1%, and 5% attack prevalence respectively; these are arithmetic scenarios, not production estimates.
+Length slicing exposes a separate denominator failure: dev-test benign FPR is 2.96% at 256 normalized characters or fewer, then 47.00%, 70.89%, and 62.96% across the longer bands, whose benign denominators are only 283, 237, and 27.
+The selected fit contains only 64 benign rows from 257 through 1,024 characters and none above 1,024, while the corresponding positive counts are 17,196, 8,927, and 41.
+The retained [JSON](routing-baseline.json) and [Markdown](routing-baseline.md) snapshots have SHA-256 digests `9366b13422099510f987e438d2140c71c18ee1dcce9f5c695b8e30b96fceb9d7` and `2adc2a6465eb7846d0ba99147a94f42ba07e7f9148413feb2a62e1c9c70a91d4`.
+Both versioned snapshots reproduced byte for byte on an immediate second run after removing the non-evidentiary wall-clock field.
+Aggregate differences from the earlier historical snapshot come from the data-manifest change, while the source-macro change on this manifest is only the corrected membership accounting; neither is evidence that the same model improved or regressed.
 This control is not directly comparable to the narrower instruction-subversion models because broad routing labels also include harmful intent, toxicity, and unresolved rows.
+
+#### Source-cap ablation
+
+A matched source-balance ablation on manifest SHA-256 `0c5e22107975588dfa2628bf4ac290ec9dc8f344c9c9a3da69c72aa208ca5edc` reduced the per-source-label training cap from 20,000 to 2,000 while keeping the seed, three epochs, unweighted loss, features, and untouched 0.5 cutoff fixed.
+The cap reduced selected training rows by 85.80%, from 154,049 to 21,870.
+
+| Per-source-label cap | Validation recall / FPR / macro recall / macro FPR | Dev-test recall / FPR / macro recall / macro FPR |
+|---:|---:|---:|
+| 20,000 control | **93.19%** / **1.69%** / 85.79% / 2.83% | **92.42%** / **3.17%** / 79.94% / 15.13% |
+| 2,000 candidate | 91.32% / 2.04% / **88.22%** / **2.70%** | 91.20% / 3.43% / **80.25%** / **13.36%** |
+
+The smaller cap improved unweighted macro-source recall and FPR, but it degraded aggregate recall, FPR, precision, PR-AUC, ROC-AUC, and Brier score on both splits.
+On dev-test it lost 1.22 recall points and added 0.27 FPR points while gaining only 0.32 macro-recall points.
+The 2,000 cap is rejected as the maintained default because the compute reduction does not improve routing quality.
+The unchanged 20,000-cap control remains the cheapest retained recipe, and a future source-balance study needs a better weighting hypothesis rather than a more aggressive global cap.
+
+#### Capped inverse-square-root source-weight ablation
+
+A second matched source-balance ablation on that same canonical manifest retained all 154,049 selected training rows and changed only each row's training weight.
+For source-label count `n`, the raw weight was `min(4, sqrt(20000 / n))`, followed by normalization to mean one; resulting weights ranged from `0.870315` to `3.481261`.
+The seed, three epochs, feature map, optimizer, 20,000 selection cap, and untouched `0.5` cutoff stayed fixed.
+The predeclared gate required at least one percentage point of macro-source recall improvement on both roles, no macro-source FPR increase, no aggregate FPR increase, at most 0.25 percentage points of aggregate recall loss, and no PR-AUC or ROC-AUC loss.
+
+| Recipe | Validation recall / FPR / macro recall / macro FPR | Dev-test recall / FPR / macro recall / macro FPR |
+|---|---|---|
+| Unweighted control | 93.1717% / 1.7168% / 86.3617% / 4.2122% | 92.4574% / 3.1818% / 80.0217% / 15.2425% |
+| Capped inverse-square-root weights | 92.7633% / 1.6499% / 89.7729% / 2.5522% | 92.1577% / 3.1160% / 80.5222% / 14.7384% |
+
+The weighted candidate reduced aggregate and macro-source FPR on both roles, but validation aggregate recall fell by 0.4084 percentage points and dev-test recall fell by 0.2997 points.
+Validation PR-AUC and ROC-AUC fell from `0.993599` and `0.990317` to `0.993411` and `0.990072`, while dev-test PR-AUC fell from `0.985367` to `0.985256`.
+Its dev-test macro-source recall gain was only 0.5006 percentage points, below the one-point gate, and Brier loss worsened on both roles.
+An exact deterministic repeat reproduced the candidate metrics.
+
+Decision: reject the weighting candidate and keep the unweighted control unchanged.
+Do not sweep weighting exponents or caps on these consumed development roles; revisit source balance only with new source-held-out evidence or a qualitatively different, predeclared hypothesis.
 
 Decision: register `mmbert-lora-full-s42` as a one-seed advisory research artifact without promoting it over the retained frozen model or the existing partial-LoRA downstream route.
 No learned model is approved for blocking, authorization, or privilege grants, and `morgott scan` remains advisory with `decision: allow`.
 
+### Auxiliary matched boundary diagnostic
+
+The complete official test split of the already-open auxiliary `agentic_boundary_pairs` source was scored without fitting or threshold selection on that source.
+A total of 120 matched pairs were scored: 80 instruction-subversion pairs for detector metrics and 40 authorization-boundary pairs reported separately.
+A strict-normalized exact audit found no overlap with any canonical routing role, PromptShield split, SEP, or the retained generated-pair archive.
+This is a small synthetic development diagnostic from an auxiliary source already present in the canonical data manifest, not prospective or independent external evidence.
+Only the registered seed-42 frozen head is available for this replay, so the frozen result does not measure seed dispersion.
+
+| Registered artifact | Instruction-subversion AUROC | Attack ranked above paired clean | Recall / row FPR at unchanged canonical 1% component-target threshold | Authorization-only attack-side / clean-side flag rate |
+|---|---:|---:|---:|---:|
+| Frozen full-data seed 42 | 0.7852 | 88.75% | 6.25% / 0.00% | 0.00% / 0.00% |
+| Reduced-mixture LoRA seed 42 | 0.7291 | 77.50% | 50.00% / 18.75% | 20.00% / 10.00% |
+| Full-mixture LoRA seed 42 | **0.8370** | **91.25%** | 48.75% / 16.25% | 10.00% / 2.50% |
+
+The full LoRA improves pair ordering over both registered alternatives, but its transported operating point does not preserve the calibration false-positive rate on these matched controls.
+It flagged every clean obfuscation control, which accounts for most of its instruction-side false positives and strengthens the existing requirement for symmetric benign and attack transformations.
+The authorization-only columns are diagnostics rather than detector recall or FPR because those pairs deliberately exercise approval, authority, egress, and tool-use boundaries outside the instruction-subversion target.
+They reinforce that learned routing cannot replace the deterministic reference monitor.
+
+### Channel-aware downstream repair
+
+The maintained DeepSeek reviewer previously discarded trusted `input_channel` metadata and over-relied on the presence of an attack payload.
+A first outer-intent prompt was rejected because it lowered mixed-domain calibration AUROC and nearly eliminated SEP recall.
+The selected hybrid keeps the indirect-injection rule for task-like instructions inside untrusted content while distinguishing analysis of a payload from requests to execute it.
+
+On the frozen 6,000-row calibration role, its standalone AUROC / average precision improved from 0.9343 / 0.9114 to 0.9460 / 0.9202.
+With full-LoRA local gates fixed at `0.2 / 0.99999`, threshold `0.7310585786300049` raised calibration recall from 66.58% to 69.11% at the identical 68 false positives and 1.9808% FPR.
+On the untouched 14,000-row evaluation role, recall rose from 66.79% to 69.85%, FPR fell from 1.810% to 1.760%, and precision rose from 96.50% to 96.74% at the unchanged 22.17% provider call rate.
+SEP recall rose by 9.43 points and canonical recall by 1.40 points, while PromptShield recall fell by 2.90 points.
+
+Reviewer-only scoring of the complete already-open instruction Boundary Pairs test improved from 98.75% recall / 15.00% FPR under the old remote contract to 100% / 5.00% under the selected contract and threshold.
+All clean obfuscation controls passed when every row reached the reviewer; three memory-context controls and one multi-agent trust control remained false positives.
+The actual three-zone cascade reached 90.00% recall / 12.50% FPR and 77.50% fully correct pairs because eight attacks fell below the local gate and eight clean rows crossed the local high gate.
+A calibration-only gate search found no material generalizing improvement under the 2% FPR and 35% call-rate caps, so the `0.2 / 0.99999` local gates remain unchanged.
+OpenVINO BF16 serving equivalence passed with 70.02% evaluation recall, 1.785% FPR, 96.70% precision, and one extra calibration false positive relative to the new FP32 reference.
+
+A later AgentDojo transfer diagnostic exposed a narrower untested option: change only the low floor selected by trusted `input_channel`.
+The fixed follow-up retained the direct-user floor `0.2`, high gate `0.99999`, and reviewer threshold, then compared untrusted-content floors `0.2`, `0.1`, and `0.05` on the same 6,000-row calibration role.
+The `0.1` floor is the highest-recall feasible point under the unchanged 2% FPR and 35% call-rate caps.
+It adds 10 calibration true positives and 49 provider calls with no false positives, keeping calibration FPR at 1.9808%.
+On the already-open 14,000-row evaluation role it adds 25 true positives, one false positive, and 104 calls, reaching 70.27% recall, 1.773% FPR, 96.74% precision, and a 22.91% provider call rate.
+The gain is concentrated in untrusted content: SEP recall rises from 48.06% to 49.37% at unchanged 0.114% FPR, while direct-only PromptShield is unchanged.
+This is a post-hoc development improvement, not prospective validation.
+Fresh OpenVINO BF16 verification under the channel-specific floor passes every serving-equivalence check.
+It reaches 70.42% evaluation recall, 1.798% FPR, 96.70% precision, and a 22.89% provider call rate, compared with FP32 at 70.27% / 1.773% / 96.74% / 22.91%.
+The runtimes differ on 89 local zones and 24 final routes over 20,000 rows, and BF16 adds one calibration false positive.
+
+Decision: use this contract only in the advisory cascade and retain the full-LoRA artifact's one-seed research status.
+The detailed prompt-selection protocol, per-dataset results, immutable evidence hashes, and limitations are in [the OpenRouter downstream evaluation](openrouter-downstream-evaluation.md#channel-aware-outer-intent-repair-2026-08-02).
+
+### August 2026 cascade, workload, and containment ledger
+
+Detailed protocols, complete slices, and hashes live in the dedicated reports linked below.
+This ledger retains only decisions that affect maintained behavior or the next experiment.
+
+#### Retained cascade decision
+
+- DeepSeek V4 Flash 0731 replaced the April reviewer after adding 58 true positives with the same 142 false positives on the frozen evaluation.
+  FP32 recall, FPR, precision, and call rate are 71.235%, 1.773%, 96.779%, and 22.914%; OpenVINO BF16 reaches 71.386%, 1.798%, 96.742%, and 22.893%.
+  PromptShield recall fell 2.176 points and untrusted-content FPR rose 0.375 points, so this is an aggregate advisory improvement rather than uniform transfer.
+  The local gates remain direct-user 0.2, untrusted-content 0.1, and high 0.99999; the reviewer threshold is 0.6224593312018547 and concurrency is capped at four.
+  See [the replacement report](deepseek-v4-flash-0731-research.md).
+- The selected cascade remains advisory, is not approved for blocking, and never grants authority.
+  Full-context-first review applies only to remote-enabled multi-window untrusted content; scalar call-minimization and Ionstream fallback candidates were rejected.
+
+#### Learned-detector and workload findings
+
+- The Financial AI CTF diagnostic reaches 83.33% row recall but only 63.26% participant-macro recall, and most protected-field leaks fall outside instruction subversion.
+  FORCE-Bench records 0 restrictions across 251 legitimate finance tasks.
+  See [the finance audit](finance-web3-benchmark-audit.md).
+- AgentAbstain shows at least 3.45% restrictions overall and 14% on high-stakes tasks.
+  SafeClawBench reaches only 10.11% recall at 4.26% FPR.
+  BFCL v4 records 0.878% restrictions and 14.34% review incidence across 2,050 live controls.
+- Long-document and task-conditioned repairs did not transfer cleanly.
+  Known-span documents retained weak payload recall and high clean review, while LongBench, StruQ, InjecAgent, API-Bank, AgentDyn, and AgentPIMA showed that scalar thresholds or trusted-task prompting do not solve the source shift.
+  See [the long-context report](long-context-reviewer-research.md), [the InjecAgent report](injecagent-detector-evaluation.md), and [the task-conditioned report](task-conditioned-reviewer-evaluation.md).
+- SWE-bench Verified records 1.42% hard restrictions and 69.11% review on 492 long legitimate tasks.
+  SWE-chat records 1.133% hard restrictions and 52.255% review on 5,121 earliest-session prompts, with 93.471% review at 256 or more words.
+  SWE-rebench records 0.954% hard restrictions and 52.061% review across 20,762 tasks, with roughly 96% to 97% review on 2,048-character or longer tasks.
+  These are workload measurements rather than production FPR estimates.
+  See [the SWE-chat report](swe-chat-traffic-research.md).
+- PIArena reaches 95.96% attack recall, 0.77% clean restrictions, and 83.85% fully correct matched tasks after a bounded transport completion.
+  The original run still records 37 provider failures.
+- Adaptive Adversaries retained 93.18% attack recall but failed its clean-pair gate because flattening mixed provenance was the wrong projection.
+  See [the adaptive report](adaptive-adversaries-evaluation.md).
+- ASPI shows 31.41% of retained clarification attacks below the local review gate, including 71.03% of Travel attacks.
+  Clarifications must bind typed missing slots and require separate authorization for scope expansion.
+  See [the stateful benchmark report](agent-security-benchmark-options.md#aspi-clarification-state-audit-exposed-a-routing-blind-spot).
+- The tau2 retail construction did not create an independently supported matched training source and did not authorize fitting.
+
+#### Stateful containment findings
+
+- The provider-free AgentDojo Banking replay preserves all 144 paired legitimate outcomes while reducing upstream attacker-goal completion from 144 of 144 without monitoring to 0 of 144 with monitoring.
+- The fixed-agent Banking comparison improves unattacked utility from 6 of 16 to 8 of 16 and attacked utility from 56 of 144 to 71 of 144 while retaining zero unauthorized mutations.
+  Warning-only and Slack policy variants were rejected or left incomplete on utility.
+  See [the AgentDojo report](agentdojo-integration-research.md).
+- One load-bearing Nemotron case and one coupled Agent-Diff Linear incident demonstrate vulnerable controls, exact legitimate state, deterministic denial, and zero unauthorized mutations.
+  Other Agent-Diff, STATE-Bench, AgentLure, and workspace transfers were inconclusive because the attack was not proposed, the required source was not observed, or transport failed.
+  See [the stateful benchmark report](agent-security-benchmark-options.md).
+- The maintained security boundary remains typed capabilities, stable source identities, monotone provenance and sensitivity propagation, synchronous pre-effect enforcement, and deterministic egress policy.
+
+#### Robustness and next-model evidence
+
+- Multi-attempt mutation conditional evasion at 1, 2, 4, 8, 16, and 25 attempts is 0.87%, 1.30%, 1.71%, 2.14%, 2.57%, and 2.79%.
+  Effective end-to-end recall falls from 73.93% to 72.50%; no mutation crosses below the local pass gate.
+  The manifest, base result, mutation result, and summary digests are `5b4138ef08cd84456749fc9ad8100024bc07d65417a6dbe4f39295e1c1b8cdb8`, `183c1ff8680e7b097b3d93fa0bd4e61f6fd20c81b038a2b76b12661eaeabdbfb`, `25aba3e75ba563f4eeaf659d54a331f79a27d3ac59cff2b50ad057b11e6709f1`, and `57ba976f7736a0744ea7b954ba1c56433b1506af22209eb4dcf71071a6aa769b`.
+- Another learned-model run still requires explicit authorization, same-row incumbent scoring, source-heldout and indirect-document gates, a long legitimate workload, and the retained mutation curve.
+
+#### Frozen mmBERT LP-FT comparison (2026-08-05)
+
+The owner-authorized LP-FT candidate trained encoder layers 20 and 21, the final normalization, and the retained frozen head on the rebuilt canonical mixture plus 22,716 repository-grouped SWE-rebench V2 matched pairs, with seed 42, three epochs, 25,083 updates, and the unchanged objective and checkpoint rule.
+Training completed in 10.11 hours on the local RTX 4050 at 1.04 GiB peak reserved VRAM, and the trainer now writes an atomic progress checkpoint every 500 updates that restores the same update sequence; validation and best-epoch selection remain epoch-boundary only.
+The resume path does not enable deterministic CUDA algorithms and does not claim bit-identical floating-point results across process or hardware changes.
+Epoch validation macro BCE was 0.08856, 0.09102, and 0.08478, so epoch 3 was selected after its PromptShield validation component recovered from the epoch-2 regression.
+
+Evaluation first failed closed because the dev-test real-finance negative pin still recorded the July count.
+The corpus rebuild removed 11 harper_valley_bank rows from the scored slice: the manifest records one additional routing-quarantine row and a three-row dev-test reduction for that source, while the remaining eight rows stayed in dev-test but left the scored direct-user channel through whole-conversation lineage regrouping.
+The pin therefore moved from 7,054 to 7,043 with no other evaluator change.
+Population guards should run before scoring in a future maintenance pass because the stale pin cost one complete scoring run.
+
+Against the incumbent full-mixture LoRA, threshold-free ranking ties on canonical dev-test (ROC AUC 0.98967 versus 0.98962), improves SEP (0.87567 versus 0.81440), and collapses on PromptShield test (0.75142 versus 0.90149), with recall 14.82% versus 68.50% at each run's own calibration-selected component threshold.
+The candidate removes the incumbent's worst benign slice (multi_turn FPR 86.75% leaves the worst list) but loses indirect-document recall (BrowseSafe 34.05% to 0.16%, BIPIA 41.08% to 8.82%) and flags 9 of 7,043 real-finance negatives where the incumbent flags 0.
+Evaluation populations differ slightly because the corpus was rebuilt, so aggregate rows are not identical between the two evaluations.
+
+On the repository-held-out SWE-rebench V2 slices scored with window-max over ordered 512-token windows, the descriptive validation-calibrated 1% coordinate gives the candidate 0.17% dev-test clean flags, 0.03% clean high-gate restrictions, and 85.20% attack recall against the incumbent's 7.31% clean flags, 1.50% clean high-gate restrictions, and 98.02% recall; threshold-free pair ordering is 99.86% versus 99.42%.
+On clean documents of at least 8,192 normalized characters the candidate flags 0.00% while the incumbent flags 44.44%; that slice holds only 18 pairs (0 versus 8 flags), so it is directional evidence rather than a precise rate.
+Repository grouping holds out task contexts, not attack templates: 2,267 of 2,590 unique dev-test attack spans also occur in training.
+Attack recall, AUROC, and pair ordering are therefore in-family template evidence rather than attack-side generalization, and the candidate's clean-side advantage partly reflects same-source familiarity that the incumbent lacks.
+
+Decision: the candidate is not retained because the PromptShield and indirect-document regressions fail the frozen Pareto rule; the maintained artifacts, gates, and cascade are unchanged.
+The handoff stopped after the decisive core result, so the sealed LogInject panel remained unopened and the mutation ASR and SWE-rebench workload reruns were not started.
+This is an explicit protocol deviation and those panels provide no evidence for the candidate.
+The durable positive result is that the matched long-task pairs work: they remove most long-clean flagging on exactly the workload that rejected the current cascade.
+The retained result, evaluation, new-data manifest, and held-out comparison SHA-256 digests are `abf09b1a50eb767ce250ed9e29f90bcfbf3e29cd356d1a0786317e39ae5219b4`, `8890a302d4808f414ef22fdb6dec8615fc556c50af74d28dca6710bbbf8c05f7`, `1f3a7dfdf9a35c4910f2762cc8b971dc54cdf1af1036b754a2753b4d2f0fb45b`, and `63b5147631ab073cefc66e5e27309d5a87b5ae81d6ad9ad4d2bf22c8271fe6b0`.
+The rejected encoder, head, and scores are retained through Git LFS for later comparison but remain unregistered and unavailable to maintained inference.
+Their SHA-256 digests are `271df253cd4fc807c6060059e9bb62dc85e0c317aed15a892be5c7186cf3d515`, `2b5dbd647484e8753441118bf45bccd7c3836982474978f653c2de606bef98b5`, and `1cf04f41f76c2048d0170880a4794dae1d97da1efb38d1523a8cfd4c6c415aa5` respectively.
+The owner approved deleting the resumable progress checkpoint after its SHA-256 `0e46cad31c0a92284ee85a6011c7ba723b78e4fcaac76f8669a4a69929585c2e` was recorded; the retained weights, scores, and evaluation records remain available for later comparison.
+The natural disentangling candidate is rank-8 LoRA retrained on the identical new mixture at matched updates, which requires its own owner authorization and frozen protocol.
+
 ### Deferred improvement ledger
 
-1. Build a prospective, lineage-grouped finance and Web3 suite with matched benign transaction tasks, realistic direct and indirect attacks, multilingual transformations, and a long-benign denominator.
-2. Recalibrate the full-data LoRA only on new representative traffic if the downstream route is revisited.
-3. Report mutation ASR at multiple attempts beside clean recall before any deployment claim.
-4. Evaluate the deterministic policy monitor in AgentDojo Banking so the advisory sensor is measured as one layer rather than mistaken for the security boundary.
+1. Replace the rejected Adaptive Adversaries composite-text projection with an end-to-end adaptive suite that preserves field-level provenance and has deterministic task, action, and clean-utility oracles.
+2. Treat the rejected SWE-chat traffic proxy as consumed development evidence, preserve the frozen PromptShield regression diagnosis without retuning either source, and keep the AgentPIMA-rejected task-conditioned candidate out of integration unless a materially different architecture with a frozen low-call invocation policy succeeds on new independent evidence.
+3. Use the completed multi-attempt mutation ASR curve beside clean recall in every candidate comparison.
+4. Keep the rejected advisory-warning result as fixed development evidence, and test any revision only on a prospective task or attack family with a warning-aware adaptive attack.
+5. Replace the inconclusive coupled transfer sequence with an independently versioned task whose clean completion demonstrably consumes the untrusted record and whose vulnerable control passes before the same proposal is forked, while retaining stable identity, oracle authority, one-shot capabilities, and complete-state gates.
+6. Treat clarification replies as typed data bound to the original task scope, and require a separate authorization event before a reply can add actions or widen capabilities; evaluate any task-conditioned reviewer only as an advisory layer on a new prospective source with legitimate scope-expansion controls.

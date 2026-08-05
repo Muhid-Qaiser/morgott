@@ -11,8 +11,8 @@ from pathlib import Path
 from unittest import mock
 
 from morgott.cli import main
-from morgott.models.cascade import CascadeScanner
-from morgott.models.deepseek_nooa import WindowReview
+from morgott.models.cascade import FULL_CONTEXT_REVIEW_INDEX, CascadeScanner
+from morgott.models.deepseek_nooa import REMOTE_CONCURRENCY, WindowReview
 from morgott.models.mmbert.serving import MmbertRuntime, PreparedText, Window
 
 
@@ -68,9 +68,12 @@ class _Reviewer:
     def __init__(self, probability=0.1, status="ok"):
         self.probability = probability
         self.status = status
+        self.input_channels = []
+        self.texts = []
 
-    async def review(self, text):
-        del text
+    async def review(self, text, *, input_channel):
+        self.texts.append(text)
+        self.input_channels.append(input_channel)
         log_odds = (
             math.log(self.probability / (1 - self.probability))
             if self.status == "ok" and self.probability is not None
@@ -92,12 +95,12 @@ class _ParallelReviewer(_Reviewer):
         self.active = 0
         self.max_active = 0
 
-    async def review(self, text):
+    async def review(self, text, *, input_channel):
         self.active += 1
         self.max_active = max(self.max_active, self.active)
         await asyncio.sleep(0)
         self.active -= 1
-        return await super().review(text)
+        return await super().review(text, input_channel=input_channel)
 
 
 class _ClosableReviewer(_Reviewer):
@@ -112,9 +115,11 @@ class _ClosableReviewer(_Reviewer):
 class _SequenceReviewer:
     def __init__(self, probabilities):
         self.probabilities = iter(probabilities)
+        self.texts = []
 
-    async def review(self, text):
-        del text
+    async def review(self, text, *, input_channel):
+        self.texts.append(text)
+        del input_channel
         probability = next(self.probabilities)
         return WindowReview(
             status="ok",
@@ -125,13 +130,51 @@ class _SequenceReviewer:
         )
 
 
+class _FirstDecisiveReviewer:
+    def __init__(self, status):
+        self.status = status
+        self.calls = 0
+
+    async def review(self, text, *, input_channel):
+        del text, input_channel
+        self.calls += 1
+        decisive = self.calls == 1
+        failed = decisive and self.status == "failed"
+        probability = 0.9 if decisive and not failed else 0.1
+        return WindowReview(
+            status="failed" if failed else "ok",
+            probability=None if failed else probability,
+            log_odds=(None if failed else math.log(probability / (1 - probability))),
+            attempts=1,
+            latency_ms=1.0,
+            failure_code="http_429" if failed else None,
+        )
+
+
 class _ForbiddenReviewer:
-    async def review(self, text):
-        del text
+    async def review(self, text, *, input_channel):
+        del text, input_channel
         raise AssertionError("remote review must not be called")
 
 
 class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_untrusted_content_reaches_the_lower_review_floor(self):
+        reviewer = _Reviewer(probability=0.1)
+        scanner = CascadeScanner(
+            scorer=_Scorer([0.1]),
+            reviewer=reviewer,
+        )
+
+        result = await scanner.assess_text(
+            "tool-return text",
+            input_channel="untrusted_content",
+        )
+
+        self.assertEqual(
+            (result.advisory_route, result.reason), ("pass", "deepseek_clear")
+        )
+        self.assertEqual(result.deepseek_calls, 1)
+
     async def test_all_low_windows_return_a_complete_shadow_pass(self):
         scanner = CascadeScanner(
             scorer=_Scorer([0.1, 0.199]),
@@ -149,6 +192,85 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((result.low_windows, result.middle_windows), (2, 0))
         self.assertEqual((result.high_windows, result.deepseek_calls), (0, 0))
         self.assertEqual(result.window_count, 2)
+
+    async def test_untrusted_multi_window_full_context_flag_short_circuits(self):
+        reviewer = _Reviewer(probability=0.9)
+        scanner = CascadeScanner(
+            scorer=_Scorer([0.01, 0.01]),
+            reviewer=reviewer,
+        )
+
+        result = await scanner.assess_text(
+            "distributed instruction",
+            input_channel="untrusted_content",
+        )
+
+        self.assertEqual(
+            (result.advisory_route, result.reason, result.deepseek_calls),
+            ("restrict", "deepseek_full_context_flag", 1),
+        )
+        self.assertEqual(result.reviewed_windows[0].index, FULL_CONTEXT_REVIEW_INDEX)
+        self.assertEqual(reviewer.texts, ["distributed instruction"])
+
+    async def test_untrusted_multi_window_full_clear_passes_all_low_input(self):
+        reviewer = _Reviewer(probability=0.1)
+        scanner = CascadeScanner(
+            scorer=_Scorer([0.01, 0.01]),
+            reviewer=reviewer,
+        )
+
+        result = await scanner.assess_text(
+            "ordinary long content",
+            input_channel="untrusted_content",
+        )
+
+        self.assertEqual(
+            (result.advisory_route, result.reason, result.deepseek_calls),
+            ("pass", "deepseek_full_context_clear", 1),
+        )
+        self.assertEqual(
+            [review.index for review in result.reviewed_windows],
+            [FULL_CONTEXT_REVIEW_INDEX],
+        )
+
+    async def test_untrusted_full_clear_falls_back_to_window_review(self):
+        reviewer = _SequenceReviewer([0.1, 0.1, 0.9])
+        scanner = CascadeScanner(
+            scorer=_Scorer([0.5, 0.5]),
+            reviewer=reviewer,
+        )
+
+        result = await scanner.assess_text(
+            "ambiguous long content",
+            input_channel="untrusted_content",
+        )
+
+        self.assertEqual(
+            (result.advisory_route, result.reason, result.deepseek_calls),
+            ("restrict", "deepseek_flag", 3),
+        )
+        self.assertEqual(
+            [review.index for review in result.reviewed_windows],
+            [FULL_CONTEXT_REVIEW_INDEX, 0, 1],
+        )
+
+    async def test_untrusted_full_context_failure_restricts_incompletely(self):
+        scanner = CascadeScanner(
+            scorer=_Scorer([0.01, 0.01]),
+            reviewer=_Reviewer(status="failed"),
+        )
+
+        result = await scanner.assess_text(
+            "ordinary long content",
+            input_channel="untrusted_content",
+        )
+
+        self.assertEqual(
+            (result.advisory_route, result.complete, result.reason),
+            ("restrict", False, "deepseek_failed"),
+        )
+        self.assertEqual(result.deepseek_failures, 1)
+        self.assertEqual(result.reviewed_windows[0].index, FULL_CONTEXT_REVIEW_INDEX)
 
     async def test_any_high_window_returns_a_complete_shadow_restrict(self):
         for high_index in (0, 1, 2):
@@ -174,9 +296,10 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(result.deepseek_calls, 0)
 
     async def test_all_clear_middle_windows_return_a_complete_shadow_pass(self):
+        reviewer = _Reviewer(probability=0.1)
         scanner = CascadeScanner(
             scorer=_Scorer([0.2, 0.5]),
-            reviewer=_Reviewer(probability=0.1),
+            reviewer=reviewer,
         )
 
         result = await scanner.assess_text(
@@ -191,6 +314,7 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result.complete)
         self.assertEqual(result.deepseek_calls, 2)
         self.assertEqual(result.deepseek_failures, 0)
+        self.assertEqual(reviewer.input_channels, ["direct_user", "direct_user"])
         self.assertEqual(
             [window.index for window in result.reviewed_windows],
             [0, 1],
@@ -348,6 +472,26 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(result.deepseek_calls, 0)
 
+    async def test_window_cap_restricts_all_low_untrusted_multiwindow_text(self):
+        # With a reviewer configured, multi-window untrusted text goes to
+        # full-context review even when every window scores low, so text over
+        # the window cap fails safe instead of passing locally.
+        scanner = CascadeScanner(
+            scorer=_Scorer([0.01] * 129),
+            reviewer=_ForbiddenReviewer(),
+        )
+
+        result = await scanner.assess_text(
+            "large low-scoring artifact",
+            input_channel="untrusted_content",
+        )
+
+        self.assertEqual(
+            (result.advisory_route, result.complete, result.reason),
+            ("restrict", False, "deepseek_window_limit"),
+        )
+        self.assertEqual(result.deepseek_calls, 0)
+
     async def test_middle_windows_are_reviewed_concurrently(self):
         reviewer = _ParallelReviewer()
         scanner = CascadeScanner(
@@ -362,6 +506,30 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result.advisory_route, "pass")
         self.assertGreater(reviewer.max_active, 1)
+
+    async def test_decisive_remote_batch_skips_later_provider_calls(self):
+        for status, complete, reason in (
+            ("ok", True, "deepseek_flag"),
+            ("failed", False, "deepseek_failed"),
+        ):
+            with self.subTest(reason=reason):
+                reviewer = _FirstDecisiveReviewer(status)
+                scanner = CascadeScanner(
+                    scorer=_Scorer([0.5] * (REMOTE_CONCURRENCY + 1)),
+                    reviewer=reviewer,
+                )
+
+                result = await scanner.assess_text(
+                    "large ambiguous artifact",
+                    input_channel="direct_user",
+                )
+
+                self.assertEqual(
+                    (result.advisory_route, result.complete, result.reason),
+                    ("restrict", complete, reason),
+                )
+                self.assertEqual(reviewer.calls, REMOTE_CONCURRENCY)
+                self.assertEqual(len(result.reviewed_windows), REMOTE_CONCURRENCY)
 
     async def test_chunk_cancellation_closes_the_temporary_file(self):
         async def chunks():

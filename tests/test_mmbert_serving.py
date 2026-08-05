@@ -1,8 +1,8 @@
 import copy
-import gzip
 import hashlib
 import importlib.util
 import json
+import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +10,17 @@ from unittest import mock
 
 import numpy as np
 
+from morgott.models.deepseek_nooa import (
+    MAX_ATTEMPTS,
+    PROMPT_SHA256,
+    REQUEST_SHA256,
+)
+from morgott.models.deepseek_nooa import (
+    MODEL as DEEPSEEK_MODEL,
+)
+from morgott.models.deepseek_nooa import (
+    PROVIDER as DEEPSEEK_PROVIDER,
+)
 from morgott.models.mmbert.export_onnx import (
     _cascade_metrics,
     _deepseek_evidence,
@@ -18,6 +29,7 @@ from morgott.models.mmbert.export_onnx import (
     verify_panel,
 )
 from morgott.models.mmbert.serving import MmbertRuntime, PreparedText, Window
+from morgott.normalization import strict_normalize
 
 
 class _Encoding:
@@ -83,46 +95,6 @@ class _BenchmarkRuntime:
         return (0.55,)
 
 
-def _write_deepseek_evidence(root):
-    panel_sha256 = "a" * 64
-    configuration_sha256 = "b" * 64
-    ledger = (
-        json.dumps(
-            {
-                "panel_id": "row-1",
-                "configuration": "deepseek_coreweave",
-                "configuration_sha256": configuration_sha256,
-            },
-            sort_keys=True,
-        )
-        + "\n"
-    ).encode()
-    with gzip.open(root / "followup_results.jsonl.gz", "wb") as handle:
-        handle.write(ledger)
-    followup = {
-        "panel_sha256": panel_sha256,
-        "split": {"calibration_panel_ids": ["row-1"]},
-    }
-    followup_path = root / "followup_manifest.json"
-    followup_path.write_text(
-        json.dumps(followup, sort_keys=True),
-        encoding="utf-8",
-    )
-    summary = {
-        "panel_sha256": panel_sha256,
-        "result_ledger_sha256": hashlib.sha256(ledger).hexdigest(),
-        "followup_manifest_sha256": hashlib.sha256(
-            followup_path.read_bytes()
-        ).hexdigest(),
-        "configuration_sha256s": {"deepseek_coreweave": configuration_sha256},
-    }
-    (root / "followup_summary.json").write_text(
-        json.dumps(summary),
-        encoding="utf-8",
-    )
-    return {"panel": {"sha256": panel_sha256}}, followup_path
-
-
 class MmbertServingTests(unittest.TestCase):
     def test_verification_does_not_overwrite_registered_evidence(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -135,6 +107,7 @@ class MmbertServingTests(unittest.TestCase):
                     manifest_path=output / "missing-manifest.json",
                     panel_dir=output,
                     output=output,
+                    deepseek_evidence_path=output / "unused.jsonl",
                 )
 
             self.assertEqual(evidence.read_text(encoding="utf-8"), "registered\n")
@@ -177,32 +150,130 @@ class MmbertServingTests(unittest.TestCase):
             )
             self.assertTrue(result["p95_below_500_ms"])
 
-    def test_verification_reads_versioned_compressed_provider_evidence(self):
+    def test_verification_accepts_typed_current_prompt_evidence(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            panel_manifest, _ = _write_deepseek_evidence(root)
+            panel_id = "row-1"
+            panel_manifest = {"panel": {"sha256": "a" * 64}}
+            (root / "followup_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "panel_sha256": panel_manifest["panel"]["sha256"],
+                        "split": {"calibration_panel_ids": [panel_id]},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            evidence_path = root / "current-results.jsonl"
+            evidence_path.write_text(
+                json.dumps(
+                    {
+                        "attempts": 1,
+                        "client_seconds": 0.1,
+                        "dataset": "canonical",
+                        "failure_code": None,
+                        "input_channel": "direct_user",
+                        "input_tokens": 10,
+                        "job_id": hashlib.sha256(
+                            f"{PROMPT_SHA256}\0{REQUEST_SHA256}\0{panel_id}".encode()
+                        ).hexdigest(),
+                        "log_odds_subversion": 1.0,
+                        "model": DEEPSEEK_MODEL,
+                        "output_tokens": 5,
+                        "p_subversion": 1 / (1 + math.exp(-1)),
+                        "panel_id": panel_id,
+                        "prompt_sha256": PROMPT_SHA256,
+                        "provider": DEEPSEEK_PROVIDER,
+                        "request_sha256": REQUEST_SHA256,
+                        "status": "ok",
+                    },
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
 
             records, calibration_ids = _deepseek_evidence(
                 root,
                 panel_manifest,
+                evidence_path=evidence_path,
+                panel=[
+                    {
+                        "panel_id": panel_id,
+                        "dataset": "canonical",
+                        "input_channel": "direct_user",
+                    }
+                ],
             )
-
-        self.assertEqual(set(records), {"row-1"})
-        self.assertEqual(calibration_ids, {"row-1"})
-
-    def test_verification_rejects_a_changed_calibration_split(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            panel_manifest, followup_path = _write_deepseek_evidence(root)
-            followup = json.loads(followup_path.read_text(encoding="utf-8"))
-            followup["split"]["calibration_panel_ids"] = ["row-2"]
-            followup_path.write_text(
-                json.dumps(followup, sort_keys=True),
+            invalid = json.loads(evidence_path.read_text(encoding="utf-8"))
+            invalid["attempts"] = MAX_ATTEMPTS + 1
+            evidence_path.write_text(json.dumps(invalid) + "\n", encoding="utf-8")
+            panel = [
+                {
+                    "panel_id": panel_id,
+                    "dataset": "canonical",
+                    "input_channel": "direct_user",
+                }
+            ]
+            with self.assertRaisesRegex(ValueError, "identity is invalid"):
+                _deepseek_evidence(
+                    root,
+                    panel_manifest,
+                    evidence_path=evidence_path,
+                    panel=panel,
+                )
+            valid_line = json.dumps({**invalid, "attempts": 1}, sort_keys=True) + "\n"
+            evidence_path.write_text(valid_line * 2, encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "duplicate DeepSeek evidence"):
+                _deepseek_evidence(
+                    root,
+                    panel_manifest,
+                    evidence_path=evidence_path,
+                    panel=panel,
+                )
+            evidence_path.write_text(valid_line, encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "does not match the frozen panel"):
+                _deepseek_evidence(
+                    root,
+                    panel_manifest,
+                    evidence_path=evidence_path,
+                    panel=[{**panel[0], "dataset": "promptshield"}],
+                )
+            (root / "followup_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "panel_sha256": "b" * 64,
+                        "split": {"calibration_panel_ids": [panel_id]},
+                    }
+                ),
                 encoding="utf-8",
             )
+            with self.assertRaisesRegex(ValueError, "retained DeepSeek split changed"):
+                _deepseek_evidence(
+                    root,
+                    panel_manifest,
+                    evidence_path=evidence_path,
+                    panel=panel,
+                )
+            (root / "followup_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "panel_sha256": panel_manifest["panel"]["sha256"],
+                        "split": {"calibration_panel_ids": ["row-2"]},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "retained DeepSeek split changed"):
+                _deepseek_evidence(
+                    root,
+                    panel_manifest,
+                    evidence_path=evidence_path,
+                    panel=panel,
+                )
 
-            with self.assertRaisesRegex(ValueError, "split changed"):
-                _deepseek_evidence(root, panel_manifest)
+        self.assertEqual(set(records), {panel_id})
+        self.assertEqual(calibration_ids, {panel_id})
 
     def test_serving_quality_gate_allows_one_calibration_false_positive(self):
         reference = {
@@ -228,21 +299,50 @@ class MmbertServingTests(unittest.TestCase):
 
     def test_precision_study_uses_the_frozen_fail_safe_cascade(self):
         panel = [
-            {"panel_id": "a", "label": 0, "dataset": "canonical"},
-            {"panel_id": "b", "label": 1, "dataset": "promptshield"},
-            {"panel_id": "c", "label": 0, "dataset": "sep"},
-            {"panel_id": "d", "label": 1, "dataset": "canonical"},
+            {
+                "panel_id": "a",
+                "label": 0,
+                "dataset": "canonical",
+                "input_channel": "direct_user",
+            },
+            {
+                "panel_id": "b",
+                "label": 1,
+                "dataset": "promptshield",
+                "input_channel": "direct_user",
+            },
+            {
+                "panel_id": "c",
+                "label": 0,
+                "dataset": "sep",
+                "input_channel": "untrusted_content",
+            },
+            {
+                "panel_id": "d",
+                "label": 1,
+                "dataset": "canonical",
+                "input_channel": "direct_user",
+            },
+            # Middle zone only under the 0.1 untrusted floor: a regression to a
+            # single 0.2 floor would pass this row locally with no provider call.
+            {
+                "panel_id": "e",
+                "label": 0,
+                "dataset": "sep",
+                "input_channel": "untrusted_content",
+            },
         ]
         records = {
             "a": {"status": "ok", "p_subversion": 0.95},
             "b": {"status": "ok", "p_subversion": 0.01},
             "c": {"status": "ok", "p_subversion": 0.1},
             "d": {"status": "timeout"},
+            "e": {"status": "ok", "p_subversion": 0.01},
         }
 
         metrics = _cascade_metrics(
             panel,
-            np.asarray([0.1, 0.99999, 0.5, 0.5]),
+            np.asarray([0.1, 0.99999, 0.5, 0.5, 0.15]),
             records,
             {"a", "b"},
         )
@@ -250,8 +350,23 @@ class MmbertServingTests(unittest.TestCase):
         self.assertEqual(metrics["calibration"]["true_positive"], 1)
         self.assertEqual(metrics["evaluation"]["true_positive"], 1)
         self.assertEqual(metrics["evaluation"]["false_positive"], 0)
-        self.assertEqual(metrics["evaluation"]["provider_call_rows"], 2)
+        self.assertEqual(metrics["evaluation"]["provider_call_rows"], 3)
         self.assertEqual(metrics["evaluation"]["provider_failures"], 1)
+
+        with self.assertRaisesRegex(ValueError, "probability"):
+            _cascade_metrics(
+                [
+                    {
+                        "panel_id": "invalid",
+                        "label": 1,
+                        "dataset": "canonical",
+                        "input_channel": "direct_user",
+                    }
+                ],
+                np.asarray([0.5]),
+                {"invalid": {"status": "ok", "p_subversion": np.nan}},
+                set(),
+            )
 
     def test_registered_artifact_hash_mismatch_fails_before_model_loading(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -315,6 +430,16 @@ class MmbertServingTests(unittest.TestCase):
             ],
             ["a b c", "c d"],
         )
+
+    def test_preparation_keeps_registered_strict_normalization(self):
+        text = "Привет, как ваши дела?"
+        tokenizer = _Tokenizer(
+            _Encoding([101, 1, 102], [(0, 0), (0, len(text)), (0, 0)])
+        )
+
+        prepared = MmbertRuntime(tokenizer=tokenizer, session=None).prepare(text)
+
+        self.assertEqual(prepared.normalized_text, strict_normalize(text))
 
     def test_scores_every_window_with_a_stable_sigmoid(self):
         overflow = _Encoding(

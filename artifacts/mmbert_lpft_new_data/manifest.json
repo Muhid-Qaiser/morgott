@@ -1,0 +1,41 @@
+{
+  "construction": "problem_statement plus one deterministic known-span injected twin",
+  "outputs": {
+    "dev_test": {
+      "content_sha256": "02faad6c972ee08f625acc8c88bd2b48954407b5c180de04bcf935646ddf496e",
+      "pairs": 2926,
+      "path": "pairs.jsonl.gz",
+      "repositories": 334,
+      "sha256": "20c109c68d25fee9b07cb3c4f0046266248f966a5c6aa0a93c083ae60e5d40d1"
+    },
+    "train": {
+      "content_sha256": "9cb9a5b668c811825904c90f00f0a2f5a1669133913a230719f08f3f6f03cb0d",
+      "pairs": 22719,
+      "path": "pairs.jsonl.gz",
+      "repositories": 2600,
+      "sha256": "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba"
+    },
+    "validation": {
+      "content_sha256": "9085ceac615cef70ffd756a9505bf42340798932017ea91b14fe5130744aaf6b",
+      "pairs": 2768,
+      "path": "pairs.jsonl.gz",
+      "repositories": 337,
+      "sha256": "54c961a9ed2df61ff9f88fa5464faacf0ec1fbbf91721ef9fa9c9c6d911c5d7b"
+    }
+  },
+  "removed": {
+    "evaluation_repository_overlap": 2607,
+    "invalid": 46,
+    "normalized_duplicate": 435,
+    "privacy": 578
+  },
+  "schema_version": 1,
+  "source": {
+    "license": "CC-BY-4.0",
+    "repository": "nebius/SWE-rebench-V2",
+    "revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
+    "rows": 32079,
+    "sha256": "0e0bf9355f892ad74ae98d4e1c404f39fd6654a8e351ee3e6ab162e4a64cd3ad"
+  },
+  "split_unit": "repository"
+}

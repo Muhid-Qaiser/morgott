@@ -4,7 +4,6 @@ import hashlib
 import heapq
 import json
 from collections import Counter, defaultdict
-from datetime import UTC, datetime
 from pathlib import Path
 
 import joblib
@@ -22,10 +21,16 @@ DEFAULT_THRESHOLD = 0.5
 BATCH_SIZE = 2_048
 MAX_BATCH_CHARACTERS = 2_000_000
 FEATURES = 2**20
-FAILED_ATTEMPT_SOURCES = {"hackaprompt", "tensor_trust_raw"}
+ATTACK_PREVALENCES = {"0.1%": 0.001, "1%": 0.01, "5%": 0.05}
+LENGTH_BANDS = (
+    ("0-256", 0, 256),
+    ("257-1024", 257, 1_024),
+    ("1025-4096", 1_025, 4_096),
+    ("4097+", 4_097, None),
+)
 
 
-def _direct_strength(row: dict) -> str:
+def _is_weak_label(row: dict) -> bool:
     origins = row.get("origins") or [row]
 
     def weak(origin: dict) -> bool:
@@ -35,32 +40,28 @@ def _direct_strength(row: dict) -> str:
             and "generated" in basis
         )
 
-    if all(weak(origin) for origin in origins):
-        return "weak_label"
-    if origins and all(
-        origin.get("source") in FAILED_ATTEMPT_SOURCES
-        and origin.get("source_attack_success") is not True
-        for origin in origins
-    ):
-        return "failed_attack_attempt"
-    return "strong"
+    return all(weak(origin) for origin in origins)
 
 
-def _rows(data_dir: Path, manifest: dict, split: str):
+def _rows(data_dir: Path, manifest: dict, split: str, *, normalize: bool = True):
     output = manifest["routing_views"][split]
     for row in iter_verified_jsonl(
         manifest_output_path(data_dir, output), output["sha256"]
     ):
-        strength = _direct_strength(row)
-        if row["input_channel"] != "direct_user" or strength == "weak_label":
+        if row["input_channel"] != "direct_user" or _is_weak_label(row):
             continue
         yield {
-            "text": normalize_text(row["text"]),
+            "text": normalize_text(row["text"]) if normalize else row["text"],
             "label": row["routing_label"],
             "source": row["source"],
+            "sources": tuple(
+                sorted(
+                    {origin["source"] for origin in row.get("origins", [])}
+                    or {row["source"]}
+                )
+            ),
             "group": row["split_group_id"],
             "hash": row["normalized_text_sha256"],
-            "strength": strength,
         }
 
 
@@ -158,6 +159,10 @@ def _metrics(labels: np.ndarray, scores: np.ndarray) -> dict:
         "rows": len(labels),
         "positive": positives,
         "negative": negatives,
+        "true_positive": true_positive,
+        "false_positive": false_positive,
+        "true_negative": negatives - false_positive,
+        "false_negative": positives - true_positive,
         "recall": true_positive / positives if positives else None,
         "fpr": false_positive / negatives if negatives else None,
         "precision": (
@@ -171,40 +176,65 @@ def _metrics(labels: np.ndarray, scores: np.ndarray) -> dict:
         "pr_auc": None,
         "roc_auc": None,
         "brier": float(brier_score_loss(labels, scores)) if len(labels) else None,
+        "expected_precision_at_attack_prevalence": {
+            label: None for label in ATTACK_PREVALENCES
+        },
     }
     if positives and negatives:
         result["pr_auc"] = float(average_precision_score(labels, scores))
         result["roc_auc"] = float(roc_auc_score(labels, scores))
+        for label, prevalence in ATTACK_PREVALENCES.items():
+            true_signals = result["recall"] * prevalence
+            total_signals = true_signals + result["fpr"] * (1 - prevalence)
+            result["expected_precision_at_attack_prevalence"][label] = (
+                true_signals / total_signals if total_signals else None
+            )
     return result
+
+
+def _length_mask(lengths: np.ndarray, lower: int, upper: int | None) -> np.ndarray:
+    mask = lengths >= lower
+    return mask if upper is None else mask & (lengths <= upper)
 
 
 def _evaluate(rows, vectorizer, classifier) -> dict:
     labels = []
-    sources = []
+    lengths = []
+    source_memberships = []
     scores = []
     for batch in _row_batches(rows):
         labels.extend(row["label"] for row in batch)
-        sources.extend(row["source"] for row in batch)
+        lengths.extend(len(row["text"]) for row in batch)
+        source_memberships.extend(row.get("sources", (row["source"],)) for row in batch)
         scores.extend(
             classifier.predict_proba(
                 vectorizer.transform([row["text"] for row in batch])
             )[:, 1]
         )
     labels_array = np.asarray(labels, dtype=np.int8)
+    lengths_array = np.asarray(lengths)
     scores_array = np.asarray(scores)
     by_source = {}
     source_recalls = []
     source_fprs = []
-    for source in sorted(set(sources)):
-        mask = np.asarray([value == source for value in sources])
+    sources = sorted(
+        {source for memberships in source_memberships for source in memberships}
+    )
+    for source in sources:
+        mask = np.asarray([source in memberships for memberships in source_memberships])
         source_metrics = _metrics(labels_array[mask], scores_array[mask])
         by_source[source] = source_metrics
         if source_metrics["recall"] is not None:
             source_recalls.append(source_metrics["recall"])
         if source_metrics["fpr"] is not None:
             source_fprs.append(source_metrics["fpr"])
+    by_length = {}
+    for name, lower, upper in LENGTH_BANDS:
+        mask = _length_mask(lengths_array, lower, upper)
+        by_length[name] = _metrics(labels_array[mask], scores_array[mask])
     return {
         "all": _metrics(labels_array, scores_array),
+        "by_normalized_character_length": by_length,
         "by_source": by_source,
         "macro_source_recall": (
             float(np.mean(source_recalls)) if source_recalls else None
@@ -224,20 +254,82 @@ def _write_report(path: Path, result: dict) -> None:
         "This is a cheap research control, not a blocking model or a production estimate.",
         "It uses source-supported direct-user rows, unweighted training, and the untouched 0.5 cutoff.",
         "",
-        "| Split | Recall | FPR | Precision | PR-AUC | ROC-AUC |",
-        "|---|---:|---:|---:|---:|---:|",
+        "| Split | Recall | FPR | Macro-source recall | Macro-source FPR | Precision | PR-AUC | ROC-AUC |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for split, metrics in result["evaluation"].items():
         values = metrics["all"]
         lines.append(
             f"| {split} | {_format(values['recall'])} | {_format(values['fpr'])} | "
+            f"{_format(metrics['macro_source_recall'])} | "
+            f"{_format(metrics['macro_source_fpr'])} | "
             f"{_format(values['precision'])} | {_format(values['pr_auc'])} | "
             f"{_format(values['roc_auc'])} |"
         )
     lines.extend(
         [
             "",
-            "Per-source metrics and exact recipe metadata are in `routing-baseline.json`.",
+            "Confusion counts use the same untouched 0.5 cutoff.",
+            "",
+            "| Split | TP | FP | TN | FN |",
+            "|---|---:|---:|---:|---:|",
+        ]
+    )
+    for split, metrics in result["evaluation"].items():
+        values = metrics["all"]
+        lines.append(
+            f"| {split} | {values['true_positive']} | {values['false_positive']} | "
+            f"{values['true_negative']} | {values['false_negative']} |"
+        )
+    lines.extend(
+        [
+            "",
+            "The following values substitute the measured development recall and FPR into fixed attack-prevalence scenarios; they are not production estimates.",
+            "",
+            "| Split | Expected precision at 0.1% | At 1% | At 5% |",
+            "|---|---:|---:|---:|",
+        ]
+    )
+    for split, metrics in result["evaluation"].items():
+        expected = metrics["all"]["expected_precision_at_attack_prevalence"]
+        lines.append(
+            f"| {split} | {_format(expected['0.1%'])} | "
+            f"{_format(expected['1%'])} | {_format(expected['5%'])} |"
+        )
+    lines.extend(
+        [
+            "",
+            "Selected training support by normalized character length:",
+            "",
+            "| Normalized characters | Benign | Positive |",
+            "|---:|---:|---:|",
+        ]
+    )
+    for name, _, _ in LENGTH_BANDS:
+        values = result["training_by_normalized_character_length"][name]
+        lines.append(f"| {name} | {values['benign']} | {values['positive']} |")
+    lines.extend(
+        [
+            "",
+            "Length slices use normalized Unicode character counts and expose their class denominators.",
+            "",
+            "| Split | Normalized characters | Positive | Benign | Recall | FPR |",
+            "|---|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for split, metrics in result["evaluation"].items():
+        for name, _, _ in LENGTH_BANDS:
+            values = metrics["by_normalized_character_length"][name]
+            lines.append(
+                f"| {split} | {name} | {values['positive']} | "
+                f"{values['negative']} | {_format(values['recall'])} | "
+                f"{_format(values['fpr'])} |"
+            )
+    lines.extend(
+        [
+            "",
+            "Per-source metrics count exact-merged rows in every origin source membership; aggregate metrics count each row once.",
+            "Exact recipe metadata is in `routing-baseline.json`.",
             "",
         ]
     )
@@ -259,12 +351,22 @@ def run_routing_baseline(
     if manifest.get("schema_version") != 5:
         raise ValueError("routing baseline requires canonical data schema 5")
     train_rows, selection = _cap_rows(
-        _rows(data_dir, manifest, "train"), max_per_source_label
+        _rows(data_dir, manifest, "train", normalize=False), max_per_source_label
     )
+    for row in train_rows:
+        row["text"] = normalize_text(row["text"])
+    training_labels = np.asarray([row["label"] for row in train_rows])
+    training_lengths = np.asarray([len(row["text"]) for row in train_rows])
+    training_length_support = {}
+    for name, lower, upper in LENGTH_BANDS:
+        mask = _length_mask(training_lengths, lower, upper)
+        training_length_support[name] = {
+            "benign": int(np.sum(mask & (training_labels == 0))),
+            "positive": int(np.sum(mask & (training_labels == 1))),
+        }
     vectorizer, classifier = _fit(train_rows, epochs)
     result = {
         "schema_version": 1,
-        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "data_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
         "recipe": {
             "model": "word 1-2 gram hashing vectorizer with unweighted SGD logistic regression",
@@ -275,7 +377,14 @@ def run_routing_baseline(
             "threshold_selection": "untouched default; no validation tuning",
         },
         "selection": selection,
-        "training_sources": sorted({row["source"] for row in train_rows}),
+        "source_accounting": {
+            "training_cap": "representative source so each exact-unique row is selected once",
+            "training_and_evaluation_membership": "all origin sources; exact-merged rows may occur in multiple source slices",
+        },
+        "training_sources": sorted(
+            {source for row in train_rows for source in row["sources"]}
+        ),
+        "training_by_normalized_character_length": training_length_support,
         "evaluation": {
             split: _evaluate(_rows(data_dir, manifest, split), vectorizer, classifier)
             for split in ("validation", "dev_test")

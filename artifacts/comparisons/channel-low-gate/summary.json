@@ -1,0 +1,512 @@
+{
+  "advisory_only": true,
+  "candidates": {
+    "0.05": {
+      "calibration": {
+        "by_channel": {
+          "direct_user": {
+            "false_positive": 58,
+            "fpr": 0.022095238095238095,
+            "negative": 2625,
+            "positive": 1575,
+            "provider_call_rate": 0.19238095238095237,
+            "provider_calls": 808,
+            "recall": 0.7587301587301587,
+            "rows": 4200,
+            "true_positive": 1195
+          },
+          "untrusted_content": {
+            "false_positive": 11,
+            "fpr": 0.013613861386138614,
+            "negative": 808,
+            "positive": 992,
+            "provider_call_rate": 0.3422222222222222,
+            "provider_calls": 616,
+            "recall": 0.5987903225806451,
+            "rows": 1800,
+            "true_positive": 594
+          }
+        },
+        "by_dataset": {
+          "canonical": {
+            "false_positive": 40,
+            "fpr": 0.025046963055729492,
+            "negative": 1597,
+            "positive": 1403,
+            "provider_call_rate": 0.16,
+            "provider_calls": 480,
+            "recall": 0.797576621525303,
+            "rows": 3000,
+            "true_positive": 1119
+          },
+          "promptshield": {
+            "false_positive": 26,
+            "fpr": 0.02394106813996317,
+            "negative": 1086,
+            "positive": 414,
+            "provider_call_rate": 0.26066666666666666,
+            "provider_calls": 391,
+            "recall": 0.7439613526570048,
+            "rows": 1500,
+            "true_positive": 308
+          },
+          "sep": {
+            "false_positive": 3,
+            "fpr": 0.004,
+            "negative": 750,
+            "positive": 750,
+            "provider_call_rate": 0.36866666666666664,
+            "provider_calls": 553,
+            "recall": 0.4826666666666667,
+            "rows": 1500,
+            "true_positive": 362
+          }
+        },
+        "overall": {
+          "false_positive": 69,
+          "fpr": 0.0200990387416254,
+          "negative": 3433,
+          "positive": 2567,
+          "provider_call_rate": 0.23733333333333334,
+          "provider_calls": 1424,
+          "recall": 0.6969224776003117,
+          "rows": 6000,
+          "true_positive": 1789
+        }
+      },
+      "evaluation": {
+        "by_channel": {
+          "direct_user": {
+            "false_positive": 118,
+            "fpr": 0.019205729166666668,
+            "negative": 6144,
+            "positive": 3490,
+            "provider_call_rate": 0.19431181233132655,
+            "provider_calls": 1872,
+            "recall": 0.7504297994269341,
+            "rows": 9634,
+            "true_positive": 2619
+          },
+          "untrusted_content": {
+            "false_positive": 24,
+            "fpr": 0.012861736334405145,
+            "negative": 1866,
+            "positive": 2500,
+            "provider_call_rate": 0.3305084745762712,
+            "provider_calls": 1443,
+            "recall": 0.642,
+            "rows": 4366,
+            "true_positive": 1605
+          }
+        },
+        "by_dataset": {
+          "canonical": {
+            "false_positive": 73,
+            "fpr": 0.01959731543624161,
+            "negative": 3725,
+            "positive": 3275,
+            "provider_call_rate": 0.15971428571428573,
+            "provider_calls": 1118,
+            "recall": 0.8015267175572519,
+            "rows": 7000,
+            "true_positive": 2625
+          },
+          "promptshield": {
+            "false_positive": 67,
+            "fpr": 0.02642998027613412,
+            "negative": 2535,
+            "positive": 965,
+            "provider_call_rate": 0.26485714285714285,
+            "provider_calls": 927,
+            "recall": 0.7461139896373057,
+            "rows": 3500,
+            "true_positive": 720
+          },
+          "sep": {
+            "false_positive": 2,
+            "fpr": 0.001142857142857143,
+            "negative": 1750,
+            "positive": 1750,
+            "provider_call_rate": 0.3628571428571429,
+            "provider_calls": 1270,
+            "recall": 0.5022857142857143,
+            "rows": 3500,
+            "true_positive": 879
+          }
+        },
+        "overall": {
+          "false_positive": 142,
+          "fpr": 0.01772784019975031,
+          "negative": 8010,
+          "positive": 5990,
+          "provider_call_rate": 0.2367857142857143,
+          "provider_calls": 3315,
+          "recall": 0.7051752921535893,
+          "rows": 14000,
+          "true_positive": 4224
+        }
+      },
+      "feasible": false
+    },
+    "0.1": {
+      "calibration": {
+        "by_channel": {
+          "direct_user": {
+            "false_positive": 58,
+            "fpr": 0.022095238095238095,
+            "negative": 2625,
+            "positive": 1575,
+            "provider_call_rate": 0.19238095238095237,
+            "provider_calls": 808,
+            "recall": 0.7587301587301587,
+            "rows": 4200,
+            "true_positive": 1195
+          },
+          "untrusted_content": {
+            "false_positive": 10,
+            "fpr": 0.012376237623762377,
+            "negative": 808,
+            "positive": 992,
+            "provider_call_rate": 0.31222222222222223,
+            "provider_calls": 562,
+            "recall": 0.59375,
+            "rows": 1800,
+            "true_positive": 589
+          }
+        },
+        "by_dataset": {
+          "canonical": {
+            "false_positive": 39,
+            "fpr": 0.024420788979336257,
+            "negative": 1597,
+            "positive": 1403,
+            "provider_call_rate": 0.15933333333333333,
+            "provider_calls": 478,
+            "recall": 0.797576621525303,
+            "rows": 3000,
+            "true_positive": 1119
+          },
+          "promptshield": {
+            "false_positive": 26,
+            "fpr": 0.02394106813996317,
+            "negative": 1086,
+            "positive": 414,
+            "provider_call_rate": 0.26066666666666666,
+            "provider_calls": 391,
+            "recall": 0.7439613526570048,
+            "rows": 1500,
+            "true_positive": 308
+          },
+          "sep": {
+            "false_positive": 3,
+            "fpr": 0.004,
+            "negative": 750,
+            "positive": 750,
+            "provider_call_rate": 0.334,
+            "provider_calls": 501,
+            "recall": 0.476,
+            "rows": 1500,
+            "true_positive": 357
+          }
+        },
+        "overall": {
+          "false_positive": 68,
+          "fpr": 0.019807748325080105,
+          "negative": 3433,
+          "positive": 2567,
+          "provider_call_rate": 0.22833333333333333,
+          "provider_calls": 1370,
+          "recall": 0.6949746786131671,
+          "rows": 6000,
+          "true_positive": 1784
+        }
+      },
+      "evaluation": {
+        "by_channel": {
+          "direct_user": {
+            "false_positive": 118,
+            "fpr": 0.019205729166666668,
+            "negative": 6144,
+            "positive": 3490,
+            "provider_call_rate": 0.19431181233132655,
+            "provider_calls": 1872,
+            "recall": 0.7504297994269341,
+            "rows": 9634,
+            "true_positive": 2619
+          },
+          "untrusted_content": {
+            "false_positive": 24,
+            "fpr": 0.012861736334405145,
+            "negative": 1866,
+            "positive": 2500,
+            "provider_call_rate": 0.3060009161704077,
+            "provider_calls": 1336,
+            "recall": 0.636,
+            "rows": 4366,
+            "true_positive": 1590
+          }
+        },
+        "by_dataset": {
+          "canonical": {
+            "false_positive": 73,
+            "fpr": 0.01959731543624161,
+            "negative": 3725,
+            "positive": 3275,
+            "provider_call_rate": 0.15971428571428573,
+            "provider_calls": 1118,
+            "recall": 0.8015267175572519,
+            "rows": 7000,
+            "true_positive": 2625
+          },
+          "promptshield": {
+            "false_positive": 67,
+            "fpr": 0.02642998027613412,
+            "negative": 2535,
+            "positive": 965,
+            "provider_call_rate": 0.26485714285714285,
+            "provider_calls": 927,
+            "recall": 0.7461139896373057,
+            "rows": 3500,
+            "true_positive": 720
+          },
+          "sep": {
+            "false_positive": 2,
+            "fpr": 0.001142857142857143,
+            "negative": 1750,
+            "positive": 1750,
+            "provider_call_rate": 0.3322857142857143,
+            "provider_calls": 1163,
+            "recall": 0.4937142857142857,
+            "rows": 3500,
+            "true_positive": 864
+          }
+        },
+        "overall": {
+          "false_positive": 142,
+          "fpr": 0.01772784019975031,
+          "negative": 8010,
+          "positive": 5990,
+          "provider_call_rate": 0.22914285714285715,
+          "provider_calls": 3208,
+          "recall": 0.7026711185308848,
+          "rows": 14000,
+          "true_positive": 4209
+        }
+      },
+      "feasible": true
+    },
+    "0.2": {
+      "calibration": {
+        "by_channel": {
+          "direct_user": {
+            "false_positive": 58,
+            "fpr": 0.022095238095238095,
+            "negative": 2625,
+            "positive": 1575,
+            "provider_call_rate": 0.19238095238095237,
+            "provider_calls": 808,
+            "recall": 0.7587301587301587,
+            "rows": 4200,
+            "true_positive": 1195
+          },
+          "untrusted_content": {
+            "false_positive": 10,
+            "fpr": 0.012376237623762377,
+            "negative": 808,
+            "positive": 992,
+            "provider_call_rate": 0.285,
+            "provider_calls": 513,
+            "recall": 0.5836693548387096,
+            "rows": 1800,
+            "true_positive": 579
+          }
+        },
+        "by_dataset": {
+          "canonical": {
+            "false_positive": 39,
+            "fpr": 0.024420788979336257,
+            "negative": 1597,
+            "positive": 1403,
+            "provider_call_rate": 0.15933333333333333,
+            "provider_calls": 478,
+            "recall": 0.797576621525303,
+            "rows": 3000,
+            "true_positive": 1119
+          },
+          "promptshield": {
+            "false_positive": 26,
+            "fpr": 0.02394106813996317,
+            "negative": 1086,
+            "positive": 414,
+            "provider_call_rate": 0.26066666666666666,
+            "provider_calls": 391,
+            "recall": 0.7439613526570048,
+            "rows": 1500,
+            "true_positive": 308
+          },
+          "sep": {
+            "false_positive": 3,
+            "fpr": 0.004,
+            "negative": 750,
+            "positive": 750,
+            "provider_call_rate": 0.30133333333333334,
+            "provider_calls": 452,
+            "recall": 0.46266666666666667,
+            "rows": 1500,
+            "true_positive": 347
+          }
+        },
+        "overall": {
+          "false_positive": 68,
+          "fpr": 0.019807748325080105,
+          "negative": 3433,
+          "positive": 2567,
+          "provider_call_rate": 0.22016666666666668,
+          "provider_calls": 1321,
+          "recall": 0.691079080638878,
+          "rows": 6000,
+          "true_positive": 1774
+        }
+      },
+      "evaluation": {
+        "by_channel": {
+          "direct_user": {
+            "false_positive": 118,
+            "fpr": 0.019205729166666668,
+            "negative": 6144,
+            "positive": 3490,
+            "provider_call_rate": 0.19431181233132655,
+            "provider_calls": 1872,
+            "recall": 0.7504297994269341,
+            "rows": 9634,
+            "true_positive": 2619
+          },
+          "untrusted_content": {
+            "false_positive": 23,
+            "fpr": 0.01232583065380493,
+            "negative": 1866,
+            "positive": 2500,
+            "provider_call_rate": 0.28218048557031605,
+            "provider_calls": 1232,
+            "recall": 0.626,
+            "rows": 4366,
+            "true_positive": 1565
+          }
+        },
+        "by_dataset": {
+          "canonical": {
+            "false_positive": 72,
+            "fpr": 0.019328859060402683,
+            "negative": 3725,
+            "positive": 3275,
+            "provider_call_rate": 0.15914285714285714,
+            "provider_calls": 1114,
+            "recall": 0.8009160305343511,
+            "rows": 7000,
+            "true_positive": 2623
+          },
+          "promptshield": {
+            "false_positive": 67,
+            "fpr": 0.02642998027613412,
+            "negative": 2535,
+            "positive": 965,
+            "provider_call_rate": 0.26485714285714285,
+            "provider_calls": 927,
+            "recall": 0.7461139896373057,
+            "rows": 3500,
+            "true_positive": 720
+          },
+          "sep": {
+            "false_positive": 2,
+            "fpr": 0.001142857142857143,
+            "negative": 1750,
+            "positive": 1750,
+            "provider_call_rate": 0.3037142857142857,
+            "provider_calls": 1063,
+            "recall": 0.4805714285714286,
+            "rows": 3500,
+            "true_positive": 841
+          }
+        },
+        "overall": {
+          "false_positive": 141,
+          "fpr": 0.017602996254681647,
+          "negative": 8010,
+          "positive": 5990,
+          "provider_call_rate": 0.22171428571428572,
+          "provider_calls": 3104,
+          "recall": 0.6984974958263773,
+          "rows": 14000,
+          "true_positive": 4184
+        }
+      },
+      "feasible": true
+    }
+  },
+  "date": "2026-08-02",
+  "fixed_thresholds": {
+    "direct_user_low": 0.2,
+    "high": 0.99999,
+    "reviewer": 0.7310585786300049
+  },
+  "inputs": {
+    "evaluation": {
+      "path": "artifacts/models/mmbert-lora-full-s42/evaluation/evaluation.json",
+      "sha256": "ec378e29358aab50515b66d2f05612767dea810b388326f4ece86bc99c7c6e99"
+    },
+    "panel": {
+      "path": "artifacts/openrouter_downstream_eval/panel.jsonl.gz",
+      "sha256": "25d55cabd284ac6220abceb8298521ca0aeffdc39f92bd918c353b4252f4428f"
+    },
+    "reviewer_results": {
+      "path": "artifacts/openrouter_downstream_eval/outer_intent_hybrid_results.jsonl.gz",
+      "sha256": "ac030484c5472b4500b2ad7f9bad1fb7b5f818276a9a630fa156f4707a064a5e"
+    },
+    "scores": {
+      "path": "artifacts/models/mmbert-lora-full-s42/evaluation/scores.npy",
+      "sha256": "b9ad82b94ffdfa8d2282bbe912b7e7316df4e299bfdee23724955b09cfcc2965"
+    },
+    "split_manifest": {
+      "path": "artifacts/openrouter_downstream_eval/followup_manifest.json",
+      "sha256": "fe20a42462d1c4929b1f3927bdd34692a44175d3ef9853daee81090f562ac64a"
+    }
+  },
+  "limitations": [
+    "The split and evaluation role are already-open development evidence.",
+    "AgentDojo motivated the channel-specific check but did not select its threshold.",
+    "The ablation reuses retained reviewer outputs and makes no provider calls.",
+    "Representative prospective traffic is still required before deployment."
+  ],
+  "purpose": "post-hoc trusted-channel-specific local review-floor ablation",
+  "runner_sha256": "220552c86a831b845ef21c20f03d0427cc6f9019296a1f15f56d2c965af13b71",
+  "schema_version": 1,
+  "selected_deltas": {
+    "calibration": {
+      "false_positive": 0,
+      "fpr": 0.0,
+      "provider_call_rate": 0.008166666666666655,
+      "provider_calls": 49,
+      "recall": 0.0038955979742890667,
+      "true_positive": 10
+    },
+    "evaluation": {
+      "false_positive": 1,
+      "fpr": 0.00012484394506866517,
+      "provider_call_rate": 0.007428571428571423,
+      "provider_calls": 104,
+      "recall": 0.004173622704507496,
+      "true_positive": 25
+    }
+  },
+  "selection": {
+    "maximum_calibration_fpr": 0.02,
+    "maximum_calibration_provider_call_rate": 0.35,
+    "objective": "maximize calibration recall, then minimize provider calls, without changing the direct-user route",
+    "selected_untrusted_content_low": 0.1,
+    "untrusted_content_candidates": [
+      0.2,
+      0.1,
+      0.05
+    ]
+  }
+}

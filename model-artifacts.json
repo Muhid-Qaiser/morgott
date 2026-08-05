@@ -100,8 +100,8 @@
           "sha256": "42f70856ce7999eb122a2fb303390ab19c1f84fdc93d45fa72374b5049b289c8"
         },
         "verification": {
-          "path": "artifacts/models/mmbert-lora-full-s42/serving/verification.json",
-          "sha256": "573249ba74be2da75fb141ddedca929c15ea6eb6c319c54f5efdd2217181b8dc"
+          "path": "artifacts/models/mmbert-lora-full-s42/serving/verification-0731.json",
+          "sha256": "38d6dc33fdf3fd4e84d5cca2ac6d9e25cd187607c23e1f1f73caf2ca7b5ace38"
         },
         "benchmark": {
           "path": "artifacts/models/mmbert-lora-full-s42/serving/benchmark.json",

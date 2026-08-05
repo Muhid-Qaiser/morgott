@@ -1,0 +1,103 @@
+{
+  "artifacts": {
+    "exclusions": {
+      "path": "artifacts/aspi_clarification_local_diagnostic/exclusions.json",
+      "sha256": "d7f344ded5a7ade7482e4458702e5120da91304a2d2ff78f434baec3913636d1"
+    },
+    "scores": {
+      "content_sha256": "5bae8c32adc8370ef73a9443142471e71201b940cb1423ed3c284ee483483a4a",
+      "path": "artifacts/aspi_clarification_local_diagnostic/scores.jsonl.gz",
+      "rows": 2512,
+      "sha256": "a3c40dd703eaaf89032e6b157b30845bbab21b84f873367b5a3b059e19442b6e"
+    },
+    "summary": {
+      "path": "artifacts/aspi_clarification_local_diagnostic/summary.json",
+      "sha256": "d90effb5cc0ce7a622145bc92ed3b1b8c31d84fb7e612fa10a6e3d7c69e482e6"
+    }
+  },
+  "development_only": true,
+  "fit_overlap": {
+    "candidate_rows": 2512,
+    "excluded_complete_groups": 20,
+    "reference_rows": {
+      "canonical_train": 1073829,
+      "matched_pairs": 22092,
+      "promptshield_train": 18284
+    },
+    "removed_rows": {
+      "near": 4,
+      "normalized_exact": 16
+    },
+    "retained_rows_before_group_exclusion": 2492
+  },
+  "implementation_contract": {
+    "experiments/aspi_clarification_local_diagnostic/README.md": "fba515e5e594cfcf8ba2e5979991d1eb53efe7d6fe3c68a838ebf3f44c0649aa",
+    "experiments/injecagent_detector_eval/run.py": "6ed450421b9663509662f10761bf3785c96d098f9b088867cd1e52c21b3eb4ec",
+    "model-artifacts.json": "dd1c546a8a30a34b3a3865edc7774ff34de80ddcee0fdbb516e3a667c07a1b0f",
+    "src/morgott/models/downstream.py": "becd382a482e5746fff9bfec61ed43d5ace46d5b576f90525d5d9a3afb7bdc3c",
+    "src/morgott/models/mmbert/data.py": "e0a21c54016dd8e7d224071521fa24f9f45bb3d39226222463d980ed95887270",
+    "src/morgott/models/mmbert/inference.py": "0e3422066a1358aabdb34aec8f2b63818b728e3441a9d3e5ab335b66766513fb",
+    "src/morgott/overlap.py": "b7c54d610eb5c820c2691bc0351e777dbf513084df35dae87b23d027eaf6d17c"
+  },
+  "model": {
+    "adapter_sha256": {
+      "README.md": "25e02f4e1120370bcf76598ec974f12bebf1c24301f6312835a21aef037fba80",
+      "adapter_config.json": "cc404cd76eed420d5a489d52eafba146c74e9152b3f62e8b67a58e69930045d6",
+      "adapter_model.safetensors": "84f85ea8845720896dbe09b8b959e8e8858f23a8ff09fa3ac3e736ddcb5adb0d"
+    },
+    "evaluation_sha256": "ec378e29358aab50515b66d2f05612767dea810b388326f4ece86bc99c7c6e99",
+    "head_sha256": "a40113a01347289f8a409b764b8e546af0e061a19fb0d9210c98590c26e83a41",
+    "key": "mmbert-lora-full-s42",
+    "result_sha256": "d1014af4256212d707f3fe6d6dc8f90a35f65a5086bb7feea2a63bdf703295a0",
+    "source_evidence_sha256": "88ad269012e9525c87072f05109f31c1f50601bae5e99189ef048fbedacfadaf"
+  },
+  "opened_before_registration": true,
+  "primary_population": {
+    "attack_rows": 1824,
+    "benign_rows": 608,
+    "groups": 608,
+    "rows": 2432
+  },
+  "projection": {
+    "input_channel": "direct_user",
+    "input_sha256": "fa00fb98f094637106d34bc497e540417dfac51a892369b39720292b0761cd92",
+    "quality_eligible_groups": 628,
+    "rows_per_group": 4,
+    "variants": [
+      "benign",
+      "HR",
+      "GS",
+      "CP"
+    ]
+  },
+  "purpose": "post-hoc local ASPI clarification diagnostic",
+  "remote_calls": 0,
+  "routing": {
+    "high": 0.99999,
+    "low": 0.2
+  },
+  "schema_version": 1,
+  "source": {
+    "agentdojo_audit_package_version": "0.1.35",
+    "agentdojo_benchmark_version": "v1.2.2",
+    "code_license": "not declared in the GitHub checkout",
+    "data_license": "CC-BY-4.0",
+    "data_revision": "8aaafd059a345eaf60019a6a35472c31a8527bd7",
+    "files": {
+      "data/aspi_banking_gemini-3.1-pro-preview.jsonl": "7c66d63cf5c3f191becf4816e875c0a05111d0e1e7b809948935ea6e4947af2e",
+      "data/aspi_slack_gemini-3.1-pro-preview.jsonl": "653393ee9230bc61f095a51546bc43be1b5d3b4db17e0b06a35a8215cb9bc147",
+      "data/aspi_travel_gemini-3.1-pro-preview.jsonl": "56bcaec00ad6be4a7292ec1d3b5576899636d240c25edc458605330b1d0100bf",
+      "data/aspi_workspace_gemini-3.1-pro-preview.jsonl": "83a967848d4fc9ca27fb22c300aa525fcd5e5a52fc8841bda56dc698a860e32a",
+      "src/aspi/dataset/quality.py": "3b0848df9d438bb5e1d5795c5767101ba1a4ae2ad2756a932b27ca6e9708f6bd"
+    },
+    "paper": "https://arxiv.org/abs/2605.17324",
+    "quality_failures": {
+      "QC-6_clarification_necessity": 8,
+      "QC-7_slot_strength": 92,
+      "groups": 100
+    },
+    "repository": "scaleapi/aspi",
+    "revision": "e2a3f6ac87b2c00ac482252d067d22f3ecf57b9d",
+    "rows": 728
+  }
+}

@@ -2,6 +2,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 from unittest.mock import patch
 
@@ -35,6 +36,7 @@ from morgott.sources.tasks import (
     _lmsys_arena_sample,
     _mind2web_sample,
     _sensitive_text_reasons,
+    _swebench_verified_sample,
     _taskmaster_sample,
     _taskmaster_split_group,
 )
@@ -298,6 +300,34 @@ class CorpusTests(unittest.TestCase):
             self.assertEqual(_read_rows(path), [row])
         self.assertEqual(output["rows"], 1)
         self.assertFalse(row["routing_training_eligible"])
+
+    def test_swebench_verified_is_a_repository_grouped_dev_test_task(self):
+        row = _swebench_verified_sample(
+            {
+                "repo": "example/project",
+                "instance_id": "example__project-123",
+                "base_commit": "a" * 40,
+                "problem_statement": "Fix the documented parser regression.",
+                "created_at": "2024-01-02T03:04:05Z",
+                "version": "1.2",
+                "environment_setup_commit": "b" * 40,
+                "difficulty": "15 min - 1 hour",
+                "patch": "must not persist",
+                "test_patch": "must not persist",
+                "hints_text": "must not persist",
+            }
+        )
+
+        self.assertEqual(row["routing_label"], 0)
+        self.assertEqual(row["source_role"], "dev_test")
+        self.assertEqual(row["input_channel"], "direct_user")
+        self.assertEqual(row["group_id"], "swebench_verified:example__project-123")
+        self.assertEqual(
+            row["split_group_id"],
+            "swebench_verified:repo:example/project",
+        )
+        self.assertIn("not_safety_annotation", row["label_basis"])
+        self.assertNotIn("must not persist", str(row))
 
     def test_taskmaster_maps_dialogue_lineage_and_speaker_channel(self):
         dialog = {
@@ -619,6 +649,95 @@ class CorpusTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, message):
                     materialize_routing_views(root, {"gandalf": output}, build)
 
+    def test_singleton_exact_group_preserves_the_canonical_row(self):
+        row = _row("one", "single canonical attack", "group-one")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = _source_output(root, [row])
+            build = root / "build"
+            build.mkdir()
+            with patch(
+                "morgott.routing.zlib.compress", wraps=zlib.compress
+            ) as compress:
+                views, _, _ = materialize_routing_views(
+                    root, {"gandalf": output}, build
+                )
+            routed = [
+                candidate
+                for name in ("train", "validation", "dev_test")
+                for candidate in _read_rows(root / views[name]["path"])
+            ]
+
+        expected = {**row, "data_role": routed[0]["data_role"]}
+        self.assertEqual(routed, [expected])
+        self.assertEqual(compress.call_count, 1)
+
+    def test_routing_quarantines_strict_train_dev_overlap(self):
+        rows = [
+            _row("held", "alpha beta gamma delta", "held", "dev_test"),
+            _row("candidate", "alpha\u200b beta gamma delta", "candidate"),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = _source_output(root, rows)
+            build = root / "build"
+            build.mkdir()
+            with (
+                patch("morgott.routing.OVERLAP_BATCH_SIZE", 1),
+                patch("morgott.routing.OVERLAP_WORKERS", 2),
+            ):
+                views, quarantine, _ = materialize_routing_views(
+                    root, {"gandalf": output}, build
+                )
+            supervised = [
+                row
+                for name in ("train", "validation", "dev_test")
+                for row in _read_rows(root / views[name]["path"])
+            ]
+            quarantine_rows = _read_rows(root / quarantine["path"])
+
+        self.assertEqual([row["source_id"] for row in supervised], ["held"])
+        self.assertEqual(
+            [row["quarantine_reason"] for row in quarantine_rows],
+            ["strict_dev_test_overlap"],
+        )
+
+    def test_routing_quarantines_strict_validation_train_overlap(self):
+        rows = [
+            _row("held-a", "official held alpha beta", "held-a", "dev_test"),
+            _row("held-b", "official held gamma delta", "held-b", "dev_test"),
+            *[
+                _row(
+                    f"candidate-{index}",
+                    f"alpha{'\u200b' * index} beta gamma delta",
+                    f"candidate-{index}",
+                )
+                for index in range(1, 9)
+            ],
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = _source_output(root, rows)
+            build = root / "build"
+            build.mkdir()
+            views, quarantine, _ = materialize_routing_views(
+                root, {"gandalf": output}, build
+            )
+            validation = _read_rows(root / views["validation"]["path"])
+            quarantine_rows = _read_rows(root / quarantine["path"])
+
+        self.assertEqual(validation, [])
+        # The hash-based partitioner decides which split each colliding
+        # candidate lands in first, so assert the strict quarantine family
+        # rather than one exact reason ordering.
+        self.assertTrue(quarantine_rows)
+        self.assertTrue(
+            all(
+                row["quarantine_reason"].startswith("strict_")
+                for row in quarantine_rows
+            )
+        )
+
     def test_exact_duplicates_do_not_connect_unrelated_lineage_networks(self):
         rows = [
             _row("one", "same attack", "group-one"),
@@ -745,7 +864,7 @@ class CorpusTests(unittest.TestCase):
                 rebuilt = rebuild_routing(root)
             self.assertEqual(rebuilt["routing_views"]["train"]["rows"], 1)
             source_path = root / output["path"]
-            source_path.write_text(source_path.read_text() + "\n")
+            source_path.write_bytes(source_path.read_bytes().replace(b'": ', b'":', 1))
             with (
                 patch("morgott.corpus.SOURCES", {"gandalf": SOURCES["gandalf"]}),
                 patch("morgott.routing.SOURCES", {"gandalf": SOURCES["gandalf"]}),
@@ -753,6 +872,28 @@ class CorpusTests(unittest.TestCase):
             ):
                 rebuild_routing(root)
             self.assertTrue(manifest_path.is_file())
+
+    def test_routing_reads_each_verified_source_once(self):
+        rows = [_row("one", "one two three four", "group-one")]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = _source_output(root, rows)
+            source_path = root / output["path"]
+            build = root / "build"
+            build.mkdir()
+            source_opens = 0
+            original_open = Path.open
+
+            def counting_open(path, *args, **kwargs):
+                nonlocal source_opens
+                if path == source_path:
+                    source_opens += 1
+                return original_open(path, *args, **kwargs)
+
+            with patch.object(Path, "open", counting_open):
+                materialize_routing_views(root, {"gandalf": output}, build)
+
+        self.assertEqual(source_opens, 1)
 
     def test_official_holdout_is_counted_before_flexible_split(self):
         candidates = [

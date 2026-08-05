@@ -1,0 +1,10 @@
+{
+  "manifest_sha256": "c6ff5a4d957db2c81ffbc0da95bca43e59c5ad75759034a786c166d16653603b",
+  "provider_requests": 3,
+  "provider_set_sha256": "59b4487c8b7604c1ca7000408daeac62100a79db5a8f953f2ebaa999991f352b",
+  "response_model_set_sha256": "3587d0aeb38b5404785273d0f279a5292d97dd057de1ae4c0a1528917f4ea3e4",
+  "schema_version": 1,
+  "status": "passed",
+  "tool_call_sha256": "198712f48a16fff4cd0ffa78d3762c54d99e0e513742723f24b8c448e6f8ef84",
+  "turns": 1
+}

@@ -193,6 +193,117 @@ def _mind2web_rows():
     return iter(accepted), downloads, profile, iter(quarantined)
 
 
+def _swebench_verified_sample(source_row: dict) -> dict:
+    fields = (
+        "repo",
+        "instance_id",
+        "base_commit",
+        "problem_statement",
+        "created_at",
+        "version",
+        "environment_setup_commit",
+        "difficulty",
+    )
+    if any(
+        not isinstance(source_row.get(field), str) or not source_row[field].strip()
+        for field in fields
+    ):
+        raise ValueError("swebench_verified row has invalid task lineage")
+    repo = source_row["repo"]
+    instance_id = source_row["instance_id"]
+    row = _sample(
+        text=source_row["problem_statement"],
+        label=0,
+        attack_type=None,
+        source="swebench_verified",
+        source_split="test",
+        source_id=instance_id,
+        group_id=f"swebench_verified:{instance_id}",
+        split_group_id=f"swebench_verified:repo:{repo}",
+        category=repo,
+        input_channel="direct_user",
+        label_basis="human_verified_solvable_software_issue_not_safety_annotation",
+    )
+    row.update(
+        {
+            "source_base_commit": source_row["base_commit"],
+            "source_created_at": source_row["created_at"],
+            "source_difficulty": source_row["difficulty"],
+            "source_environment_setup_commit": source_row["environment_setup_commit"],
+            "source_instance_id": instance_id,
+            "source_language": "en",
+            "source_repository": repo,
+            "source_version": source_row["version"],
+        }
+    )
+    return _set_source_role(row, "dev_test")
+
+
+def _swebench_verified_rows():
+    filename, expected = FILES["swebench_verified"]["dev_test"]
+    path, digest = _download("swebench_verified", filename, expected)
+    columns = (
+        "repo",
+        "instance_id",
+        "base_commit",
+        "problem_statement",
+        "created_at",
+        "version",
+        "environment_setup_commit",
+        "difficulty",
+    )
+    accepted = []
+    quarantined = []
+    reason_counts = Counter()
+    instance_ids = set()
+    repositories = Counter()
+    for batch in pq.ParquetFile(path).iter_batches(columns=columns, batch_size=128):
+        for source_row in batch.to_pylist():
+            row = _swebench_verified_sample(source_row)
+            instance_id = row["source_instance_id"]
+            if instance_id in instance_ids:
+                raise ValueError(
+                    f"swebench_verified has duplicate instance id: {instance_id}"
+                )
+            instance_ids.add(instance_id)
+            repositories[row["source_repository"]] += 1
+            reasons = _sensitive_text_reasons(row["text"])
+            if reasons:
+                row["source_sensitive_text_reasons"] = reasons
+                row = _set_source_role(row, "uncertain")
+                row["data_role"] = "quarantine"
+                row["quarantine_reason"] = "potential_secret_or_pii"
+                quarantined.append(row)
+                reason_counts.update(reasons)
+            else:
+                accepted.append(row)
+    if len(instance_ids) != 500:
+        raise ValueError(
+            f"swebench_verified expected 500 official test tasks, found {len(instance_ids)}"
+        )
+    lengths = [len(row["text"]) for row in accepted]
+    profile = {
+        "projection": "problem_statement plus repository, instance, commit, time, version, and difficulty lineage",
+        "excluded": "patch, test patch, test names, hints, and all repository contents",
+        "label_limit": "human validation establishes a legitimate solvable software task, not a safety annotation",
+        "evaluation_limit": "benign FPR slice only; no same-format attack arm or aggregate performance claim",
+        "privacy_check": "the same local secret and PII screen used for Mind2Web; suspicious issue text is quarantined without redaction",
+        "privacy_limit": "pattern checks reduce obvious exposure but do not prove that retained public issue text contains no personal data",
+        "official_test_tasks": len(instance_ids),
+        "retained_tasks": len(accepted),
+        "quarantined_tasks": len(quarantined),
+        "quarantine_reasons": dict(sorted(reason_counts.items())),
+        "official_tasks_by_repository": dict(sorted(repositories.items())),
+        "retained_length_characters": {
+            "at_least_1024": sum(length >= 1_024 for length in lengths),
+            "at_least_2048": sum(length >= 2_048 for length in lengths),
+            "at_least_4096": sum(length >= 4_096 for length in lengths),
+            "maximum": max(lengths),
+        },
+    }
+    return iter(accepted), {filename: digest}, profile, iter(quarantined)
+
+
 def _taskmaster_split_group(dialog: dict, collection: str) -> str:
     conversation_id = dialog.get("conversation_id")
     if not isinstance(conversation_id, str) or not conversation_id:

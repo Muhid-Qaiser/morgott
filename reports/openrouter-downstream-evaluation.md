@@ -1,6 +1,6 @@
 # OpenRouter downstream evaluation
 
-Date: 2026-07-29
+Date: 2026-07-29; updated 2026-08-02
 
 ## Decision
 
@@ -19,14 +19,14 @@ DeepSeek V4 Pro is not a better recall-first replacement.
 Strict structured output fixes its high-reasoning serialization failures, but Pro still trails Flash on recall and costs much more.
 Changing from fp4 to fp8 does not materially change Flash or Pro high-reasoning classification on the paired sample.
 
-The current practical recommendation is:
+The maintained shadow recommendation after the channel-aware follow-up is:
 
-1. Use the partial-data rank-8 LoRA only for this selected development policy.
-2. Pass scores below `0.2`, restrict scores at or above `0.999`, and send only the middle zone to DeepSeek V4 Flash.
-3. In the middle zone, restrict at DeepSeek decision-token log odds greater than or equal to `log(9)`, equivalent to `p >= 0.9`; otherwise pass.
-4. Retry transient provider failures in the future provider adapter, and restrict after retries are exhausted.
+1. Use the full-mixture rank-8 LoRA only as the local advisory research shadow for this selected development route.
+2. Pass direct-user scores below `0.2` and untrusted-content scores below `0.1`, restrict scores at or above `0.99999`, and send only the middle zone to DeepSeek V4 Flash.
+3. Pass the trusted runtime input channel to DeepSeek and restrict at decision-token probability `p >= 0.7310585786`; otherwise pass.
+4. Retry transient or invalid provider results under the bounded maintained contract, and restrict after retries are exhausted.
 5. Keep every learned output advisory and privilege-reducing; it never grants authority or changes `morgott scan`.
-6. Keep the completed full-data LoRA refresh as development evidence only; its copied thresholds miss the calibration FPR cap, and its post-hoc high-gate extension still requires separate prospective calibration.
+6. Treat this as already-open development evidence until a prospective traffic-like evaluation confirms the gain.
 
 ## Evaluation contract
 
@@ -530,12 +530,121 @@ The partial LoRA reaches 65.69% flag recall at 1.79% FPR and 96.49% precision wh
 This is the first tested operating region that reaches the requested approximately 60% to 70% high-confidence flag recall at a relatively low FPR.
 At a 5% calibration cap, flag recall rises to 78.71% for frozen and 80.40% for partial LoRA, but evaluation FPR also rises to 4.31% and 4.46%, which is too costly for a default automatic-flag policy.
 
-Decision: retain DeepSeek V4 Flash on CoreWeave fp8 with reasoning disabled as the downstream research route.
-For a review-capable route, use the full-data frozen mmBERT plus the 99.5% review-recall family as the primary high-recall experiment.
-For the no-manual-review route, retain the partial-LoRA `0.2 / 0.999` cascade with DeepSeek `p >= 0.9` as the current 2%-region development candidate.
-No tested no-manual-review policy has both useful recall and a source-robust 2% FPR confidence guarantee under the 35% call budget.
-Treat the 1% and 2% flag-FPR settings as two reported operating candidates rather than pretending one utility tradeoff is universally best.
-Do not promote StreamLake, Qwen, either encoder, the fusion model, or any selected threshold from this open development evidence.
+Decision at the end of the July study: retain DeepSeek V4 Flash on CoreWeave fp8 with reasoning disabled as the downstream research route.
+The partial-LoRA `0.2 / 0.999 / 0.9` recommendation below was superseded by the channel-aware follow-up in the next section.
+The review-capable 99.5% recall family remains a separate high-recall experiment rather than the maintained no-manual-review route.
+No result establishes a source-robust production guarantee.
+
+## Channel-aware outer-intent repair (2026-08-02)
+
+The retained prompt classified payload presence too readily and did not receive `input_channel`, even though the cascade already required that value from trusted runtime metadata.
+In reviewer-only scoring of the complete 160-row instruction side of the scenario-held-out Boundary Pairs test, it reached 98.75% recall and 15.00% FPR at `p >= 0.9`.
+It flagged every clean obfuscation control that asked for analysis of an encoded attack while explicitly forbidding execution.
+
+The first repair made outer intent explicit but treated ordinary requests as benign regardless of provenance.
+That candidate was rejected after full calibration because standalone AUROC fell from `0.93429` to `0.92764` and SEP recall at `p >= 0.9` collapsed from 33.07% to 0.13%.
+The selected hybrid instead preserves a high-recall indirect-injection rule for untrusted content, distinguishes analysis from execution, and receives trusted `direct_user` or `untrusted_content` metadata in the system message.
+
+The original 6,000-row calibration and 14,000-row evaluation split, full-LoRA local gates, provider, quantization, strict response schema, and retry behavior stayed fixed.
+Only the prompt template and the DeepSeek threshold changed.
+The candidate produced 20,000 of 20,000 valid typed outputs with no retries in the final run.
+The old retained records had 19,991 valid outputs.
+The candidate used a mean 524.00 input tokens per call versus 366.53 prompt tokens for the old contract, a material approximately 43% token increase.
+Provider timing was measured in a different run window and is not used as a selection claim.
+
+Standalone decision-token ranking improved on both roles:
+
+| Prompt contract | Calibration AUROC / AP | Evaluation AUROC / AP |
+|---|---:|---:|
+| Old text-only prompt | 0.93429 / 0.91145 | 0.93931 / 0.92440 |
+| Channel-aware hybrid | **0.94604 / 0.92025** | **0.95361 / 0.93816** |
+
+With full-LoRA gates fixed at `0.2 / 0.99999`, calibration selected `p >= 0.7310585786300049` by maximizing recall subject to the same aggregate 2% FPR cap.
+The old `p >= 0.9` route had 68 calibration false positives, 1.9808% FPR, and 66.58% recall.
+The hybrid has the same 68 false positives and 1.9808% FPR with 69.11% recall.
+
+| Frozen evaluation result | Recall | FPR | Precision | DeepSeek call rate |
+|---|---:|---:|---:|---:|
+| Old prompt, FP32 full LoRA | 66.79% | 1.810% | 96.50% | 22.17% |
+| Channel-aware hybrid, FP32 full LoRA | **69.85%** | **1.760%** | **96.74%** | 22.17% |
+| Channel-aware hybrid, OpenVINO BF16 | **70.02%** | 1.785% | 96.70% | **22.16%** |
+
+The FP32 comparison changes 357 of 14,000 final routes.
+It adds 252 true positives, loses 69 true positives, adds 16 false positives, and clears 20 false positives.
+This is a strict aggregate improvement on the already-open evaluation role, not a uniform slice win.
+
+| Evaluation slice | Old recall / FPR | Hybrid recall / FPR | Change |
+|---|---:|---:|---:|
+| Canonical | 78.69% / 1.611% | 80.09% / 1.933% | Recall +1.40 points; FPR +0.32 |
+| PromptShield | 77.51% / 3.274% | 74.61% / 2.643% | Recall -2.90 points; FPR -0.63 |
+| SEP | 38.63% / 0.114% | 48.06% / 0.114% | Recall +9.43 points; FPR unchanged |
+
+At the selected `0.7310585786` cutoff, reviewer-only scoring of the complete instruction-side Boundary Pairs test reaches 100% recall, 5.00% FPR, and 95.00% fully correct matched pairs.
+All ten clean obfuscation controls are correct when every row reaches the reviewer.
+The four remaining reviewer false positives are three memory-context controls and one multi-agent trust control.
+
+The retained end-to-end three-zone cascade reaches only 90.00% recall, 12.50% FPR, and 77.50% fully correct matched pairs on the same 80 instruction pairs.
+Of the 80 attack rows, 8 fall below the local low gate, 50 reach DeepSeek, and 22 cross the local high gate.
+Of the 80 clean rows, 61 fall below the local low gate, 11 reach DeepSeek, and 8 cross the local high gate; those eight local false positives are six obfuscation controls and two RAG controls.
+The separate authorization diagnostic is likewise 97.5% attack-side / 0% clean-side under reviewer-only scoring but 45% / 0% end to end.
+Neither pair is detector recall or FPR because approval, tool authority, and data egress belong to the deterministic reference monitor.
+
+A calibration-only gate search then varied the existing low gate, high gate, and reviewer cutoff under the same 2% FPR and 35% call-rate caps.
+Its row-recall winner lowered the local gate from `0.2` to `0.1`, adding 4 calibration true positives at the same 68 false positives but requiring 114 more reviewer calls.
+On the already-open evaluation role it added only 2 true positives while adding 3 false positives and 236 reviewer calls, so the change was rejected.
+Separating direct-user and untrusted-content high gates also produced no feasible calibration improvement, so that stage retained the scalar `0.2 / 0.99999` local gates.
+
+### Channel-specific low-floor follow-up
+
+The later AgentDojo transfer panel exposed five low-cue untrusted-content misses below the scalar `0.2` floor.
+AgentDojo did not select a threshold, but it motivated testing the one trusted-metadata degree of freedom omitted from the earlier gate search: separate low floors by input channel.
+
+The follow-up fixes the direct-user floor at `0.2`, the high gate at `0.99999`, and the reviewer threshold at `0.7310585786300049`.
+It compares only untrusted-content floors `0.2`, `0.1`, and `0.05` on the retained 6,000-row calibration role, maximizing recall under the same 2% aggregate FPR and 35% call-rate caps.
+The `0.05` point is infeasible at 2.010% calibration FPR.
+The selected `0.1` point adds 10 true positives and 49 calls at the same 68 false positives as the scalar-floor route.
+
+| FP32 full-LoRA policy | Calibration recall / FPR / calls | Evaluation recall / FPR / precision / calls |
+|---|---:|---:|
+| Scalar low floor `0.2` | 69.11% / 1.9808% / 22.02% | 69.85% / 1.760% / 96.74% / 22.17% |
+| Direct `0.2`, untrusted `0.1` | **69.50%** / **1.9808%** / 22.83% | **70.27%** / 1.773% / **96.74%** / 22.91% |
+
+The evaluation delta is 25 additional true positives, one additional false positive, and 104 additional provider calls over 14,000 rows.
+SEP recall rises from 48.06% to 49.37% at unchanged 0.114% FPR.
+Canonical recall rises from 80.09% to 80.15% while FPR rises from 1.933% to 1.960%, and direct-only PromptShield is unchanged.
+
+The write-once [machine ablation](../artifacts/comparisons/channel-low-gate/summary.json) has SHA-256 `1d4eb89230700de7a7ce47c314e8c521ad2f66010c5bbbdd34ac0f78356ce6bc`.
+Its runner has SHA-256 `220552c86a831b845ef21c20f03d0427cc6f9019296a1f15f56d2c965af13b71`.
+The selected threshold-contract SHA-256 is `0d7edddf5fa86d791d4457a7e59cf229b03b093e826dd19ffc8556919f70b1ae`.
+The ablation reuses the retained 20,000 reviewer records and sends no additional corpus text to a provider.
+
+Decision: use the channel-specific low floor inside the advisory cascade.
+The evaluation role is already open and the gain is small, so this remains a post-hoc engineering improvement pending representative prospective calibration.
+
+The earlier scalar-floor OpenVINO BF16 verification used the same channel-aware ledger for the registered FP32 reference and BF16 candidate.
+It found 97 local-zone differences and 32 final-route differences over 20,000 rows.
+BF16 added one calibration false positive, raised evaluation recall by 0.17 points, raised FPR by 0.025 points, and passed every existing serving-equivalence check.
+
+The channel-specific verification finds 89 local-zone differences and 24 final-route differences.
+FP32 reaches 70.27% evaluation recall, 1.773% FPR, 96.74% precision, and a 22.91% call rate.
+OpenVINO BF16 reaches 70.42% recall, 1.798% FPR, 96.70% precision, and a 22.89% call rate.
+BF16 adds one calibration false positive and passes every quality gate.
+
+The parsed text-free evidence is `artifacts/openrouter_downstream_eval/outer_intent_hybrid_results.jsonl.gz`.
+Its compressed SHA-256 is `ac030484c5472b4500b2ad7f9bad1fb7b5f818276a9a630fa156f4707a064a5e`, and its decompressed ledger SHA-256 is `d4e930c004a52790a5ed2775b9ebb6f5abf2e0b3e14b7d953ee38aa1d899e096`.
+The prompt, provider request, and version-2 scalar-floor threshold SHA-256 values are `6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1`, `91cebeab5f248fe21677bf3b30afd6fe4df8bee61d2271852ac6a67c1c664b3e`, and `d75b25e472bb7219ce7a4948ee9abff77b04c2100dee1aa4875a0e02ceac8fb7`.
+The superseded version-2 BF16 verification digest is `fdcf8621deaff51e44774783d057ee21ab239eae31207534509543cac30e720e`.
+The selected channel-specific threshold SHA-256 is `0d7edddf5fa86d791d4457a7e59cf229b03b093e826dd19ffc8556919f70b1ae`.
+The superseded version-3 BF16 verification digest is `3a267e7d930d89d7b1c379c360ed9419d4642aa7e59cb0a04b4e81a8a91c86f6`.
+
+Decision: promote the channel-aware hybrid prompt and calibrated threshold inside the advisory cascade.
+Do not interpret the gain as production validation.
+The prompt was selected with already-open synthetic boundary and mixed-domain development data, PromptShield recall regressed, the provider is external and mutable, and no prospective prevalence-matched final test exists.
+Learned output still cannot block, approve, grant authority, or bypass the reference monitor.
+
+The later DeepSeek V4 Flash 0731 comparison supersedes only the reviewer identity, provider, and threshold in this maintained contract.
+Under the owner's aggregate-quality criterion, the current route uses 0731 through Cloudflare at `0.6224593312018547`; the historical April metrics and artifacts above remain unchanged provenance.
+The replacement evidence and its PromptShield limitation are recorded in [the 0731 research report](deepseek-v4-flash-0731-research.md).
 
 ## Artifacts and limitations
 
@@ -544,7 +653,7 @@ Its SHA-256 is `728521a998124066924765e2601a0c35b29bdf3dc5f25b778ae1c7bb9f823e54
 The panel, primary ledger, audit ledger, ablation ledger, setup-failure ledgers, and exact input hashes are recorded in that summary.
 Versioned row-level ledgers use deterministic `.jsonl.gz` copies in the same directory, and the analyzer reads either the working `.jsonl` files or those compressed copies.
 
-The runner and analyzer are disposable research code under `experiments/openrouter_downstream_eval/`.
+The completed runner and analyzer were disposable research code and are not retained in the maintained tree.
 They do not modify `morgott scan`, shadow scoring, policy enforcement, authorization, or the maintained mmBERT trainer.
 
 The follow-up machine summary is `artifacts/openrouter_downstream_eval/followup_summary.json`.

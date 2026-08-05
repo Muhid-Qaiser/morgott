@@ -9,8 +9,12 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 from ...data import iter_verified_jsonl, text_hash
-from ...normalization import strict_normalize
-from ...overlap import NearIndex, fingerprint
+from ...overlap import (
+    LEAKAGE_NORMALIZATION_METHOD,
+    NearIndex,
+    fingerprint,
+    leakage_text_hash,
+)
 from .core import INSTRUCTION_SUBVERSION_TAGS, file_sha256
 
 PAIR_ARCHIVE_SHA256 = "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3"
@@ -18,8 +22,7 @@ PAIR_CONTENT_SHA256 = "8ec5c1c77b378688b190722f7d1fc51e9bef819ee9670948d2658f4a3
 EXTERNAL_DATA_SCHEMA_VERSION = 2
 
 
-def _strict_hash(text: str) -> str:
-    return hashlib.sha256(strict_normalize(text).encode()).hexdigest()
+_strict_hash = leakage_text_hash
 
 
 def _overlap_values(row: dict) -> tuple[str, str, int | None]:
@@ -154,8 +157,17 @@ def external_rows(directory: Path) -> tuple[dict[str, list[dict]], dict]:
     return result, manifest
 
 
-def matched_pairs(path: Path) -> list[tuple[dict, dict]]:
-    if file_sha256(path) != PAIR_ARCHIVE_SHA256:
+def _matched_pairs(
+    path: Path,
+    *,
+    source: str,
+    expected_archive_sha256: str | None,
+    expected_content_sha256: str | None,
+) -> list[tuple[dict, dict]]:
+    if (
+        expected_archive_sha256 is not None
+        and file_sha256(path) != expected_archive_sha256
+    ):
         raise ValueError("matched-pair archive hash mismatch")
     digest = hashlib.sha256()
     pairs = []
@@ -172,9 +184,9 @@ def matched_pairs(path: Path) -> list[tuple[dict, dict]]:
                 or raw.get("channel") not in {"direct_user", "untrusted_content"}
             ):
                 raise ValueError(f"invalid matched pair: {index}")
-            pair_id = f"matched:{index}"
+            pair_id = f"{source}:{index}"
             common = {
-                "source": "matched_pairs",
+                "source": source,
                 "input_channel": raw["channel"],
                 "group_id": pair_id,
                 "pair_id": pair_id,
@@ -195,9 +207,30 @@ def matched_pairs(path: Path) -> list[tuple[dict, dict]]:
                     },
                 )
             )
-    if digest.hexdigest() != PAIR_CONTENT_SHA256:
+    if (
+        expected_content_sha256 is not None
+        and digest.hexdigest() != expected_content_sha256
+    ):
         raise ValueError("matched-pair content hash mismatch")
     return pairs
+
+
+def matched_pairs(path: Path) -> list[tuple[dict, dict]]:
+    return _matched_pairs(
+        path,
+        source="matched_pairs",
+        expected_archive_sha256=PAIR_ARCHIVE_SHA256,
+        expected_content_sha256=PAIR_CONTENT_SHA256,
+    )
+
+
+def additional_matched_pairs(path: Path) -> list[tuple[dict, dict]]:
+    return _matched_pairs(
+        path,
+        source="additional_matched_pairs",
+        expected_archive_sha256=None,
+        expected_content_sha256=None,
+    )
 
 
 class OverlapGuard:
@@ -209,21 +242,23 @@ class OverlapGuard:
 
     def add(self, references: Iterable[dict]) -> None:
         for row in references:
-            normalized, strict, near = _overlap_values(row)
-            self.normalized.add(normalized)
-            self.strict.add(strict)
-            if near is not None:
-                self.near.add(
-                    row,
-                    dataset=row["source"],
-                    value=near,
-                    normalized_hash=normalized,
-                )
+            self._add(row)
 
-    def add_exact(self, references: Iterable[dict]) -> None:
-        for row in references:
-            self.normalized.add(text_hash(row["text"]))
-            self.strict.add(_strict_hash(row["text"]))
+    def _add(
+        self,
+        row: dict,
+        values: tuple[str, str, int | None] | None = None,
+    ) -> None:
+        normalized, strict, near = values or _overlap_values(row)
+        self.normalized.add(normalized)
+        self.strict.add(strict)
+        if near is not None:
+            self.near.add(
+                row,
+                dataset=row["source"],
+                value=near,
+                normalized_hash=normalized,
+            )
 
     def reason(
         self,
@@ -310,10 +345,15 @@ class _SmallSetFilter:
 def filter_small_training_sets(
     candidates: dict[str, list[dict]],
     references: Iterable[dict],
+    *,
+    reference_guard: OverlapGuard | None = None,
 ) -> tuple[dict[str, list[dict]], dict[str, dict[str, int]]]:
     candidate_filter = _SmallSetFilter(candidates)
     for reference in references:
-        candidate_filter.block(reference)
+        values = _overlap_values(reference)
+        candidate_filter.block(reference, values)
+        if reference_guard is not None and "_candidate_dataset" not in reference:
+            reference_guard._add(reference, values)
     return candidate_filter.result()
 
 
@@ -646,6 +686,7 @@ def partition_validation_records(
             "target_checkpoint": target[key],
         }
     return roles, {
+        "leakage_fingerprint": LEAKAGE_NORMALIZATION_METHOD,
         "target_checkpoint_fraction": checkpoint_fraction,
         "actual_checkpoint_fraction": len(checkpoint) / len(prepared),
         "total_rows": len(prepared),
@@ -683,14 +724,3 @@ def partition_validation_records(
         "by_label_source": by_label_source,
         "disjointness": disjointness,
     }
-
-
-def checkpoint_rows(rows: Iterable[dict]) -> list[dict]:
-    selected = [row for row in rows if is_checkpoint_group(row["group_id"])]
-    if {row["label"] for row in selected} != {0, 1}:
-        raise ValueError("checkpoint split must contain both labels")
-    return selected
-
-
-def is_checkpoint_group(group_id: str) -> bool:
-    return hashlib.sha256(group_id.encode()).digest()[0] < 64

@@ -1,0 +1,40 @@
+{
+  "advisory_passed": 61,
+  "advisory_restricted": 179,
+  "deepseek_attempts": 99,
+  "deepseek_failures": 0,
+  "deepseek_windows": 81,
+  "model_contract": {
+    "files": {
+      "model-artifacts.json": "dd1c546a8a30a34b3a3865edc7774ff34de80ddcee0fdbb516e3a667c07a1b0f",
+      "src/morgott/models/cascade.py": "40c423c28f6e95451e8c67621ef03e81492830922362293a19fa9be3babb46ae",
+      "src/morgott/models/deepseek_nooa.py": "0488f064b509b74d389d44a3aacc182dd81e7890343d01162da47791274a0fef",
+      "src/morgott/models/downstream.py": "becd382a482e5746fff9bfec61ed43d5ace46d5b576f90525d5d9a3afb7bdc3c",
+      "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+      "src/morgott/models/mmbert/inference.py": "0e3422066a1358aabdb34aec8f2b63818b728e3441a9d3e5ab335b66766513fb",
+      "src/morgott/models/mmbert/serving.py": "804ce5253ec54ac61baeb160da936139f88e8d3ae6c7d18642c00a11c0a636c9",
+      "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+      "src/morgott/sources/tasks.py": "9db5aa253eeb7939695fabbedcf57b4b4823ad4711e7cd446d251efcd946a20c"
+    },
+    "flag": 0.6224593312018547,
+    "high": 0.99999,
+    "low_by_channel": {
+      "direct_user": 0.2,
+      "untrusted_content": 0.1
+    },
+    "model": "deepseek/deepseek-v4-flash-0731",
+    "prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+    "provider": "cloudflare",
+    "request_sha256": "b5df77d444d1c16cce2aca82d35abf5a9d07869ad61fc11a051fc4a792a0619b",
+    "threshold_sha256": "89ac994922b6fb014179aa30df40b79001359f7e8df1de62ef6c3ec4a604d6f2"
+  },
+  "planned_maximum_remote_windows": 81,
+  "results": {
+    "content_sha256": "40fed5b8c6d7430778d58e7ed953ce50ebeb3cbd32dde9bf32f9b2378219d1a7",
+    "path": "artifacts/cascade_mutation_asr/base_results.jsonl.gz",
+    "rows": 240,
+    "sha256": "183c1ff8680e7b097b3d93fa0bd4e61f6fd20c81b038a2b76b12661eaeabdbfb"
+  },
+  "rows": 240,
+  "schema_version": 1
+}
