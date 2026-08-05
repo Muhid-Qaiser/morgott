@@ -226,7 +226,7 @@ Direct-user and single-window behavior remain unchanged, and the 128-window cap 
 The synthetic full-context review record uses window index `-1`; ordinary window records retain their nonnegative tokenizer-window indexes.
 An exhausted review fails safe immediately, while a confirmed reviewer flag completes the advisory restrict without starting later calls.
 The selected reviewer is `deepseek/deepseek-v4-flash-0731` through Cloudflare.
-DeepSeek receives the trusted input channel and restricts at `p_subversion >= 0.6224593312`; invalid or exhausted reviews fail conservatively.
+DeepSeek receives the trusted input channel and restricts at `p_subversion >= 0.6224593312018547`; invalid or exhausted reviews fail conservatively.
 Production initialization suppresses LiteLLM's unsolicited error banners so `morgott cascade` keeps stdout as one JSON document even when a retry is needed.
 Every result remains advisory: `decision` is always `allow`, and `advisory_route` never grants authority.
 
@@ -321,6 +321,7 @@ is promoted; their durable conclusions are summarized in
 - `src/morgott/models/`: retained linear controls and model-specific packages.
 - `src/morgott/normalization.py`: strict inference-side text normalization.
 - `src/morgott/policy.py`: deterministic authorization simulation.
+- `src/morgott/runtime.py`: trusted label propagation and policy-gated effect invocation.
 - `tests/`: maintained data, detector, and policy invariants.
 - `artifacts/models/`: the registered advisory model artifacts plus the retained unregistered LP-FT comparison candidate.
 - `experiments/`: rules for disposable or study-specific experiments that do not belong in maintained model code.
@@ -330,8 +331,10 @@ is promoted; their durable conclusions are summarized in
 - `reports/corpus-sanity-audit.md`: corpus-wide integrity checks and critical limitations.
 - `reports/attention-kernel-audit.md`: measured SDPA versus FlashAttention-2 and context-length constraints.
 - `reports/model-experiments.md`: concise historical model decision ledger.
+- `docs/data-contract.md`: canonical data, label, source, and split contracts.
 - `docs/threat-model.md`: trust boundary and security claims.
 - `docs/roadmap.md`: evidence-gated next steps.
+- `AGENTS.md`: operating brief for coding agents.
 
 Only load model artifacts generated locally by this project. Python model
 serialization is unsafe for untrusted files.
