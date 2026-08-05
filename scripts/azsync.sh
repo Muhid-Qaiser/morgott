@@ -60,7 +60,7 @@ case "$cmd" in
       matched=true
       echo "== pull $p"
       mkdir -p "$p"
-      "$AZCOPY" sync "$(remote "$p")" "$p" --delete-destination=$mirror --output-level essential
+      "$AZCOPY" sync "$(remote "$p")" "$p" --delete-destination=$mirror --mirror-mode=$mirror --output-level essential
     done
     $matched || { echo "unknown prefix: $arg (one of: ${PREFIXES[*]})" >&2; exit 1; }
     # manifest.json and data/README.md come from git, not pulled.

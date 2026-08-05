@@ -21,53 +21,57 @@ Everything marked *derived* is rebuilt deterministically from `data/sources/` + 
 
 ## Source shards (`data/sources/`)
 
-Rows, licenses, and roles below come from `data/manifest.json` (which also pins each shard's SHA-256 and upstream revision).
+Licenses and roles below come from `data/manifest.json`. Row counts and per-shard SHA-256 hashes live only in the manifest — they change with rebuilds, so they are deliberately not copied here.
 
-| Shard | Rows | License | Use |
-|-------|------|---------|-----|
-| `agentic_boundary_pairs` | 1,200 | CC-BY-4.0 | auxiliary paired instruction-subversion training and authorization diagnostics |
-| `banking77` | 13,083 | CC-BY-4.0 | English online-banking intent queries as finance hard negatives |
-| `bipia` | 2,200 | MIT attacks; mixed benchmark context licenses | channel-specific indirect-injection train/test with clean-context controls |
-| `browsesafe` | 14,719 | MIT | whole-document browser injection train and official test |
-| `coconot` | 1,306 | ODC-BY-1.0 + component licenses | safe-to-comply prompts for weak development and hard-benign evaluation |
-| `do_not_answer` | 6,391 | CC-BY-NC-SA-4.0 | held-out harmful-goal non-injection negatives |
-| `false_reject` | 15,811 | CC-BY-NC-4.0 | hard-benign prompts; generated candidates and human test held out |
-| `financebench` | 339 | public open-source sample (no explicit license) | 150 public finance-QA examples as development-only hard-benign diagnostics |
-| `gandalf` | 1,000 | MIT | human direct-injection data; official train only for fitting |
-| `hackaprompt` | 579,887 | MIT | **gated** human direct attack attempts; user_input only |
-| `harmbench` | 400 | MIT | held-out harmful-goal non-injection negatives |
-| `harper_valley_bank` | 19,301 | CC-BY-4.0 | simulated human-human banking calls; caller and agent channels retained separately |
-| `jailbreaks_over_time` | 23,301 | MIT | source-held-out temporal distribution-shift evaluation only |
-| `jbb_benign` | 100 | MIT | curated benign behaviors thematically matched to misuse requests |
-| `llmail` | 461,850 | MIT | human adaptive email injection; phase 1 fit, phase 2 evaluation |
-| `lmsys_arena` | 138,041 | CC-BY-4.0 prompts; CC-BY-NC-4.0 outputs | English Arena messages; weak-benign candidates, flagged conversations kept as uncertain |
-| `massive_en` | 16,521 | CC-BY-4.0 | English voice-assistant utterances for benign intent coverage |
-| `mind2web` | 957 | CC-BY-4.0 | confirmed official training tasks only, after local secret and PII quarantine |
-| `multi_turn` | 6,918 | MIT | out-of-source obfuscated-jailbreak test grouped by goal |
-| `nemotron_agentic_ipi` | 1,272 | CC-BY-4.0 | synthetic successful agentic indirect-injection evaluation only; never direct-user training |
-| `notinject` | 339 | MIT | locked trigger-word hard negatives for measuring over-defense |
-| `oasst1` | 88,838 | Apache-2.0 | multilingual weak injection controls; auxiliary for broad routing |
-| `prompt_injections` | 662 | Apache-2.0 | train and same-source test; direct prompt-injection label |
-| `schema_guided_dialogue` | 463,282 | CC-BY-SA-4.0 | English crowdworker task-dialogue turns for benign routing balance |
-| `swebench_verified` | 492 | upstream repositories vary | human-verified software issue statements; dev-test-only long-benign FPR slice |
-| `taskmaster` | 1,125,559 | CC-BY-4.0 | English task-oriented user and assistant turns for benign routing balance |
-| `tatqa` | 32,464 | CC-BY-4.0 | finance-QA questions and report contexts |
-| `tensor_trust` | 2,692 | public research release | human prompt-injection robustness evaluation only; never training |
-| `tensor_trust_raw` | 680,327 | no standard dataset license declared | human game attack attempts; grouped development data |
-| `toxic_chat` | 10,165 | CC-BY-NC-4.0 | train and same-source test; explicit jailbreak label |
-| `wildguardmix` | 88,470 | ODC-BY | **gated** prompt harmfulness data for the routing target |
-| `wildjailbreak` | 263,769 | ODC-BY | **gated** four-way harmful/benign and adversarial contrast data |
-| `xstest` | 450 | CC-BY-4.0 | hard-negative test; safe and unsafe requests are not attacks |
+| Shard | License | Use |
+|-------|---------|-----|
+| `agentic_boundary_pairs` | CC-BY-4.0 | auxiliary paired instruction-subversion training and authorization diagnostics |
+| `banking77` | CC-BY-4.0 | English online-banking intent queries as finance hard negatives |
+| `bipia` | MIT attacks; mixed benchmark context licenses | channel-specific indirect-injection train/test with clean-context controls |
+| `browsesafe` | MIT | whole-document browser injection train and official test |
+| `coconot` | ODC-BY-1.0 + component licenses | safe-to-comply prompts for weak development and hard-benign evaluation |
+| `do_not_answer` | CC-BY-NC-SA-4.0 | held-out harmful-goal non-injection negatives |
+| `false_reject` | CC-BY-NC-4.0 | hard-benign prompts; generated candidates and human test held out |
+| `financebench` | no explicit dataset license declared; public open-source sample | 150 public finance-QA examples as development-only hard-benign diagnostics |
+| `gandalf` | MIT | human direct-injection data; official train only for fitting |
+| `hackaprompt` | MIT | **gated** human direct attack attempts; user_input only |
+| `harmbench` | MIT | held-out harmful-goal non-injection negatives |
+| `harper_valley_bank` | CC-BY-4.0 | simulated human-human banking calls; caller and agent channels retained separately |
+| `jailbreaks_over_time` | MIT | source-held-out temporal distribution-shift evaluation only |
+| `jbb_benign` | MIT | curated benign behaviors thematically matched to misuse requests |
+| `llmail` | MIT | human adaptive email injection; phase 1 fit, phase 2 evaluation |
+| `lmsys_arena` | CC-BY-4.0 prompts; CC-BY-NC-4.0 model outputs | English Arena messages with weak-benign candidates and flagged conversations retained as uncertain |
+| `massive_en` | CC-BY-4.0 | English voice-assistant utterances for benign intent coverage |
+| `mind2web` | CC-BY-4.0 | confirmed official training tasks only, after local secret and PII quarantine |
+| `multi_turn` | MIT | out-of-source obfuscated-jailbreak test grouped by goal |
+| `nemotron_agentic_ipi` | CC-BY-4.0 | synthetic successful agentic indirect-injection evaluation only; never direct-user training |
+| `notinject` | MIT | locked trigger-word hard negatives for measuring over-defense |
+| `oasst1` | Apache-2.0 | multilingual weak injection controls; auxiliary for broad routing |
+| `prompt_injections` | Apache-2.0 | train and same-source test; direct prompt-injection label |
+| `schema_guided_dialogue` | CC-BY-SA-4.0 | English crowdworker task-dialogue turns for benign routing balance |
+| `swebench_verified` | no dataset-level license declared; upstream repositories vary | human-verified software issue statements as a dev-test-only long-benign FPR slice |
+| `taskmaster` | CC-BY-4.0 | English task-oriented user and assistant turns for benign routing balance |
+| `tatqa` | CC-BY-4.0 | finance-QA questions and report contexts; task construction is not safety adjudication |
+| `tensor_trust` | public research release; no explicit standard dataset license | human prompt-injection robustness evaluation only; never training |
+| `tensor_trust_raw` | no standard dataset license declared | human game attack attempts; grouped development data |
+| `toxic_chat` | CC-BY-NC-4.0 | train and same-source test; explicit jailbreak label |
+| `wildguardmix` | ODC-BY | **gated** prompt harmfulness data for the routing target |
+| `wildjailbreak` | ODC-BY | **gated** four-way harmful/benign and adversarial contrast data |
+| `xstest` | CC-BY-4.0 | hard-negative test; safe and unsafe requests are not attacks |
 
 Gated shards (`hackaprompt`, `wildguardmix`, `wildjailbreak`) require an authenticated HF token to re-download — another reason this container, not HuggingFace, is the recovery path.
 
 ## Verifying integrity
 
-Every file's SHA-256 is in `data/manifest.json`. After any pull:
+Every local corpus file's SHA-256 is pinned in `data/manifest.json` — sources, views, quarantine, and audits alike. After any pull, verify all of them:
 
 ```bash
-jq -r '.source_outputs[] | "\(.sha256)  data/\(.path)"' data/manifest.json | sha256sum -c
+jq -r '(.source_outputs, .routing_views, .injection_views, .quarantines, .audits)[]
+       | select(has("path") and has("sha256"))
+       | "\(.sha256)  data/\(.path)"' data/manifest.json | sha256sum -c
 ```
+
+(Don't walk the whole manifest recursively — `.sources` also records *upstream* HuggingFace file hashes under bare paths like `train.jsonl` that don't exist locally.)
 
 ## Sync (any machine)
 
