@@ -8,11 +8,11 @@ This is the canonical copy of the morgott corpus (prompt-injection / routing gua
 |------|------|-------|------------|
 | `README.md` | — | — | This data card (repo path: `data/README.md`) |
 | `data/manifest.json` | 92K | precious | Integrity anchor: SHA-256 hashes, row counts, roles, and provenance for every file below. Also tracked in git. |
-| `data/sources/` | 12G | **precious** | 33 canonical standardized source shards (jsonl). Rebuildable only via authenticated HuggingFace re-downloads (three are gated) plus the exact build pipeline — treat as irreplaceable. |
+| `data/sources/` | 12G | **precious** | 33 canonical standardized source shards (jsonl). Rebuildable only via authenticated HuggingFace re-downloads (four are gated) plus the exact build pipeline — treat as irreplaceable. |
 | `data/views/` | 7.8G | derived | Deterministic training/eval views: `routing/` (train/validation/dev_test/uncertain) and `injection/` (per-benchmark eval slices + direct/indirect train). Ready to train on directly. |
 | `data/quarantine/` | 739M | derived | Rows excluded for conflict/leakage/sensitivity (routing, injection, mind2web + swebench sensitive). |
 | `data/audits/` | 212K | derived | Overlap/near-duplicate evidence backing the quarantine decisions. |
-| `data-archive/` | 4.7M | **precious** | Retained model-generated matched pairs (11,046 pairs; generation was stochastic, not reproducible). See its own README + SHA256SUMS. |
+| `data-archive/` | 36M | **precious** | Retained model-generated matched pairs (11,046 pairs) plus the first-party red-team campaign corpus under `redteam/` (raw parquets + derived projection). Both are stochastic generator output, not reproducible, and are **not** canonical corpus sources. See its own README + SHA256SUMS. |
 | `artifacts/models/` | 1.3G | precious | Trained model weights (safetensors/onnx/adapters) for the mmbert LoRA/frozen/LP-FT runs. Also in git-LFS. |
 
 Everything marked *derived* is rebuilt deterministically from `data/sources/` + the repo pipeline via `uv run morgott data`; hashes are pinned in `data/manifest.json`, and the build fails closed on any mismatch.
@@ -59,7 +59,7 @@ Licenses and roles below come from `data/manifest.json`. Row counts and per-shar
 | `wildjailbreak` | ODC-BY | **gated** four-way harmful/benign and adversarial contrast data |
 | `xstest` | CC-BY-4.0 | hard-negative test; safe and unsafe requests are not attacks |
 
-Gated shards (`hackaprompt`, `wildguardmix`, `wildjailbreak`) require an authenticated HF token to re-download — another reason this container, not HuggingFace, is the recovery path.
+Gated shards (`hackaprompt`, `lmsys_arena`, `wildguardmix`, `wildjailbreak`) require an authenticated HF token to re-download — another reason this container, not HuggingFace, is the recovery path.
 
 ## Verifying integrity
 

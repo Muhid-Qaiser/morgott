@@ -13,6 +13,10 @@ data/*
 !data/manifest.json
 !data/README.md
 
+# Red-team campaign payloads live in Azure like the rest of the corpus.
+# data-archive/SHA256SUMS and the READMEs stay in git as the integrity anchor.
+data-archive/redteam/
+
 # Rebuilt by `make benchmark`.
 artifacts/
 reports/baseline.json

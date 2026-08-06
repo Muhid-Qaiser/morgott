@@ -20,9 +20,10 @@ REPO = ROOT.parents[1]
 DATA = Path(
     os.environ.get(
         "MORGOTT_RED_TEAM_DATA",
-        Path.home()
-        / "Downloads"
-        / "red_teaming_attempts_data"
+        REPO
+        / "data-archive"
+        / "redteam"
+        / "raw"
         / "normalized_dataset_dedup.parquet",
     )
 ).expanduser()
