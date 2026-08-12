@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Reproducible jailbreak detection and agent action-policy POC"
 requires-python = ">=3.12"
 dependencies = [
-  "datasets>=5.0.0,<6",
+  "datasets>=5.0.1,<6",
   "ijson>=3.4,<4",
   "scikit-learn>=1.6,<2",
 ]
@@ -20,7 +20,7 @@ encoder = [
     "torch>=2.13",
     "transformers>=5.14",
     "safetensors>=0.4",
-    "peft>=0.19,<0.20",
+    "peft>=0.20.0,<0.21",
 ]
 cascade = [
     "nooa==0.0.8; python_version < '3.14'",
@@ -38,13 +38,13 @@ showcase = [
     "httpx>=0.27,<1",
     "pandas>=3.0.5,<4",
     "pyarrow>=18,<26",
-    "uvicorn>=0.30,<1",
+    "uvicorn>=0.52.1,<1",
 ]
 
 [dependency-groups]
 dev = [
   "pre-commit>=4.6.1,<5",
-  "ruff>=0.16.0,<0.17",
+  "ruff>=0.16.1,<0.17",
 ]
 
 [project.scripts]
