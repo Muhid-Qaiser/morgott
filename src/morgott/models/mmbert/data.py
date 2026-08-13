@@ -6,6 +6,7 @@ import json
 import random
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 
 from ...data import iter_verified_jsonl, text_hash
@@ -20,6 +21,25 @@ from .core import INSTRUCTION_SUBVERSION_TAGS, file_sha256
 PAIR_ARCHIVE_SHA256 = "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3"
 PAIR_CONTENT_SHA256 = "8ec5c1c77b378688b190722f7d1fc51e9bef819ee9670948d2658f4a37082158"
 EXTERNAL_DATA_SCHEMA_VERSION = 2
+
+
+@dataclass
+class TrainingData:
+    """Prepared corpus with a stable module path so every caller can unpickle it."""
+
+    views: dict
+    data_manifest_sha256: str
+    external_manifest_sha256: str
+    promptshield: list[dict]
+    promptshield_validation: list[dict]
+    pairs: list[tuple[dict, dict]]
+    checkpoint: list[dict]
+    calibration: list[dict]
+    validation_partition: dict
+    canonical_counts: dict
+    canonical_group_counts: dict
+    canonical_owners: dict
+    removed: dict
 
 
 _strict_hash = leakage_text_hash

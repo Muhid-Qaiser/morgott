@@ -67,5 +67,5 @@ Random same-label pairs could reinforce source and template shortcuts, so this i
 6. Report TPR at the supported FPR point, ROC AUC, PR AUC, per-source and source-held-out slices, channel, language, length, finance false positives, matched-pair separation, mutation ASR at multiple attempts, latency, and peak memory.
 7. Treat an off-the-shelf multilingual SBERT plus logistic regression only as a practical secondary control because it changes the backbone, pretraining data, tokenizer, and often the maximum sequence length at once.
 
-No new encoder run is authorized by the current bounded exception, so this experiment should remain a proposal unless the repository owner explicitly approves it ([repository authorization](../AGENTS.md), [experiment ledger](model-experiments.md#deferred-improvement-ledger)).
-Until then, keep mmBERT as the advisory research shadow and do not add SBERT machinery merely on architectural intuition.
+This remains a lower-priority proposal until its cheap frozen probe and the
+evidence gates above justify encoder work. Do not add SBERT machinery merely on architectural intuition.

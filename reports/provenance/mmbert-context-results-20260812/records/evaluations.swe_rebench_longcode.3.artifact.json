@@ -1,0 +1,215 @@
+{
+  "advisory_only": true,
+  "checkpoint": {
+    "epoch": 3,
+    "evaluation_max_tokens": 1024,
+    "evaluation_model_sha256": "4a270bd3bfed3d0d6e7a7c2e50bc02a41f041ae30ad77d6c8d9f217f8417305f",
+    "native_context_evaluation": true,
+    "role": "pre_registered_comparison",
+    "run_name": "mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024",
+    "run_result_sha256": "f9f683fbf2aa8c5d0ab0490eebdd9707349eccce4b8b69b815bcf02b56957df6",
+    "snapshot_sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+    "training_max_tokens": 1024,
+    "update": 17000
+  },
+  "evaluation_identity_sha256": "3e472a6f3c7f0c45de58fcc3060f476c4509d9723aeb210dd2fb9f3128115ab4",
+  "full_panel_evaluation": {
+    "evaluation_identity_sha256": "94c5091a967460f4a2eb51b369c5f925a8215163687bbf474c4253cf2cc2fd09",
+    "score_artifact_sha256": "4d70a38620c1da4a4a5260b6d6bcf8fb55f11a7cb0f24f89cc3fe07a0fb6c946",
+    "scoring_sha256": "c59ac1b7bcaf63ccc77cbc180d77dd37aabf73aa111dfd7f75242ed9de3ffe0d",
+    "sha256": "e2d6162ada5a67969a4b3bab23f7c83aa1b69cba15f72b4e0a4b10383aff0a9b"
+  },
+  "inputs": {
+    "pair_manifest_sha256": "1f3a7dfdf9a35c4910f2762cc8b971dc54cdf1af1036b754a2753b4d2f0fb45b",
+    "source_revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
+    "splits": {
+      "dev_test": {
+        "archive_sha256": "20c109c68d25fee9b07cb3c4f0046266248f966a5c6aa0a93c083ae60e5d40d1",
+        "content_sha256": "02faad6c972ee08f625acc8c88bd2b48954407b5c180de04bcf935646ddf496e",
+        "pairs": 2926,
+        "repositories": 334
+      },
+      "validation": {
+        "archive_sha256": "54c961a9ed2df61ff9f88fa5464faacf0ec1fbbf91721ef9fa9c9c6d911c5d7b",
+        "content_sha256": "9085ceac615cef70ffd756a9505bf42340798932017ea91b14fe5130744aaf6b",
+        "pairs": 2768,
+        "repositories": 337
+      }
+    },
+    "training_pair_archive_sha256": "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba"
+  },
+  "limitations": [
+    "SWE-rebench V2 is already-open development evidence, not a prospective final test.",
+    "Repository grouping holds out task contexts but not attack templates.",
+    "The transported threshold is descriptive and is not approved for blocking.",
+    "Neither pair split is used for checkpoint or threshold selection."
+  ],
+  "metrics": {
+    "dev_test": {
+      "by_length": {
+        "at_least_8192_chars": {
+          "attack_high_gate_rate": 0.9444444444444444,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9444444444444444,
+          "clean_flag_rate": 0.05555555555555555,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 18
+        },
+        "under_2048_chars": {
+          "attack_high_gate_rate": 0.9980384464495881,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9996076892899176,
+          "clean_flag_rate": 0.00039231071008238524,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 2549
+        },
+        "under_4096_chars": {
+          "attack_high_gate_rate": 0.9927536231884058,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 1.0,
+          "clean_flag_rate": 0.0,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 276
+        },
+        "under_8192_chars": {
+          "attack_high_gate_rate": 0.9879518072289156,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 1.0,
+          "clean_flag_rate": 0.0,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 83
+        }
+      },
+      "operation": {
+        "attack_windows": 3291,
+        "benign_windows": 3278,
+        "maximum_attack_windows": 40,
+        "maximum_benign_windows": 40
+      },
+      "overall": {
+        "attack_high_gate_rate": 0.9969241285030759,
+        "attack_recall": 1.0,
+        "auroc": 1.0,
+        "both_correct": 0.9993164730006835,
+        "clean_flag_rate": 0.000683526999316473,
+        "clean_high_gate_rate": 0.0,
+        "pair_ordering": 1.0,
+        "pairs": 2926
+      },
+      "repository_macro": {
+        "attack_recall": 1.0,
+        "both_correct": 0.9955089820359282,
+        "clean_flag_rate": 0.004491017964071856,
+        "pair_ordering": 1.0,
+        "repositories": 334
+      }
+    },
+    "validation": {
+      "by_length": {
+        "at_least_8192_chars": {
+          "attack_high_gate_rate": 1.0,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.92,
+          "clean_flag_rate": 0.08,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 25
+        },
+        "under_2048_chars": {
+          "attack_high_gate_rate": 0.9983354140657511,
+          "attack_recall": 1.0,
+          "auroc": 0.9999999999999999,
+          "both_correct": 0.9991677070328756,
+          "clean_flag_rate": 0.0008322929671244278,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 2403
+        },
+        "under_4096_chars": {
+          "attack_high_gate_rate": 1.0,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 1.0,
+          "clean_flag_rate": 0.0,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 270
+        },
+        "under_8192_chars": {
+          "attack_high_gate_rate": 0.9857142857142858,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9571428571428572,
+          "clean_flag_rate": 0.04285714285714286,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 70
+        }
+      },
+      "operation": {
+        "attack_windows": 3105,
+        "benign_windows": 3087,
+        "maximum_attack_windows": 17,
+        "maximum_benign_windows": 17
+      },
+      "overall": {
+        "attack_high_gate_rate": 0.9981936416184971,
+        "attack_recall": 1.0,
+        "auroc": 0.9999997389655517,
+        "both_correct": 0.997471098265896,
+        "clean_flag_rate": 0.0025289017341040463,
+        "clean_high_gate_rate": 0.0,
+        "pair_ordering": 1.0,
+        "pairs": 2768
+      },
+      "repository_macro": {
+        "attack_recall": 1.0,
+        "both_correct": 0.9987270971692337,
+        "clean_flag_rate": 0.0012729028307663323,
+        "pair_ordering": 1.0,
+        "repositories": 337
+      }
+    }
+  },
+  "provenance": {
+    "sources": {
+      "experiments/mmbert_longcode_snapshot_eval/run.py": "8bb4b5f004c2e7073dc81043fd0b4e2e878bf04dd977a8b0b034f4e1404d46ab",
+      "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+      "src/morgott/models/mmbert/evaluate.py": "fc3b8645579e36d29f2ef386a58d34616e63aaad202e92ea7f872d595d0d9d6d",
+      "src/morgott/models/mmbert/head_contract.py": "a9dfd30a345e3262f7aabb1c529459fec7c0b525ca2c8a806c4ae3c0d2f592fd",
+      "src/morgott/models/mmbert/score_journal.py": "d94537583feaa7138ffbb0da7f8dfeece3174382567b21c556dd3c2b509bfe8b",
+      "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b"
+    },
+    "uv_lock_sha256": "b8b5814c8e6bb74b081c4d6046d255438e09dffd079a60a85b96362c5944a39f"
+  },
+  "purpose": "fixed-checkpoint repository-held-out SWE-rebench V2 comparison",
+  "runtime": {
+    "peak_reserved_bytes": 1375731712,
+    "seconds": 2511.970881994348
+  },
+  "schema_version": 1,
+  "scoring": {
+    "aggregation": "maximum primary-head probability over ordered windows",
+    "batch_size": 24,
+    "overlap_tokens": 128,
+    "score_journal_numeric_only": true,
+    "scoring_sha256": "598e762c4d407f758b010759662ab9394a2c4e52b967600314535a593afe756f",
+    "window_tokens": 1024
+  },
+  "threshold": {
+    "component_fpr_budget": "1.0000%",
+    "fixed_high_gate": 0.99999,
+    "selection_on_swe_rebench": false,
+    "source": "exact-checkpoint full-panel canonical calibration only",
+    "value": 0.9702399060540358
+  }
+}

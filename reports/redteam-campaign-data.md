@@ -42,7 +42,8 @@ a target. 1,837 rows carry a verdict (162 Breached, 68 Partial, 1,607 Failed); 3
    encoder run on matched transaction tasks, paired multilingual transformations,
    known-span long-document attacks, and stronger same-source controls. Short direct-user
    attack text is already covered by hackaprompt, tensor_trust_raw, and wildjailbreak.
-4. **No encoder run is authorized.** `docs/data-contract.md:167`.
+4. **This source is reserved for evaluation.** Its rare fresh positives are
+   more valuable as untouched evidence than as another single-class fit source.
 5. **It is uncontaminated, and that is scarce.** 5,888 distinct normalized texts across all
    three archived files were checked against all 2,177,717 routing-view rows — train,
    validation, dev_test, and uncertain — under the corpus's own `normalized_text_sha256`.

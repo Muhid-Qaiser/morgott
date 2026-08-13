@@ -1,0 +1,215 @@
+{
+  "advisory_only": true,
+  "checkpoint": {
+    "epoch": 3,
+    "evaluation_max_tokens": 1024,
+    "evaluation_model_sha256": "bb0892f76b645bd37a29ac6cca339d3920daa6e9feba4244d509552e9232a8f4",
+    "native_context_evaluation": false,
+    "role": "pre_registered_comparison",
+    "run_name": "mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control",
+    "run_result_sha256": "49fd6d41dff0638f1044b1e6446ef7d1b1f8f4789e16d0b7010b87eccf76f529",
+    "snapshot_sha256": "8468a35ceedb6ce06c35f2d98781e5f656ba44ca1b602af00c0b8094a296f0e8",
+    "training_max_tokens": 512,
+    "update": 17000
+  },
+  "evaluation_identity_sha256": "8877e957a75418adbfc4ad53b6d98aebaf934ce90be55d9041d994201bd3d1b3",
+  "full_panel_evaluation": {
+    "evaluation_identity_sha256": "4c4b37b4d18e66ac503eab2a4e8d77806d8f8172c584eebd16600cf44fbd44c1",
+    "score_artifact_sha256": "1d596ffa56053fa099433f164f110ec031f7897c1b11c2f2f23280faaaa6cd30",
+    "scoring_sha256": "c59ac1b7bcaf63ccc77cbc180d77dd37aabf73aa111dfd7f75242ed9de3ffe0d",
+    "sha256": "89ac838268634c9d66ee089286bc50f6546be26965f8904d2961990b86ba663a"
+  },
+  "inputs": {
+    "pair_manifest_sha256": "1f3a7dfdf9a35c4910f2762cc8b971dc54cdf1af1036b754a2753b4d2f0fb45b",
+    "source_revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
+    "splits": {
+      "dev_test": {
+        "archive_sha256": "20c109c68d25fee9b07cb3c4f0046266248f966a5c6aa0a93c083ae60e5d40d1",
+        "content_sha256": "02faad6c972ee08f625acc8c88bd2b48954407b5c180de04bcf935646ddf496e",
+        "pairs": 2926,
+        "repositories": 334
+      },
+      "validation": {
+        "archive_sha256": "54c961a9ed2df61ff9f88fa5464faacf0ec1fbbf91721ef9fa9c9c6d911c5d7b",
+        "content_sha256": "9085ceac615cef70ffd756a9505bf42340798932017ea91b14fe5130744aaf6b",
+        "pairs": 2768,
+        "repositories": 337
+      }
+    },
+    "training_pair_archive_sha256": "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba"
+  },
+  "limitations": [
+    "SWE-rebench V2 is already-open development evidence, not a prospective final test.",
+    "Repository grouping holds out task contexts but not attack templates.",
+    "The transported threshold is descriptive and is not approved for blocking.",
+    "Neither pair split is used for checkpoint or threshold selection."
+  ],
+  "metrics": {
+    "dev_test": {
+      "by_length": {
+        "at_least_8192_chars": {
+          "attack_high_gate_rate": 0.7222222222222222,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 1.0,
+          "clean_flag_rate": 0.0,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 18
+        },
+        "under_2048_chars": {
+          "attack_high_gate_rate": 0.9913691643781876,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9988230678697528,
+          "clean_flag_rate": 0.0011769321302471558,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 2549
+        },
+        "under_4096_chars": {
+          "attack_high_gate_rate": 0.8804347826086957,
+          "attack_recall": 1.0,
+          "auroc": 0.9996586851501785,
+          "both_correct": 0.9927536231884058,
+          "clean_flag_rate": 0.007246376811594203,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 276
+        },
+        "under_8192_chars": {
+          "attack_high_gate_rate": 0.7590361445783133,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9879518072289156,
+          "clean_flag_rate": 0.012048192771084338,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 83
+        }
+      },
+      "operation": {
+        "attack_windows": 3291,
+        "benign_windows": 3278,
+        "maximum_attack_windows": 40,
+        "maximum_benign_windows": 40
+      },
+      "overall": {
+        "attack_high_gate_rate": 0.9726589200273411,
+        "attack_recall": 1.0,
+        "auroc": 0.9999922326477351,
+        "both_correct": 0.9979494190020506,
+        "clean_flag_rate": 0.002050580997949419,
+        "clean_high_gate_rate": 0.0,
+        "pair_ordering": 1.0,
+        "pairs": 2926
+      },
+      "repository_macro": {
+        "attack_recall": 1.0,
+        "both_correct": 0.995482870291805,
+        "clean_flag_rate": 0.004517129708194946,
+        "pair_ordering": 1.0,
+        "repositories": 334
+      }
+    },
+    "validation": {
+      "by_length": {
+        "at_least_8192_chars": {
+          "attack_high_gate_rate": 0.76,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.84,
+          "clean_flag_rate": 0.16,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 25
+        },
+        "under_2048_chars": {
+          "attack_high_gate_rate": 0.9945900957136912,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9991677070328756,
+          "clean_flag_rate": 0.0008322929671244278,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 2403
+        },
+        "under_4096_chars": {
+          "attack_high_gate_rate": 0.837037037037037,
+          "attack_recall": 0.9962962962962963,
+          "auroc": 0.9997187928669411,
+          "both_correct": 0.9888888888888889,
+          "clean_flag_rate": 0.007407407407407408,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 270
+        },
+        "under_8192_chars": {
+          "attack_high_gate_rate": 0.7571428571428571,
+          "attack_recall": 1.0,
+          "auroc": 0.9903061224489796,
+          "both_correct": 0.9428571428571428,
+          "clean_flag_rate": 0.05714285714285714,
+          "clean_high_gate_rate": 0.014285714285714285,
+          "pair_ordering": 0.9857142857142858,
+          "pairs": 70
+        }
+      },
+      "operation": {
+        "attack_windows": 3105,
+        "benign_windows": 3087,
+        "maximum_attack_windows": 17,
+        "maximum_benign_windows": 17
+      },
+      "overall": {
+        "attack_high_gate_rate": 0.9710982658959537,
+        "attack_recall": 0.9996387283236994,
+        "auroc": 0.9999485762137058,
+        "both_correct": 0.9953034682080925,
+        "clean_flag_rate": 0.004335260115606936,
+        "clean_high_gate_rate": 0.000361271676300578,
+        "pair_ordering": 0.9996387283236994,
+        "pairs": 2768
+      },
+      "repository_macro": {
+        "attack_recall": 0.9999593512458842,
+        "both_correct": 0.9961558827200467,
+        "clean_flag_rate": 0.003803468525837535,
+        "pair_ordering": 0.9996702934388395,
+        "repositories": 337
+      }
+    }
+  },
+  "provenance": {
+    "sources": {
+      "experiments/mmbert_longcode_snapshot_eval/run.py": "8bb4b5f004c2e7073dc81043fd0b4e2e878bf04dd977a8b0b034f4e1404d46ab",
+      "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+      "src/morgott/models/mmbert/evaluate.py": "fc3b8645579e36d29f2ef386a58d34616e63aaad202e92ea7f872d595d0d9d6d",
+      "src/morgott/models/mmbert/head_contract.py": "a9dfd30a345e3262f7aabb1c529459fec7c0b525ca2c8a806c4ae3c0d2f592fd",
+      "src/morgott/models/mmbert/score_journal.py": "d94537583feaa7138ffbb0da7f8dfeece3174382567b21c556dd3c2b509bfe8b",
+      "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b"
+    },
+    "uv_lock_sha256": "b8b5814c8e6bb74b081c4d6046d255438e09dffd079a60a85b96362c5944a39f"
+  },
+  "purpose": "fixed-checkpoint repository-held-out SWE-rebench V2 comparison",
+  "runtime": {
+    "peak_reserved_bytes": 1375731712,
+    "seconds": 2572.6986744878814
+  },
+  "schema_version": 1,
+  "scoring": {
+    "aggregation": "maximum primary-head probability over ordered windows",
+    "batch_size": 24,
+    "overlap_tokens": 128,
+    "score_journal_numeric_only": true,
+    "scoring_sha256": "598e762c4d407f758b010759662ab9394a2c4e52b967600314535a593afe756f",
+    "window_tokens": 1024
+  },
+  "threshold": {
+    "component_fpr_budget": "1.0000%",
+    "fixed_high_gate": 0.99999,
+    "selection_on_swe_rebench": false,
+    "source": "exact-checkpoint full-panel canonical calibration only",
+    "value": 0.975576909945893
+  }
+}

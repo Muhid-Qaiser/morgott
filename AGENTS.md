@@ -12,16 +12,19 @@ revive.
 
 ## Read before you change things
 
-- [README.md](README.md) — operational overview, commands, repository map.
-- [docs/data-contract.md](docs/data-contract.md) — data, label, source, and
-  split contracts; required before touching adapters, labels, partitions, the
-  manifest, or model recipes.
-- [docs/threat-model.md](docs/threat-model.md) — trust boundary and claims.
-- [docs/roadmap.md](docs/roadmap.md) — evidence-gated next steps.
-- [data/README.md](data/README.md) — data card, Azure layout, sync commands.
-- [CONTRIBUTING.md](CONTRIBUTING.md) — branch, PR, and credential rules.
-- [reports/model-experiments.md](reports/model-experiments.md) — the model
-  decision ledger.
+Always read this file and the relevant section of [README.md](README.md).
+Then follow the shortest task-specific route:
+
+- data, labels, partitions, manifests, or model recipes:
+  [docs/data-contract.md](docs/data-contract.md) and
+  [data/README.md](data/README.md);
+- security, runtime authority, or claims:
+  [docs/threat-model.md](docs/threat-model.md);
+- model training or evaluation:
+  [docs/roadmap.md](docs/roadmap.md) and the authoritative historical ledger,
+  [reports/model-experiments.md](reports/model-experiments.md);
+- branches, PRs, credentials, or release hygiene:
+  [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Mission and non-goals
 
@@ -54,9 +57,14 @@ wired into blocking. A later LP-FT comparison (2026-08-05) reduced long-task
 clean flags but collapsed on PromptShield transfer and indirect-document
 recall; it was rejected and its retained weights stay outside the registry.
 Git commit `91e8c829c8b39c8ff37a6ca2479c8fc057168d39` is immutable provenance
-for the July 2026 runs. Code availability is not authorization: no further
-encoder run or model promotion is authorized. Details and exact metrics:
-`reports/model-experiments.md`.
+for the July 2026 runs. Agents may autonomously run training and evaluation
+when scientifically justified and within the repository's safety, privacy,
+data, and evidence gates; no separate owner-approval step is required. Moving
+an artifact into maintained inference still requires licensing, privacy, and
+reproducibility review plus a `model-artifacts.json` registry entry. Learned
+output remains advisory. Details and exact metrics: `reports/model-experiments.md`.
+Historical reports may describe bounded owner authorizations; those statements
+record scope at the time and are not current approval requirements.
 
 ## Non-negotiable security rules
 
@@ -131,7 +139,7 @@ invariants and inspect the quarantine summary — and push to Azure.
 The file map is the "Repository map" in `README.md`. Two rules live here, not
 there:
 
-- `model-artifacts.json` is the sole registry for owner-approved LFS research
+- `model-artifacts.json` is the sole registry for reviewed LFS research
   weights loadable by maintained inference; the rejected LP-FT comparison
   stays intentionally outside it.
 - `experiments/` holds disposable or study-specific work that is never

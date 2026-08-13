@@ -1,0 +1,994 @@
+{
+  "advisory_only": true,
+  "comparisons": {
+    "fixed_update_17000": {
+      "full_panel_matrix_ids": [
+        "u17000-train512-eval512",
+        "u17000-train512-eval1024",
+        "u17000-train1024-eval512",
+        "u17000-train1024-eval1024"
+      ],
+      "inference_context_only": {
+        "train1024_eval1024_minus_eval512_tpr_percentage_points": {
+          "canonical": 0.02610505520866946,
+          "promptshield": 1.0946654332408268,
+          "sep": 0.0
+        },
+        "train512_eval1024_minus_eval512_tpr_percentage_points": {
+          "canonical": -0.7069531167319343,
+          "promptshield": 0.1079247610237477,
+          "sep": 0.0
+        }
+      },
+      "interpretation": "Training at 1,024 is the material lever; changing inference cap alone has small, mixed effects. The native 1,024 model improves canonical and SEP low-FPR recall and long-code clean specificity, but loses PromptShield recall and SEP pair ordering.",
+      "native_1024_minus_native_512": {
+        "canonical_tpr_at_1pct_fpr_percentage_points": 11.710586658200162,
+        "finance_false_flags": 2,
+        "longcode_dev_clean_false_flags": {
+          "native_1024": 2,
+          "native_512": 15
+        },
+        "promptshield_tpr_at_1pct_fpr_percentage_points": -4.147394387912429,
+        "reserve_attested_recall_percentage_points": 0.9803921568627416,
+        "reserve_bare_harmful_off_target_percentage_points": 0.025062656641604286,
+        "sep_pair_ordering_percentage_points": -5.753275109170309,
+        "sep_tpr_at_1pct_fpr_percentage_points": 5.010917030567685
+      },
+      "role": "pre-registered primary context comparison",
+      "source_caveat": "The data, model revision, optimizer recipe, seed, and fixed update match. The recorded trainer source hashes differ because the 1,024 launch required explicit cap/validation/provenance support; this file preserves both hashes."
+    },
+    "packaged_update_18500_vs_fixed_update_17000_native_1024": {
+      "evaluation_change": {
+        "canonical_tpr_at_1pct_fpr_percentage_points": -4.944438564927511,
+        "finance_false_flags": 0,
+        "native_longcode_dev_clean_false_flags": {
+          "update_17000": 2,
+          "update_18500": 3
+        },
+        "promptshield_tpr_at_1pct_fpr_percentage_points": 5.673758865248235,
+        "reserve_attested_recall_percentage_points": 1.4260249554367221,
+        "reserve_bare_harmful_off_target_percentage_points": 2.8320802005012524,
+        "sep_pair_ordering_percentage_points": -1.3973799126637543,
+        "sep_tpr_at_1pct_fpr_percentage_points": 0.10917030567685893
+      },
+      "interpretation": "The tiny selector improvement is driven by PromptShield BCE while Morgott source-macro, row-micro, and worst-source BCE worsen. Open-panel results confirm a real trade: PromptShield improves, canonical and pair ordering regress, reserve off-target flags increase.",
+      "morgott_row_micro_bce_change": 0.0807336685450762,
+      "morgott_source_macro_bce_change": 0.003127053553466874,
+      "promptshield_bce_change": -0.0040309248877860755,
+      "role": "historical-selector diagnostic; not the pre-registered causal context comparison",
+      "selector_loss_change": -0.00045193566715959893,
+      "worst_source_bce_change": 0.2848196914155966
+    }
+  },
+  "completed_date": "2026-08-12",
+  "decision": {
+    "checkpoint_selection_conclusion": "Do not call update 18,500 best overall. The historical BCE selector does not encode the low-FPR, source-balance, pair-ordering, finance, reserve off-target, or long-code trade-offs exposed by evaluation.",
+    "context_study_primary_checkpoint": "u17000-train1024-eval1024",
+    "deployment": "No checkpoint is promoted, registered for maintained inference, or approved for blocking.",
+    "future_2048": "A 2,048-token training campaign remains a separate future experiment and requires a new tail/correctness gate plus a frozen selection protocol.",
+    "packaged_checkpoint": "u18500-train1024-eval1024",
+    "preferred_research_direction": "Continue 1,024-token research because the fixed-update comparison materially improves canonical/SEP recall and long-code specificity; retain the 512 result as the PromptShield/pair-ordering counterpoint."
+  },
+  "evaluations": {
+    "full_panel": [
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/evaluation-update-17000-trainctx512-evalctx512/evaluation.json",
+          "sha256": "f881a5e53d3aa3e4db905a23c1fbde4063cf5317a21af96321fc75b3d0ee0b18"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "8468a35ceedb6ce06c35f2d98781e5f656ba44ca1b602af00c0b8094a296f0e8",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "0382c1c116ca5c0ef6e850ad037ac00674b30260cdd45325777aada6bb5e40b5",
+        "evaluation_max_tokens": 512,
+        "evaluation_model_sha256": "bb0892f76b645bd37a29ac6cca339d3920daa6e9feba4244d509552e9232a8f4",
+        "id": "u17000-train512-eval512",
+        "metrics": {
+          "canonical_dev_test": {
+            "roc_auc": 0.9901281208292348,
+            "rows": 303645,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.6014816382685999
+          },
+          "promptshield_test": {
+            "roc_auc": 0.932987473448843,
+            "rows": 23516,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.5699969164353993
+          },
+          "real_finance_negatives": {
+            "false_flags_at_selected_component_threshold": 0,
+            "rows": 7043
+          },
+          "sep": {
+            "both_correct_at_selected_component_threshold": 0.3467248908296943,
+            "pair_ordering": 0.8253275109170306,
+            "roc_auc": 0.8194135433153448,
+            "rows": 18320,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.4481441048034934
+          }
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 6124.06113080075,
+        "score_artifact_sha256": "eaac89038413fca4cb04d99265876dec5406a7772e056ee25bf5e60379686d43",
+        "scoring_sha256": "3b7ce188ee1ecd392aaa47666df71fc611f6fabe04c4b31d2340e4ec7fbc9419",
+        "selected_component_threshold_1pct": 0.990291523518526,
+        "training_max_tokens": 512
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/evaluation-update-17000-trainctx512-evalctx1024/evaluation.json",
+          "sha256": "89ac838268634c9d66ee089286bc50f6546be26965f8904d2961990b86ba663a"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "8468a35ceedb6ce06c35f2d98781e5f656ba44ca1b602af00c0b8094a296f0e8",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "4c4b37b4d18e66ac503eab2a4e8d77806d8f8172c584eebd16600cf44fbd44c1",
+        "evaluation_max_tokens": 1024,
+        "evaluation_model_sha256": "bb0892f76b645bd37a29ac6cca339d3920daa6e9feba4244d509552e9232a8f4",
+        "id": "u17000-train512-eval1024",
+        "metrics": {
+          "canonical_dev_test": {
+            "roc_auc": 0.9900215044121858,
+            "rows": 303645,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.5944121071012806
+          },
+          "promptshield_test": {
+            "roc_auc": 0.9448563498887979,
+            "rows": 23516,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.5710761640456368
+          },
+          "real_finance_negatives": {
+            "false_flags_at_selected_component_threshold": 2,
+            "rows": 7043
+          },
+          "sep": {
+            "both_correct_at_selected_component_threshold": 0.38176855895196504,
+            "pair_ordering": 0.8253275109170306,
+            "roc_auc": 0.8194135433153448,
+            "rows": 18320,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.4481441048034934
+          }
+        },
+        "native_context_evaluation": false,
+        "runtime_seconds": 6248.044231659733,
+        "score_artifact_sha256": "1d596ffa56053fa099433f164f110ec031f7897c1b11c2f2f23280faaaa6cd30",
+        "scoring_sha256": "c59ac1b7bcaf63ccc77cbc180d77dd37aabf73aa111dfd7f75242ed9de3ffe0d",
+        "selected_component_threshold_1pct": 0.975576909945893,
+        "training_max_tokens": 512
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/evaluation-update-17000-trainctx1024-evalctx512/evaluation.json",
+          "sha256": "fe0d06530daf04846953d901375f620ad76db041a6eeee697ef0023554f94d84"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "c4632a15e1f6f1f103771e3dabdb1bbd1b428b1d6a04fe4194ee266b1e5974f6",
+        "evaluation_max_tokens": 512,
+        "evaluation_model_sha256": "4a270bd3bfed3d0d6e7a7c2e50bc02a41f041ae30ad77d6c8d9f217f8417305f",
+        "id": "u17000-train1024-eval512",
+        "metrics": {
+          "canonical_dev_test": {
+            "roc_auc": 0.9915354556866495,
+            "rows": 303645,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.7183264542985148
+          },
+          "promptshield_test": {
+            "roc_auc": 0.9306238071104501,
+            "rows": 23516,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.5175763182238667
+          },
+          "real_finance_negatives": {
+            "false_flags_at_selected_component_threshold": 1,
+            "rows": 7043
+          },
+          "sep": {
+            "both_correct_at_selected_component_threshold": 0.38406113537117903,
+            "pair_ordering": 0.7677947598253275,
+            "roc_auc": 0.7705118371121832,
+            "rows": 18320,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.4982532751091703
+          }
+        },
+        "native_context_evaluation": false,
+        "runtime_seconds": 6002.022994232364,
+        "score_artifact_sha256": "8c7a51ebe6655b6f5d070b81b79601e47e11b8088ab9bfece27d43f4f272e337",
+        "scoring_sha256": "3b7ce188ee1ecd392aaa47666df71fc611f6fabe04c4b31d2340e4ec7fbc9419",
+        "selected_component_threshold_1pct": 0.986777178247695,
+        "training_max_tokens": 1024
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/evaluation-update-17000-trainctx1024-evalctx1024/evaluation.json",
+          "sha256": "e2d6162ada5a67969a4b3bab23f7c83aa1b69cba15f72b4e0a4b10383aff0a9b"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "94c5091a967460f4a2eb51b369c5f925a8215163687bbf474c4253cf2cc2fd09",
+        "evaluation_max_tokens": 1024,
+        "evaluation_model_sha256": "4a270bd3bfed3d0d6e7a7c2e50bc02a41f041ae30ad77d6c8d9f217f8417305f",
+        "id": "u17000-train1024-eval1024",
+        "metrics": {
+          "canonical_dev_test": {
+            "roc_auc": 0.9915450450186343,
+            "rows": 303645,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.7185875048506015
+          },
+          "promptshield_test": {
+            "roc_auc": 0.9441862313680182,
+            "rows": 23516,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.528522972556275
+          },
+          "real_finance_negatives": {
+            "false_flags_at_selected_component_threshold": 2,
+            "rows": 7043
+          },
+          "sep": {
+            "both_correct_at_selected_component_threshold": 0.42041484716157207,
+            "pair_ordering": 0.7677947598253275,
+            "roc_auc": 0.7705118371121832,
+            "rows": 18320,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.4982532751091703
+          }
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 6171.2168822148815,
+        "score_artifact_sha256": "4d70a38620c1da4a4a5260b6d6bcf8fb55f11a7cb0f24f89cc3fe07a0fb6c946",
+        "scoring_sha256": "c59ac1b7bcaf63ccc77cbc180d77dd37aabf73aa111dfd7f75242ed9de3ffe0d",
+        "selected_component_threshold_1pct": 0.9702399060540358,
+        "training_max_tokens": 1024
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/evaluation-update-18500-trainctx1024-evalctx512/evaluation.json",
+          "sha256": "44f9d37eb1c274b350a03db9d8120506389dcee609930d37dbef1748f9893217"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "periodic_validation",
+          "snapshot_sha256": "e33f9deeec260c20d3d60f86158a5d1c13f05d55e50288b58b337bc002cd08af",
+          "update": 18500
+        },
+        "evaluation_identity_sha256": "a274846ace21cab4c226b76151cfb3a37fa35f93f049480c482bf608534d226a",
+        "evaluation_max_tokens": 512,
+        "evaluation_model_sha256": "7ca8304c0d1edafe2421a6448dafedd8a69da7aa9e2fc48fea82acb1dd15d725",
+        "id": "u18500-train1024-eval512",
+        "metrics": {
+          "canonical_dev_test": {
+            "roc_auc": 0.9901366174883476,
+            "rows": 303645,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.669785162451053
+          },
+          "promptshield_test": {
+            "roc_auc": 0.9503613818208021,
+            "rows": 23516,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.5698427382053654
+          },
+          "real_finance_negatives": {
+            "false_flags_at_selected_component_threshold": 2,
+            "rows": 7043
+          },
+          "sep": {
+            "both_correct_at_selected_component_threshold": 0.39497816593886464,
+            "pair_ordering": 0.75382096069869,
+            "roc_auc": 0.7617266904711961,
+            "rows": 18320,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.49934497816593887
+          }
+        },
+        "native_context_evaluation": false,
+        "runtime_seconds": 6132.60512006795,
+        "score_artifact_sha256": "a347e9e15055e8067284478b0afa1d644027b8dead500b2f6d07fcbcf4565e6a",
+        "scoring_sha256": "3b7ce188ee1ecd392aaa47666df71fc611f6fabe04c4b31d2340e4ec7fbc9419",
+        "selected_component_threshold_1pct": 0.9441768588653857,
+        "training_max_tokens": 1024
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/evaluation-update-18500-trainctx1024-evalctx1024/evaluation.json",
+          "sha256": "933342acb8b6c171f2a720210df5e4e71dc6c67714874f9d95b2c327d2e8b6bb"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "periodic_validation",
+          "snapshot_sha256": "e33f9deeec260c20d3d60f86158a5d1c13f05d55e50288b58b337bc002cd08af",
+          "update": 18500
+        },
+        "evaluation_identity_sha256": "b914e27d995fb8b7cd80c6b4b65a1e1a7d67fcbdf00ccc530dcd5db92a1c962e",
+        "evaluation_max_tokens": 1024,
+        "evaluation_model_sha256": "7ca8304c0d1edafe2421a6448dafedd8a69da7aa9e2fc48fea82acb1dd15d725",
+        "id": "u18500-train1024-eval1024",
+        "metrics": {
+          "canonical_dev_test": {
+            "roc_auc": 0.9901038490677606,
+            "rows": 303645,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.6691431192013264
+          },
+          "promptshield_test": {
+            "roc_auc": 0.9614636131229122,
+            "rows": 23516,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.5852605612087574
+          },
+          "real_finance_negatives": {
+            "false_flags_at_selected_component_threshold": 2,
+            "rows": 7043
+          },
+          "sep": {
+            "both_correct_at_selected_component_threshold": 0.41375545851528384,
+            "pair_ordering": 0.75382096069869,
+            "roc_auc": 0.7617266904711961,
+            "rows": 18320,
+            "tpr_at_descriptive_same_panel_1pct_fpr": 0.49934497816593887
+          }
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 6205.2520292317495,
+        "score_artifact_sha256": "9dd45d03fbbeb95c0f95bf46501f86f63a86f46dadcce24bee4bb57ba9a19788",
+        "scoring_sha256": "c59ac1b7bcaf63ccc77cbc180d77dd37aabf73aa111dfd7f75242ed9de3ffe0d",
+        "selected_component_threshold_1pct": 0.8783142453629531,
+        "training_max_tokens": 1024
+      }
+    ],
+    "native_reserve": [
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/redteam-reserve-evaluation-update-17000-trainctx512-evalctx512/evaluation.json",
+          "sha256": "a2e94a6a7acff865f7cb5f1ae1df388227a6ebeff8cd3f7f527bd207bf33cbea"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "8468a35ceedb6ce06c35f2d98781e5f656ba44ca1b602af00c0b8094a296f0e8",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "cc62f3c8f04d54a0823f99017ef6855157548c7abdc25594719c3998cbb9091c",
+        "evaluation_max_tokens": 512,
+        "id": "u17000-train512-eval512-reserve",
+        "metrics": {
+          "bare_harmful_off_target": {
+            "flag_rate": 0.10350877192982456,
+            "flagged": 413,
+            "interpretation": "off-target flag rate on harmful requests without attested instruction subversion; not benign FPR",
+            "rows": 3990
+          },
+          "pooled_flag_rate": {
+            "flag_rate": 0.2676056338028169,
+            "flagged": 1368,
+            "interpretation": "mixture flag rate across the two reserve classes; not attack recall",
+            "rows": 5112
+          },
+          "source_attested_subversion": {
+            "flagged": 955,
+            "recall": 0.8511586452762924,
+            "rows": 1122
+          },
+          "truncated_rows": 543
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 126.43118820292875,
+        "score_artifact_sha256": "0ef5974df65eeeaff24ff11f14ed8cfcccccfc46b6b117eed765d3919b1a8737",
+        "scoring_sha256": "d16993df438c1641c8e1e6f9bd1a3b6636d3a73378be51a063d1cb8cc59dac44",
+        "training_max_tokens": 512
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/redteam-reserve-evaluation-update-17000-trainctx1024-evalctx1024/evaluation.json",
+          "sha256": "4a6a8893af28267640af4d789281354533711811f59997ea9ae0fcf3fdd4b884"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "87f9d97178ecbad907327b84f85fcdf412eab88c4eaf674b21d51ac0b729c9e6",
+        "evaluation_max_tokens": 1024,
+        "id": "u17000-train1024-eval1024-reserve",
+        "metrics": {
+          "bare_harmful_off_target": {
+            "flag_rate": 0.1037593984962406,
+            "flagged": 414,
+            "interpretation": "off-target flag rate on harmful requests without attested instruction subversion; not benign FPR",
+            "rows": 3990
+          },
+          "pooled_flag_rate": {
+            "flag_rate": 0.2699530516431925,
+            "flagged": 1380,
+            "interpretation": "mixture flag rate across the two reserve classes; not attack recall",
+            "rows": 5112
+          },
+          "source_attested_subversion": {
+            "flagged": 966,
+            "recall": 0.8609625668449198,
+            "rows": 1122
+          },
+          "truncated_rows": 65
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 129.1528115789406,
+        "score_artifact_sha256": "751183853efa22aaf54199560956d9cf0d3787118eaaa8ec3c4428aab5eb252a",
+        "scoring_sha256": "f4369248651a4981800fce544e8e95a67fbca18998902cee9d823df22ea3faf4",
+        "training_max_tokens": 1024
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/redteam-reserve-evaluation-update-18500-trainctx1024-evalctx1024/evaluation.json",
+          "sha256": "60206577b200163ae2461ae29c6831129d3c8c4ff836b853c947429c006ac050"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "periodic_validation",
+          "snapshot_sha256": "e33f9deeec260c20d3d60f86158a5d1c13f05d55e50288b58b337bc002cd08af",
+          "update": 18500
+        },
+        "evaluation_identity_sha256": "cfb1a9cfde09cfa6347b2f41971531e43cdf8ae7a2090d54b634627f2d48fe14",
+        "evaluation_max_tokens": 1024,
+        "id": "u18500-train1024-eval1024-reserve",
+        "metrics": {
+          "bare_harmful_off_target": {
+            "flag_rate": 0.13208020050125313,
+            "flagged": 527,
+            "interpretation": "off-target flag rate on harmful requests without attested instruction subversion; not benign FPR",
+            "rows": 3990
+          },
+          "pooled_flag_rate": {
+            "flag_rate": 0.29518779342723006,
+            "flagged": 1509,
+            "interpretation": "mixture flag rate across the two reserve classes; not attack recall",
+            "rows": 5112
+          },
+          "source_attested_subversion": {
+            "flagged": 982,
+            "recall": 0.875222816399287,
+            "rows": 1122
+          },
+          "truncated_rows": 65
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 129.22798324003816,
+        "score_artifact_sha256": "0a926ed11c2f4fc21af6edbab0be10797e51579f329fade83cf686a363614d76",
+        "scoring_sha256": "f4369248651a4981800fce544e8e95a67fbca18998902cee9d823df22ea3faf4",
+        "training_max_tokens": 1024
+      }
+    ],
+    "swe_rebench_longcode": [
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/longcode-evaluation-update-17000-trainctx512-evalctx512/evaluation.json",
+          "sha256": "eacf32b7d035d47a578023957197c02259508e6fae93cfa277edf6a46b79863e"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "8468a35ceedb6ce06c35f2d98781e5f656ba44ca1b602af00c0b8094a296f0e8",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "2d71545bf5eab07977aedfea8c9490affb31cf1c43ba4f988da3936b70fa2731",
+        "evaluation_max_tokens": 512,
+        "full_panel_evaluation_sha256": "f881a5e53d3aa3e4db905a23c1fbde4063cf5317a21af96321fc75b3d0ee0b18",
+        "id": "u17000-train512-eval512-longcode",
+        "metrics": {
+          "dev_test": {
+            "attack_recall": 1.0,
+            "both_correct": 0.9948735475051265,
+            "clean_false_flags": 15,
+            "clean_flag_rate": 0.005126452494873548,
+            "clean_high_gate_flags": 0,
+            "pair_ordering": 1.0,
+            "pairs": 2926
+          },
+          "validation": {
+            "attack_recall": 1.0,
+            "clean_false_flags": 20,
+            "clean_flag_rate": 0.0072254335260115606,
+            "pair_ordering": 1.0,
+            "pairs": 2768
+          }
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 2566.9339806423523,
+        "training_max_tokens": 512
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/longcode-evaluation-update-17000-trainctx512-evalctx1024/evaluation.json",
+          "sha256": "824d5b3fb1e94d692508ee2e41d856ad49a1e4a247df6dc463cdc627546790a8"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "8468a35ceedb6ce06c35f2d98781e5f656ba44ca1b602af00c0b8094a296f0e8",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "8877e957a75418adbfc4ad53b6d98aebaf934ce90be55d9041d994201bd3d1b3",
+        "evaluation_max_tokens": 1024,
+        "full_panel_evaluation_sha256": "89ac838268634c9d66ee089286bc50f6546be26965f8904d2961990b86ba663a",
+        "id": "u17000-train512-eval1024-longcode",
+        "metrics": {
+          "dev_test": {
+            "attack_recall": 1.0,
+            "both_correct": 0.9979494190020506,
+            "clean_false_flags": 6,
+            "clean_flag_rate": 0.002050580997949419,
+            "clean_high_gate_flags": 0,
+            "pair_ordering": 1.0,
+            "pairs": 2926
+          },
+          "validation": {
+            "attack_recall": 0.9996387283236994,
+            "clean_false_flags": 12,
+            "clean_flag_rate": 0.004335260115606936,
+            "pair_ordering": 0.9996387283236994,
+            "pairs": 2768
+          }
+        },
+        "native_context_evaluation": false,
+        "runtime_seconds": 2572.6986744878814,
+        "training_max_tokens": 512
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/longcode-evaluation-update-17000-trainctx1024-evalctx512/evaluation.json",
+          "sha256": "23f54b513b3c45831b995e5462eb5d2e4cfabe5c2b8b65a338a595cb20318bf2"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "82822da89499ec15b619bbbe79f9f85ea7cb2e89e328f473b411bc00457b869f",
+        "evaluation_max_tokens": 512,
+        "full_panel_evaluation_sha256": "fe0d06530daf04846953d901375f620ad76db041a6eeee697ef0023554f94d84",
+        "id": "u17000-train1024-eval512-longcode",
+        "metrics": {
+          "dev_test": {
+            "attack_recall": 1.0,
+            "both_correct": 0.9989747095010253,
+            "clean_false_flags": 3,
+            "clean_flag_rate": 0.0010252904989747095,
+            "clean_high_gate_flags": 0,
+            "pair_ordering": 1.0,
+            "pairs": 2926
+          },
+          "validation": {
+            "attack_recall": 1.0,
+            "clean_false_flags": 9,
+            "clean_flag_rate": 0.0032514450867052024,
+            "pair_ordering": 1.0,
+            "pairs": 2768
+          }
+        },
+        "native_context_evaluation": false,
+        "runtime_seconds": 2545.9810983422212,
+        "training_max_tokens": 1024
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/longcode-evaluation-update-17000-trainctx1024-evalctx1024/evaluation.json",
+          "sha256": "cec87164caadc1eefe3043f16fbb84a7db07f6bcf5c9c9903512e83b8e15f97f"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "pre_registered_comparison",
+          "snapshot_sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+          "update": 17000
+        },
+        "evaluation_identity_sha256": "3e472a6f3c7f0c45de58fcc3060f476c4509d9723aeb210dd2fb9f3128115ab4",
+        "evaluation_max_tokens": 1024,
+        "full_panel_evaluation_sha256": "e2d6162ada5a67969a4b3bab23f7c83aa1b69cba15f72b4e0a4b10383aff0a9b",
+        "id": "u17000-train1024-eval1024-longcode",
+        "metrics": {
+          "dev_test": {
+            "attack_recall": 1.0,
+            "both_correct": 0.9993164730006835,
+            "clean_false_flags": 2,
+            "clean_flag_rate": 0.000683526999316473,
+            "clean_high_gate_flags": 0,
+            "pair_ordering": 1.0,
+            "pairs": 2926
+          },
+          "validation": {
+            "attack_recall": 1.0,
+            "clean_false_flags": 7,
+            "clean_flag_rate": 0.0025289017341040463,
+            "pair_ordering": 1.0,
+            "pairs": 2768
+          }
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 2511.970881994348,
+        "training_max_tokens": 1024
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/longcode-evaluation-update-18500-trainctx1024-evalctx512/evaluation.json",
+          "sha256": "2798e8414a6d903686ffdfb659c7142747d32edfba552ba6b2e41ff83ac04854"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "periodic_validation",
+          "snapshot_sha256": "e33f9deeec260c20d3d60f86158a5d1c13f05d55e50288b58b337bc002cd08af",
+          "update": 18500
+        },
+        "evaluation_identity_sha256": "96ea2b8dfb7bf85187e6218597f1ed5f69b2c1117b3c344b81ce4034992ddb92",
+        "evaluation_max_tokens": 512,
+        "full_panel_evaluation_sha256": "44f9d37eb1c274b350a03db9d8120506389dcee609930d37dbef1748f9893217",
+        "id": "u18500-train1024-eval512-longcode",
+        "metrics": {
+          "dev_test": {
+            "attack_recall": 1.0,
+            "both_correct": 0.9982911825017088,
+            "clean_false_flags": 5,
+            "clean_flag_rate": 0.0017088174982911825,
+            "clean_high_gate_flags": 0,
+            "pair_ordering": 1.0,
+            "pairs": 2926
+          },
+          "validation": {
+            "attack_recall": 1.0,
+            "clean_false_flags": 7,
+            "clean_flag_rate": 0.0025289017341040463,
+            "pair_ordering": 1.0,
+            "pairs": 2768
+          }
+        },
+        "native_context_evaluation": false,
+        "runtime_seconds": 2590.630712673068,
+        "training_max_tokens": 1024
+      },
+      {
+        "artifact": {
+          "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/longcode-evaluation-update-18500-trainctx1024-evalctx1024/evaluation.json",
+          "sha256": "71eaeb051739a14fe0f1cde00f55e9c693a7315e162e13020c59f86b324d07c1"
+        },
+        "checkpoint": {
+          "epoch": 3,
+          "role": "periodic_validation",
+          "snapshot_sha256": "e33f9deeec260c20d3d60f86158a5d1c13f05d55e50288b58b337bc002cd08af",
+          "update": 18500
+        },
+        "evaluation_identity_sha256": "cbbef1a04c266606eeb3e2bc4967ceefa738ace92dd293883c66e93ddade2b82",
+        "evaluation_max_tokens": 1024,
+        "full_panel_evaluation_sha256": "933342acb8b6c171f2a720210df5e4e71dc6c67714874f9d95b2c327d2e8b6bb",
+        "id": "u18500-train1024-eval1024-longcode",
+        "metrics": {
+          "dev_test": {
+            "attack_recall": 1.0,
+            "both_correct": 0.9989747095010253,
+            "clean_false_flags": 3,
+            "clean_flag_rate": 0.0010252904989747095,
+            "clean_high_gate_flags": 0,
+            "pair_ordering": 1.0,
+            "pairs": 2926
+          },
+          "validation": {
+            "attack_recall": 1.0,
+            "clean_false_flags": 9,
+            "clean_flag_rate": 0.0032514450867052024,
+            "pair_ordering": 1.0,
+            "pairs": 2768
+          }
+        },
+        "native_context_evaluation": true,
+        "runtime_seconds": 2534.164754893165,
+        "training_max_tokens": 1024
+      }
+    ]
+  },
+  "inputs": {
+    "additional_pair_archive_sha256": "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba",
+    "data_manifest_sha256": "8432adedea4e2fec4c80140e2a73f6e5d82cf9f0803a3057498589e7c418c557",
+    "external_manifest_sha256": "f2e07c759c5f836ac731ad9ae86d6ddd72213dff3f8aeb19c4418a1fe5fb932a",
+    "pair_archive_sha256": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+    "routing_views": {
+      "dev_test": {
+        "rows": 441896,
+        "sha256": "0f0f08854aeeb974e617204157621422b2d5c1c0889c4e1aa07e8e37fcf34501"
+      },
+      "train": {
+        "rows": 1477802,
+        "sha256": "7c01d8bc5f0789f464fa2bdcae11098b2abb21a69ac872c7e27417bdcaec9443"
+      },
+      "validation": {
+        "rows": 201382,
+        "sha256": "e022f15d0dccca50d00ef5b267558187d9c2b271fa9ae478b98e9f5cbcb5d944"
+      }
+    }
+  },
+  "panels": {
+    "calibration": {
+      "role": "threshold selection only; disjoint from checkpoint selection by lineage and near-overlap components",
+      "row_identity_sha256": "de23d1df497eb8437368839d36d92eb75f2c81b39d9ef4a497bf6b9993d0616b",
+      "rows": 116138
+    },
+    "canonical_dev_test": {
+      "row_identity_sha256": "d39702f528764b7801feb4dc2c13a4abb13845ba0848fda3b391bbd72cdb51a8",
+      "rows": 303645
+    },
+    "promptshield_test": {
+      "row_identity_sha256": "5e0b6c170e54c593a110614f3d147f88f5c1d9d87404ebbdf2eaf0af64acdc60",
+      "rows": 23516
+    },
+    "real_finance_negatives": {
+      "rows": 7043,
+      "sources": [
+        "banking77",
+        "financebench",
+        "harper_valley_bank",
+        "tatqa"
+      ]
+    },
+    "redteam_reserve": {
+      "archive_sha256": "685e75c25509634b57dc2ccaf20e2c952873391c10fa2af0c4bc1440df76ed7e",
+      "bare_harmful_rows": 3990,
+      "row_identity_sha256": "9c7d01f1976d9745c344f33ff618ac4d0e143b96c0f8373638a02e2d1e9c4996",
+      "rows": 5112,
+      "source_attested_rows": 1122
+    },
+    "sep": {
+      "pairs": 9160,
+      "row_identity_sha256": "215118e594a427112d150f5bc56c43602660a06df9c8a5c92064f1d59f9ce2f9",
+      "rows": 18320
+    },
+    "swe_rebench_v2": {
+      "pair_manifest_sha256": "1f3a7dfdf9a35c4910f2762cc8b971dc54cdf1af1036b754a2753b4d2f0fb45b",
+      "source_revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
+      "splits": {
+        "dev_test": {
+          "archive_sha256": "20c109c68d25fee9b07cb3c4f0046266248f966a5c6aa0a93c083ae60e5d40d1",
+          "content_sha256": "02faad6c972ee08f625acc8c88bd2b48954407b5c180de04bcf935646ddf496e",
+          "pairs": 2926,
+          "repositories": 334
+        },
+        "validation": {
+          "archive_sha256": "54c961a9ed2df61ff9f88fa5464faacf0ec1fbbf91721ef9fa9c9c6d911c5d7b",
+          "content_sha256": "9085ceac615cef70ffd756a9505bf42340798932017ea91b14fe5130744aaf6b",
+          "pairs": 2768,
+          "repositories": 337
+        }
+      },
+      "training_pair_archive_sha256": "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba"
+    }
+  },
+  "prerequisites": {
+    "context_parity": {
+      "passed": true,
+      "path": "artifacts/mmbert/arm6-context-parity-cap1024-efficient-s42-r3-mb24.json",
+      "required_probes": 12,
+      "sha256": "ab2ca66759bd31064f85ef3b6c931310dd4784247ad7060fe86519c2a626df36",
+      "successful_probes": 12
+    },
+    "context_tail_audit": {
+      "audited_row_instances": 1647409,
+      "over_512_tokens": {
+        "attack": 71210,
+        "clean": 13397
+      },
+      "passed": true,
+      "path": "artifacts/mmbert/context-tail-audit-cap512-vs1024-s42-v2.json",
+      "sha256": "dd6aad99efba698f9cfb32da3aa7e1a2f1e51a759f3e8ccd7baf3142f84e7b4a"
+    }
+  },
+  "promotion_authorized": false,
+  "purpose": "checksum-bound compact index of the completed mmBERT context study and the packaged update-18,500 diagnostic",
+  "reading_rules": [
+    "Update 17,000 is the pre-registered fixed snapshot for the 512-versus-1,024 training-context comparison.",
+    "Update 18,500 is the checkpoint chosen by the historical training-time BCE selector and is a post-training diagnostic, not a replacement selected from the open evaluation panels.",
+    "TPR@1% values are descriptive same-panel coordinates; each panel selects its own threshold and the values are not transported production operating points.",
+    "Reserve bare-harmful rates are off-target flag rates on harmful requests without attested instruction subversion, not benign FPR.",
+    "SWE-rebench long-code attack results are in-family template evidence; repository grouping protects clean task contexts, not attack-template novelty.",
+    "Trackio is a compact visualization only. The artifacts and SHA-256 values in this file are the evidence."
+  ],
+  "schema_version": 1,
+  "source_provenance": {
+    "archive": {
+      "path": "reports/provenance/mmbert-context-campaign-source-20260812.tar.gz",
+      "sha256": "7326148fd92f2486afb908ae73f90c2ecb212d0c6bd68f8ef06fd0d6494dca11"
+    },
+    "git_durable_evidence": {
+      "checkpoints": {
+        "files": 3,
+        "path": "reports/provenance/mmbert-context-checkpoints-20260812/",
+        "sha256_manifest": "b70b29e14f196fdd6b4386104bea4c1ce8bbd974c7e90c6af6e0180d2ce2505d",
+        "storage": "git_lfs"
+      },
+      "result_artifacts": {
+        "files": 21,
+        "path": "reports/provenance/mmbert-context-results-20260812/",
+        "sha256_manifest": "441c7b901cc80d2476eea71cb2e1429075d449012d33b3e5269a1916d22c488c"
+      },
+      "trackio": {
+        "databases": 2,
+        "path": "reports/provenance/trackio-20260812/",
+        "sha256_manifest": "d5b5d1457aab3596825f272bd909b76f6af6e8030c670a82528c2ddd066f96f0",
+        "storage": "git_lfs_zstd"
+      }
+    },
+    "embedded_git_head": "14e2375ebe1d8c7ca50fda4856ad7427b4841c9f",
+    "embedded_sha256sum_verification": "passed for every archived entry on 2026-08-12",
+    "note": "The archive preserves exact experiment/evaluator/trainer sources and launchers before worktree cleanup.",
+    "uv_lock_sha256": "b8b5814c8e6bb74b081c4d6046d255438e09dffd079a60a85b96362c5944a39f"
+  },
+  "study_id": "mmbert-noharm-context-512-vs-1024-fixed-u17000",
+  "superseded_records": [
+    {
+      "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/evaluation-update-17000/evaluation.json",
+      "reason": "legacy record omitted explicit training/evaluation context and evaluation identity; retained for provenance only",
+      "sha256": "0a5bbc11d6015f48ac53af70e23318ab584d3ab7b526b597c94035e3682c2d5f",
+      "superseded_by": "u17000-train512-eval512"
+    },
+    {
+      "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/redteam-reserve-evaluation-update-17000/evaluation.json",
+      "reason": "legacy record omitted explicit training/evaluation context and evaluation identity; retained for provenance only",
+      "sha256": "a29655c324ed1bf43165523e15e2f8f2697c5a9d3e03a035f49421e209095aae",
+      "superseded_by": "u17000-train512-eval512-reserve"
+    }
+  ],
+  "training_runs": {
+    "train_context_1024": {
+      "comparison_protocol": {
+        "complete_all_updates": true,
+        "early_stopping": false,
+        "epoch_final_role": "descriptive",
+        "pre_registered_snapshot": true,
+        "pre_registered_update": 17000,
+        "selection_rule_role": "secondary"
+      },
+      "completed_epochs": 3,
+      "completed_updates": 25083,
+      "model_id": "jhu-clsp/mmBERT-base",
+      "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+      "packaged_selector_checkpoint": {
+        "epoch": 3,
+        "pre_registered_comparison": false,
+        "selection_loss": 0.05889492930841143,
+        "selection_role": "secondary",
+        "selection_rule": "source_macro",
+        "updates": 18500,
+        "validation_point_role": "periodic_validation"
+      },
+      "recipe": {
+        "attention": "sdpa",
+        "batch_size": 128,
+        "compiled": true,
+        "gradient_checkpointing": false,
+        "harmful_objective": null,
+        "length_grouped": false,
+        "lora_rank": 8,
+        "microbatch_size": 24,
+        "mode": "lora",
+        "pair_ranking_weight": 0.25,
+        "seed": 42,
+        "token_budget": 24576
+      },
+      "result": {
+        "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024/result.json",
+        "sha256": "f9f683fbf2aa8c5d0ab0490eebdd9707349eccce4b8b69b815bcf02b56957df6"
+      },
+      "run_name": "mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024",
+      "runtime": {
+        "device": "NVIDIA GeForce RTX 4090",
+        "interpretation": "The device is reported by the final resumed process; cumulative seconds span the interrupted L40S-to-RTX-4090 campaign and are not a single-hardware benchmark.",
+        "peak_reserved_bytes": 14904459264,
+        "seconds": 51070.326118717436
+      },
+      "selector_definition": "minimum equal-domain mean of Morgott and PromptShield validation BCE",
+      "selector_points": {
+        "17000": {
+          "morgott_row_micro_bce": 0.08668369679556238,
+          "morgott_source_macro_bce": 0.09168338998818448,
+          "pre_registered_comparison": true,
+          "promptshield_bce": 0.027010339962957573,
+          "selection_loss": 0.059346864975571026,
+          "worst_source": "lmsys_arena",
+          "worst_source_bce": 0.4740769841801067
+        },
+        "18500": {
+          "morgott_row_micro_bce": 0.16741736534063859,
+          "morgott_source_macro_bce": 0.09481044354165136,
+          "pre_registered_comparison": false,
+          "promptshield_bce": 0.022979415075171497,
+          "selection_loss": 0.05889492930841143,
+          "worst_source": "tensor_trust_raw",
+          "worst_source_bce": 0.7588966755957033
+        }
+      },
+      "snapshots": [
+        {
+          "path": "artifacts/mmbert/runs/.mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024.snapshots/update-017000.pt",
+          "sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+          "update": 17000
+        },
+        {
+          "path": "artifacts/mmbert/runs/.mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024.snapshots/update-018500.pt",
+          "sha256": "e33f9deeec260c20d3d60f86158a5d1c13f05d55e50288b58b337bc002cd08af",
+          "update": 18500
+        }
+      ],
+      "training_max_tokens": 1024,
+      "training_source_sha256": "3338db61ad42bad08d928974f698d563f99964dc8602fad475f66c6d8b3ee876"
+    },
+    "train_context_512": {
+      "comparison_protocol": {
+        "complete_all_updates": true,
+        "early_stopping": false,
+        "epoch_final_role": "descriptive",
+        "pre_registered_snapshot": true,
+        "pre_registered_update": 17000,
+        "selection_rule_role": "secondary"
+      },
+      "completed_epochs": 3,
+      "completed_updates": 25083,
+      "model_id": "jhu-clsp/mmBERT-base",
+      "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+      "packaged_selector_checkpoint": {
+        "epoch": 3,
+        "pre_registered_comparison": true,
+        "selection_loss": 0.05741260575490113,
+        "selection_role": "secondary",
+        "selection_rule": "source_macro",
+        "updates": 17000,
+        "validation_point_role": "periodic_validation"
+      },
+      "recipe": {
+        "attention": "sdpa",
+        "batch_size": 128,
+        "compiled": true,
+        "gradient_checkpointing": false,
+        "harmful_objective": null,
+        "length_grouped": false,
+        "lora_rank": 8,
+        "microbatch_size": 24,
+        "mode": "lora",
+        "pair_ranking_weight": 0.25,
+        "seed": 42,
+        "token_budget": null
+      },
+      "result": {
+        "path": "artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/result.json",
+        "sha256": "49fd6d41dff0638f1044b1e6446ef7d1b1f8f4789e16d0b7010b87eccf76f529"
+      },
+      "run_name": "mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control",
+      "runtime": {
+        "device": "NVIDIA L40S",
+        "peak_reserved_bytes": 7734296576,
+        "seconds": 14854.138520785142
+      },
+      "selector_definition": "minimum equal-domain mean of Morgott and PromptShield validation BCE",
+      "selector_points": {
+        "17000": {
+          "morgott_row_micro_bce": 0.0741508944054825,
+          "morgott_source_macro_bce": 0.08180836561311072,
+          "pre_registered_comparison": true,
+          "promptshield_bce": 0.033016845896691537,
+          "selection_loss": 0.05741260575490113,
+          "worst_source": "browsesafe",
+          "worst_source_bce": 0.398975803820448
+        }
+      },
+      "snapshots": [
+        {
+          "path": "artifacts/mmbert/runs/.mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control.snapshots/update-017000.pt",
+          "sha256": "8468a35ceedb6ce06c35f2d98781e5f656ba44ca1b602af00c0b8094a296f0e8",
+          "update": 17000
+        }
+      ],
+      "training_max_tokens": 512,
+      "training_source_sha256": "52f7904eb07278b0a322dd908c3857d2bc8670539605a89b9eb7153707f00eab"
+    }
+  }
+}

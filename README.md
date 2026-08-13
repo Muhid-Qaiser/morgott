@@ -174,7 +174,8 @@ The separate cascade path scans complete normalized artifacts using ordered 512-
 The later owner-authorized LP-FT comparison added repository-grouped SWE-rebench V2 matched pairs and substantially reduced long-task clean flags, but it collapsed on PromptShield transfer and indirect-document recall.
 That candidate was rejected, its weights are not registered, and the maintained LoRA and cascade remain unchanged.
 Its weights, scores, result records, and reproduction code are retained only for later comparison; the progress checkpoint was deleted after its digest was recorded.
-None of these artifacts authorize another training run, and exact findings and limitations are in `reports/model-experiments.md`.
+None of these artifacts by themselves justify another training run; exact
+findings and limitations are in `reports/model-experiments.md`.
 
 The maintained mmBERT package can prepare the pinned external data, preflight the complete canonical mixture, train a frozen head or rank-8 LoRA, reproduce the completed LP-FT comparison, and evaluate a run:
 
@@ -199,8 +200,8 @@ The registered full-mixture LoRA identity fails closed unless it uses microbatch
 The single generic output treats direct injection, indirect injection, and jailbreak as positive instruction subversion and does not expose separate subtype scores.
 Source-supported harmful content without subversion may remain as a negative counterexample; this is not a harmfulness score.
 It keeps the retained SDPA attention contract; an FA2 run requires its own pinned kernel and mmBERT parity record.
-Having a maintained runner does not authorize a new experiment or promote its output.
-The evidence gates in `docs/roadmap.md` still apply.
+Having a maintained runner does not waive the evidence gates in
+`docs/roadmap.md` or promote its output.
 
 The registered model keys and exact hashes are in `model-artifacts.json`.
 Score downstream JSONL without producing a decision:
@@ -330,7 +331,7 @@ is promoted; their durable conclusions are summarized in
 - `reports/label-audit.md`: label interpretation and known ambiguity.
 - `reports/corpus-sanity-audit.md`: corpus-wide integrity checks and critical limitations.
 - `reports/attention-kernel-audit.md`: measured SDPA versus FlashAttention-2 and context-length constraints.
-- `reports/model-experiments.md`: concise historical model decision ledger.
+- `reports/model-experiments.md`: authoritative historical model decision ledger.
 - `docs/data-contract.md`: canonical data, label, source, and split contracts.
 - `docs/threat-model.md`: trust boundary and security claims.
 - `docs/roadmap.md`: evidence-gated next steps.

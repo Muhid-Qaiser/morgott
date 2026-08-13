@@ -1012,7 +1012,8 @@ The retained result, evaluation, new-data manifest, and held-out comparison SHA-
 The rejected encoder, head, and scores are retained through Git LFS for later comparison but remain unregistered and unavailable to maintained inference.
 Their SHA-256 digests are `271df253cd4fc807c6060059e9bb62dc85e0c317aed15a892be5c7186cf3d515`, `2b5dbd647484e8753441118bf45bccd7c3836982474978f653c2de606bef98b5`, and `1cf04f41f76c2048d0170880a4794dae1d97da1efb38d1523a8cfd4c6c415aa5` respectively.
 The owner approved deleting the resumable progress checkpoint after its SHA-256 `0e46cad31c0a92284ee85a6011c7ba723b78e4fcaac76f8669a4a69929585c2e` was recorded; the retained weights, scores, and evaluation records remain available for later comparison.
-The natural disentangling candidate is rank-8 LoRA retrained on the identical new mixture at matched updates, which requires its own owner authorization and frozen protocol.
+The natural disentangling candidate is rank-8 LoRA retrained on the identical
+new mixture at matched updates under its own frozen protocol.
 
 ### Deferred improvement ledger
 
@@ -1022,3 +1023,414 @@ The natural disentangling candidate is rank-8 LoRA retrained on the identical ne
 4. Keep the rejected advisory-warning result as fixed development evidence, and test any revision only on a prospective task or attack family with a warning-aware adaptive attack.
 5. Replace the inconclusive coupled transfer sequence with an independently versioned task whose clean completion demonstrably consumes the untrusted record and whose vulnerable control passes before the same proposal is forked, while retaining stable identity, oracle authority, one-shot capabilities, and complete-state gates.
 6. Treat clarification replies as typed data bound to the original task scope, and require a separate authorization event before a reply can add actions or widen capabilities; evaluate any task-conditioned reviewer only as an advisory layer on a new prospective source with legitimate scope-expansion controls.
+
+## Capacity ladder arms and pinned guard baselines (2026-08-07 to 2026-08-12)
+
+All numbers from `artifacts/mmbert/runs*/`, `artifacts/comparisons/<slug>/`, and
+the frozen Aug 6 red-team reserve. Advisory only; no promotion is implied and
+no new ladder arm in this section is registered.
+The checksum-bound context-study index is
+[`mmbert-context-comparison.json`](mmbert-context-comparison.json); it, rather
+than the Trackio UI, is the compact machine-readable source for the comparison.
+
+### Batch-ordering ablation strongly implicates length grouping
+
+The Aug 7 full-mixture LoRA (`mmbert-lora-full-s42-mb24`) improved canonical and
+SEP but lost public transfer. The
+`runs-ablation/mmbert-lora-full-s42-mb24` `--no-length-grouped` arm is a
+batch-ordering-focused ablation. Preserved provenance records intervening
+training/data-source changes, so this is not a single-variable experiment and
+does not prove grouping is the sole cause. It nevertheless strongly implicates
+grouping in the observed trade. Detection at a fixed descriptive 1% FPR:
+
+| Panel | Jul 28 | Aug 7, length-grouped | Aug 7, grouping off |
+|---|---:|---:|---:|
+| Canonical dev-test | 54.5% | 70.2% | 56.3% |
+| SEP | 38.9% | 59.5% | 49.8% |
+| PromptShield test | 47.4% | 40.2% | 54.8% |
+
+In this ablation, turning grouping off recovers PromptShield above both prior
+models and gives back most of the in-distribution and indirect-injection gain.
+Because provenance does not support a single-variable claim, treat length
+grouping as a leading mechanism rather than a proven sole cause. Choose the
+operating point per deployment target and state which arm produced a quoted
+number.
+
+### Arm 6 and its no-harm control completed
+
+The rank-8, no-length-grouping multitask arm
+`mmbert-lora-full-s42-mb24-nolengthgroup-harmful-balanced` completed all 25,083
+updates and three epochs in 14,436 seconds of packaged runtime on the L40S. It
+used compiled SDPA at 512 tokens, the complete 1.07-million-row canonical
+primary objective, PromptShield fitting rows, and the retained matched-pair
+archive. The run result is
+`artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-harmful-balanced/result.json`.
+
+The pre-registered update 17,000 and the later update 23,000 diagnostic were
+both scored on the complete current panels. The TPR columns are threshold-free
+same-panel coordinates at descriptive 1% FPR; the finance column uses each
+checkpoint's calibration-selected 1% component threshold.
+
+| Checkpoint | Canonical AUROC / TPR@1% | PromptShield AUROC / TPR@1% | SEP AUROC / TPR@1% / pair order | Real-finance flags |
+|---|---:|---:|---:|---:|
+| Arm 6 at 17,000, pre-registered primary | 0.98784 / 45.88% | 0.93224 / 54.18% | 0.78937 / **47.31%** / 79.47% | **0 / 7,043** |
+| Arm 6 at 23,000, post-run diagnostic | 0.99000 / **61.35%** | 0.92668 / 43.11% | **0.86299** / **56.92%** / **87.58%** | 13 / 7,043 |
+| No-harm control at 17,000, explicit 512/512 | **0.99013** / 60.15% | **0.93299 / 57.00%** | 0.81941 / 44.81% / 82.53% | **0 / 7,043** |
+
+At their transported thresholds, update 17,000 flags 2,304 of 2,400
+multi-turn controls, 159 of 160 llmail controls, and one of 492 SWE-bench
+Verified tasks; update 23,000 flags 2,233, 160, and zero respectively. These
+adversarial-control slices are diagnostics, not ordinary-benign FPR estimates.
+The full records are the two `evaluation-update-*/evaluation.json` files under
+the Arm 6 run directory.
+
+The explicit 512/512 no-harm evaluation flags 2,152 of 2,400 multi-turn
+controls, 160 of 160 llmail controls, and one of 492 SWE-bench Verified tasks.
+Its calibration-selected threshold is 0.9902915235. Training packaged in
+14,854.14 seconds; the later resumable full-panel evaluation took 6,124.06
+seconds. The package records update 17,000 as its exact weights provenance, so
+a duplicate "final package" evaluation would score the same weights and is not
+required.
+
+The frozen 5,112-row red-team reserve does not provide a benign denominator.
+"Bare harmful" below is an off-target flag rate on harmful requests without
+source-attested instruction subversion, not FPR.
+
+| Checkpoint | Source-attested subversion | Bare-harmful off-target | Pooled flag rate | Auxiliary mean score |
+|---|---:|---:|---:|---:|
+| Arm 6 at 17,000 | 981 / 1,122 = 87.43% | 582 / 3,990 = 14.59% | 1,563 / 5,112 = 30.58% | 0.5044 |
+| Arm 6 at 23,000 | **986 / 1,122 = 87.88%** | 626 / 3,990 = 15.69% | 1,612 / 5,112 = 31.53% | 0.0973 |
+| No-harm control at 17,000, explicit 512/512 | 955 / 1,122 = 85.12% | **413 / 3,990 = 10.35%** | **1,368 / 5,112 = 26.76%** | n/a |
+
+The reserve gain at update 23,000 is only 0.45 percentage points while its
+off-target rate is 1.10 points worse. More importantly, no frozen selection
+rule authorized choosing 23,000 after looking at PromptShield, SEP, finance, or
+the reserve. Update 17,000 therefore remains the pre-registered primary result;
+update 23,000 is a useful trade-off diagnostic, not a replacement or promotion.
+The aggregate-only records are the two
+`redteam-reserve-evaluation-update-*/evaluation.json` files under the run.
+
+The matched comparison is therefore mixed but useful. Against the explicit
+512/512 control, adding the harmful head lowers canonical TPR@1% by 14.27
+points and PromptShield TPR@1% by 2.82 points, lowers canonical and PromptShield
+AUROC, and raises bare-harmful off-target flags by 4.24 points. It improves SEP
+TPR@1% by 2.50 points and reserve source-attested recall by 2.32 points,
+although the no-harm control has better SEP AUROC and pair ordering. The head
+hurts most primary panels and specificity for a narrow gain on two recall
+coordinates; that is not a case for keeping the current auxiliary recipe.
+
+The no-harm artifacts are under
+`artifacts/mmbert/runs/mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control/`.
+The no-harm recipe became the 512-token base for the completed matched
+1,024-token study below. Its explicit-cap records supersede the earlier
+implicit-cap full and reserve JSONs; the old files remain indexed for
+provenance. Compact curves may be viewed in the curated Trackio project
+`morgott`, but UI run IDs are not evidence. This remains advisory development
+evidence and does not promote or register either run.
+
+The live Trackio store was non-destructively curated on Aug 12 after a verified
+SQLite backup. All 19 historical run identities and every metric-row record
+were retained; redundant JSON metric keys and historical per-core telemetry
+were projected out of the live viewer, while the complete pre-curation history
+remains at `/workspace/hf_cache/trackio-archive/20260812T105500Z/` with its own
+checksum manifest. Two compact `decision-summaries` runs add only eight
+headline metrics: the fixed-update native 512/1,024 comparison and the native
+1,024 update-17,000/update-18,500 diagnostic. The live project now has 21 runs
+and 68 user-metric keys. All eight historical positive-row
+`val_bce_missed_attacks/*` curves are retained, but these legacy BCEs are not
+miss counts or recall; future runs use label-aware validation metrics. The
+checksum-bound JSON records remain authoritative.
+
+### The auxiliary harmful head is source-confounded
+
+This limitation concerns only the auxiliary harmful-intent head. It does not
+mean the instruction-subversion objective was trained on a small corpus: that
+primary objective used more than one million canonical rows plus PromptShield
+and 33,757 long-task and other matched pairs.
+
+Only 49.60% of Arm 6 canonical training rows have a known harmfulness label.
+WildJailbreak supplies 99.7149% of all harmful-positive supervision and
+ToxicChat supplies the remainder. The harmfulness 2x2 contains no
+`injection=1, harmful=0` examples, so the auxiliary head never sees an explicit
+counterexample to "subversion cues imply harmfulness." Checkpoint selection is
+more confounded still: 5,614 of its 5,622 harmful positives are WildJailbreak,
+whose checkpoint slice contains only one harmful-negative row.
+
+At update 17,000, pooled canonical-dev harmful AUROC / AP is 0.9268 / 0.8273,
+but the unweighted macro over the four sources containing both classes is only
+0.7647 / 0.7862. Calibration BCE / AUROC / AP is 0.2394 / 0.9871 / 0.9659.
+At update 23,000, pooled dev ranking rises to 0.9418 / 0.8606 while calibration
+BCE worsens to 0.4642 and the reserve's unlabeled auxiliary mean falls from
+0.5044 to 0.0973. The correct conclusion is narrow WildJailbreak/style learning
+with unstable score scale, not broad harmfulness generalization. There is no
+supported harmful-score operating threshold and no evidence for extending this
+recipe beyond three epochs.
+
+The completed no-harm control isolates the current auxiliary loss as a net
+negative for the primary objective under the pre-registered comparison. Any
+future harmful branch needs the data, sampling, and validation repairs above;
+longer training on the existing branch is not the next experiment.
+
+### The 1,024-token context study completed
+
+The original 512-versus-1,024 canary showed that 1,024 tokens fit on the L40S
+at 13.90 GiB peak but ran about 1.557 times slower. Its first numerical
+comparison mixed efficient-only compiled SDPA with an eager path that could also
+choose Flash, so that failure did not isolate compilation.
+
+The replacement same-backend diagnostic forced efficient SDPA for all paths
+and ran three fresh replicas each of uncompiled, Dynamo-eager, AOT-eager, and
+Inductor. All 12 probes and every cross-mode and within-mode gate passed the
+unchanged loss-relative, gradient-cosine, and gradient-relative-L2 thresholds
+of 0.05, 0.99, and 0.20. The result is
+`artifacts/mmbert/arm6-context-parity-cap1024-efficient-s42-r3-mb24.json`,
+SHA-256 `ab2ca66759bd31064f85ef3b6c931310dd4784247ad7060fe86519c2a626df36`.
+This cleared the numerical correctness prerequisite.
+
+The launch-binding V2 tail audit then counted every fitting, selection,
+calibration, and already-open evaluation row instance using the exact prepared
+population and tokenizer. It found 13,397 clean and 71,210 attack instances
+whose tokenized input exceeds the 512-token baseline, against a predeclared
+minimum of 300 per label. The gate passes. The aggregate-only artifact is
+`artifacts/mmbert/context-tail-audit-cap512-vs1024-s42-v2.json`, SHA-256
+`dd6aad99efba698f9cfb32da3aa7e1a2f1e51a759f3e8ccd7baf3142f84e7b4a`;
+it records 1,647,409 audited row instances and 717.05 seconds runtime. V2 binds
+the patched training source used for launch and supersedes the pre-patch V1
+audit even though the affected counts are unchanged.
+
+The first 1,024-token launch reached update 500 and failed before validation
+completed. The cap-specific validation path relied on `train_encoder=False`,
+whose no-gradient context covered the encoder but not the trainable head;
+converting the head output to NumPy therefore raised on a tensor requiring
+gradients. No score or model claim was recovered from that attempt. Its Trackio
+run remains preserved under
+`mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024-failed-u500`.
+
+The narrow correction wrapped the complete cap-specific validation loop in
+`torch.no_grad()`. Its regression test explicitly observed disabled gradient
+mode in the 1,024 path. The 13-test context-length module, focused Ruff checks,
+formatting, the then-current full repository check of 398 tests with 10 skipped,
+and a finite CUDA smoke all passed before relaunch. No smoke input text was
+retained.
+
+The corrected run
+`mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024` completed all 25,083
+updates and three epochs. Its cumulative packaged runtime was 51,070.33 seconds
+across the interrupted and resumed campaign. The final resumed process reports
+an RTX 4090 and 14.90 GB peak reserved VRAM, while earlier work ran on an L40S.
+The 512 control also ran on an L40S, so these runtimes are operational
+observations rather than a hardware speed comparison. Both runs use the same
+seed, data/input hashes, base model,
+rank-8 LoRA objective, optimizer, effective batch, no-length-group ordering,
+and fixed update 17,000 comparison point. Their trainer hashes differ because
+the 1,024 launch required explicit cap, validation, and provenance support; the
+machine index preserves both.
+
+Update 17,000 is the pre-registered primary context comparison. Every full row
+below was rescored with an explicit training/evaluation context. TPR values are
+descriptive same-panel 1% FPR coordinates; finance flags use each evaluation's
+own calibration-selected component threshold. Long-code flags are clean
+SWE-rebench V2 dev-test tasks out of 2,926; every row had 100% attack recall and
+100% pair ordering.
+
+| Train / eval tokens | Canonical AUROC / TPR@1% | PromptShield AUROC / TPR@1% | SEP AUROC / TPR@1% / pair order | Finance flags | Long-code clean flags |
+|---|---:|---:|---:|---:|---:|
+| 512 / 512 | 0.99013 / 60.15% | 0.93299 / 57.00% | 0.81941 / 44.81% / **82.53%** | **0 / 7,043** | 15 / 2,926 |
+| 512 / 1,024 | 0.99002 / 59.44% | **0.94486 / 57.11%** | 0.81941 / 44.81% / **82.53%** | 2 / 7,043 | 6 / 2,926 |
+| 1,024 / 512 | 0.99154 / 71.83% | 0.93062 / 51.76% | 0.77051 / **49.83%** / 76.78% | 1 / 7,043 | 3 / 2,926 |
+| 1,024 / 1,024 | **0.99155 / 71.86%** | 0.94419 / 52.85% | 0.77051 / **49.83%** / 76.78% | 2 / 7,043 | **2 / 2,926** |
+
+Training at 1,024 is the material lever. At native context, it gains 11.71
+points canonical TPR@1%, 5.01 points SEP TPR@1%, and reduces long-code clean
+flags from 15 to 2. It loses 4.15 points PromptShield TPR@1% and 5.75 points SEP
+pair ordering, while adding two finance flags. Changing inference context alone
+is modest and mixed: 512-trained PromptShield changes by +0.11 points and
+canonical by -0.71 points at 1,024 evaluation; for the 1,024-trained checkpoint,
+PromptShield changes by +1.09 points and canonical by +0.03 points.
+
+The native frozen reserve also favors neither model uniformly. The 512 model
+recalls 955 of 1,122 source-attested rows (85.12%), flags 413 of 3,990
+bare-harmful controls (10.35%), and truncates 543 rows. The 1,024 model recalls
+966 (86.10%), flags 414 (10.38%), and truncates only 65. The extra context
+therefore raises attested recall by 0.98 points with essentially unchanged
+off-target rate and materially less truncation.
+
+The historical packager selected update 18,500 for the 1,024 run because its
+recorded equal-domain selection loss, 0.0588949, narrowly beat update 17,000 at
+0.0593469. That 0.0004519 improvement hides opposed components: PromptShield
+BCE improves by 0.0040309, while Morgott source-macro BCE worsens by 0.0031271,
+row-micro BCE worsens from 0.08668 to 0.16742, and worst-source BCE worsens from
+0.47408 to 0.75890.
+
+| Native 1,024 checkpoint | Canonical AUROC / TPR@1% | PromptShield AUROC / TPR@1% | SEP AUROC / TPR@1% / pair order | Finance flags | Reserve attested / bare-harmful | Long-code clean flags |
+|---|---:|---:|---:|---:|---:|---:|
+| Update 17,000, pre-registered | **0.99155 / 71.86%** | 0.94419 / 52.85% | **0.77051** / 49.83% / **76.78%** | 2 / 7,043 | 86.10% / **10.38%** | **2 / 2,926** |
+| Update 18,500, packaged selector | 0.99010 / 66.91% | **0.96146 / 58.53%** | 0.76173 / **49.93%** / 75.38% | 2 / 7,043 | **87.52%** / 13.21% | 3 / 2,926 |
+
+Update 18,500 gains 5.67 points PromptShield TPR@1%, 0.11 points SEP TPR@1%,
+and 1.43 points reserve attested recall. It loses 4.94 points canonical TPR@1%,
+1.40 points pair ordering, adds 2.83 points bare-harmful off-target flags, and
+adds one long-code clean flag. Its 512-token rescore is also complete: 66.98%
+canonical, 56.98% PromptShield, and 49.93% SEP TPR@1%, two finance flags, and
+five long-code clean flags. Evaluation context does not reverse the checkpoint
+trade-off.
+
+Decision: retain update 17,000 as the primary fixed-update 1,024 context result
+and update 18,500 as the packaged-selector diagnostic. The study supports
+continuing the 1,024-token research direction, while retaining 512 as the
+PromptShield and SEP-pair counterpoint. It does not establish that update
+18,500 is best overall, promote either checkpoint, or authorize blocking. A
+2,048-token training campaign requires a new tail and numerical gate plus a
+frozen checkpoint-selection protocol before launch.
+
+Exact paths, hashes, identities, metrics, deltas, superseded implicit-cap
+records, and the 512/1,024 matrix are in
+[`mmbert-context-comparison.json`](mmbert-context-comparison.json). The exact
+campaign source and launchers are preserved in
+`reports/provenance/mmbert-context-campaign-source-20260812.tar.gz`, SHA-256
+`7326148fd92f2486afb908ae73f90c2ecb212d0c6bd68f8ef06fd0d6494dca11`;
+every embedded checksum was reverified before consolidation.
+Because the RunPod volume is disposable, Git also retains byte-exact,
+checksum-verified copies of all 21 aggregate result JSONs under
+`reports/provenance/mmbert-context-results-20260812/`, the three evaluated
+snapshots through Git LFS under
+`reports/provenance/mmbert-context-checkpoints-20260812/`, and both curated and
+pre-curation Trackio databases through Git LFS under
+`reports/provenance/trackio-20260812/`. The snapshots remain advisory and
+unregistered; per-row score journals are reproducible caches rather than the
+only copy of any finding.
+
+### LP-FT arm rejected again
+
+`mmbert-base-full-lpft-s42-top22-mb24` (top-22 layers unfrozen from the frozen
+head) is best-in-class in distribution and collapses on transfer: 75.3% canonical
+at 1% FPR against 3.0% PromptShield and 3.3% SEP; at its own threshold, canonical
+recall 66.85% at 0.60% FPR but PromptShield 6.60% and SEP 0.73%. Consistent with
+the 2026-08-05 LP-FT rejection. Stays outside `model-artifacts.json`.
+
+### Pinned guard baselines on identical rows
+
+Open-panel columns use the threshold-free descriptive 1% FPR coordinate.
+Reserve columns use each baseline's recorded native operating point or, where
+there is no native cutoff, its shared calibration threshold. Reserve slices
+follow `by_subversion_basis`, never the pooled aggregate, so those columns are
+not on one common threshold scale.
+
+| System | Canonical | PromptShield | SEP | Reserve attested | Reserve bare-harmful |
+|---|---:|---:|---:|---:|---:|
+| mmbert-lora-full-s42 (registered) | 55.2% | 48.0% | 38.8% | 43.0% | 9.3% |
+| Full pipeline (encoder + selective review) | n/a | n/a | n/a | 91.7% | 22.9% |
+| Llama Prompt Guard 2 86M | 43.1% | 15.7% | 3.3% | 80.0% | 2.6% |
+| ModernGuard-1 | 0.0% | 0.1% | 2.4% | 99.2% | 81.3% |
+| Qwen3Guard-Stream-4B, query head | 1.7% | 5.9% | 0.5% | 98.8% | 95.7% |
+| Qwen3Guard-Stream-4B, jailbreak head | 37.7% | 9.2% | 8.0% | 0.0% | 0.1% |
+| Kanana Safeguard Prompt 2.1B | 37.7% | 1.7% | 3.0% | 84.0% | 10.8% |
+
+Reading rules. ModernGuard and the Qwen3Guard query head score near-perfectly on
+attested reserve attacks while flagging 81.3% and 95.7% of bare-harmful rows and
+10.9% to 13.6% of canonical benign rows at native cutoff: they approximate
+flag-everything, and their low-FPR coordinates are near the floor because their
+scores saturate at 1.0. The jailbreak head is the opposite degenerate case. Only
+the registered shadow and Prompt Guard 2 separate the two reserve classes, and
+Prompt Guard 2 is the more selective of the two on the off-target class.
+
+The reserve also reproduces the open-panel gap: the registered shadow recalls
+43.05% of attested reserve rows against 86.57% on canonical. The harness records
+this as descriptive, since the populations differ in composition as well as in
+publication status.
+
+The registered row above previously carried the Aug 7 length-grouped arm's
+70.2% / 40.2% / 59.5% values under the registered model's name. The corrected
+55.2% / 48.0% / 38.8% values come from the current registered rescore at
+`artifacts/comparisons/mmbert-lora-full-s42-rescore/evaluation.json`.
+
+Prompt Guard's current-panel artifact is
+`artifacts/comparisons/prompt-guard-2-86m-current-panel/evaluation.json`, pinned
+at revision `a8ded8e697ce7c355e395a0df51f94adb4a2fd27`. It scores 303,645 canonical
+rows at 43.116% TPR@1%, rather than silently reusing the historical
+`prompt-guard-2-86m-full-mixture` artifact's 303,376-row 42.527% result. The
+PromptShield coordinate is unchanged at 15.742%; SEP moves from 3.352% in the
+historical artifact to 3.308% on the current panel. The 80.0% / 2.6% reserve
+figures are from this same current-panel run at its native 0.5 cutoff.
+
+Both Qwen3Guard Stream 4B readouts are complete on all current panels and the
+reserve at exact revision `27a8f4e52e66dc01a03d20f41e362bb9c9bda7bf`:
+the generic query risk score and the separate Jailbreak category score. They
+are different projections of one checkpoint, not two independently trained
+models, and neither is a promotion candidate.
+
+Kanana Safeguard Prompt 2.1B is complete at revision
+`167d74d4706b236580b0e48318337c7ac6ba7848`. Its pooled unsafe mass uses the
+shared calibration threshold 0.9997723699 because the documented three-way
+first-token argmax has no equivalent scalar cutoff. Canonical AUROC / TPR@1%
+is 0.91054 / 37.73%; PromptShield is 0.73882 / 1.70%; SEP is 0.66168 / 3.02%,
+with 69.63% pair ordering. It flags zero of 7,043 real-finance controls. On the
+positive-only reserve it recalls 942 of 1,122 source-attested rows (83.96%),
+flags 432 of 3,990 bare-harmful rows (10.83%), and flags 1,374 of 5,112 rows
+pooled (26.88%).
+
+The finalized evidence source is
+`artifacts/comparisons/kanana-safeguard-prompt-2.1b/evaluation.json`. The
+current invocation scored 414,507 rows in 3,719.51 seconds after resuming
+52,224 completed calibration rows whose earlier shard timing is not retained;
+the reserve portion took 54.68 seconds. The compact `morgott`
+Trackio project is visualization only. Kanana is not promoted: despite clean
+finance behavior, it is weaker than the compact no-harm candidate on every
+open-panel 1% recall coordinate, does not improve the reserve target/off-target
+trade, and costs a 2.1-billion-parameter guard to obtain that result.
+
+### LLM reviewers on the reserve, bounded owner-approved run
+
+Shared binary prompt contract, valid-output basis. DeepSeek V4 Flash 0731 scored
+27.2% pooled; on attested rows the every-input configuration reached 88.8%.
+Alibaba Qwen 3.7 Flash reached 93.0% attested and 23.0% bare-harmful but only on
+the 93.3% of rows its provider answered after a full retry pass, with failures
+correlated to content, so its rows are not identical to the other systems'.
+GPT-OSS Safeguard 20B reached 22.9% attested at 97.1% coverage.
+
+### Guard-baseline status and deferred work
+
+Granite Guardian 4.1 8B is terminally recorded as `extraction_unavailable`, not
+as a zero score. At pinned revision
+`69820a3f3c8f265e2fe61b5a8fcea2146c2fcb16`, the documented `risk_name` setting
+does not change the rendered prompt, the 4.1 template carries no guardian
+logic, and the card's regex-parsed generated answer does not expose the
+continuous first-position probability required by this ROC harness. The
+fail-closed record is
+`artifacts/comparisons/granite-guardian-4.1-8b/evaluation.json`; rerunning the
+same revision cannot create a comparable scalar.
+
+A Granite Guardian 3.2 3B A800M canary completed 4,096 length-stratified rows in
+16 minutes 28 seconds of queue wall time, but the harness's stdout suppression
+also swallowed the final JSON. The 90-minute projection predicate therefore
+failed closed and no full panel ran. This is a throughput-harness failure, not a
+quality result, so Granite 3.2 has no comparison row.
+
+A separate hash-ranked 4,096-row canary scored the current ProtectAI DeBERTa-v3
+prompt-injection v2 checkpoint at pinned revision
+`90c9989b1a342275dd0d1a95aad283c04e075671`. BF16 512-token scoring at batch 32
+took 52.53 seconds after 53.26 seconds of loading, or 77.98 rows per second.
+Its conservative full-panel projection was 116.86 minutes, so it failed the
+60-minute gate and no full evaluation ran. On the canary only, native-cutoff
+canonical / PromptShield / SEP AUROC was 0.96910 / 0.67992 / 0.69185, while the
+same-sample descriptive TPR@1% was 65.34% / 2.05% / 3.39%. These are sampled
+polarity diagnostics, not shared-threshold comparison evidence. The record is
+`artifacts/comparisons/protectai-deberta-v3-prompt-injection-v2-canary-4096/evaluation.json`,
+with an exact tracked copy at
+`reports/provenance/protectai-v2-canary-20260812.json`, SHA-256
+`e43bae32ad230804477e3881214d19aebb2f28973301089cd44d41344cd3a585`.
+The companion
+`reports/provenance/protectai-v2-canary-20260812.md` discloses that the exact
+producing canary/adapter source bytes were not retained; the JSON binds their
+hashes, while the current reusable harness is corrected but not byte-identical.
+
+Full-panel Granite 3.2 and ProtectAI v2 scoring is explicitly deferred future
+baseline work under the current runtime gates. Granite must first be rerun
+through the artifact-writing canary and establish a valid runtime projection;
+ProtectAI requires a deliberately longer gate or
+a faster evaluation path. Their absent full-panel rows are deliberate, do not
+imply zero scores, and do not block the completed context decision.
+
+AprielGuard remains unscored because access was unavailable and no speculative
+result is useful. It is not a required blocker for this ladder; no result should
+be inferred from the absence of an artifact.

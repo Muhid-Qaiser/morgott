@@ -158,5 +158,8 @@ At import time, that code globally replaces Transformers' LFM2 causal-mask funct
 Any future use should pin the exact revision, hash or vendor the reviewed custom code, record it in artifact provenance, and isolate it from unrelated LFM2 models.
 The current one-day-old release should not be allowed to turn a floating Hub revision into executable production code.
 
-Apart from the explicitly authorized bounded LFM frozen-head comparison, no further encoder sweep or promotion is authorized.
-The next evidence-producing work remains matched transaction data, paired multilingual transformations, known-span long documents, and prospective traffic-like negatives ([repository authorization](../AGENTS.md), [roadmap](../docs/roadmap.md)).
+Apart from the completed bounded LFM frozen-head comparison, no further encoder
+sweep is currently evidence-prioritized, and no result is promoted. The next
+evidence-producing work remains matched transaction data, paired multilingual
+transformations, known-span long documents, and prospective traffic-like
+negatives ([operating brief](../AGENTS.md), [roadmap](../docs/roadmap.md)).

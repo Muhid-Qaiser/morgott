@@ -162,9 +162,11 @@ Toxicity remains deferred until a second independent positive source and matched
 
 The completed frozen-head, reduced-mixture LoRA, and one-seed full-mixture LoRA experiments are the bounded exception recorded in `AGENTS.md`.
 Their already-consumed PromptShield and SEP results are development evidence, not a prospective final test.
-The maintained mmBERT trainer exists for reproducibility and a future explicitly authorized run.
+The maintained mmBERT trainer exists for reproducibility and future
+scientifically gated runs.
 The completed LP-FT exception does not satisfy those broader evidence requirements: its matched long-task data improved its same-source workload while external transfer regressed.
-The next encoder run remains deferred and requires a new explicit authorization and prospectively frozen, same-row comparison protocol.
+The next encoder run remains deferred until it has a prospectively frozen,
+same-row comparison protocol and satisfies the evidence prerequisites below.
 
 Before promoting auxiliary rows, follow the diagnostic-first OASST1 and
 WildJailbreak procedure in `reports/dataset-selection.md`; those rows must not

@@ -62,8 +62,15 @@ That scope contains the full-data frozen mmBERT head, one update-matched reduced
 On 2026-08-05 the owner separately authorized one LP-FT comparison using the rebuilt canonical mixture plus repository-grouped SWE-rebench V2 matched pairs.
 LP-FT reduced held-out same-source long-task clean flags from 7.31% to 0.17%, but reduced attack recall from 98.02% to 85.20%, collapsed PromptShield ranking, and nearly eliminated BrowseSafe and BIPIA recall.
 The LP-FT candidate was rejected, its weights are not registered for inference, and the full-mixture LoRA and maintained cascade remain unchanged.
+On 2026-08-12 a later bounded exception completed the matched no-harm
+512/1,024-token campaign. At its frozen comparison update, 1,024-token training
+improved canonical and indirect-document low-FPR recall and long-code clean
+specificity, but regressed PromptShield transfer and matched-pair ordering. A
+later packaged-selector checkpoint exposed a different trade rather than a
+clear winner. The study is advisory and does not promote either checkpoint.
 The retained weights, scores, trainer, and result records are comparison and reproducibility material only; the resumable checkpoint was deleted after its digest was recorded.
-These materials do not authorize more seeds, another LoRA or LP-FT run, production calibration, promotion, or blocking.
+These materials do not by themselves justify more seeds, another LoRA or LP-FT
+run, production calibration, promotion, or blocking.
 
 Exit condition: one reproducible shadow candidate improves on the cheap control
 across source-held-out evidence without unacceptable benign review load. This is
@@ -227,13 +234,13 @@ Do not import it into the maintained package.
 
 Before another encoder-tuning experiment, collect realistic matched transaction attacks and benign tasks plus prospective traffic-like negatives.
 The completed PIArena static panel now supplies same-row clean and attacked retrieval, question-answering, summarization, and long-context development evidence, but it is evaluation-only, publicly predates the remote model, and cannot authorize fitting.
-The repository-grouped SWE-bench Verified problem-statement slice now supplies a dev-test-only long-benign FPR denominator, not training authorization or the missing same-format attack arm.
-Paired multilingual transformations and an independently sourced known-span long-document diagnostic now exist, but the latter rejects text-only window and threshold repairs rather than supplying training authorization.
+The repository-grouped SWE-bench Verified problem-statement slice now supplies a dev-test-only long-benign FPR denominator, not fit-data evidence or the missing same-format attack arm.
+Paired multilingual transformations and an independently sourced known-span long-document diagnostic now exist, but the latter rejects text-only window and threshold repairs rather than supplying fit-data evidence.
 The future fit-leakage audit now removes U+034F and supplementary variation selectors U+E0100 through U+E01EF and filters one same-label intra-training duplicate.
 The registered model-input normalizer still preserves those code points; correct that behavior only as a prospectively evaluated model-input contract, not as an inference-only patch to retained weights.
 Do not repeat context-length, document-bag, or BIPIA augmentation ablations on the same labels.
 Do not sweep reinforcement-learning, focal-loss, or source-weighting objectives over the current open dev roles as a substitute for new evidence.
-The rejected LP-FT comparison confirms that matched long-task data can repair same-source clean workload while damaging external transfer; any future run requires new authorization, identical-row incumbent scoring, and frozen cross-source and indirect-document gates.
+The rejected LP-FT comparison confirms that matched long-task data can repair same-source clean workload while damaging external transfer; any future run requires identical-row incumbent scoring and frozen cross-source and indirect-document gates.
 Do not use the Rogue Security benchmark as independent evidence because more than half of its rows exactly overlap current canonical public sources.
 
 ## P2 - prospective evaluation

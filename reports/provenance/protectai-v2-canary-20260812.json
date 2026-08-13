@@ -1,0 +1,376 @@
+{
+  "advisory_only": true,
+  "baseline": {
+    "baseline": "protectai-deberta-v3-prompt-injection-v2",
+    "measures": "instruction subversion",
+    "model_id": "protectai/deberta-v3-base-prompt-injection-v2",
+    "model_identity": {
+      "files": {
+        "added_tokens.json": {
+          "bytes": 23,
+          "sha256": "dc046d04c9b0ada7ae6f1dc89c465801799acdf0c9a6aab8c15a1b2d5ca4e91f"
+        },
+        "config.json": {
+          "bytes": 994,
+          "sha256": "05079f4735092040b780d459027afab413faa6eeb66a548571a58832304b60bb"
+        },
+        "model.safetensors": {
+          "bytes": 737719272
+        },
+        "special_tokens_map.json": {
+          "bytes": 286,
+          "sha256": "9463f61e1b109a8eb4688b829260d7c6b1e6dff04c98ff7269bb89e2b92369b9"
+        },
+        "spm.model": {
+          "bytes": 2464616,
+          "sha256": "c679fbf93643d19aab7ee10c0b99e460bdbc02fedf34b92b05af343b4af586fd"
+        },
+        "tokenizer.json": {
+          "bytes": 8656744
+        },
+        "tokenizer_config.json": {
+          "bytes": 1284,
+          "sha256": "557b3d33d3f41b81ad769244e506549e98a1857d41dd58160aacd4d98d710b5a"
+        }
+      },
+      "id2label": {
+        "0": "SAFE",
+        "1": "INJECTION"
+      },
+      "max_position_embeddings": 512,
+      "num_labels": 2,
+      "positive_index": 1
+    },
+    "model_revision": "90c9989b1a342275dd0d1a95aad283c04e075671",
+    "native_cutoff": 0.5,
+    "native_operating_point": null,
+    "notes": [
+      "The generic encoder adapter derives class index 1 from the pinned config's SAFE / INJECTION id2label mapping; it does not assume a positional label convention.",
+      "The pinned snapshot uses only standard Transformers config, tokenizer, and safetensors files; trust_remote_code stays false.",
+      "Training-source overlap with PromptShield, SEP, and canonical development sources is not established, so this remains an already-open development baseline."
+    ],
+    "positive_class": "softmax over config label INJECTION",
+    "preprocessing": {
+      "architectural_max_tokens": null,
+      "attention_backend": null,
+      "batching": {
+        "bucket_rows": null,
+        "restore_order_before_journal_append": false,
+        "sort_key": null,
+        "strategy": "panel_order_v1"
+      },
+      "inference_dtype": "bfloat16",
+      "max_tokens": 512,
+      "text": "raw model-native input",
+      "truncation": "tail-truncated to the first max_tokens native tokens"
+    },
+    "role": "ProtectAI's binary DeBERTa-v3 prompt-injection detector"
+  },
+  "canary": {
+    "label_counts": {
+      "calibration": {
+        "negative": 439,
+        "positive": 585
+      },
+      "canonical_dev_test": {
+        "negative": 545,
+        "positive": 479
+      },
+      "promptshield_test": {
+        "negative": 731,
+        "positive": 293
+      },
+      "sep": {
+        "negative": 522,
+        "positive": 502
+      }
+    },
+    "ordered_row_identity_sha256": {
+      "calibration": "27a8f4c7d20c3bc20ac8fe180cc575c8e8af45c5f196493f91fad43a77a562a5",
+      "canonical_dev_test": "b6cacc242803a184492e312838aee68f1d129949c9fa890464f9e76687a8413f",
+      "promptshield_test": "0929285d10684fa87682fb9ca8265430472a72a9b9e4612cd876b0a13a8127df",
+      "sep": "a641d85ef620b1074e08f727070ebff1dbd5fbd0c16038bf29f732f5911c3f05"
+    },
+    "ordered_scoring_input_sha256": {
+      "calibration": "c07395cd900a8519bf5e1eb6934cb3ede4a64e4397c6f341dc6e65e8f908a7be",
+      "canonical_dev_test": "170e8a77f98acbc47fb69bd7e2b3cf2d11b1931bd22b364e837af45a7a9c9561",
+      "promptshield_test": "c10f5d96b372f4d26134529b16e0d0dfbda1ec6b6b3860becda204cecc66c814",
+      "sep": "542270dd5c818c7abbd22d07beff00c3c724297fe2a42a6a6e3c160f1e86d7bb"
+    },
+    "rows": 4096,
+    "rows_per_slice": 1024,
+    "sampling": "lowest SHA-256 rank of guard-canary-v1, seed, slice, and row ID",
+    "seed": 42
+  },
+  "full_evaluation_launched": false,
+  "full_runtime_gate": {
+    "decision": "report_to_owner_before_full_scoring",
+    "full_panel_rows": 466731,
+    "maximum_seconds": 3600,
+    "passes": false,
+    "projected_redteam_seconds_conservative": 79.01424717442205,
+    "projected_standard_seconds": 6879.122139448706,
+    "projected_total_seconds_including_load": 7011.3941065459385
+  },
+  "limitations": [
+    "This hash-ranked sample is a throughput and polarity canary, not a comparable full-panel result.",
+    "Its 0.5-cutoff metrics are descriptive and do not use the registered shared-threshold protocol.",
+    "Already-open development data and undisclosed training overlap preclude a prospective claim."
+  ],
+  "model_weights_sha256": "6521cb8d0ac08148c81464899c424e6148fcc62befa371089fa4061d8b6e0424",
+  "panel": {
+    "panel_sha256": "2f2c032f63b35d223b06547f1e2289b935fbc70e2c4d7cb20045c1dfa470877d",
+    "redteam_row_identity_sha256": "9c7d01f1976d9745c344f33ff618ac4d0e143b96c0f8373638a02e2d1e9c4996",
+    "redteam_rows": 5112,
+    "row_identity_sha256": {
+      "calibration": "de23d1df497eb8437368839d36d92eb75f2c81b39d9ef4a497bf6b9993d0616b",
+      "canonical_dev_test": "d39702f528764b7801feb4dc2c13a4abb13845ba0848fda3b391bbd72cdb51a8",
+      "promptshield_test": "5e0b6c170e54c593a110614f3d147f88f5c1d9d87404ebbdf2eaf0af64acdc60",
+      "sep": "215118e594a427112d150f5bc56c43602660a06df9c8a5c92064f1d59f9ce2f9"
+    },
+    "rows": {
+      "calibration": 116138,
+      "canonical_dev_test": 303645,
+      "promptshield_test": 23516,
+      "sep": 18320
+    }
+  },
+  "polarity_smoke": {
+    "attack_greater_than_benign": true,
+    "attack_score": 0.9999997615814209,
+    "benign_score": 0.0002234163403045386,
+    "overflow": [
+      false,
+      false
+    ]
+  },
+  "purpose": "bounded guard throughput, identity, and polarity canary",
+  "quality_at_native_cutoff_0_5": {
+    "calibration": {
+      "descriptive_same_test": {
+        "0.1000%": {
+          "false_positive": 0,
+          "fpr": 0.0,
+          "recall": 0.6649572649572649,
+          "target_fpr": 0.001,
+          "threshold": 0.9999772310256958,
+          "true_positive": 389
+        },
+        "1.0000%": {
+          "false_positive": 4,
+          "fpr": 0.009111617312072893,
+          "recall": 0.7162393162393162,
+          "target_fpr": 0.01,
+          "threshold": 0.9981613755226135,
+          "true_positive": 419
+        }
+      },
+      "false_positive": 12,
+      "fpr": 0.02733485193621868,
+      "negative": 439,
+      "positive": 585,
+      "pr_auc": 0.9830060211217084,
+      "precision": 0.9746300211416491,
+      "recall": 0.788034188034188,
+      "roc_auc": 0.9751299573623037,
+      "rows": 1024,
+      "threshold": 0.5,
+      "true_positive": 461
+    },
+    "canonical_dev_test": {
+      "descriptive_same_test": {
+        "0.1000%": {
+          "false_positive": 0,
+          "fpr": 0.0,
+          "recall": 0.6388308977035491,
+          "target_fpr": 0.001,
+          "threshold": 0.9999227523803711,
+          "true_positive": 306
+        },
+        "1.0000%": {
+          "false_positive": 5,
+          "fpr": 0.009174311926605505,
+          "recall": 0.6534446764091858,
+          "target_fpr": 0.01,
+          "threshold": 0.999713122844696,
+          "true_positive": 313
+        }
+      },
+      "false_positive": 20,
+      "fpr": 0.03669724770642202,
+      "negative": 545,
+      "positive": 479,
+      "pr_auc": 0.968967768259182,
+      "precision": 0.9487179487179487,
+      "recall": 0.7724425887265136,
+      "roc_auc": 0.9691042117561433,
+      "rows": 1024,
+      "threshold": 0.5,
+      "true_positive": 370
+    },
+    "promptshield_test": {
+      "descriptive_same_test": {
+        "0.1000%": {
+          "false_positive": 0,
+          "fpr": 0.0,
+          "recall": 0.0,
+          "target_fpr": 0.001,
+          "threshold": 0.9999995231628419,
+          "true_positive": 0
+        },
+        "1.0000%": {
+          "false_positive": 7,
+          "fpr": 0.009575923392612859,
+          "recall": 0.020477815699658702,
+          "target_fpr": 0.01,
+          "threshold": 0.9895108342170715,
+          "true_positive": 6
+        }
+      },
+      "false_positive": 14,
+      "fpr": 0.019151846785225718,
+      "negative": 731,
+      "positive": 293,
+      "pr_auc": 0.4290394520768094,
+      "precision": 0.36363636363636365,
+      "recall": 0.027303754266211604,
+      "roc_auc": 0.6799185743032827,
+      "rows": 1024,
+      "threshold": 0.5,
+      "true_positive": 8
+    },
+    "sep": {
+      "descriptive_same_test": {
+        "0.1000%": {
+          "false_positive": 0,
+          "fpr": 0.0,
+          "recall": 0.00398406374501992,
+          "target_fpr": 0.001,
+          "threshold": 0.999841570854187,
+          "true_positive": 2
+        },
+        "1.0000%": {
+          "false_positive": 5,
+          "fpr": 0.009578544061302681,
+          "recall": 0.03386454183266932,
+          "target_fpr": 0.01,
+          "threshold": 0.3508661091327667,
+          "true_positive": 17
+        }
+      },
+      "false_positive": 3,
+      "fpr": 0.005747126436781609,
+      "negative": 522,
+      "positive": 502,
+      "pr_auc": 0.6523535022030691,
+      "precision": 0.8235294117647058,
+      "recall": 0.027888446215139442,
+      "roc_auc": 0.6918494603959641,
+      "rows": 1024,
+      "threshold": 0.5,
+      "true_positive": 14
+    }
+  },
+  "runtime": {
+    "batch_size": 32,
+    "by_slice": {
+      "calibration": {
+        "batching": {
+          "bucket_rows": null,
+          "model_batches_current_invocation": 32,
+          "padded_token_reduction_fraction_vs_panel_order": null,
+          "padded_tokens_current_invocation": null,
+          "padding_fraction_current_invocation": null,
+          "panel_order_padded_tokens_current_invocation": null,
+          "prepared_rows_current_invocation": null,
+          "rendered_tokens_current_invocation": null,
+          "restore_order_before_journal_append": false,
+          "sort_key": null,
+          "strategy": "panel_order_v1"
+        },
+        "resumed_rows": 0,
+        "rows_per_second": 66.9694927622429,
+        "score_journal_identity_sha256": null,
+        "scored_rows": 1024,
+        "seconds": 15.290544362273067
+      },
+      "canonical_dev_test": {
+        "batching": {
+          "bucket_rows": null,
+          "model_batches_current_invocation": 32,
+          "padded_token_reduction_fraction_vs_panel_order": null,
+          "padded_tokens_current_invocation": null,
+          "padding_fraction_current_invocation": null,
+          "panel_order_padded_tokens_current_invocation": null,
+          "prepared_rows_current_invocation": null,
+          "rendered_tokens_current_invocation": null,
+          "restore_order_before_journal_append": false,
+          "sort_key": null,
+          "strategy": "panel_order_v1"
+        },
+        "resumed_rows": 0,
+        "rows_per_second": 64.6971930102097,
+        "score_journal_identity_sha256": null,
+        "scored_rows": 1024,
+        "seconds": 15.827580028679222
+      },
+      "promptshield_test": {
+        "batching": {
+          "bucket_rows": null,
+          "model_batches_current_invocation": 32,
+          "padded_token_reduction_fraction_vs_panel_order": null,
+          "padded_tokens_current_invocation": null,
+          "padding_fraction_current_invocation": null,
+          "panel_order_padded_tokens_current_invocation": null,
+          "prepared_rows_current_invocation": null,
+          "rendered_tokens_current_invocation": null,
+          "restore_order_before_journal_append": false,
+          "sort_key": null,
+          "strategy": "panel_order_v1"
+        },
+        "resumed_rows": 0,
+        "rows_per_second": 75.33939951133762,
+        "score_journal_identity_sha256": null,
+        "scored_rows": 1024,
+        "seconds": 13.591825879178941
+      },
+      "sep": {
+        "batching": {
+          "bucket_rows": null,
+          "model_batches_current_invocation": 32,
+          "padded_token_reduction_fraction_vs_panel_order": null,
+          "padded_tokens_current_invocation": null,
+          "padding_fraction_current_invocation": null,
+          "panel_order_padded_tokens_current_invocation": null,
+          "prepared_rows_current_invocation": null,
+          "rendered_tokens_current_invocation": null,
+          "restore_order_before_journal_append": false,
+          "sort_key": null,
+          "strategy": "panel_order_v1"
+        },
+        "resumed_rows": 0,
+        "rows_per_second": 131.35474933096953,
+        "score_journal_identity_sha256": null,
+        "scored_rows": 1024,
+        "seconds": 7.795683104079217
+      }
+    },
+    "device": "NVIDIA GeForce RTX 4090",
+    "load_seconds": 53.25771992281079,
+    "peak_allocated_bytes": 1886403584,
+    "peak_reserved_bytes": 1895825408,
+    "rows_per_second": 77.97515337851515,
+    "score_seconds": 52.52955361455679
+  },
+  "schema_version": 1,
+  "source_sha256": {
+    "adapter_source": "c443405230826c9e5cec53a96bc056a6f390010ec645db3e0abd9b3462827f78",
+    "canary_source": "a1c89ba8c8ed9b2940f75fa8e8f7b1bcb67397c75ea6d7a5346f187fa7320519",
+    "data_manifest": "8432adedea4e2fec4c80140e2a73f6e5d82cf9f0803a3057498589e7c418c557",
+    "external_manifest": "f2e07c759c5f836ac731ad9ae86d6ddd72213dff3f8aeb19c4418a1fe5fb932a",
+    "harness_source": "f7aa7d4d8b3cbaef1dc24d26332275b4b909237bf6344e5705b1892137c0146a",
+    "lockfile": "b8b5814c8e6bb74b081c4d6046d255438e09dffd079a60a85b96362c5944a39f",
+    "matched_pairs": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+    "redteam_reserve": "685e75c25509634b57dc2ccaf20e2c952873391c10fa2af0c4bc1440df76ed7e"
+  }
+}

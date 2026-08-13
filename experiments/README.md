@@ -7,5 +7,13 @@ The exact source that produced the retained July 2026 artifacts remains at Git c
 The compact maintained recipe is a clean successor, so new runs record new source and input hashes rather than pretending to reproduce the historical files byte for byte.
 The durable historical conclusions and limitations remain in `reports/model-experiments.md`.
 
-Create `experiments/<study>/` only for an explicitly authorized study that does not belong in maintained model behavior.
+Create `experiments/<study>/` only for a bounded study with a written question,
+entry point, stop rule, and evidence destination that does not belong in
+maintained model behavior.
 Promote only code that has a continuing caller and a stable contract.
+
+Three loose files predate this directory contract and remain in place because
+historical reports bind their paths: `benchmark_mmbert_full_lora.py`,
+`evaluate_prompt_guard_2_full_mixture.py`, and `lfm25-frozen-backbone.patch`.
+Treat them as historical exceptions; new studies use subdirectories with a
+README.

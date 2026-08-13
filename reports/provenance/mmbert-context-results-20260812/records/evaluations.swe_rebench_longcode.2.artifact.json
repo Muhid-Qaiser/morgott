@@ -1,0 +1,215 @@
+{
+  "advisory_only": true,
+  "checkpoint": {
+    "epoch": 3,
+    "evaluation_max_tokens": 512,
+    "evaluation_model_sha256": "4a270bd3bfed3d0d6e7a7c2e50bc02a41f041ae30ad77d6c8d9f217f8417305f",
+    "native_context_evaluation": false,
+    "role": "pre_registered_comparison",
+    "run_name": "mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024",
+    "run_result_sha256": "f9f683fbf2aa8c5d0ab0490eebdd9707349eccce4b8b69b815bcf02b56957df6",
+    "snapshot_sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+    "training_max_tokens": 1024,
+    "update": 17000
+  },
+  "evaluation_identity_sha256": "82822da89499ec15b619bbbe79f9f85ea7cb2e89e328f473b411bc00457b869f",
+  "full_panel_evaluation": {
+    "evaluation_identity_sha256": "c4632a15e1f6f1f103771e3dabdb1bbd1b428b1d6a04fe4194ee266b1e5974f6",
+    "score_artifact_sha256": "8c7a51ebe6655b6f5d070b81b79601e47e11b8088ab9bfece27d43f4f272e337",
+    "scoring_sha256": "3b7ce188ee1ecd392aaa47666df71fc611f6fabe04c4b31d2340e4ec7fbc9419",
+    "sha256": "fe0d06530daf04846953d901375f620ad76db041a6eeee697ef0023554f94d84"
+  },
+  "inputs": {
+    "pair_manifest_sha256": "1f3a7dfdf9a35c4910f2762cc8b971dc54cdf1af1036b754a2753b4d2f0fb45b",
+    "source_revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
+    "splits": {
+      "dev_test": {
+        "archive_sha256": "20c109c68d25fee9b07cb3c4f0046266248f966a5c6aa0a93c083ae60e5d40d1",
+        "content_sha256": "02faad6c972ee08f625acc8c88bd2b48954407b5c180de04bcf935646ddf496e",
+        "pairs": 2926,
+        "repositories": 334
+      },
+      "validation": {
+        "archive_sha256": "54c961a9ed2df61ff9f88fa5464faacf0ec1fbbf91721ef9fa9c9c6d911c5d7b",
+        "content_sha256": "9085ceac615cef70ffd756a9505bf42340798932017ea91b14fe5130744aaf6b",
+        "pairs": 2768,
+        "repositories": 337
+      }
+    },
+    "training_pair_archive_sha256": "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba"
+  },
+  "limitations": [
+    "SWE-rebench V2 is already-open development evidence, not a prospective final test.",
+    "Repository grouping holds out task contexts but not attack templates.",
+    "The transported threshold is descriptive and is not approved for blocking.",
+    "Neither pair split is used for checkpoint or threshold selection."
+  ],
+  "metrics": {
+    "dev_test": {
+      "by_length": {
+        "at_least_8192_chars": {
+          "attack_high_gate_rate": 1.0,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9444444444444444,
+          "clean_flag_rate": 0.05555555555555555,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 18
+        },
+        "under_2048_chars": {
+          "attack_high_gate_rate": 0.9980384464495881,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9996076892899176,
+          "clean_flag_rate": 0.00039231071008238524,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 2549
+        },
+        "under_4096_chars": {
+          "attack_high_gate_rate": 0.9891304347826086,
+          "attack_recall": 1.0,
+          "auroc": 0.9999999999999999,
+          "both_correct": 1.0,
+          "clean_flag_rate": 0.0,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 276
+        },
+        "under_8192_chars": {
+          "attack_high_gate_rate": 0.9879518072289156,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9879518072289156,
+          "clean_flag_rate": 0.012048192771084338,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 83
+        }
+      },
+      "operation": {
+        "attack_windows": 4312,
+        "benign_windows": 4206,
+        "maximum_attack_windows": 93,
+        "maximum_benign_windows": 93
+      },
+      "overall": {
+        "attack_high_gate_rate": 0.9969241285030759,
+        "attack_recall": 1.0,
+        "auroc": 1.0,
+        "both_correct": 0.9989747095010253,
+        "clean_flag_rate": 0.0010252904989747095,
+        "clean_high_gate_rate": 0.0,
+        "pair_ordering": 1.0,
+        "pairs": 2926
+      },
+      "repository_macro": {
+        "attack_recall": 1.0,
+        "both_correct": 0.9954424484364603,
+        "clean_flag_rate": 0.004557551563539587,
+        "pair_ordering": 1.0,
+        "repositories": 334
+      }
+    },
+    "validation": {
+      "by_length": {
+        "at_least_8192_chars": {
+          "attack_high_gate_rate": 1.0,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.92,
+          "clean_flag_rate": 0.08,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 25
+        },
+        "under_2048_chars": {
+          "attack_high_gate_rate": 0.9991677070328756,
+          "attack_recall": 1.0,
+          "auroc": 0.9999999999999999,
+          "both_correct": 0.9991677070328756,
+          "clean_flag_rate": 0.0008322929671244278,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 2403
+        },
+        "under_4096_chars": {
+          "attack_high_gate_rate": 0.9962962962962963,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9925925925925926,
+          "clean_flag_rate": 0.007407407407407408,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 270
+        },
+        "under_8192_chars": {
+          "attack_high_gate_rate": 0.9857142857142858,
+          "attack_recall": 1.0,
+          "auroc": 1.0,
+          "both_correct": 0.9571428571428572,
+          "clean_flag_rate": 0.04285714285714286,
+          "clean_high_gate_rate": 0.0,
+          "pair_ordering": 1.0,
+          "pairs": 70
+        }
+      },
+      "operation": {
+        "attack_windows": 4029,
+        "benign_windows": 3932,
+        "maximum_attack_windows": 39,
+        "maximum_benign_windows": 39
+      },
+      "overall": {
+        "attack_high_gate_rate": 0.9985549132947977,
+        "attack_recall": 1.0,
+        "auroc": 0.9999997389655517,
+        "both_correct": 0.9967485549132948,
+        "clean_flag_rate": 0.0032514450867052024,
+        "clean_high_gate_rate": 0.0,
+        "pair_ordering": 1.0,
+        "pairs": 2768
+      },
+      "repository_macro": {
+        "attack_recall": 1.0,
+        "both_correct": 0.9972707566663186,
+        "clean_flag_rate": 0.0027292433336814706,
+        "pair_ordering": 1.0,
+        "repositories": 337
+      }
+    }
+  },
+  "provenance": {
+    "sources": {
+      "experiments/mmbert_longcode_snapshot_eval/run.py": "8bb4b5f004c2e7073dc81043fd0b4e2e878bf04dd977a8b0b034f4e1404d46ab",
+      "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+      "src/morgott/models/mmbert/evaluate.py": "fc3b8645579e36d29f2ef386a58d34616e63aaad202e92ea7f872d595d0d9d6d",
+      "src/morgott/models/mmbert/head_contract.py": "a9dfd30a345e3262f7aabb1c529459fec7c0b525ca2c8a806c4ae3c0d2f592fd",
+      "src/morgott/models/mmbert/score_journal.py": "d94537583feaa7138ffbb0da7f8dfeece3174382567b21c556dd3c2b509bfe8b",
+      "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b"
+    },
+    "uv_lock_sha256": "b8b5814c8e6bb74b081c4d6046d255438e09dffd079a60a85b96362c5944a39f"
+  },
+  "purpose": "fixed-checkpoint repository-held-out SWE-rebench V2 comparison",
+  "runtime": {
+    "peak_reserved_bytes": 1061158912,
+    "seconds": 2545.9810983422212
+  },
+  "schema_version": 1,
+  "scoring": {
+    "aggregation": "maximum primary-head probability over ordered windows",
+    "batch_size": 24,
+    "overlap_tokens": 128,
+    "score_journal_numeric_only": true,
+    "scoring_sha256": "e3f4605242a23ce37e347ba131255f930fb1958990e81764addc777b653d7328",
+    "window_tokens": 512
+  },
+  "threshold": {
+    "component_fpr_budget": "1.0000%",
+    "fixed_high_gate": 0.99999,
+    "selection_on_swe_rebench": false,
+    "source": "exact-checkpoint full-panel canonical calibration only",
+    "value": 0.986777178247695
+  }
+}

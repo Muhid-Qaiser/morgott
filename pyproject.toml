@@ -33,6 +33,14 @@ encoder-export = [
     "onnx>=1.17,<2",
     "onnxruntime>=1.20,<2",
 ]
+# Opt-in only. This pulls an executable attention kernel from the Hub, so it is
+# deliberately not part of `encoder`; see reports/attention-kernel-audit.md.
+fa2 = ["kernels==0.15.2"]
+# Opt-in only. Trackio is local-first -- metrics stay in a local SQLite store
+# under ~/.cache/huggingface/trackio unless a Space is explicitly named.
+# No corpus text is ever logged. The GPU extra supplies NVML telemetry so a
+# run cannot mistake free VRAM for idle compute or memory bandwidth.
+tracking = ["trackio[gpu]>=0.7,<1"]
 showcase = [
     "fastapi>=0.115,<1",
     "httpx>=0.27,<1",

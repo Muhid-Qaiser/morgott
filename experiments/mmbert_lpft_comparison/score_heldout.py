@@ -177,7 +177,7 @@ def main() -> int:
         import torch
 
         threshold = _descriptive_threshold(run)
-        result, encoder, tokenizer, head = _load_run(run)
+        result, encoder, tokenizer, head, _ = _load_run(run)
         model_report = {
             "descriptive_1pct_threshold": threshold,
             "high_gate": HIGH_GATE,

@@ -1,0 +1,4 @@
+archived_path	sha256	source_path
+trainctx512-update-017000.pt	8468a35ceedb6ce06c35f2d98781e5f656ba44ca1b602af00c0b8094a296f0e8	artifacts/mmbert/runs/.mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control.snapshots/update-017000.pt
+trainctx1024-update-017000.pt	6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774	artifacts/mmbert/runs/.mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024.snapshots/update-017000.pt
+trainctx1024-update-018500.pt	e33f9deeec260c20d3d60f86158a5d1c13f05d55e50288b58b337bc002cd08af	artifacts/mmbert/runs/.mmbert-lora-full-s42-mb24-nolengthgroup-noharm-ctx1024.snapshots/update-018500.pt

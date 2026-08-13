@@ -8,7 +8,10 @@
     "revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
     "license": "MIT",
     "url": "https://huggingface.co/jhu-clsp/mmBERT-base",
+    "config_sha256": "47b40fd2e1df8299426dd5f4bb18c28f028cfafcb51b73645f83e596d187eb37",
     "pytorch_model_sha256": "8ea64ec1ea4eb8fca0fc14b69a2ae571de6bfbc25fd214bb932dd4aba6a3a04e",
+    "special_tokens_map_sha256": "baec30ea10906f16adb8c18af7a34023002c1746542612b8b41c9f09e1351351",
+    "tokenizer_config_sha256": "1d2f82c1341a79748e00efe82e67690f99d00b3c2a894f2b23128fd9d3519da3",
     "tokenizer_json_sha256": "197d4cc5406ee12cc50c8b5511f2393cc32d9db321545979ce041c1199178356"
   },
   "score_definition": "sigmoid(generic instruction-subversion logit)",

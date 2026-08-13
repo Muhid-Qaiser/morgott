@@ -1,5 +1,12 @@
 # ModernBERT attention and context-length audit
 
+> **Historical scope, superseded 2026-08-12.** This report describes the earlier
+> direct-user recipe and its then-available data. A later owner-authorized,
+> matched no-harm 512/1,024-token campaign completed after adding long-benign
+> evidence and a tail gate. Its results and limitations are in
+> [the model ledger](model-experiments.md#the-1024-token-context-study-completed).
+> The measurements below remain historical kernel evidence.
+
 This audit separates kernel feasibility from model-quality evidence.
 No longer-context model was trained because the selected direct-user recipe could not evaluate long benign inputs.
 
