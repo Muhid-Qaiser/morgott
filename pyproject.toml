@@ -37,7 +37,7 @@ showcase = [
     "fastapi>=0.115,<1",
     "httpx>=0.27,<1",
     "pandas>=3.0.5,<4",
-    "pyarrow>=18,<26",
+    "pyarrow>=25.0.0,<26",
     "uvicorn>=0.52.1,<1",
 ]
 
