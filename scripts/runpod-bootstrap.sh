@@ -496,7 +496,21 @@ else
   warn "/workspace/setup-remote-user.sh missing -- desktop sessions will be root-only"
 fi
 
-# ------------------------------------------- 8a. morgott experiment readiness
+# ----------------------------------------------------- 8a. agent skills and MCP
+# This volume-owned helper runs without root authority. The canonical skills
+# live in the shared persistent agent store established in section 1.
+AGENT_SETUP="$VOL/agent-skills/setup.sh"
+if [ -r "$AGENT_SETUP" ]; then
+  log "Activating persistent agent skills and RunPod MCP servers"
+  REMOTE_HOME=$(getent passwd "$REMOTE_ACCOUNT" | cut -d: -f6)
+  sudo -u "$REMOTE_ACCOUNT" -H env \
+    PATH="$REMOTE_HOME/.local/bin:/usr/local/bin:/usr/bin:/bin" \
+    bash "$AGENT_SETUP" || warn "agent skill setup failed"
+else
+  warn "$AGENT_SETUP missing -- NVIDIA and RunPod skills are unavailable"
+fi
+
+# ------------------------------------------- 8b. morgott experiment readiness
 # Restore services and validate the durable state, but never start or resume a
 # multi-hour GPU workload from bootstrap. Training remains an explicit action.
 MORGOTT_VENV="$VENV_ROOT/morgott"
