@@ -243,99 +243,6 @@ def _evaluate(rows, vectorizer, classifier) -> dict:
     }
 
 
-def _format(value) -> str:
-    return "n/a" if value is None else f"{value:.4f}"
-
-
-def _write_report(path: Path, result: dict) -> None:
-    lines = [
-        "# Routing word n-gram baseline",
-        "",
-        "This is a cheap research control, not a blocking model or a production estimate.",
-        "It uses source-supported direct-user rows, unweighted training, and the untouched 0.5 cutoff.",
-        "",
-        "| Split | Recall | FPR | Macro-source recall | Macro-source FPR | Precision | PR-AUC | ROC-AUC |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
-    ]
-    for split, metrics in result["evaluation"].items():
-        values = metrics["all"]
-        lines.append(
-            f"| {split} | {_format(values['recall'])} | {_format(values['fpr'])} | "
-            f"{_format(metrics['macro_source_recall'])} | "
-            f"{_format(metrics['macro_source_fpr'])} | "
-            f"{_format(values['precision'])} | {_format(values['pr_auc'])} | "
-            f"{_format(values['roc_auc'])} |"
-        )
-    lines.extend(
-        [
-            "",
-            "Confusion counts use the same untouched 0.5 cutoff.",
-            "",
-            "| Split | TP | FP | TN | FN |",
-            "|---|---:|---:|---:|---:|",
-        ]
-    )
-    for split, metrics in result["evaluation"].items():
-        values = metrics["all"]
-        lines.append(
-            f"| {split} | {values['true_positive']} | {values['false_positive']} | "
-            f"{values['true_negative']} | {values['false_negative']} |"
-        )
-    lines.extend(
-        [
-            "",
-            "The following values substitute the measured development recall and FPR into fixed attack-prevalence scenarios; they are not production estimates.",
-            "",
-            "| Split | Expected precision at 0.1% | At 1% | At 5% |",
-            "|---|---:|---:|---:|",
-        ]
-    )
-    for split, metrics in result["evaluation"].items():
-        expected = metrics["all"]["expected_precision_at_attack_prevalence"]
-        lines.append(
-            f"| {split} | {_format(expected['0.1%'])} | "
-            f"{_format(expected['1%'])} | {_format(expected['5%'])} |"
-        )
-    lines.extend(
-        [
-            "",
-            "Selected training support by normalized character length:",
-            "",
-            "| Normalized characters | Benign | Positive |",
-            "|---:|---:|---:|",
-        ]
-    )
-    for name, _, _ in LENGTH_BANDS:
-        values = result["training_by_normalized_character_length"][name]
-        lines.append(f"| {name} | {values['benign']} | {values['positive']} |")
-    lines.extend(
-        [
-            "",
-            "Length slices use normalized Unicode character counts and expose their class denominators.",
-            "",
-            "| Split | Normalized characters | Positive | Benign | Recall | FPR |",
-            "|---|---:|---:|---:|---:|---:|",
-        ]
-    )
-    for split, metrics in result["evaluation"].items():
-        for name, _, _ in LENGTH_BANDS:
-            values = metrics["by_normalized_character_length"][name]
-            lines.append(
-                f"| {split} | {name} | {values['positive']} | "
-                f"{values['negative']} | {_format(values['recall'])} | "
-                f"{_format(values['fpr'])} |"
-            )
-    lines.extend(
-        [
-            "",
-            "Per-source metrics count exact-merged rows in every origin source membership; aggregate metrics count each row once.",
-            "Exact recipe metadata is in `routing-baseline.json`.",
-            "",
-        ]
-    )
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
 def run_routing_baseline(
     data_dir: Path = Path("data"),
     artifacts_dir: Path = Path("artifacts"),
@@ -413,5 +320,4 @@ def run_routing_baseline(
     (reports_dir / "routing-baseline.json").write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    _write_report(reports_dir / "routing-baseline.md", result)
     return result

@@ -12,6 +12,7 @@ import urllib.error
 import urllib.request
 from collections import Counter
 from collections.abc import Iterable
+from contextlib import contextmanager
 from pathlib import Path
 
 from datasets import disable_progress_bars, load_dataset
@@ -1421,7 +1422,8 @@ def deduplicate(
     return kept, stats
 
 
-def _write_jsonl(path: Path, rows: list[dict]) -> str:
+@contextmanager
+def _atomic_text_writer(path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
     try:
@@ -1429,28 +1431,23 @@ def _write_jsonl(path: Path, rows: list[dict]) -> str:
             "w", encoding="utf-8", dir=path.parent, delete=False
         ) as handle:
             temporary = Path(handle.name)
-            for row in rows:
-                handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+            yield handle
         temporary.replace(path)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
+
+
+def _write_jsonl(path: Path, rows: list[dict]) -> str:
+    with _atomic_text_writer(path) as handle:
+        for row in rows:
+            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
     return file_sha256(path)
 
 
 def atomic_write_text(path: Path, value: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            "w", encoding="utf-8", dir=path.parent, delete=False
-        ) as handle:
-            temporary = Path(handle.name)
-            handle.write(value)
-        temporary.replace(path)
-    finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
+    with _atomic_text_writer(path) as handle:
+        handle.write(value)
 
 
 def _write_json(path: Path, value: dict) -> None:

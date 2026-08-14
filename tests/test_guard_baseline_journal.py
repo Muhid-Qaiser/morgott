@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -405,17 +406,24 @@ class GuardScoreJournalTests(unittest.TestCase):
                 3,
             )
 
-            manifest = (root / "canonical_dev_test" / "manifest.json").read_text(
-                encoding="utf-8"
+            with sqlite3.connect(journal.database_path) as database:
+                identity = database.execute(
+                    "SELECT identity_json FROM journal"
+                ).fetchone()[0]
+                score_columns = {
+                    row[1]: row[2]
+                    for row in database.execute("PRAGMA table_info(scores)")
+                }
+            self.assertNotIn("input_ids", identity)
+            self.assertNotIn("prompt_ids", identity)
+            self.assertEqual(
+                score_columns,
+                {
+                    "row_index": "INTEGER",
+                    "column_index": "INTEGER",
+                    "value": "REAL",
+                },
             )
-            self.assertNotIn("input_ids", manifest)
-            self.assertNotIn("prompt_ids", manifest)
-            for shard in (root / "canonical_dev_test" / "shards").glob("*.npz"):
-                with np.load(shard, allow_pickle=False) as payload:
-                    self.assertEqual(
-                        set(payload.files),
-                        {"identity_sha256", "scores", "start", "stop"},
-                    )
             persisted = b"".join(
                 path.read_bytes() for path in root.rglob("*") if path.is_file()
             )

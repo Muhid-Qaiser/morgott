@@ -16,198 +16,62 @@
   },
   "score_definition": "sigmoid(generic instruction-subversion logit)",
   "normalization": "strict",
-  "maximum_tokens": 512,
-  "runtime": {
-    "implementation": "morgott.models.mmbert.inference",
-    "command": "morgott shadow-score"
-  },
   "models": {
-    "mmbert-frozen-s42": {
-      "adaptation": "frozen",
-      "result": {
-        "path": "artifacts/models/mmbert-frozen-s42/result.json",
-        "sha256": "401b8b20c6620fa1c34fa3c82eb59c6f387474f49ea3f7cd97877092d155d0ae"
-      },
-      "head": {
-        "path": "artifacts/models/mmbert-frozen-s42/head.safetensors",
-        "sha256": "a3007323edb6da1d671b80ea1f7f46451384ddb2f45abeb2cae9d645404f5813"
-      },
-      "evaluation": {
-        "path": "artifacts/models/mmbert-frozen-s42/evaluation.json",
-        "sha256": "737e8aab8c984841d0404bcfaef4b06442b75995f59738f870fbc9e81e146077"
-      }
-    },
-    "mmbert-lora-s42": {
+    "mmbert-lora-full-ctx1024-u17000-s42": {
+      "artifact_format": "maintained-snapshot-v1",
       "adaptation": "lora",
       "result": {
-        "path": "artifacts/models/mmbert-lora-s42/result.json",
-        "sha256": "570db76e153f6d08bceb9a5688203e619e297d01f092effa25335743215ef90b"
+        "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/result.json",
+        "sha256": "d3fd6629dec100e2b3d63113464a16f62d71db1eb6e72d4aaed7da4feca699cd"
       },
       "head": {
-        "path": "artifacts/models/mmbert-lora-s42/head.safetensors",
-        "sha256": "1e141f8714c9356f6df3f745b28c4d4e8860546b0bdb714daa69b8df8e5a289f"
+        "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/head.safetensors",
+        "sha256": "7f1975415d07741b0d2a786fd70b9d0e32204ce59d9b113e64342186d3edbc72"
       },
       "adapter": {
-        "path": "artifacts/models/mmbert-lora-s42/adapter",
+        "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/adapter",
         "files": {
-          "README.md": "25e02f4e1120370bcf76598ec974f12bebf1c24301f6312835a21aef037fba80",
-          "adapter_config.json": "cc404cd76eed420d5a489d52eafba146c74e9152b3f62e8b67a58e69930045d6",
-          "adapter_model.safetensors": "8fa15f97f16d6e55e67fd7b856c0e989b0ec310ba463d9032a6b3d14e6de1a49"
+          "adapter_config.json": "08e05ed3e89bc1f731e15ed64a3c82e7b7bbe07c1699a76694d824ed6c267526",
+          "adapter_model.safetensors": "d4e95c9bdd3d3a9de6910970bb7e3131910093520bfab331c16d486c1efc9aed"
         }
       },
       "evaluation": {
-        "path": "artifacts/models/mmbert-lora-s42/evaluation.json",
-        "sha256": "c76956729eba694e378d5e8246f475dd6c4443a4c109b0550e49b4c13ade354e"
-      }
-    },
-    "mmbert-lora-full-s42": {
-      "artifact_format": "maintained-v1",
-      "adaptation": "lora",
-      "result": {
-        "path": "artifacts/models/mmbert-lora-full-s42/result.json",
-        "sha256": "d1014af4256212d707f3fe6d6dc8f90a35f65a5086bb7feea2a63bdf703295a0"
-      },
-      "head": {
-        "path": "artifacts/models/mmbert-lora-full-s42/head.safetensors",
-        "sha256": "a40113a01347289f8a409b764b8e546af0e061a19fb0d9210c98590c26e83a41"
-      },
-      "adapter": {
-        "path": "artifacts/models/mmbert-lora-full-s42/adapter",
-        "files": {
-          "README.md": "25e02f4e1120370bcf76598ec974f12bebf1c24301f6312835a21aef037fba80",
-          "adapter_config.json": "cc404cd76eed420d5a489d52eafba146c74e9152b3f62e8b67a58e69930045d6",
-          "adapter_model.safetensors": "84f85ea8845720896dbe09b8b959e8e8858f23a8ff09fa3ac3e736ddcb5adb0d"
-        }
-      },
-      "evaluation": {
-        "path": "artifacts/models/mmbert-lora-full-s42/evaluation/evaluation.json",
-        "sha256": "ec378e29358aab50515b66d2f05612767dea810b388326f4ece86bc99c7c6e99"
-      },
-      "scores": {
-        "path": "artifacts/models/mmbert-lora-full-s42/evaluation/scores.npy",
-        "sha256": "b9ad82b94ffdfa8d2282bbe912b7e7316df4e299bfdee23724955b09cfcc2965"
+        "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/evaluation/evaluation.json",
+        "sha256": "e2d6162ada5a67969a4b3bab23f7c83aa1b69cba15f72b4e0a4b10383aff0a9b"
       },
       "serving": {
-        "format": "onnx-openvino-bf16-v1",
+        "format": "onnx-openvino-v1",
         "inference_precision": "bf16",
+        "max_tokens": 1024,
+        "window_overlap": 128,
         "onnx": {
-          "path": "artifacts/models/mmbert-lora-full-s42/serving/model.onnx",
-          "sha256": "262f7b5f377c2c30e017e2f18204a9a8222c7dc5799a185f20437fa0137098e3"
+          "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/model.onnx",
+          "sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5"
         },
         "tokenizer": {
-          "path": "artifacts/models/mmbert-lora-full-s42/serving/tokenizer.json",
+          "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/tokenizer.json",
           "sha256": "197d4cc5406ee12cc50c8b5511f2393cc32d9db321545979ce041c1199178356"
         },
         "export": {
-          "path": "artifacts/models/mmbert-lora-full-s42/serving/export.json",
-          "sha256": "42f70856ce7999eb122a2fb303390ab19c1f84fdc93d45fa72374b5049b289c8"
+          "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/export.json",
+          "sha256": "8e39c7ae06c2da0c2c147c48b8402ea782093c6139a16354043b3600f0155744"
         },
         "verification": {
-          "path": "artifacts/models/mmbert-lora-full-s42/serving/verification-0731.json",
-          "sha256": "38d6dc33fdf3fd4e84d5cca2ac6d9e25cd187607c23e1f1f73caf2ca7b5ace38"
+          "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/verification.json",
+          "sha256": "91d72df38e4e52a28e363830f606a09f36027ff91826ed960ebd716b126c2835"
         },
         "benchmark": {
-          "path": "artifacts/models/mmbert-lora-full-s42/serving/benchmark.json",
-          "sha256": "f3a10ef81e08d59b22281cdec5d00f239f56bb2076565a44a1e6b7c7da4ec52d"
+          "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/benchmark.json",
+          "sha256": "d481497fd7a1b323740eabb04b8f76317242f1b360181405fd2193d1df6e38ef"
         }
-      },
-      "source_evidence": {
-        "training": {
-          "data_manifest_sha256": "27bdd9c244fbf479d699cb7c8d826385c0bd0f2f39e5154051db10e927c58f81",
-          "external_manifest_sha256": "309cfe0da78b6f1b06220759b458306caa41740882ae10bba4ec3e2516917567",
-          "pair_archive_sha256": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
-          "routing_views": {
-            "dev_test": {
-              "path": "views/routing/dev_test.jsonl",
-              "rows": 441649,
-              "sha256": "992f3f8b9467529261f929a115f8d83f99b0c411c81539778d6d7ec1492ac309"
-            },
-            "train": {
-              "path": "views/routing/train.jsonl",
-              "rows": 1478191,
-              "sha256": "682939d7b6a273888b049401cb2e9569027cd94c6cc944b1a13dd92065d5501a"
-            },
-            "validation": {
-              "path": "views/routing/validation.jsonl",
-              "rows": 202055,
-              "sha256": "ca16e7ad3364fb562ff1c9885b90b30902d57226ccfc77eaff5b6d2a223e8a7a"
-            }
-          },
-          "sources": {
-            "src/morgott/data.py": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e",
-            "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
-            "src/morgott/models/mmbert/data.py": "d2d4a808994ffa9afb9a83409f16d950c898a9e704b007426751be5e5d9c4693",
-            "src/morgott/models/mmbert/external_data.py": "61d406b5c92bca8c70799b51727a38a1bbb53fe2e6820a0556af295d341b2f97",
-            "src/morgott/models/mmbert/train.py": "4af16c60d480e29ed3a7d906379c0ffb85e18f209db822c34835a4321d6c4574",
-            "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
-            "src/morgott/overlap.py": "1be805cf673817948ee80b92084405f0d932dca6789e2c4aad1016eb61345645"
-          },
-          "uv_lock_sha256": "aae638be0b2a7255d599d15fd6ebba8387e3ddb8c48fda8a000663851a33c8b4"
-        },
-        "evaluation": {
-          "sources": {
-            "src/morgott/data.py": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e",
-            "src/morgott/models/detector.py": "71bf9486f128e5a6964b9d77f21f538949f2f1df922d4a76a7db624cfa2018a6",
-            "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
-            "src/morgott/models/mmbert/data.py": "d2d4a808994ffa9afb9a83409f16d950c898a9e704b007426751be5e5d9c4693",
-            "src/morgott/models/mmbert/evaluate.py": "ff2102b4db4d869a168be06b04243944ac2dfd2b14a5c5322166e5bf1cbf1152",
-            "src/morgott/models/mmbert/train.py": "4af16c60d480e29ed3a7d906379c0ffb85e18f209db822c34835a4321d6c4574",
-            "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
-            "src/morgott/overlap.py": "1be805cf673817948ee80b92084405f0d932dca6789e2c4aad1016eb61345645"
-          },
-          "uv_lock_sha256": "aae638be0b2a7255d599d15fd6ebba8387e3ddb8c48fda8a000663851a33c8b4"
-        }
-      }
-    }
-  },
-  "evidence": {
-    "source_commit": "91e8c829c8b39c8ff37a6ca2479c8fc057168d39",
-    "evaluation_directory": "evaluation_generic_v3",
-    "sources": {
-      "evaluator": {
-        "path": "experiments/eval_combined_generic_head.py",
-        "sha256": "5c536552a0007a4e89e2ed829f97e89183a0bf0c16f81505b1e061990c64e83c"
-      },
-      "generic_preparation_helper": {
-        "path": "experiments/prepare_combined_generic.py",
-        "sha256": "c2289b53aeed707807df8c7f9928eac119bdc04f9145a130dc57c9c0ea56fe75"
-      },
-      "full_preparation_helper": {
-        "path": "experiments/prepare_full_combined_generic.py",
-        "sha256": "9f59b8bdc88f8f60730b73244ef360412df30d0cf85f95fa28505ce33f907ca8"
-      },
-      "training_head_helper": {
-        "path": "experiments/train_combined_generic_head.py",
-        "sha256": "324fe223f461166a97cb60684d12d625ee18c5500d736ce9ef90096ef185ea54"
-      },
-      "strict_normalizer": {
-        "path": "experiments/strict_normalize.py",
-        "sha256": "56c242d31502646253bc8152d8f6f7f16773a6911c6ad41b67eb8cdd7b606720"
-      },
-      "descriptive_threshold_helper": {
-        "path": "src/morgott/detector.py",
-        "sha256": "5163fa66b38ff1fd1ea996ac60ac32545571cd2635c8bd97e32f7f6d43759882"
-      },
-      "canonical_text_helper": {
-        "path": "src/morgott/data.py",
-        "sha256": "fc3902a58c7f0a74d3c239c87b80a0bd793d240aabbc991a7966ca8f963c693e"
-      },
-      "full_training_helper": {
-        "path": "experiments/train_full_combined_generic_head.py",
-        "sha256": "3ad74bf2e11287bfb8df2dff934e2f49dc372cda766554a3fc64392922c57f58"
-      },
-      "lora_training_runner": {
-        "path": "experiments/train_combined_generic_lora.py",
-        "sha256": "94272ce33606347502b8ed2f3913273aae7ce7ea1c0753c1b14ef1a30f63e7b4"
       }
     }
   },
   "limitations": [
     "Research-only internal artifacts pending mixed-corpus redistribution review.",
     "Scores never grant authority and are not approved for blocking.",
-    "Every input is strictly normalized and truncated to its first 512 tokens.",
+    "The maintained preview scans ordered 1,024-token windows; older model artifacts are provenance only.",
     "PromptShield and SEP are already-consumed development evaluations.",
-    "The partial LoRA is one seed on a reduced mixture without generated pairs.",
     "The full-mixture LoRA is one seed and remains an unpromoted advisory result."
   ]
 }

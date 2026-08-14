@@ -50,11 +50,13 @@ single-mutation evasion on its own dev-test suite; its in-corpus FPR figure
 describes text of 64 tokens or fewer. Never quote its retained FPR/recall pair
 without those qualifiers or treat it as evidence a detector works.
 
-Owner-authorized bounded exceptions (2026-07-28) produced the registered
-frozen-mmBERT head, reduced-mixture LoRA gate, and one full-mixture rank-8
-LoRA seed — advisory research shadows listed in `model-artifacts.json`, never
-wired into blocking. A later LP-FT comparison (2026-08-05) reduced long-task
-clean flags but collapsed on PromptShield transfer and indirect-document
+Owner-authorized bounded exceptions (2026-07-28) produced a frozen-mmBERT
+head, reduced-mixture LoRA gate, and full-mixture rank-8 LoRA seed.
+Only the later 1,024-token update-17,000 candidate remains loadable through
+`model-artifacts.json`; older artifacts are retained as provenance and none is
+wired into blocking.
+A later LP-FT comparison (2026-08-05) reduced long-task clean flags but
+collapsed on PromptShield transfer and indirect-document
 recall; it was rejected and its retained weights stay outside the registry.
 Git commit `91e8c829c8b39c8ff37a6ca2479c8fc057168d39` is immutable provenance
 for the July 2026 runs. Agents may autonomously run training and evaluation
@@ -103,11 +105,19 @@ uv run morgott data --routing-only  # partition-logic-only changes
 ```
 
 The cloud source of truth is Azure Blob Storage (account `vulsightdata`,
-container `morgott`). Any data change ends with:
+container `morgott`).
+Rebuild when a change can affect published corpus bytes, membership, labels,
+provenance, partitions, manifest contents, or another data-contract output:
 
 ```bash
-uv run morgott data && scripts/azsync.sh push
+uv run morgott data
+scripts/azsync.sh push  # only when published data changed
 ```
+
+Pure structural refactors may skip the rebuild when focused tests cover the
+unchanged behavior and the handoff explains why generated output is unaffected.
+If equivalence is uncertain, rebuild.
+Push to Azure only when rebuilt published data changes.
 
 Auth, pull, and new-machine bootstrap are in `data/README.md`. The full
 corpus, label, source, and split contracts are in `docs/data-contract.md`.
@@ -130,9 +140,10 @@ make check
 git diff --check
 ```
 
-Data, label, partition, or manifest changes also require the applicable full
-or routing-only rebuild above, then verify manifest hashes, counts, and split
-invariants and inspect the quarantine summary — and push to Azure.
+Changes meeting the data-impact criteria above also require the applicable full
+or routing-only rebuild, followed by verification of manifest hashes, counts,
+split invariants, and the quarantine summary.
+Output-neutral refactors use focused equivalence tests instead.
 
 ## Maintained files
 

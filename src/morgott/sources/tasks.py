@@ -21,7 +21,13 @@ from ..data import (
     _set_source_role,
     text_hash,
 )
-from ._shared import FILES, _download, _parquet_dataset, _verified_archive
+from ._shared import (
+    FILES,
+    _download,
+    _download_files,
+    _parquet_dataset,
+    _verified_archive,
+)
 
 _SENSITIVE_TEXT_PATTERNS = {
     "email_address": re.compile(
@@ -126,20 +132,17 @@ def _mind2web_sample(source_row: dict) -> dict:
 
 def _mind2web_rows():
     conversion_revision = SOURCES["mind2web"]["conversion_revision"]
-    paths = []
-    downloads = {}
-    for _, (filename, expected) in FILES["mind2web"].items():
-        path, digest = _download(
-            "mind2web", filename, expected, revision=conversion_revision
-        )
-        paths.append(path)
-        downloads[f"conversion/{conversion_revision}/{filename}"] = digest
+    paths, downloads = _download_files("mind2web", revision=conversion_revision)
+    downloads = {
+        f"conversion/{conversion_revision}/{filename}": digest
+        for filename, digest in downloads.items()
+    }
     columns = ("website", "domain", "subdomain", "annotation_id", "confirmed_task")
     accepted = []
     quarantined = []
     reason_counts = Counter()
     annotation_ids = set()
-    for path in paths:
+    for path in paths.values():
         for batch in pq.ParquetFile(path).iter_batches(columns=columns, batch_size=128):
             for source_row in batch.to_pylist():
                 row = _mind2web_sample(source_row)
@@ -590,12 +593,7 @@ def _false_reject_sample(source_row: dict, split: str, index: int) -> dict:
 
 
 def _false_reject_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
-    paths = {}
-    downloads = {}
-    for split, (filename, expected) in FILES["false_reject"].items():
-        path, digest = _download("false_reject", filename, expected)
-        paths[split] = path
-        downloads[filename] = digest
+    paths, downloads = _download_files("false_reject")
     profile = {
         "projection": "prompt only",
         "excluded": "generated standard and chain-of-thought response fields",

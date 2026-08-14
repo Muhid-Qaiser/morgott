@@ -82,7 +82,6 @@ def _request_kwargs() -> dict[str, Any]:
                 "order": [PROVIDER],
                 "allow_fallbacks": False,
                 "require_parameters": True,
-                "quantizations": ["fp8"],
             },
         },
         "cache_control_injection_points": [],
@@ -99,6 +98,10 @@ REQUEST_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
+# The frozen 20,000-row evidence used Cloudflare's former fp8 routing label.
+EVALUATION_REQUEST_SHA256 = (
+    "b5df77d444d1c16cce2aca82d35abf5a9d07869ad61fc11a051fc4a792a0619b"
+)
 
 
 def refuse_nooa_tracing() -> None:

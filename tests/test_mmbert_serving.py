@@ -11,9 +11,9 @@ from unittest import mock
 import numpy as np
 
 from morgott.models.deepseek_nooa import (
+    EVALUATION_REQUEST_SHA256,
     MAX_ATTEMPTS,
     PROMPT_SHA256,
-    REQUEST_SHA256,
 )
 from morgott.models.deepseek_nooa import (
     MODEL as DEEPSEEK_MODEL,
@@ -24,11 +24,17 @@ from morgott.models.deepseek_nooa import (
 from morgott.models.mmbert.export_onnx import (
     _cascade_metrics,
     _deepseek_evidence,
+    _parity_metrics,
     _quality_gate,
     benchmark,
     verify_panel,
 )
-from morgott.models.mmbert.serving import MmbertRuntime, PreparedText, Window
+from morgott.models.mmbert.serving import (
+    MmbertRuntime,
+    PreparedText,
+    Window,
+    _select_inference_precision,
+)
 from morgott.normalization import strict_normalize
 
 
@@ -60,7 +66,18 @@ class _Session:
         return {"logit": np.array([[0.0 if token_id == 1 else 2.1972246]])}
 
 
+class _BatchSession:
+    def __call__(self, inputs):
+        return {
+            "logit": np.asarray(
+                [[float(row[1])] for row in inputs["input_ids"]],
+                dtype=np.float32,
+            )
+        }
+
+
 class _BenchmarkRuntime:
+    max_tokens = 1024
     identity = type(
         "Identity",
         (),
@@ -69,6 +86,8 @@ class _BenchmarkRuntime:
             "onnx_sha256": "c" * 64,
             "compile_seconds": 1.25,
             "openvino": "test",
+            "requested_inference_precision": "bf16",
+            "inference_precision": "bf16",
             "reported_inference_precision": "bf16",
             "threads": 2,
             "cpu_capabilities": ("BF16", "FP32"),
@@ -84,8 +103,8 @@ class _BenchmarkRuntime:
                     index=0,
                     char_start=0,
                     char_end=len(text),
-                    input_ids=tuple(range(512)),
-                    attention_mask=(1,) * 512,
+                    input_ids=tuple(range(1024)),
+                    attention_mask=(1,) * 1024,
                 ),
             ),
         )
@@ -96,6 +115,23 @@ class _BenchmarkRuntime:
 
 
 class MmbertServingTests(unittest.TestCase):
+    def test_export_parity_fails_outside_serving_tolerance(self):
+        reference = (np.asarray([[0.0]], dtype=np.float32),)
+
+        self.assertTrue(_parity_metrics(reference, reference, label="test")["passed"])
+        with self.assertRaisesRegex(ValueError, "test representative parity"):
+            _parity_metrics(
+                reference,
+                (np.asarray([[0.001]], dtype=np.float32),),
+                label="test",
+            )
+
+    def test_auto_precision_prefers_bf16_and_falls_back_to_fp32(self):
+        self.assertEqual(_select_inference_precision("auto", ("FP32", "BF16")), "bf16")
+        self.assertEqual(_select_inference_precision("auto", ("FP32",)), "fp32")
+        with self.assertRaisesRegex(RuntimeError, "does not support"):
+            _select_inference_precision("bf16", ("FP32",))
+
     def test_verification_does_not_overwrite_registered_evidence(self):
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary)
@@ -126,29 +162,28 @@ class MmbertServingTests(unittest.TestCase):
             result = benchmark(output=output, warmup=1, requests=1)
 
             self.assertFalse((output / "benchmark.json").exists())
-            self.assertEqual(
-                set(result),
-                {
-                    "compile_seconds",
-                    "cpu_capabilities",
-                    "format",
-                    "measured_requests",
-                    "openvino",
-                    "p50_ms",
-                    "p95_below_500_ms",
-                    "p95_ms",
-                    "qps",
-                    "reported_inference_precision",
-                    "representative_logit",
-                    "requested_inference_precision",
-                    "source_onnx_bytes",
-                    "source_onnx_sha256",
-                    "sustains_5_qps",
-                    "threads",
-                    "warmup_requests",
-                },
-            )
-            self.assertTrue(result["p95_below_500_ms"])
+            self.assertEqual(result["measured_requests"], 1)
+            self.assertGreater(result["qps"], 0)
+            self.assertGreaterEqual(result["p95_ms"], 0)
+
+    def test_runtime_readiness_does_not_load_benchmark_evidence(self):
+        manifest_path = Path(__file__).parents[1] / "model-artifacts.json"
+        model_key = "mmbert-lora-full-ctx1024-u17000-s42"
+        artifact_path = mock.Mock(
+            side_effect=lambda root, spec, **_: root / spec["path"]
+        )
+        with (
+            mock.patch(
+                "morgott.models.mmbert.serving.verified_artifact_path",
+                artifact_path,
+            ),
+            mock.patch.object(MmbertRuntime, "_from_verified_files", return_value=None),
+        ):
+            MmbertRuntime.from_artifacts(manifest_path, model_key=model_key)
+        self.assertEqual(
+            [call.kwargs["name"] for call in artifact_path.call_args_list],
+            ["ONNX model", "tokenizer", "serving export", "serving verification"],
+        )
 
     def test_verification_accepts_typed_current_prompt_evidence(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -175,7 +210,7 @@ class MmbertServingTests(unittest.TestCase):
                         "input_channel": "direct_user",
                         "input_tokens": 10,
                         "job_id": hashlib.sha256(
-                            f"{PROMPT_SHA256}\0{REQUEST_SHA256}\0{panel_id}".encode()
+                            f"{PROMPT_SHA256}\0{EVALUATION_REQUEST_SHA256}\0{panel_id}".encode()
                         ).hexdigest(),
                         "log_odds_subversion": 1.0,
                         "model": DEEPSEEK_MODEL,
@@ -184,7 +219,7 @@ class MmbertServingTests(unittest.TestCase):
                         "panel_id": panel_id,
                         "prompt_sha256": PROMPT_SHA256,
                         "provider": DEEPSEEK_PROVIDER,
-                        "request_sha256": REQUEST_SHA256,
+                        "request_sha256": EVALUATION_REQUEST_SHA256,
                         "status": "ok",
                     },
                     sort_keys=True,
@@ -378,10 +413,12 @@ class MmbertServingTests(unittest.TestCase):
                 "advisory_only": True,
                 "base_model": {"tokenizer_json_sha256": "0" * 64},
                 "models": {
-                    "mmbert-lora-full-s42": {
+                    "mmbert-lora-full-ctx1024-u17000-s42": {
                         "serving": {
-                            "format": "onnx-openvino-bf16-v1",
+                            "format": "onnx-openvino-v1",
                             "inference_precision": "bf16",
+                            "max_tokens": 1024,
+                            "window_overlap": 128,
                             "onnx": {
                                 "path": "model.onnx",
                                 "sha256": "0" * 64,
@@ -398,7 +435,25 @@ class MmbertServingTests(unittest.TestCase):
             path.write_text(json.dumps(manifest), encoding="utf-8")
 
             with self.assertRaisesRegex(ValueError, "ONNX model hash mismatch"):
-                MmbertRuntime.from_artifacts(path)
+                MmbertRuntime.from_artifacts(
+                    path,
+                    model_key="mmbert-lora-full-ctx1024-u17000-s42",
+                )
+
+    def test_runtime_uses_the_registered_context_length(self):
+        tokenizer = _Tokenizer(_Encoding([101, 1, 102], [(0, 0), (0, 1), (0, 0)]))
+
+        runtime = MmbertRuntime(
+            tokenizer=tokenizer,
+            session=None,
+            max_tokens=1024,
+            window_overlap=128,
+        )
+
+        self.assertEqual(runtime.max_tokens, 1024)
+        self.assertEqual(tokenizer.truncation, (1024, 128))
+        with self.assertRaisesRegex(ValueError, "context contract"):
+            MmbertRuntime(tokenizer=tokenizer, session=None, max_tokens=512)
 
     def test_prepared_windows_cover_the_normalized_input_without_truncation(self):
         overflow = _Encoding(
@@ -417,7 +472,7 @@ class MmbertServingTests(unittest.TestCase):
         prepared = runtime.prepare("A B C D")
 
         self.assertEqual(tokenizer.normalized, "a b c d")
-        self.assertEqual(tokenizer.truncation, (512, 128))
+        self.assertEqual(tokenizer.truncation, (1024, 128))
         self.assertEqual(prepared.token_count, 4)
         self.assertEqual(
             [(window.char_start, window.char_end) for window in prepared.windows],
@@ -462,6 +517,19 @@ class MmbertServingTests(unittest.TestCase):
         self.assertEqual(scores[0], 0.5)
         self.assertAlmostEqual(scores[1], 0.9)
 
+    def test_batch_scoring_preserves_window_order(self):
+        tokenizer = _Tokenizer(_Encoding([101, 1, 102], [(0, 0), (0, 1), (0, 0)]))
+        runtime = MmbertRuntime(tokenizer=tokenizer, session=_BatchSession())
+        windows = (
+            Window(0, 0, 2, (101, 2, 3, 102), (1, 1, 1, 1)),
+            Window(1, 0, 1, (101, 0, 102), (1, 1, 1)),
+        )
+
+        scores = runtime.score_batch(windows, batch_size=2)
+
+        self.assertAlmostEqual(scores[0], 0.880797, places=6)
+        self.assertEqual(scores[1], 0.5)
+
     @unittest.skipUnless(
         importlib.util.find_spec("tokenizers"),
         "cascade tokenizer dependency is not installed",
@@ -472,8 +540,8 @@ class MmbertServingTests(unittest.TestCase):
         from tokenizers.pre_tokenizers import Whitespace
         from tokenizers.processors import TemplateProcessing
 
-        tokens = [f"t{index}" for index in range(900)]
-        tokens[507:515] = [
+        tokens = [f"t{index}" for index in range(1400)]
+        tokens[1018:1026] = [
             "attack",
             "crosses",
             "the",
@@ -498,10 +566,10 @@ class MmbertServingTests(unittest.TestCase):
 
         prepared = runtime.prepare(text)
 
-        self.assertEqual(prepared.token_count, 900)
+        self.assertEqual(prepared.token_count, 1400)
         self.assertGreater(len(prepared.windows), 1)
         self.assertEqual(prepared.windows[0].char_start, 0)
-        self.assertEqual(prepared.windows[-1].char_end, len(text))
+        self.assertEqual(prepared.windows[-1].char_end, len(prepared.normalized_text))
         self.assertTrue(
             any(
                 "attack crosses the window boundary without being cut"

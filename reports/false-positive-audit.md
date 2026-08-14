@@ -127,7 +127,7 @@ protocol threshold. The two columns differ enormously for the saturating models.
 
 | System | Benign rows | At native 0.5 | At calibrated threshold |
 |---|---:|---:|---:|
-| mmbert-lora-full-s42 (registered) | 161,910 | 4.62% | 1.50% |
+| mmbert-lora-full-s42 (registered at the time) | 161,910 | 4.62% | 1.50% |
 | Llama Prompt Guard 2 86M | 161,482 | 1.81% | 1.38% |
 | Qwen3Guard-Stream-4B, query risk head | 161,910 | 10.89% | 0.21% |
 | Qwen3Guard-Stream-4B, jailbreak head | 161,910 | 0.01% | 0.01% |
@@ -137,10 +137,10 @@ ModernGuard and the Qwen3Guard query head saturate at exactly 1.0, so the shared
 protocol selects a threshold at or above 1.0 and they flag nothing. Their 0.00%
 and 0.21% columns are abstention, not precision, and must never be quoted as
 selectivity. At their own default cutoffs both are two to three times less
-selective than the registered shadow, which matches their behaviour on the
+selective than the then-registered shadow, which matches their behaviour on the
 red-team reserve, where they flag 81.3% and 95.7% of bare-harmful rows.
 
-### Per source, registered shadow at its calibrated threshold
+### Per source, then-registered shadow at its calibrated threshold
 
 | Source | Benign denominator | FPR | Prompt Guard 2 |
 |---|---:|---:|---:|

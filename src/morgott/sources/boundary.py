@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
 from collections.abc import Iterator
 
 from ..data import _sample, _set_source_role
-from ._shared import FILES, _download
+from ._shared import _download_files
 
 BOUNDARY_INSTRUCTION_FAMILIES = {
     "direct_instruction_override",
@@ -207,11 +207,9 @@ def _validate_boundary_rows(rows_by_split: dict[str, list[dict]]) -> dict:
 
 
 def _agentic_boundary_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+    paths, downloads = _download_files("agentic_boundary_pairs")
     rows_by_split = {}
-    downloads = {}
-    for split, (filename, expected) in FILES["agentic_boundary_pairs"].items():
-        path, digest = _download("agentic_boundary_pairs", filename, expected)
-        downloads[filename] = digest
+    for split, path in paths.items():
         rows_by_split[split] = [
             json.loads(line)
             for line in path.read_text(encoding="utf-8").splitlines()

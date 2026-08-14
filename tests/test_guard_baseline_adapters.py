@@ -332,46 +332,6 @@ class ProtectAIV2AdapterTests(unittest.TestCase):
         )
 
 
-class IncumbentAdapterTests(unittest.TestCase):
-    def test_identity_binds_the_loaded_base_model(self) -> None:
-        spec = adapters.BASELINES["mmbert-lora-full-s42-rescore"]
-        guard = adapters.IncumbentGuard(spec, batch_size=spec.batch_size)
-        result = {
-            "max_tokens": spec.max_tokens,
-            "model_id": "jhu-clsp/mmBERT-base",
-            "model_revision": "revision",
-            "token_budget": 4096,
-        }
-        base_model = {"pytorch_model_sha256": "1" * 64}
-        bundle = {
-            "adaptation": "lora",
-            "result": result,
-            "result_sha256": "2" * 64,
-            "head_sha256": "3" * 64,
-            "adapter_sha256": {"adapter_model.safetensors": "4" * 64},
-            "evaluation_sha256": "5" * 64,
-            "source_evidence_sha256": "6" * 64,
-            "head_path": Path("/registered/run/head.safetensors"),
-        }
-        model = SimpleNamespace(gradient_checkpointing_disable=lambda: None)
-        tokenizer, head = object(), object()
-        with (
-            patch.object(guard, "_smoke"),
-            patch(
-                "morgott.models.mmbert.inference.load_bundle",
-                return_value=bundle,
-            ),
-            patch(
-                "morgott.models.mmbert.evaluate._load_run",
-                return_value=(result, model, tokenizer, head, base_model),
-            ),
-        ):
-            guard.load()
-
-        self.assertIs(guard.model, model)
-        self.assertEqual(guard.describe()["model_identity"]["base_model"], base_model)
-
-
 class StreamHeadAdapterTests(unittest.TestCase):
     def test_rendered_cap_handles_boundary_merge_overhead(self) -> None:
         spec = adapters.BaselineSpec(

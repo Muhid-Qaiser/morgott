@@ -478,7 +478,7 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(REMOTE_CONCURRENCY, 4)
         self.assertEqual(
             REQUEST_SHA256,
-            "b5df77d444d1c16cce2aca82d35abf5a9d07869ad61fc11a051fc4a792a0619b",
+            "8138ecb7533351edfbd82194d591e2e491082443b6f13e61c7bf7f996568ce91",
         )
         self.assertEqual(
             PROMPT_SHA256,
@@ -523,7 +523,6 @@ class DeepSeekReviewerTests(unittest.IsolatedAsyncioTestCase):
                     "order": [PROVIDER],
                     "allow_fallbacks": False,
                     "require_parameters": True,
-                    "quantizations": ["fp8"],
                 },
             },
         )

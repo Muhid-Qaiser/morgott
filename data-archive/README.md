@@ -53,7 +53,7 @@ sha256sum -c data-archive/SHA256SUMS
 uv run --extra showcase python -m experiments.redteam_campaigns.normalize \
   --input data-archive/redteam/raw/normalized_dataset_dedup.parquet \
   --out data-archive/redteam/redteam_campaigns_20260806 --check
-uv run --extra showcase python -m experiments.redteam_subversion_control.run pairs
+uv run --extra showcase python -m experiments.redteam_subversion_control.run
 ```
 
 ### What the projection drops, and why

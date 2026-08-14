@@ -13,7 +13,7 @@ import ijson
 from datasets import load_dataset
 
 from ..data import _sample, _set_source_role, text_hash
-from ._shared import FILES, _download, _parquet_dataset
+from ._shared import FILES, _download, _download_files, _parquet_dataset
 
 
 def _gandalf_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
@@ -56,12 +56,7 @@ def _llmail_attack_attempt(value: object) -> str:
 
 
 def _llmail_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
-    paths = {}
-    downloads = {}
-    for name, (filename, expected) in FILES["llmail"].items():
-        path, digest = _download("llmail", filename, expected)
-        paths[name] = path
-        downloads[filename] = digest
+    paths, downloads = _download_files("llmail")
     profile = {
         "normalized_source_labels": {},
         "raw_rows": {},
@@ -290,12 +285,7 @@ def _llmail_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
 
 
 def _tensor_trust_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
-    paths = {}
-    downloads = {}
-    for name, (filename, expected) in FILES["tensor_trust_raw"].items():
-        path, digest = _download("tensor_trust_raw", filename, expected)
-        paths[name] = path
-        downloads[filename] = digest
+    paths, downloads = _download_files("tensor_trust_raw")
     profile = {
         "raw_attack_rows": 0,
         "raw_defense_rows": 0,
@@ -741,12 +731,7 @@ def _wildjailbreak_sample(source_row: dict, split: str, index: int) -> dict:
 
 
 def _wildjailbreak_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
-    paths = {}
-    downloads = {}
-    for split, (filename, expected) in FILES["wildjailbreak"].items():
-        path, digest = _download("wildjailbreak", filename, expected)
-        paths[split] = path
-        downloads[filename] = digest
+    paths, downloads = _download_files("wildjailbreak")
     profile = {"missing_adversarial_text_rows_uncertain": 0}
 
     def rows() -> Iterator[dict]:

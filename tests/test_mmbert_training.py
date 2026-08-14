@@ -16,22 +16,19 @@ import numpy as np
 
 from morgott.models.mmbert import data as mmbert_data
 from morgott.models.mmbert import external_data
-from morgott.models.mmbert import head_contract as mmbert_head_contract
 from morgott.models.mmbert import train as mmbert_train
 from morgott.models.mmbert.evaluate import (
     _real_finance_mask,
     _select_component_thresholds,
 )
 from morgott.models.mmbert.train import (
+    ADDITIONAL_PAIR_ARCHIVE_SHA256,
+    ADDITIONAL_PAIR_POPULATION,
     DOMAIN_WEIGHT,
-    LPFT_INITIAL_HEAD_SHA256,
-    NEW_LPFT_PAIR_ARCHIVE_SHA256,
-    NEW_LPFT_POPULATION,
     BalancedIndexCycle,
     PairIndexCycle,
     _bce_from_logits,
     _classification_backward,
-    _configure_lpft,
     _LengthGroupedCycle,
     _load_checkpoint,
     _lr_multiplier,
@@ -92,33 +89,6 @@ def _training_data(**overrides) -> mmbert_data.TrainingData:
 
 
 class MmbertDataTests(unittest.TestCase):
-    def test_lpft_trains_only_the_top_encoder_layers_and_final_norm(self):
-        import torch
-
-        class Encoder(torch.nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.layers = torch.nn.ModuleList(
-                    [torch.nn.Linear(2, 2) for _ in range(4)]
-                )
-                self.final_norm = torch.nn.LayerNorm(2)
-
-        encoder = Encoder()
-        names, parameters = _configure_lpft(encoder)
-        self.assertTrue(names)
-        self.assertEqual(
-            {name.split(".")[1] for name in names if name.startswith("layers.")},
-            {"2", "3"},
-        )
-        self.assertTrue(any(name.startswith("final_norm.") for name in names))
-        self.assertEqual(
-            parameters,
-            sum(value.numel() for value in encoder.parameters() if value.requires_grad),
-        )
-        self.assertFalse(
-            any(value.requires_grad for value in encoder.layers[1].parameters())
-        )
-
     def test_external_loader_rejects_the_retired_schema(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
@@ -356,7 +326,6 @@ class MmbertDataTests(unittest.TestCase):
                 "resume": False,
                 "preflight_only": False,
                 "additional_pairs": None,
-                "initial_head": None,
                 **overrides,
             }
         )
@@ -403,16 +372,6 @@ class MmbertDataTests(unittest.TestCase):
             _validate_full_recipe(
                 args,
                 {**report, "matched_pairs": report["matched_pairs"] - 1},
-            )
-        # lpft still requires the pinned additional-pair archive.
-        with self.assertRaisesRegex(ValueError, "additional-pair"):
-            _validate_full_recipe(
-                self._baseline_recipe_args(
-                    mode="lpft",
-                    head_learning_rate=3e-5,
-                    adapter_learning_rate=1e-5,
-                ),
-                report,
             )
         # frozen never takes them.
         with self.assertRaisesRegex(ValueError, "additional-pair"):
@@ -482,52 +441,24 @@ class MmbertDataTests(unittest.TestCase):
                 {**shifted, "calibration_rows": shifted["calibration_rows"] - 1},
             )
 
-    def test_full_recipe_binds_lpft_to_pinned_pairs_and_head(self):
-        report = dict(NEW_LPFT_POPULATION)
+    def test_full_recipe_binds_lora_to_pinned_additional_pairs(self):
+        report = dict(ADDITIONAL_PAIR_POPULATION)
         with tempfile.TemporaryDirectory() as temporary:
             pairs = Path(temporary) / "pairs.jsonl.gz"
-            head = Path(temporary) / "head.safetensors"
             pairs.write_bytes(b"pairs")
-            head.write_bytes(b"head")
             args = self._baseline_recipe_args(
-                mode="lpft",
-                head_learning_rate=3e-5,
-                adapter_learning_rate=1e-5,
                 additional_pairs=pairs,
-                initial_head=head,
             )
-            pinned = {
-                pairs: NEW_LPFT_PAIR_ARCHIVE_SHA256,
-                head: LPFT_INITIAL_HEAD_SHA256,
-            }
             with patch(
                 "morgott.models.mmbert.train.file_sha256",
-                side_effect=pinned.__getitem__,
+                return_value=ADDITIONAL_PAIR_ARCHIVE_SHA256,
             ):
                 _validate_full_recipe(args, report)
-                # The same pinned archive is now also reachable from lora, so
-                # the disentangling arm can hold the tuning method fixed.
-                _validate_full_recipe(
-                    self._baseline_recipe_args(
-                        mode="lora",
-                        additional_pairs=pairs,
-                        initial_head=None,
-                    ),
-                    report,
-                )
             with (
                 self.assertRaisesRegex(ValueError, "additional-pair"),
                 patch(
                     "morgott.models.mmbert.train.file_sha256",
-                    side_effect={**pinned, pairs: "0" * 64}.__getitem__,
-                ),
-            ):
-                _validate_full_recipe(args, report)
-            with (
-                self.assertRaisesRegex(ValueError, "configuration"),
-                patch(
-                    "morgott.models.mmbert.train.file_sha256",
-                    side_effect={**pinned, head: "0" * 64}.__getitem__,
+                    return_value="0" * 64,
                 ),
             ):
                 _validate_full_recipe(args, report)
@@ -1154,98 +1085,6 @@ class EncodingCacheTests(unittest.TestCase):
         # Masked attention is exact in principle but not bitwise under BF16
         # reduction over a different padded width, so bound the drift instead.
         self.assertLess((exact - bucketed).abs().max().item(), 0.05)
-
-
-class MultitaskHeadCompatibilityTests(unittest.TestCase):
-    """The auxiliary head must not disturb the registered score definition."""
-
-    def test_multitask_head_preserves_the_subversion_column(self):
-        import torch
-
-        hidden = 8
-        single = mmbert_train.new_head(hidden, 42)
-        expected_rng = torch.get_rng_state().clone()
-        multi = mmbert_head_contract.new_multitask_head(hidden, 42)
-        self.assertTrue(torch.equal(torch.get_rng_state(), expected_rng))
-        self.assertEqual(single[-1].out_features, 1)
-        self.assertEqual(multi.primary.out_features, 1)
-        self.assertEqual(multi.auxiliary.out_features, 1)
-        for name, expected in single.state_dict().items():
-            mapped = (
-                name.replace("4.", "primary.")
-                if name.startswith("4.")
-                else f"trunk.{name}"
-            )
-            observed = multi.state_dict()[mapped]
-            self.assertTrue(torch.equal(observed, expected), name)
-        features = torch.zeros(3, hidden * 3)
-        single.eval()
-        multi.eval()
-        self.assertTrue(torch.equal(single(features)[:, 0], multi(features)[:, 0]))
-
-    def test_auxiliary_width_is_derived_from_verified_legacy_projection(self):
-        import torch
-
-        legacy = torch.nn.Sequential(
-            torch.nn.Linear(12, 7),
-            torch.nn.GELU(),
-            torch.nn.Linear(7, 1),
-        )
-        with patch.object(mmbert_head_contract, "new_head", return_value=legacy):
-            head = mmbert_head_contract.new_multitask_head(4, 42)
-        self.assertEqual(head.auxiliary.in_features, 7)
-        self.assertEqual(tuple(head(torch.zeros(3, 12)).shape), (3, 2))
-
-    def test_non_linear_or_non_binary_legacy_projection_fails_closed(self):
-        import torch
-
-        invalid = (
-            torch.nn.Sequential(torch.nn.Linear(12, 7), torch.nn.ReLU()),
-            torch.nn.Sequential(torch.nn.Linear(12, 7), torch.nn.Linear(7, 2)),
-        )
-        for legacy in invalid:
-            with self.subTest(final=legacy[-1]):
-                with patch.object(
-                    mmbert_head_contract,
-                    "new_head",
-                    return_value=legacy,
-                ):
-                    with self.assertRaisesRegex(
-                        ValueError,
-                        "legacy head final projection",
-                    ):
-                        mmbert_head_contract.new_multitask_head(4, 42)
-
-    def test_primary_only_backward_is_legacy_identical(self):
-        import torch
-
-        single = mmbert_train.new_head(8, 42).eval()
-        multi = mmbert_head_contract.new_multitask_head(8, 42).eval()
-        single_input = torch.randn(5, 24, generator=torch.Generator().manual_seed(7))
-        multi_input = single_input.clone()
-        single_loss = single(single_input)[:, 0].square().sum()
-        multi_loss = multi(multi_input)[:, 0].square().sum()
-        single_loss.backward()
-        multi_loss.backward()
-        self.assertTrue(torch.equal(single_loss, multi_loss))
-        for name, expected in single.named_parameters():
-            mapped = (
-                name.replace("4.", "primary.")
-                if name.startswith("4.")
-                else f"trunk.{name}"
-            )
-            observed = dict(multi.named_parameters())[mapped]
-            self.assertTrue(torch.equal(observed.grad, expected.grad), name)
-        self.assertTrue(
-            torch.equal(
-                multi.auxiliary.weight.grad, torch.zeros_like(multi.auxiliary.weight)
-            )
-        )
-        self.assertTrue(
-            torch.equal(
-                multi.auxiliary.bias.grad, torch.zeros_like(multi.auxiliary.bias)
-            )
-        )
 
 
 class EpochStreamTests(unittest.TestCase):
@@ -2813,7 +2652,6 @@ class PrepCacheTests(unittest.TestCase):
             "src/morgott/models/mmbert/core.py",
             "src/morgott/models/mmbert/data.py",
             "src/morgott/models/mmbert/external_data.py",
-            "src/morgott/models/mmbert/head_contract.py",
             "src/morgott/data.py",
             "src/morgott/normalization.py",
             "src/morgott/overlap.py",

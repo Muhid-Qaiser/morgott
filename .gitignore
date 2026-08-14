@@ -19,6 +19,12 @@ data-archive/redteam/
 
 # Rebuilt by `make benchmark`.
 artifacts/
+!artifacts/
+artifacts/*
+!artifacts/models/
+artifacts/models/*
+!artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/
+!artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/**
 reports/baseline.json
 reports/baseline.md
 reports/routing-baseline.json

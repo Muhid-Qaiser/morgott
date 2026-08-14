@@ -46,40 +46,16 @@ The recorded `attack_span_start` values are one character late; see `artifacts/m
 Repository grouping holds out task contexts, not attack templates.
 Of the 2,590 unique dev-test attack spans, 2,267 also occur in training, so attack recall, AUROC, and pair ordering are in-family template evidence rather than attack-side generalization.
 
-The retained held-out comparison record `artifacts/mmbert_lpft_comparison/heldout_summary.json` is produced by `experiments/mmbert_lpft_comparison/score_heldout.py`, which reads `artifacts/mmbert_lpft_new_data/validation/pairs.jsonl.gz` and `artifacts/mmbert_lpft_new_data/dev_test/pairs.jsonl.gz`; those archives are intentionally unversioned, so copy the rebuilt `validation/` and `dev_test/` archives into `artifacts/mmbert_lpft_new_data/` after the empty diff before scoring.
+The retained held-out comparison record is `artifacts/mmbert_lpft_comparison/heldout_summary.json`.
+Its ignored validation and dev-test input archives are not required by maintained inference.
 
-Run the training preflight and training with:
-
-```bash
-uv run --locked --extra encoder python -m morgott.models.mmbert.train \
-  --mode lpft \
-  --initial-head artifacts/models/mmbert-frozen-s42/head.safetensors \
-  --head-learning-rate 3e-5 \
-  --adapter-learning-rate 1e-5 \
-  --no-gradient-checkpointing \
-  --additional-pairs artifacts/mmbert_lpft_new_data_rebuilt/train/pairs.jsonl.gz \
-  --output artifacts/mmbert/runs \
-  --preflight-only
-
-uv run --locked --extra encoder python -m morgott.models.mmbert.train \
-  --mode lpft \
-  --initial-head artifacts/models/mmbert-frozen-s42/head.safetensors \
-  --head-learning-rate 3e-5 \
-  --adapter-learning-rate 1e-5 \
-  --no-gradient-checkpointing \
-  --additional-pairs artifacts/mmbert_lpft_new_data_rebuilt/train/pairs.jsonl.gz \
-  --output artifacts/mmbert/runs
-```
-
-Keep `--output` on a scratch directory: `artifacts/models` holds the retained frozen artifacts, and the trainer writes its progress checkpoint into `--output` during training while the completed-run guard fires only at the end.
+This experiment is provenance-only.
+The maintained trainer and evaluator no longer implement the rejected LP-FT adaptation or load its weights.
+The exact historical implementation is preserved in Git commit `5269fe4cff6db37e802623aa91afbef054e5a6b1`; later context-campaign source is also archived at `reports/provenance/mmbert-context-campaign-source-20260812.tar.gz`.
+Use those immutable sources only for a deliberate historical reproduction, not the current training CLI.
 
 The pinned preflight retains 33,757 matched pairs after overlap filtering,
 including 22,716 of the 22,719 new SWE-rebench V2 training pairs.
-
-The trainer additionally writes an atomic progress checkpoint every 500 updates.
-`--resume` restores the optimizer, sampler cycles, RNG state, and saved batch position so the deterministic epoch stream continues with the same update sequence.
-It does not enable deterministic CUDA algorithms and therefore does not claim bit-identical floating-point results across process or hardware changes.
-Validation and best-checkpoint selection still run only at epoch boundaries; the progress checkpoint is crash recovery, not a selection rule change.
 
 This remains an advisory research shadow and cannot grant authority or become a blocking control from this experiment.
 

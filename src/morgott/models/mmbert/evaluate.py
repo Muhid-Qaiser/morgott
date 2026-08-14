@@ -26,6 +26,7 @@ from .core import (
     MODEL_ID,
     MODEL_REVISION,
     file_sha256,
+    new_head,
     pool,
     score_texts,
     source_provenance,
@@ -36,13 +37,17 @@ from .data import (
     external_rows,
     routing_views,
 )
-from .head_contract import new_head_for_result, resolve_head_contract
 from .score_journal import (
     ScoreJournal,
     ScoreJournalSpec,
     require_disjoint_paths,
 )
-from .train import SUPPORTED_MAX_TOKENS, _usable_cpus, prepare_training_data
+from .train import (
+    SUPPORTED_MAX_TOKENS,
+    _head_contract,
+    _usable_cpus,
+    prepare_training_data,
+)
 
 _REAL_FINANCE_SOURCES = frozenset(
     {
@@ -53,8 +58,6 @@ _REAL_FINANCE_SOURCES = frozenset(
     }
 )
 _SNAPSHOT_NAME = re.compile(r"update-([0-9]+)\.pt")
-_HARMFUL_INTENT_TAG = "harmful_intent"
-_BENIGN_TAG = "benign"
 EVALUATION_SCHEMA_VERSION = 2
 EVALUATION_IDENTITY_SCHEMA_VERSION = 2
 TRAINING_IDENTITY_SCHEMA_VERSION = 5
@@ -80,6 +83,15 @@ def _read_run_result(run: Path) -> dict:
     if not isinstance(result, dict):
         raise ValueError("run result must be an object")
     return result
+
+
+def _single_output_head_contract(result: dict) -> dict:
+    """Accept the historical implicit contract or the maintained explicit one."""
+    expected = _head_contract()
+    recorded = result.get("head_contract")
+    if recorded is not None and recorded != expected:
+        raise ValueError("run does not use the maintained single-output head")
+    return expected
 
 
 def _training_max_tokens(result: dict) -> int:
@@ -435,6 +447,7 @@ def _load_run(
     run = run.resolve()
     result = _read_run_result(run)
     _training_max_tokens(result)
+    _single_output_head_contract(result)
     mode = result.get("adaptation")
     artifact = result.get("artifact", {})
     head_name = artifact.get("head")
@@ -447,7 +460,7 @@ def _load_run(
         or result.get("model_revision") != MODEL_REVISION
         or result.get("attention_implementation") != ATTENTION_IMPLEMENTATION
         or result.get("normalization") != "strict"
-        or mode not in {"frozen", "lora", "lpft"}
+        or mode not in {"frozen", "lora"}
         or not head_path.is_relative_to(run)
         or file_sha256(head_path) != artifact.get("head_sha256")
     ):
@@ -489,33 +502,10 @@ def _load_run(
             or parameters != result["lora"]["adapter_parameters"]
         ):
             raise ValueError("LoRA identity mismatch")
-    elif mode == "lpft":
-        encoder_name = artifact.get("encoder")
-        if not isinstance(encoder_name, str):
-            raise ValueError("run has no LP-FT encoder artifact")
-        encoder_path = (run / encoder_name).resolve()
-        if not encoder_path.is_relative_to(run) or file_sha256(
-            encoder_path
-        ) != artifact.get("encoder_sha256"):
-            raise ValueError("LP-FT encoder hash mismatch")
-        state = load_file(str(encoder_path))
-        if set(state) != set(result.get("lpft", {}).get("trainable_names", ())):
-            raise ValueError("LP-FT encoder identity mismatch")
-        unexpected = encoder.load_state_dict(state, strict=False).unexpected_keys
-        if (
-            unexpected
-            or sum(value.numel() for value in state.values())
-            != result["lpft"]["trainable_parameters"]
-        ):
-            raise ValueError("LP-FT encoder state mismatch")
     encoder.eval()
     for parameter in encoder.parameters():
         parameter.requires_grad = False
-    head = new_head_for_result(
-        encoder.config.hidden_size,
-        result["seed"],
-        result,
-    ).to("cuda")
+    head = new_head(encoder.config.hidden_size, result["seed"]).to("cuda")
     head.load_state_dict(load_file(str(head_path)), strict=True)
     head.eval()
     return result, encoder, tokenizer, head, base_model
@@ -583,7 +573,7 @@ def _restore_snapshot_state(
         from peft import get_peft_model_state_dict, set_peft_model_state_dict
 
         if payload["encoder"] is not None:
-            raise ValueError("LoRA snapshot contains LP-FT encoder state")
+            raise ValueError("LoRA snapshot contains unexpected encoder state")
         current = get_peft_model_state_dict(encoder)
         selected = _validate_state("LoRA adapter", payload["adapter"], current)
         set_peft_model_state_dict(encoder, dict(selected))
@@ -594,31 +584,7 @@ def _restore_snapshot_state(
         )
         return
 
-    if payload["adapter"] is not None:
-        raise ValueError("LP-FT snapshot contains LoRA adapter state")
-    lpft = result.get("lpft")
-    names = lpft.get("trainable_names") if isinstance(lpft, dict) else None
-    if (
-        not isinstance(names, list)
-        or not names
-        or names != sorted(set(names))
-        or any(not isinstance(name, str) for name in names)
-    ):
-        raise ValueError("completed run has no strict LP-FT state identity")
-    current = encoder.state_dict()
-    if any(name not in current for name in names):
-        raise ValueError("LP-FT state names do not exist in the completed run")
-    expected = {name: current[name] for name in names}
-    selected = _validate_state("LP-FT encoder", payload["encoder"], expected)
-    incompatible = encoder.load_state_dict(selected, strict=False)
-    if incompatible.unexpected_keys:
-        raise ValueError("LP-FT snapshot has unexpected encoder state")
-    restored = encoder.state_dict()
-    _assert_restored_state(
-        "LP-FT encoder",
-        {name: restored[name] for name in names},
-        selected,
-    )
+    raise ValueError(f"unsupported snapshot adaptation: {mode!r}")
 
 
 def _load_snapshot(
@@ -771,49 +737,6 @@ def _sigmoid(values: np.ndarray) -> np.ndarray:
     return scores
 
 
-def _score_multitask_texts(
-    encoder,
-    tokenizer,
-    head,
-    texts: list[str],
-    *,
-    batch_size: int,
-    max_tokens: int = MAX_TOKENS,
-) -> np.ndarray:
-    """Score both heads in one encoder pass while preserving primary math."""
-
-    import torch
-
-    if batch_size < 1:
-        raise ValueError("batch size must be positive")
-    if type(max_tokens) is not int or max_tokens not in SUPPORTED_MAX_TOKENS:
-        raise ValueError(f"max tokens must be one of {SUPPORTED_MAX_TOKENS}")
-    encoder.eval()
-    head.eval()
-    logits = []
-    with torch.no_grad():
-        for start in range(0, len(texts), batch_size):
-            encoded = tokenizer(
-                [strict_normalize(text) for text in texts[start : start + batch_size]],
-                add_special_tokens=True,
-                max_length=max_tokens,
-                padding=True,
-                return_tensors="pt",
-                truncation=True,
-            ).to("cuda")
-            with torch.autocast("cuda", dtype=torch.bfloat16):
-                hidden = encoder(**encoded).last_hidden_state
-                features = pool(hidden, encoded["attention_mask"])
-            with torch.autocast("cuda", dtype=torch.bfloat16):
-                values = head(features)
-            if values.ndim != 2 or values.shape != (len(encoded["input_ids"]), 2):
-                raise ValueError("multitask head did not return two logits per row")
-            logits.append(values.float().cpu().numpy())
-    if not logits:
-        return np.empty((0, 2), dtype=np.float64)
-    return _sigmoid(np.concatenate(logits, axis=0))
-
-
 def _score_single_texts(
     encoder,
     tokenizer,
@@ -862,50 +785,35 @@ def _score(
     *,
     batch_size: int,
     journal: ScoreJournal | None = None,
-    score_columns: tuple[str, ...] = ("score",),
     max_tokens: int = MAX_TOKENS,
 ) -> dict:
     if type(max_tokens) is not int or max_tokens not in SUPPORTED_MAX_TOKENS:
         raise ValueError(f"max tokens must be one of {SUPPORTED_MAX_TOKENS}")
-    if score_columns not in {
-        ("score",),
-        ("score", "harmful_intent_score"),
-    }:
-        raise ValueError("unsupported evaluation score columns")
 
     def score_batch(texts: list[str]) -> np.ndarray:
-        if len(score_columns) == 1:
-            scores = (
-                score_texts(
-                    encoder,
-                    tokenizer,
-                    head,
-                    texts,
-                    batch_size=batch_size,
-                )
-                if max_tokens == MAX_TOKENS
-                else _score_single_texts(
-                    encoder,
-                    tokenizer,
-                    head,
-                    texts,
-                    batch_size=batch_size,
-                    max_tokens=max_tokens,
-                )
+        scores = (
+            score_texts(
+                encoder,
+                tokenizer,
+                head,
+                texts,
+                batch_size=batch_size,
             )
-            return np.asarray(scores, dtype=np.float64)[:, np.newaxis]
-        return _score_multitask_texts(
-            encoder,
-            tokenizer,
-            head,
-            texts,
-            batch_size=batch_size,
-            max_tokens=max_tokens,
+            if max_tokens == MAX_TOKENS
+            else _score_single_texts(
+                encoder,
+                tokenizer,
+                head,
+                texts,
+                batch_size=batch_size,
+                max_tokens=max_tokens,
+            )
         )
+        return np.asarray(scores, dtype=np.float64)[:, np.newaxis]
 
     if journal is not None:
         rows = list(rows)
-        if len(rows) != journal.spec.rows or journal.spec.columns != score_columns:
+        if len(rows) != journal.spec.rows or journal.spec.columns != ("score",):
             raise ValueError("score journal does not match the evaluation population")
         start = journal.completed_rows
         for batch in batches(rows[start:], 512):
@@ -1016,7 +924,6 @@ def _scoring_sha256(max_tokens: int = MAX_TOKENS) -> str:
     for path in (
         Path(__file__),
         Path(__file__).with_name("core.py"),
-        Path(__file__).with_name("head_contract.py"),
         Path(__file__).resolve().parents[2] / "normalization.py",
         Path(__file__).resolve().parents[4] / "uv.lock",
     ):
@@ -1280,88 +1187,6 @@ def _metrics(labels: np.ndarray, scores: np.ndarray, threshold: float) -> dict:
     return result
 
 
-def _harmful_labels(tags: list) -> tuple[np.ndarray, np.ndarray]:
-    labels = np.zeros(len(tags), dtype=np.int8)
-    known = np.zeros(len(tags), dtype=bool)
-    for index, values in enumerate(tags):
-        values = values or ()
-        if isinstance(values, str) or any(not isinstance(tag, str) for tag in values):
-            raise ValueError("invalid security tags in harmful-intent evaluation")
-        if _HARMFUL_INTENT_TAG in values:
-            labels[index] = 1
-            known[index] = True
-        elif _BENIGN_TAG in values:
-            known[index] = True
-    return labels, known
-
-
-def _harmful_metrics(labels: np.ndarray, known: np.ndarray, scores: np.ndarray) -> dict:
-    if (
-        labels.shape != known.shape
-        or labels.shape != scores.shape
-        or labels.ndim != 1
-        or not np.isin(labels, (0, 1)).all()
-        or not np.isfinite(scores).all()
-    ):
-        raise ValueError("invalid harmful-intent evaluation arrays")
-    selected_labels = labels[known]
-    selected_scores = scores[known]
-    positives = selected_labels == 1
-    negatives = selected_labels == 0
-    result = {
-        "counts": {
-            "rows": len(labels),
-            "known": int(known.sum()),
-            "unknown_masked": int((~known).sum()),
-            "positive": int(positives.sum()),
-            "negative": int(negatives.sum()),
-        },
-        "binary_cross_entropy": None,
-        "roc_auc": None,
-        "average_precision": None,
-        "positive_score_mean": (
-            float(selected_scores[positives].mean()) if positives.any() else None
-        ),
-        "negative_score_mean": (
-            float(selected_scores[negatives].mean()) if negatives.any() else None
-        ),
-    }
-    if len(selected_labels):
-        epsilon = np.finfo(np.float64).eps
-        clipped = np.clip(selected_scores, epsilon, 1.0 - epsilon)
-        result["binary_cross_entropy"] = float(
-            -np.mean(
-                selected_labels * np.log(clipped)
-                + (1 - selected_labels) * np.log1p(-clipped)
-            )
-        )
-    if positives.any() and negatives.any():
-        result["roc_auc"] = float(roc_auc_score(selected_labels, selected_scores))
-        result["average_precision"] = float(
-            average_precision_score(selected_labels, selected_scores)
-        )
-    return result
-
-
-def _harmful_population(scored: dict) -> dict:
-    if scored["head_scores"].shape[1] != 2:
-        raise ValueError("harmful-intent evidence requires a two-output head")
-    labels, known = _harmful_labels(scored["tags"])
-    scores = scored["head_scores"][:, 1]
-    by_source = {}
-    for source in sorted(set(scored["sources"])):
-        selected = scored["sources"] == source
-        by_source[str(source)] = _harmful_metrics(
-            labels[selected],
-            known[selected],
-            scores[selected],
-        )
-    return {
-        "aggregate": _harmful_metrics(labels, known, scores),
-        "by_source": by_source,
-    }
-
-
 def _by_value(scored: dict, key: str, threshold: float) -> dict:
     result = {}
     for value in sorted(set(scored[key])):
@@ -1463,7 +1288,7 @@ def evaluate(
             "non-default or cross-cap evaluation output name must include "
             + context_suffix
         )
-    head_contract = resolve_head_contract(result)
+    head_contract = _single_output_head_contract(result)
     checkpoint = (
         _load_snapshot(
             snapshot,
@@ -1483,9 +1308,6 @@ def evaluate(
         base_model=base_model,
     )
     scoring_sha256 = _scoring_sha256(evaluation_max_tokens)
-    score_columns = (
-        ("score", "harmful_intent_score") if head_contract.outputs == 2 else ("score",)
-    )
     input_sha256 = _evaluation_input_sha256(
         data_dir=data_dir,
         external_dir=external_dir,
@@ -1506,7 +1328,7 @@ def evaluate(
                     scoring_sha256=scoring_sha256,
                     rows=len(records),
                     batch_size=batch_size,
-                    columns=score_columns,
+                    columns=("score",),
                 ),
             )
             if score_journal is not None
@@ -1519,7 +1341,6 @@ def evaluate(
             head,
             batch_size=batch_size,
             journal=journal,
-            score_columns=score_columns,
             max_tokens=evaluation_max_tokens,
         )
 
@@ -1639,14 +1460,7 @@ def evaluate(
             "native_context_evaluation": native_context,
             "evaluation_identity_sha256": evaluation_identity_sha256,
             "evaluation_identity": evaluation_identity,
-            "head_contract": {
-                "architecture": head_contract.architecture,
-                "outputs": head_contract.outputs,
-                "columns": {
-                    str(index): name for index, name in enumerate(head_contract.columns)
-                },
-                "primary_column": head_contract.primary_column,
-            },
+            "head_contract": head_contract,
             "run_result_sha256": run_result_sha256,
             **(
                 {
@@ -1670,7 +1484,6 @@ def evaluate(
                 Path(__file__),
                 Path(__file__).with_name("core.py"),
                 Path(__file__).with_name("data.py"),
-                Path(__file__).with_name("head_contract.py"),
                 Path(__file__).with_name("score_journal.py"),
                 Path(__file__).with_name("train.py"),
                 Path(__file__).resolve().parents[1] / "detector.py",
@@ -1738,27 +1551,6 @@ def evaluate(
                 "source": "canonical calibration components only",
                 "selected": thresholds,
             },
-            **(
-                {
-                    "harmful_intent": {
-                        "role": "masked diagnostic only; never used for threshold selection",
-                        "label_contract": (
-                            "harmful_intent security tag is positive, benign security "
-                            "tag is negative, and every other row is masked unknown"
-                        ),
-                        "source_confounded": True,
-                        "source_confounding_limitation": (
-                            "tag availability and class balance differ by source, so "
-                            "aggregate auxiliary metrics do not establish cross-source "
-                            "harmfulness generalization"
-                        ),
-                        "calibration": _harmful_population(calibration),
-                        "canonical_dev_test": _harmful_population(dev),
-                    }
-                }
-                if head_contract.outputs == 2
-                else {}
-            ),
             "scores": {
                 "path": "scores.npy",
                 "sha256": file_sha256(arrays_path),
@@ -1766,7 +1558,7 @@ def evaluate(
                 "evaluation_identity_sha256": evaluation_identity_sha256,
                 "training_max_tokens": training_max_tokens,
                 "evaluation_max_tokens": evaluation_max_tokens,
-                "columns": ["label", *score_columns],
+                "columns": ["label", "score"],
                 "slices": score_slices,
             },
             "runtime": {

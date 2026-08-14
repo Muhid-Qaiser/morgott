@@ -40,7 +40,6 @@ from morgott.policy import (
     REFERENCE_POLICY,
     SCENARIOS,
     authorize,
-    execute,
     run_policy_ablation,
 )
 from morgott.runtime import SourcedValue, enforce
@@ -816,33 +815,14 @@ class PolicyTests(unittest.TestCase):
         ]
         for malformed, context in cases:
             with self.subTest(capability=malformed):
-                committed = []
                 self.assertEqual(
-                    execute(
+                    authorize(
                         {"capabilities": {action["tool"]: malformed}},
                         action,
                         context,
-                        committed,
                     ),
                     (False, "invalid_policy"),
                 )
-                self.assertEqual(committed, [])
-
-    def test_executor_commits_only_an_authorized_snapshot(self):
-        action = {
-            "tool": SCENARIOS[-1]["action"]["tool"],
-            "arguments": dict(SCENARIOS[-1]["action"]["arguments"]),
-        }
-        committed = []
-        allowed, _ = execute(
-            REFERENCE_POLICY, action, SCENARIOS[-1]["context"], committed
-        )
-        action["arguments"]["body"] = "changed after authorization"
-        self.assertTrue(allowed)
-        self.assertEqual(len(committed), 1)
-        self.assertEqual(
-            committed[0]["arguments"]["body"], "The public report is ready."
-        )
 
     def test_provenance_is_load_bearing_not_decorative(self):
         """Flipping ONLY provenance must flip the decision.

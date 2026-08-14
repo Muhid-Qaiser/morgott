@@ -8,41 +8,37 @@ from pathlib import Path
 
 from datasets import disable_progress_bars
 
-from .data import SOURCES, atomic_write_text, build_dataset, file_sha256
+from .data import (
+    SOURCES,
+    _atomic_text_writer,
+    atomic_write_text,
+    build_dataset,
+    file_sha256,
+)
 from .routing import materialize_routing_views
 from .sources import LOADERS
 
 
 def _consume_source(path: Path, rows: Iterable[dict]) -> dict:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = None
     counts = Counter()
     row_ids = set()
-    try:
-        with tempfile.NamedTemporaryFile(
-            "w", encoding="utf-8", dir=path.parent, delete=False
-        ) as handle:
-            temporary = Path(handle.name)
-            for row in rows:
-                if row["id"] in row_ids:
-                    raise ValueError(f"duplicate canonical row id: {row['id']}")
-                row_ids.add(row["id"])
-                role = row.get("source_role")
-                eligible = row.get("routing_training_eligible")
-                expected_eligible = role in {"candidate", "dev_test"}
-                if type(eligible) is not bool or eligible != expected_eligible:
-                    raise ValueError(
-                        f"{row['id']} has inconsistent routing source role/eligibility"
-                    )
-                handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
-                counts["rows"] += 1
-                counts[f"role:{role}"] += 1
-                counts[f"security:{row['security_label']}"] += 1
-                counts[f"routing:{row['routing_label']}"] += 1
-        temporary.replace(path)
-    finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
+    with _atomic_text_writer(path) as handle:
+        for row in rows:
+            if row["id"] in row_ids:
+                raise ValueError(f"duplicate canonical row id: {row['id']}")
+            row_ids.add(row["id"])
+            role = row.get("source_role")
+            eligible = row.get("routing_training_eligible")
+            expected_eligible = role in {"candidate", "dev_test"}
+            if type(eligible) is not bool or eligible != expected_eligible:
+                raise ValueError(
+                    f"{row['id']} has inconsistent routing source role/eligibility"
+                )
+            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+            counts["rows"] += 1
+            counts[f"role:{role}"] += 1
+            counts[f"security:{row['security_label']}"] += 1
+            counts[f"routing:{row['routing_label']}"] += 1
     summary = {
         "rows": counts["rows"],
         "roles": {
@@ -63,37 +59,27 @@ def _consume_source(path: Path, rows: Iterable[dict]) -> dict:
 
 
 def _consume_source_quarantine(path: Path, rows: Iterable[dict]) -> dict:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = None
     counts = Counter()
     row_ids = set()
-    try:
-        with tempfile.NamedTemporaryFile(
-            "w", encoding="utf-8", dir=path.parent, delete=False
-        ) as handle:
-            temporary = Path(handle.name)
-            for row in rows:
-                row_id = row.get("id")
-                if (
-                    not isinstance(row_id, str)
-                    or not row_id
-                    or row_id in row_ids
-                    or not isinstance(row.get("text"), str)
-                    or not row["text"].strip()
-                    or row.get("source_role") != "uncertain"
-                    or row.get("routing_training_eligible") is not False
-                    or row.get("data_role") != "quarantine"
-                    or not isinstance(row.get("quarantine_reason"), str)
-                ):
-                    raise ValueError("invalid source-level quarantine row")
-                row_ids.add(row_id)
-                handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
-                counts["rows"] += 1
-                counts[f"reason:{row['quarantine_reason']}"] += 1
-        temporary.replace(path)
-    finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
+    with _atomic_text_writer(path) as handle:
+        for row in rows:
+            row_id = row.get("id")
+            if (
+                not isinstance(row_id, str)
+                or not row_id
+                or row_id in row_ids
+                or not isinstance(row.get("text"), str)
+                or not row["text"].strip()
+                or row.get("source_role") != "uncertain"
+                or row.get("routing_training_eligible") is not False
+                or row.get("data_role") != "quarantine"
+                or not isinstance(row.get("quarantine_reason"), str)
+            ):
+                raise ValueError("invalid source-level quarantine row")
+            row_ids.add(row_id)
+            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
+            counts["rows"] += 1
+            counts[f"reason:{row['quarantine_reason']}"] += 1
     return {
         "path": str(path),
         "rows": counts["rows"],

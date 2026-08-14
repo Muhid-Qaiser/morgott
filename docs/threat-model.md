@@ -31,12 +31,12 @@ Untrusted:
   memory, summaries, classifier scores, generated labels, and remote model responses.
 
 The POC uses simulated commits and has no wallet, email connector, or live capability runtime.
-The optional shadow cascade makes an OpenRouter model API call only when `--allow-remote` is set and `OPENROUTER_API_KEY` is available.
-For remote-enabled multi-window untrusted content without a local high, the complete normalized artifact leaves the process for one full-context review.
+The maintained shadow cascade requires `OPENROUTER_API_KEY` at startup, but it makes an OpenRouter model API call only when an input reaches the existing review route.
+For multi-window untrusted content without a local high, the complete normalized artifact leaves the process for one full-context review.
 A clear full-context result may then send middle-zone windows for the existing fallback review, while direct-user and single-window routing stay unchanged.
 The API key remains inside the provider client.
 Remote responses are untrusted, strictly parsed, and converted to a conservative incomplete assessment when invalid.
-Without `--allow-remote`, no artifact text leaves the maintained cascade.
+Callers that cannot permit eligible artifact text to leave the process must not start the maintained cascade.
 The completed PredictStrategy evaluation used the same provider boundary and recorded only hashes, parsed values, timings, usage, and cost.
 The POC does not yet bind capabilities to a task or user identity, issue expirations, or propagate provenance through a live agent runtime.
 

@@ -361,7 +361,11 @@ Future frozen agent experiments must preserve a safe failure phase and HTTP stat
 
 ## Morgott's selected reviewer contract
 
-The maintained [`deepseek_nooa.py`](../src/morgott/models/deepseek_nooa.py) pins `deepseek/deepseek-v4-flash-0731`, Cloudflare, FP8, no provider fallback, and required-parameter filtering.
+The frozen evaluation request pinned `deepseek/deepseek-v4-flash-0731`, Cloudflare, FP8, no provider fallback, and required-parameter filtering.
+On 2026-08-14 OpenRouter's live Cloudflare endpoint metadata changed its quantization label from FP8 to unknown, causing the otherwise unchanged request to return HTTP 404 because no route matched the FP8 filter.
+The maintained runtime removed only that stale quantization filter and still pins the same model, Cloudflare provider, no fallback, and required-parameter filtering.
+`EVALUATION_REQUEST_SHA256` preserves the frozen 20,000-row request identity separately from the live operational request.
+This restores the same provider route but is not fresh calibration evidence; the retained threshold remains provisional until a new frozen evaluation is justified.
 It sends temperature 0, `max_tokens=16`, a strict one-field integer JSON Schema, `logprobs=true`, `top_logprobs=20`, and explicit reasoning disablement.
 It also disables NOOA's cache-control injection and refuses tracing when corpus content could be exposed.
 
@@ -370,8 +374,8 @@ It converts `logprob(1) - logprob(0)` through a sigmoid and applies the separate
 An endpoint advertising `logprobs` and `top_logprobs` is necessary but not sufficient to meet that parser contract.
 
 The historical [OpenRouter downstream report](openrouter-downstream-evaluation.md) records the April CoreWeave route that this selection supersedes.
-The selected FP32 cascade reaches 71.235% evaluation recall, 1.773% FPR, 96.779% precision, and a 22.914% provider call rate.
-The registered OpenVINO BF16 runtime reaches 71.386% recall, 1.798% FPR, 96.742% precision, and a 22.893% call rate.
+The then-selected 512-token FP32 cascade reached 71.235% evaluation recall, 1.773% FPR, 96.779% precision, and a 22.914% provider call rate.
+The then-registered 512-token OpenVINO BF16 runtime reached 71.386% recall, 1.798% FPR, 96.742% precision, and a 22.893% call rate.
 These are already-open development results tied to the exact model, provider, prompt, request, threshold, and panel.
 
 ## Selected OpenRouter request
@@ -442,14 +446,14 @@ The threshold was applied once to the frozen evaluation role and no threshold wa
 
 The complete OpenVINO BF16 serving check then replayed all 20,000 typed 0731 records through the optimized local stage.
 It found 89 local-zone differences and 27 final-route differences relative to FP32 and passed every established recall, FPR, precision, call-rate, and dataset-slice equivalence check.
-The registered verification record is `artifacts/models/mmbert-lora-full-s42/serving/verification-0731.json` at SHA-256 `38d6dc33fdf3fd4e84d5cca2ac6d9e25cd187607c23e1f1f73caf2ca7b5ace38`.
+The then-registered verification record is `artifacts/models/mmbert-lora-full-s42/serving/verification-0731.json` at SHA-256 `38d6dc33fdf3fd4e84d5cca2ac6d9e25cd187607c23e1f1f73caf2ca7b5ace38`.
 The previous April verification records remain preserved as historical evidence.
 
 ## Explicit unknowns
 
 OpenRouter does not publish a provider build hash, container revision, exact checkpoint SHA, template revision, or DSpark enablement state for any 0731 endpoint.
 The live endpoint API can change after this report, including provider availability, status, supported parameters, context, and price.
-Cloudflare advertises the required parameters and FP8, but OpenRouter does not currently list that endpoint as ZDR.
+At evaluation time Cloudflare advertised the required parameters and FP8, but OpenRouter did not list that endpoint as ZDR.
 The Cloudflare route's parser shape, latency, and nominal cost were observed on the frozen public panel, but OpenRouter still does not expose its provider build or checkpoint hash.
 No official source reports 0731 performance on prompt injection, jailbreak detection, harmful-intent routing, PromptShield, SEP, Morgott's corpus, or Morgott's outer-intent boundary pairs.
 The official agent benchmark gains did not justify reusing the April threshold, which is why the separate project evaluation and recalibration were required.

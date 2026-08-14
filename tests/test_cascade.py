@@ -620,6 +620,31 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["advisory_route"], "pass")
         self.assertTrue(reviewer.closed)
 
+    def test_production_constructor_requires_the_remote_reviewer(self):
+        scorer = _Scorer([0.1])
+        reviewer = _ClosableReviewer()
+        with (
+            mock.patch(
+                "morgott.models.cascade.MmbertRuntime.from_artifacts",
+                return_value=scorer,
+            ) as load_scorer,
+            mock.patch(
+                "morgott.models.cascade.DeepSeekReviewer.from_env",
+                return_value=reviewer,
+            ) as load_reviewer,
+        ):
+            scanner = CascadeScanner.from_artifacts(
+                manifest_path=Path("model-artifacts.json"),
+                inference_precision="auto",
+            )
+
+        self.assertIs(scanner._reviewer, reviewer)
+        load_scorer.assert_called_once_with(
+            Path("model-artifacts.json"),
+            inference_precision="auto",
+        )
+        load_reviewer.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

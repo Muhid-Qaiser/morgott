@@ -32,4 +32,4 @@ demo:
 	$(RUN) demo
 
 test:
-	$(UV_RUN) python -m unittest discover -s tests -v
+	$(UV_RUN) --extra azure python -m unittest discover -s tests -v

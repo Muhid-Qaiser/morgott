@@ -7,7 +7,7 @@ import sqlite3
 import tempfile
 import zlib
 from collections import Counter, defaultdict
-from itertools import batched
+from itertools import batched, groupby
 from multiprocessing import get_context
 from pathlib import Path
 
@@ -133,6 +133,8 @@ class _JsonlWriter:
 
 def _open_index(path: Path) -> sqlite3.Connection:
     connection = sqlite3.connect(path)
+    # This database is disposable build scratch; validated JSONL is the durable
+    # output, so SQLite crash durability would only slow a rebuild.
     connection.execute("PRAGMA journal_mode = OFF")
     connection.execute("PRAGMA synchronous = OFF")
     connection.execute("PRAGMA temp_store = FILE")
@@ -273,23 +275,8 @@ def _eligible_exact_groups(connection: sqlite3.Connection):
         "FROM rows INDEXED BY rows_hash WHERE eligible = 1 "
         "ORDER BY normalized_hash, seq"
     )
-    current_hash = None
-    rows = []
-    for (
-        normalized_hash,
-        source_role,
-        group_id,
-        source,
-        routing_label,
-        payload,
-    ) in cursor:
-        if current_hash is not None and normalized_hash != current_hash:
-            yield current_hash, rows
-            rows = []
-        current_hash = normalized_hash
-        rows.append((source_role, group_id, source, routing_label, payload))
-    if rows:
-        yield current_hash, rows
+    for normalized_hash, rows in groupby(cursor, key=lambda row: row[0]):
+        yield normalized_hash, [row[1:] for row in rows]
 
 
 def _prepare_supervised_rows(
@@ -530,16 +517,11 @@ def _uncertain_exact_groups(connection: sqlite3.Connection):
         "SELECT normalized_hash, payload FROM rows INDEXED BY rows_role_hash "
         "WHERE source_role = 'uncertain' ORDER BY normalized_hash, seq"
     )
-    current_hash = None
-    rows = []
-    for normalized_hash, payload in cursor:
-        if current_hash is not None and normalized_hash != current_hash:
-            yield current_hash, rows
-            rows = []
-        current_hash = normalized_hash
-        rows.append(json.loads(zlib.decompress(payload)))
-    if rows:
-        yield current_hash, rows
+    for normalized_hash, rows in groupby(cursor, key=lambda row: row[0]):
+        yield (
+            normalized_hash,
+            [json.loads(zlib.decompress(payload)) for _, payload in rows],
+        )
 
 
 def _quarantine(

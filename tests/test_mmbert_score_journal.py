@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 import tempfile
 import threading
 import unittest
@@ -162,10 +163,20 @@ class ScoreJournalTests(unittest.TestCase):
                 resumed.scores()[:, 0],
                 np.asarray([0.1, 0.2, 0.3, 0.4, 0.5]),
             )
-            manifest = json.loads((root / "manifest.json").read_text())
-            self.assertEqual(manifest["identity"]["columns"], ["score"])
-            self.assertEqual(manifest["identity"]["dtype"], "float64")
-            self.assertNotIn("text", json.dumps(manifest).lower())
+            with sqlite3.connect(resumed.database_path) as database:
+                identity = json.loads(
+                    database.execute("SELECT identity_json FROM journal").fetchone()[0]
+                )
+                payload_types = {
+                    row[0]
+                    for row in database.execute(
+                        "SELECT DISTINCT typeof(value) FROM scores"
+                    )
+                }
+            self.assertEqual(identity["columns"], ["score"])
+            self.assertEqual(identity["dtype"], "float64")
+            self.assertEqual(payload_types, {"real"})
+            self.assertNotIn("text", json.dumps(identity).lower())
 
     def test_stale_implicit_writer_fails_before_relabelling_scores(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -189,78 +200,44 @@ class ScoreJournalTests(unittest.TestCase):
             root = Path(temporary) / "journal"
             first = ScoreJournal(root, _spec())
             second = ScoreJournal(root, _spec())
-            first_in_publication = threading.Event()
-            release_first = threading.Event()
-            second_started = threading.Event()
-            second_refreshed = threading.Event()
+            ready = threading.Barrier(3)
             outcomes: dict[str, object] = {}
-            original_atomic_json = score_journal_module._atomic_json
-            original_second_refresh = second._refresh_locked
 
-            def blocking_atomic_json(path, value):
-                if path == first.manifest_path and not first_in_publication.is_set():
-                    first_in_publication.set()
-                    if not release_first.wait(5):
-                        raise RuntimeError("timed out waiting to release first writer")
-                return original_atomic_json(path, value)
-
-            def note_second_refresh(*, create=False):
-                second_refreshed.set()
-                return original_second_refresh(create=create)
-
-            def append(name, journal, values, *, started=None):
-                if started is not None:
-                    started.set()
+            def append(name, journal, values):
+                ready.wait()
                 try:
                     outcomes[name] = journal.append(values, start=0)
                 except Exception as error:
                     outcomes[name] = error
 
-            with (
-                patch.object(
-                    score_journal_module,
-                    "_atomic_json",
-                    side_effect=blocking_atomic_json,
-                ),
-                patch.object(
-                    second,
-                    "_refresh_locked",
-                    side_effect=note_second_refresh,
-                ),
-            ):
-                first_thread = threading.Thread(
-                    target=append,
-                    args=("first", first, np.asarray([0.1, 0.2])),
-                )
-                second_thread = threading.Thread(
-                    target=append,
-                    args=("second", second, np.asarray([0.3, 0.4])),
-                    kwargs={"started": second_started},
-                )
-                first_thread.start()
-                self.assertTrue(first_in_publication.wait(2))
-                second_thread.start()
-                self.assertTrue(second_started.wait(2))
-                self.assertFalse(second_refreshed.wait(0.1))
-                release_first.set()
-                first_thread.join(2)
-                second_thread.join(2)
+            first_thread = threading.Thread(
+                target=append,
+                args=("first", first, np.asarray([0.1, 0.2])),
+            )
+            second_thread = threading.Thread(
+                target=append,
+                args=("second", second, np.asarray([0.3, 0.4])),
+            )
+            first_thread.start()
+            second_thread.start()
+            ready.wait()
+            first_thread.join(2)
+            second_thread.join(2)
 
             self.assertFalse(first_thread.is_alive())
             self.assertFalse(second_thread.is_alive())
-            self.assertEqual(outcomes["first"], (0, 2))
-            self.assertIsInstance(outcomes["second"], ValueError)
-            reopened = ScoreJournal(root, _spec())
-            self.assertEqual(reopened.completed_rows, 2)
             self.assertEqual(
-                len(json.loads(reopened.manifest_path.read_text())["shards"]),
+                sum(outcome == (0, 2) for outcome in outcomes.values()),
                 1,
             )
-            reopened.append(np.asarray([0.5, 0.6, 0.7]), start=2)
-            np.testing.assert_allclose(
-                reopened.scores()[:, 0],
-                np.asarray([0.1, 0.2, 0.5, 0.6, 0.7]),
+            self.assertEqual(
+                sum(isinstance(outcome, ValueError) for outcome in outcomes.values()),
+                1,
             )
+            reopened = ScoreJournal(root, _spec())
+            self.assertEqual(reopened.completed_rows, 2)
+            reopened.append(np.asarray([0.5, 0.6, 0.7]), start=2)
+            self.assertEqual(reopened.scores().shape, (5, 1))
 
     def test_identity_changes_fail_closed(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -279,32 +256,44 @@ class ScoreJournalTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "score array"):
                 journal.append(np.ones((1, 2)))
 
-    def test_orphaned_atomic_shard_is_recovered_after_manifest_failure(self):
+    def test_interrupted_append_rolls_back_the_whole_range(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "journal"
             journal = ScoreJournal(root, _spec())
-            with (
-                patch(
-                    "morgott.models.mmbert.score_journal._atomic_json",
-                    side_effect=OSError("simulated manifest interruption"),
-                ),
-                self.assertRaises(OSError),
-            ):
+            with sqlite3.connect(journal.database_path) as database:
+                database.execute(
+                    """
+                    CREATE TRIGGER interrupt_append
+                    BEFORE INSERT ON scores
+                    WHEN NEW.row_index = 1
+                    BEGIN
+                        SELECT RAISE(ABORT, 'simulated interruption');
+                    END
+                    """
+                )
+            with self.assertRaises(sqlite3.IntegrityError):
                 journal.append(np.asarray([0.1, 0.2]))
 
             resumed = ScoreJournal(root, _spec())
-            self.assertEqual(resumed.completed_rows, 2)
-            resumed.append(np.asarray([0.3, 0.4, 0.5]))
+            self.assertEqual(resumed.completed_rows, 0)
+            with sqlite3.connect(journal.database_path) as database:
+                self.assertEqual(
+                    database.execute("SELECT COUNT(*) FROM scores").fetchone()[0], 0
+                )
+                database.execute("DROP TRIGGER interrupt_append")
+            resumed.append(np.asarray([0.1, 0.2, 0.3, 0.4, 0.5]))
             self.assertTrue(resumed.complete)
 
-    def test_tampered_shard_is_rejected(self):
+    def test_non_contiguous_database_payload_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "journal"
             journal = ScoreJournal(root, _spec())
             journal.append(np.asarray([0.1, 0.2]))
-            shard = next((root / "shards").glob("*.npz"))
-            shard.write_bytes(shard.read_bytes() + b"tamper")
-            with self.assertRaisesRegex(ValueError, "hash mismatch"):
+            with sqlite3.connect(journal.database_path) as database:
+                database.execute(
+                    "DELETE FROM scores WHERE row_index = 0 AND column_index = 0"
+                )
+            with self.assertRaisesRegex(ValueError, "not contiguous"):
                 ScoreJournal(root, _spec())
 
     def test_evaluator_resumes_at_the_next_outer_batch(self):

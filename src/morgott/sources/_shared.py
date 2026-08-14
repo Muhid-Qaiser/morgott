@@ -213,12 +213,22 @@ def _download(
     return path, digest
 
 
-def _parquet_dataset(source: str) -> tuple[dict, dict[str, str]]:
-    datasets = {}
+def _download_files(
+    source: str, *, revision: str | None = None
+) -> tuple[dict[str, Path], dict[str, str]]:
+    paths = {}
     downloads = {}
-    for split, (filename, expected) in FILES[source].items():
-        path, digest = _download(source, filename, expected)
-        downloads[filename] = digest
+    for name, (filename, expected) in FILES[source].items():
+        paths[name], downloads[filename] = _download(
+            source, filename, expected, revision=revision
+        )
+    return paths, downloads
+
+
+def _parquet_dataset(source: str) -> tuple[dict, dict[str, str]]:
+    paths, downloads = _download_files(source)
+    datasets = {}
+    for split, path in paths.items():
         datasets[split] = load_dataset(
             "parquet", data_files={split: str(path)}, split=split
         )

@@ -1,0 +1,129 @@
+{
+  "adaptation": "lora",
+  "artifact": {
+    "adapter": "adapter",
+    "adapter_files": {
+      "adapter_config.json": "08e05ed3e89bc1f731e15ed64a3c82e7b7bbe07c1699a76694d824ed6c267526",
+      "adapter_model.safetensors": "d4e95c9bdd3d3a9de6910970bb7e3131910093520bfab331c16d486c1efc9aed"
+    },
+    "encoder": null,
+    "encoder_sha256": null,
+    "head": "head.safetensors",
+    "head_sha256": "7f1975415d07741b0d2a786fd70b9d0e32204ce59d9b113e64342186d3edbc72",
+    "weights_provenance": {
+      "epoch": 3,
+      "snapshot_sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774",
+      "source": "retained_snapshot",
+      "source_result_sha256": "f9f683fbf2aa8c5d0ab0490eebdd9707349eccce4b8b69b815bcf02b56957df6",
+      "updates": 17000
+    }
+  },
+  "attention_implementation": "sdpa",
+  "generic_target": "instruction_subversion",
+  "lora": {
+    "adapter_parameters": 811008,
+    "targeted_modules": [
+      "base_model.model.layers.0.attn.Wo",
+      "base_model.model.layers.0.attn.Wqkv",
+      "base_model.model.layers.1.attn.Wo",
+      "base_model.model.layers.1.attn.Wqkv",
+      "base_model.model.layers.10.attn.Wo",
+      "base_model.model.layers.10.attn.Wqkv",
+      "base_model.model.layers.11.attn.Wo",
+      "base_model.model.layers.11.attn.Wqkv",
+      "base_model.model.layers.12.attn.Wo",
+      "base_model.model.layers.12.attn.Wqkv",
+      "base_model.model.layers.13.attn.Wo",
+      "base_model.model.layers.13.attn.Wqkv",
+      "base_model.model.layers.14.attn.Wo",
+      "base_model.model.layers.14.attn.Wqkv",
+      "base_model.model.layers.15.attn.Wo",
+      "base_model.model.layers.15.attn.Wqkv",
+      "base_model.model.layers.16.attn.Wo",
+      "base_model.model.layers.16.attn.Wqkv",
+      "base_model.model.layers.17.attn.Wo",
+      "base_model.model.layers.17.attn.Wqkv",
+      "base_model.model.layers.18.attn.Wo",
+      "base_model.model.layers.18.attn.Wqkv",
+      "base_model.model.layers.19.attn.Wo",
+      "base_model.model.layers.19.attn.Wqkv",
+      "base_model.model.layers.2.attn.Wo",
+      "base_model.model.layers.2.attn.Wqkv",
+      "base_model.model.layers.20.attn.Wo",
+      "base_model.model.layers.20.attn.Wqkv",
+      "base_model.model.layers.21.attn.Wo",
+      "base_model.model.layers.21.attn.Wqkv",
+      "base_model.model.layers.3.attn.Wo",
+      "base_model.model.layers.3.attn.Wqkv",
+      "base_model.model.layers.4.attn.Wo",
+      "base_model.model.layers.4.attn.Wqkv",
+      "base_model.model.layers.5.attn.Wo",
+      "base_model.model.layers.5.attn.Wqkv",
+      "base_model.model.layers.6.attn.Wo",
+      "base_model.model.layers.6.attn.Wqkv",
+      "base_model.model.layers.7.attn.Wo",
+      "base_model.model.layers.7.attn.Wqkv",
+      "base_model.model.layers.8.attn.Wo",
+      "base_model.model.layers.8.attn.Wqkv",
+      "base_model.model.layers.9.attn.Wo",
+      "base_model.model.layers.9.attn.Wqkv"
+    ]
+  },
+  "max_tokens": 1024,
+  "model_id": "jhu-clsp/mmBERT-base",
+  "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+  "normalization": "strict",
+  "packaging": {
+    "format": "maintained-snapshot-v1",
+    "source_evaluation": {
+      "path": "reports/provenance/mmbert-context-results-20260812/records/evaluations.full_panel.3.artifact.json",
+      "sha256": "e2d6162ada5a67969a4b3bab23f7c83aa1b69cba15f72b4e0a4b10383aff0a9b"
+    },
+    "source_result": {
+      "path": "reports/provenance/mmbert-context-results-20260812/records/training_runs.train_context_1024.result.json",
+      "sha256": "f9f683fbf2aa8c5d0ab0490eebdd9707349eccce4b8b69b815bcf02b56957df6"
+    },
+    "source_snapshot": {
+      "path": "reports/provenance/mmbert-context-checkpoints-20260812/trainctx1024-update-017000.pt",
+      "sha256": "6de8784ecdb3f954f372f3411f9553889a9cfb8d369b72db20597d4924281774"
+    }
+  },
+  "provenance": {
+    "additional_pair_archive_sha256": "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba",
+    "data_manifest_sha256": "8432adedea4e2fec4c80140e2a73f6e5d82cf9f0803a3057498589e7c418c557",
+    "external_manifest_sha256": "f2e07c759c5f836ac731ad9ae86d6ddd72213dff3f8aeb19c4418a1fe5fb932a",
+    "pair_archive_sha256": "0aa08878c3096b402cf6ee309a50b730f7150b1aed78682cdf6e42a504da13d3",
+    "routing_views": {
+      "dev_test": {
+        "path": "views/routing/dev_test.jsonl",
+        "rows": 441896,
+        "sha256": "0f0f08854aeeb974e617204157621422b2d5c1c0889c4e1aa07e8e37fcf34501"
+      },
+      "train": {
+        "path": "views/routing/train.jsonl",
+        "rows": 1477802,
+        "sha256": "7c01d8bc5f0789f464fa2bdcae11098b2abb21a69ac872c7e27417bdcaec9443"
+      },
+      "validation": {
+        "path": "views/routing/validation.jsonl",
+        "rows": 201382,
+        "sha256": "e022f15d0dccca50d00ef5b267558187d9c2b271fa9ae478b98e9f5cbcb5d944"
+      }
+    },
+    "sources": {
+      "src/morgott/data.py": "1e875d30d9ec855f5a54cecda7ceb56821d69ef35633af8155328f0f897d94f6",
+      "src/morgott/models/mmbert/core.py": "e26fa5dc74c984a620a09c9118e11d203c0245fc79fca1a8ffc13967cfb86749",
+      "src/morgott/models/mmbert/data.py": "3ce90cab76a026e890da7d92d76774284ce61e61b3d5b1f09b58fa37f8107415",
+      "src/morgott/models/mmbert/external_data.py": "40f5a0100315eea94e6e7bfd7119d2c034cf862be78bca460aa12eb606315b6d",
+      "src/morgott/models/mmbert/head_contract.py": "a9dfd30a345e3262f7aabb1c529459fec7c0b525ca2c8a806c4ae3c0d2f592fd",
+      "src/morgott/models/mmbert/train.py": "3338db61ad42bad08d928974f698d563f99964dc8602fad475f66c6d8b3ee876",
+      "src/morgott/normalization.py": "663fa775279c6ca51c4e1f000ddc583fb50fcbe3f0952fc88e1a2c7b58197b5b",
+      "src/morgott/overlap.py": "15bff66f0191ceaaf55133f9be6a72c2dbf4aaaa9ecda38190b6992c1f94303e"
+    },
+    "uv_lock_sha256": "b8b5814c8e6bb74b081c4d6046d255438e09dffd079a60a85b96362c5944a39f"
+  },
+  "purpose": "maintained full-data advisory mmBERT training",
+  "schema_version": 1,
+  "seed": 42,
+  "token_budget": 24576
+}

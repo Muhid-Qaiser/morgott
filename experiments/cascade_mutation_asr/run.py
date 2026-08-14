@@ -559,7 +559,6 @@ async def _review_rows(
     os.environ.setdefault("OPENROUTER_API_KEY", OPENROUTER._api_key())
     scanner = CascadeScanner.from_artifacts(
         manifest_path=ROOT / "model-artifacts.json",
-        allow_remote=True,
     )
     scratch = output / scratch_name
     prior = _scratch_records(scratch, key)

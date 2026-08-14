@@ -8,15 +8,11 @@ import sys
 import tempfile
 import types
 import unittest
-from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import numpy as np
-
 from morgott.models.mmbert import evaluate as mmbert_evaluate
-from morgott.models.mmbert.score_journal import ScoreJournal, ScoreJournalSpec
 
 
 class SnapshotEvaluationTests(unittest.TestCase):
@@ -121,46 +117,6 @@ class SnapshotEvaluationTests(unittest.TestCase):
                     encoder=encoder,
                     head=head,
                 )
-
-    def test_lpft_snapshot_restores_only_the_recorded_trainable_state(self):
-        import torch
-
-        identity = {"schema_version": 4, "run_name": "lpft"}
-        metrics = self._metrics(update=1000, interim=False)
-        encoder = torch.nn.Sequential(torch.nn.Linear(2, 2))
-        names = sorted(encoder.state_dict())
-        selected_encoder = {
-            name: torch.full_like(encoder.state_dict()[name], 0.5) for name in names
-        }
-        head = torch.nn.Linear(2, 1)
-        selected_head = {
-            name: value.detach().clone() for name, value in head.state_dict().items()
-        }
-        result = {
-            "adaptation": "lpft",
-            "training_identity": identity,
-            "training": {"curve": [metrics]},
-            "lpft": {"trainable_names": names},
-        }
-        with tempfile.TemporaryDirectory() as temporary:
-            snapshot = Path(temporary) / "update-001000.pt"
-            self._write_snapshot(
-                snapshot,
-                identity=identity,
-                metrics=metrics,
-                head=selected_head,
-                encoder=selected_encoder,
-            )
-            checkpoint = mmbert_evaluate._load_snapshot(
-                snapshot,
-                result=result,
-                encoder=encoder,
-                head=head,
-            )
-
-        self.assertEqual(checkpoint["role"], "epoch_final")
-        for name, value in selected_encoder.items():
-            self.assertTrue(torch.equal(encoder.state_dict()[name], value))
 
     def test_lora_snapshot_checks_and_restores_every_adapter_tensor(self):
         import torch
@@ -463,144 +419,6 @@ class EvaluationInputIdentityTests(unittest.TestCase):
                             **inputs,
                         )
                     path.write_bytes(b"original")
-
-
-class MultitaskEvaluationTests(unittest.TestCase):
-    def test_two_outputs_share_one_encoder_forward_and_preserve_primary_math(self):
-        import torch
-
-        class Encoded(dict):
-            def to(self, _device):
-                return self
-
-        class Tokenizer:
-            def __call__(self, texts, **_kwargs):
-                rows = len(texts)
-                return Encoded(
-                    input_ids=torch.ones(rows, 2, dtype=torch.long),
-                    attention_mask=torch.ones(rows, 2, dtype=torch.long),
-                )
-
-        class Encoder:
-            def __init__(self):
-                self.calls = 0
-
-            def eval(self):
-                return self
-
-            def __call__(self, **encoded):
-                self.calls += 1
-                rows, tokens = encoded["input_ids"].shape
-                hidden = torch.arange(rows * tokens * 2, dtype=torch.float32).reshape(
-                    rows, tokens, 2
-                )
-                return SimpleNamespace(last_hidden_state=hidden)
-
-        class Head:
-            def __init__(self):
-                self.calls = 0
-                self.logits = []
-
-            def eval(self):
-                return self
-
-            def __call__(self, features):
-                self.calls += 1
-                values = torch.column_stack(
-                    (features[:, 0] - 1.0, features[:, 1] + 0.5)
-                )
-                self.logits.append(values.detach().numpy())
-                return values
-
-        encoder = Encoder()
-        head = Head()
-        with patch("torch.autocast", return_value=nullcontext()):
-            scores = mmbert_evaluate._score_multitask_texts(
-                encoder,
-                Tokenizer(),
-                head,
-                ["a", "b", "c"],
-                batch_size=2,
-            )
-
-        logits = np.concatenate(head.logits).astype(np.float64)
-        expected = np.empty_like(logits[:, 0])
-        positive = logits[:, 0] >= 0
-        expected[positive] = 1.0 / (1.0 + np.exp(-logits[positive, 0]))
-        exponent = np.exp(logits[~positive, 0])
-        expected[~positive] = exponent / (1.0 + exponent)
-        self.assertEqual(encoder.calls, 2)
-        self.assertEqual(head.calls, 2)
-        self.assertTrue(np.array_equal(scores[:, 0], expected))
-
-    def test_two_column_score_journal_resumes_both_outputs(self):
-        rows = [
-            {
-                "id": str(index),
-                "text": f"text-{index}",
-                "label": index % 2,
-                "source": "source",
-                "input_channel": "direct_user",
-                "security_tags": ["benign" if index % 2 == 0 else "harmful_intent"],
-            }
-            for index in range(4)
-        ]
-        with tempfile.TemporaryDirectory() as temporary:
-            journal = ScoreJournal(
-                Path(temporary) / "journal",
-                ScoreJournalSpec(
-                    model_sha256="1" * 64,
-                    panel_sha256="2" * 64,
-                    scoring_sha256="3" * 64,
-                    rows=4,
-                    batch_size=2,
-                    columns=("score", "harmful_intent_score"),
-                ),
-            )
-            journal.append(np.asarray([[0.1, 0.9], [0.2, 0.8]]))
-            with patch.object(
-                mmbert_evaluate,
-                "_score_multitask_texts",
-                return_value=np.asarray([[0.3, 0.7], [0.4, 0.6]]),
-            ) as scorer:
-                scored = mmbert_evaluate._score(
-                    rows,
-                    object(),
-                    object(),
-                    object(),
-                    batch_size=2,
-                    journal=journal,
-                    score_columns=("score", "harmful_intent_score"),
-                )
-
-        scorer.assert_called_once()
-        np.testing.assert_array_equal(scored["scores"], [0.1, 0.2, 0.3, 0.4])
-        np.testing.assert_array_equal(
-            scored["head_scores"],
-            [[0.1, 0.9], [0.2, 0.8], [0.3, 0.7], [0.4, 0.6]],
-        )
-
-    def test_harmful_metrics_mask_unknown_tags_and_expose_source_slices(self):
-        scored = {
-            "head_scores": np.asarray([[0.1, 0.9], [0.2, 0.1], [0.3, 0.8], [0.4, 0.2]]),
-            "tags": [["harmful_intent"], ["benign"], [], ["benign"]],
-            "sources": np.asarray(["a", "a", "b", "b"]),
-        }
-        evidence = mmbert_evaluate._harmful_population(scored)
-
-        self.assertEqual(
-            evidence["aggregate"]["counts"],
-            {
-                "rows": 4,
-                "known": 3,
-                "unknown_masked": 1,
-                "positive": 1,
-                "negative": 2,
-            },
-        )
-        self.assertAlmostEqual(evidence["aggregate"]["roc_auc"], 1.0)
-        self.assertAlmostEqual(evidence["aggregate"]["average_precision"], 1.0)
-        self.assertEqual(evidence["by_source"]["b"]["counts"]["unknown_masked"], 1)
 
 
 if __name__ == "__main__":

@@ -37,7 +37,6 @@ from experiments.mmbert_evaluation_contract import (
 )
 from morgott.models.mmbert import evaluate as mmbert_evaluate
 from morgott.models.mmbert.core import file_sha256, pool, source_provenance
-from morgott.models.mmbert.head_contract import resolve_head_contract
 from morgott.models.mmbert.score_journal import (
     ScoreJournal,
     ScoreJournalSpec,
@@ -345,7 +344,6 @@ def _longcode_scoring_sha256(evaluation_max_tokens: int) -> str:
                 ROOT / "experiments/mmbert_evaluation_contract.py",
                 Path(mmbert_evaluate.__file__),
                 Path(mmbert_evaluate.__file__).with_name("core.py"),
-                Path(mmbert_evaluate.__file__).with_name("head_contract.py"),
                 Path(mmbert_evaluate.__file__).with_name("score_journal.py"),
                 Path(mmbert_evaluate.__file__).resolve().parents[2]
                 / "normalization.py",
@@ -664,7 +662,7 @@ def evaluate(
         binding.snapshot_sha256,
         base_model=base_model,
     )
-    head_contract = resolve_head_contract(result)
+    head_contract = mmbert_evaluate._single_output_head_contract(result)
     scoring_sha256 = _longcode_scoring_sha256(evaluation_max_tokens)
     evaluation_identity_sha256 = _evaluation_identity_sha256(
         binding=binding,
@@ -684,7 +682,7 @@ def evaluate(
             encoder=encoder,
             tokenizer=tokenizer,
             head=head,
-            primary_column=head_contract.primary_column,
+            primary_column=head_contract["primary_column"],
             batch_size=batch_size,
             max_tokens=evaluation_max_tokens,
             model_sha256=journal_model_sha256,
@@ -697,7 +695,7 @@ def evaluate(
             encoder=encoder,
             tokenizer=tokenizer,
             head=head,
-            primary_column=head_contract.primary_column,
+            primary_column=head_contract["primary_column"],
             batch_size=batch_size,
             max_tokens=evaluation_max_tokens,
             model_sha256=journal_model_sha256,
@@ -789,7 +787,6 @@ def evaluate(
             ROOT / "experiments/mmbert_evaluation_contract.py",
             Path(mmbert_evaluate.__file__),
             Path(mmbert_evaluate.__file__).with_name("core.py"),
-            Path(mmbert_evaluate.__file__).with_name("head_contract.py"),
             Path(mmbert_evaluate.__file__).with_name("score_journal.py"),
             Path(mmbert_evaluate.__file__).resolve().parents[2] / "normalization.py",
         ),

@@ -10,7 +10,6 @@ from pathlib import Path
 from .corpus import build_corpus, rebuild_routing
 from .models.cascade import CascadeScanner
 from .models.detector import run_benchmark, scan
-from .models.mmbert import score_file
 from .models.routing_baseline import (
     DEFAULT_EPOCHS,
     DEFAULT_MAX_PER_SOURCE_LABEL,
@@ -72,19 +71,6 @@ def _parser() -> argparse.ArgumentParser:
         help="trusted local artifact produced by the benchmark command",
     )
 
-    shadow = subcommands.add_parser(
-        "shadow-score",
-        help="emit advisory scores from one retained mmBERT shadow",
-    )
-    shadow.add_argument("model")
-    shadow.add_argument("input", type=Path)
-    shadow.add_argument("output", type=Path)
-    shadow.add_argument(
-        "--manifest",
-        type=Path,
-        default=Path("model-artifacts.json"),
-    )
-
     cascade = subcommands.add_parser(
         "cascade",
         help="run the advisory mmBERT and DeepSeek shadow cascade",
@@ -100,11 +86,6 @@ def _parser() -> argparse.ArgumentParser:
         "--manifest",
         type=Path,
         default=Path("model-artifacts.json"),
-    )
-    cascade.add_argument(
-        "--allow-remote",
-        action="store_true",
-        help="allow eligible artifact text to be reviewed through OpenRouter",
     )
     return parser
 
@@ -123,7 +104,6 @@ async def _input_chunks(value: str):
 async def _run_cascade(args) -> dict:
     scanner = CascadeScanner.from_artifacts(
         manifest_path=args.manifest,
-        allow_remote=args.allow_remote,
     )
     try:
         assessment = await scanner.assess_chunks(
@@ -156,7 +136,7 @@ def main(argv: list[str] | None = None) -> None:
         summary = {
             "direct_threshold": result["training"]["threshold"],
             "indirect_threshold": result["indirect_training"]["threshold"],
-            "report": str(args.reports_dir / "baseline.md"),
+            "report": str(args.reports_dir / "baseline.json"),
         }
     elif args.command == "routing-baseline":
         result = run_routing_baseline(
@@ -168,7 +148,7 @@ def main(argv: list[str] | None = None) -> None:
         )
         summary = {
             "artifact": str(args.artifacts_dir / "routing_baseline.joblib"),
-            "report": str(args.reports_dir / "routing-baseline.md"),
+            "report": str(args.reports_dir / "routing-baseline.json"),
             "selected_rows": result["selection"]["selected_rows"],
         }
     elif args.command == "demo":
@@ -178,12 +158,6 @@ def main(argv: list[str] | None = None) -> None:
                 "unauthorized_actions_committed"
             ],
             "report": str(args.reports_dir / "policy_ablation.md"),
-        }
-    elif args.command == "shadow-score":
-        score_file(args.manifest, args.model, args.input, args.output)
-        summary = {
-            "model": args.model,
-            "output": str(args.output),
         }
     elif args.command == "cascade":
         summary = asyncio.run(_run_cascade(args))

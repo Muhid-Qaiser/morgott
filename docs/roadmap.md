@@ -67,8 +67,9 @@ On 2026-08-12 a later bounded exception completed the matched no-harm
 improved canonical and indirect-document low-FPR recall and long-code clean
 specificity, but regressed PromptShield transfer and matched-pair ordering. A
 later packaged-selector checkpoint exposed a different trade rather than a
-clear winner. The study is advisory and does not promote either checkpoint.
-The retained weights, scores, trainer, and result records are comparison and reproducibility material only; the resumable checkpoint was deleted after its digest was recorded.
+clear winner.
+At the campaign's close, the advisory study did not promote either checkpoint, and its retained weights, scores, archived training source, and result records were comparison and reproducibility material only; the resumable checkpoint was deleted after its digest was recorded.
+On 2026-08-14, the exact update-17,000 weights were later registered for the advisory Azure preview after artifact, licensing, privacy, and reproducibility review; the other campaign material remains provenance only.
 These materials do not by themselves justify more seeds, another LoRA or LP-FT
 run, production calibration, promotion, or blocking.
 
@@ -118,13 +119,14 @@ Treat the 0.101%/77.16% pair as an in-corpus artifact, not a detector result.
 The full-data frozen mmBERT and full-mixture LoRA recipes fit leakage-filtered canonical rows, PromptShield train, and the retained generated pairs with balanced BCE plus pair ranking.
 Three frozen-head seeds are retained to show dispersion.
 The reduced-mixture rank-8 LoRA is retained only as an update-matched engineering gate against a frozen control; it omits most canonical rows and all generated pairs.
-The full-mixture rank-8 LoRA is one seed selected at epoch 2 after 25,071 updates and is registered as an advisory research result without promotion.
+The full-mixture rank-8 LoRA is one seed selected at epoch 2 after 25,071 updates and is retained as historical advisory evidence without promotion.
 PromptShield validation selects checkpoints, while canonical calibration alone selects reported applied thresholds.
 PromptShield test is source-disjoint within its own release and remains already-consumed benchmark development data.
 Known cross-corpus overlap prevents a source-OOD claim relative to the complete Morgott plus PromptShield fit.
 SEP remains already-consumed transfer development data.
 All retained downstream checkpoints are advisory and must be compared independently rather than combined into an unevaluated ensemble.
-Every score is truncated to the first 512 normalized tokens, so long web, retrieval, and tool content remains an explicit evidence gap.
+The historical 512-token scores remain comparison evidence and are not registered for maintained inference.
+The sole registered Azure preview uses the update-17,000 candidate with 1,024-token windows, while complete long-document aggregation remains an explicit evidence gap.
 
 ### Downstream cascade candidate
 
@@ -143,9 +145,9 @@ The August channel-aware follow-up supersedes the July maintained route.
 It uses a `0.2` direct-user floor, a `0.1` untrusted-content floor, a shared `0.99999` high gate, trusted `input_channel` metadata, and a hybrid outer-intent prompt.
 The channel-specific floor keeps calibration FPR at 1.9808% while adding 10 true positives and 49 provider calls over 6,000 rows.
 The selected reviewer is now DeepSeek V4 Flash 0731 on Cloudflare with its separately calibrated `0.6224593312018547` threshold.
-On the frozen 14,000-row evaluation role, FP32 recall / FPR / precision is 71.235% / 1.773% / 96.779% at a 22.914% provider call rate.
+On the frozen 14,000-row evaluation role, the then-registered 512-token FP32 route reached 71.235% / 1.773% / 96.779% recall / FPR / precision at a 22.914% provider call rate.
 This adds 58 true positives with no additional false positives over the April route, although PromptShield recall falls by 2.176 points and untrusted-content FPR rises by 0.375 points.
-The registered OpenVINO BF16 runtime reaches 71.386% / 1.798% / 96.742%, differs from FP32 on 27 of 20,000 final routes, and passes every serving-equivalence gate.
+Its OpenVINO BF16 runtime reached 71.386% / 1.798% / 96.742%, differed from FP32 on 27 of 20,000 final routes, and passed every serving-equivalence gate.
 A frozen-ledger-only call-minimization check rejected further scalar gate tightening: the exact-decision rule saved seven evaluation calls and lost one true positive, while the best simple noninferior calibration grid saved 87 calls but lost nine true positives on evaluation.
 Keep the existing gates; any future low-call policy must be a materially different prospectively frozen architecture rather than another retune on this consumed panel.
 The selection follows the owner's aggregate-quality criterion and remains already-open advisory development evidence rather than a production promotion.

@@ -1,0 +1,55 @@
+{
+  "export_attention_implementation": "eager",
+  "format": "onnx-fp32-v1",
+  "max_tokens": 1024,
+  "model_id": "jhu-clsp/mmBERT-base",
+  "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+  "model_revision": "c5955035435e2bf121cde7f3c8863ef52ff35d82",
+  "onnx": {
+    "bytes": 1231920511,
+    "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/model.onnx",
+    "sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5"
+  },
+  "opset": 18,
+  "representative_parity": {
+    "atol": 0.0001,
+    "comparisons": {
+      "eager_to_onnx": {
+        "max_abs_logit_error": 4.76837158203125e-06,
+        "max_abs_probability_error": 1.341104507446289e-07,
+        "passed": true
+      },
+      "sdpa_to_eager": {
+        "max_abs_logit_error": 3.337860107421875e-06,
+        "max_abs_probability_error": 9.313225746154785e-08,
+        "passed": true
+      },
+      "sdpa_to_onnx": {
+        "max_abs_logit_error": 1.9073486328125e-06,
+        "max_abs_probability_error": 4.0978193283081055e-08,
+        "passed": true
+      }
+    },
+    "max_abs_logit_error": 4.76837158203125e-06,
+    "max_abs_probability_error": 1.341104507446289e-07,
+    "rows": 3,
+    "rtol": 0.0001,
+    "sequence_lengths": [
+      11,
+      1024
+    ]
+  },
+  "source_adapter_sha256": {
+    "adapter_config.json": "08e05ed3e89bc1f731e15ed64a3c82e7b7bbe07c1699a76694d824ed6c267526",
+    "adapter_model.safetensors": "d4e95c9bdd3d3a9de6910970bb7e3131910093520bfab331c16d486c1efc9aed"
+  },
+  "source_attention_implementation": "sdpa",
+  "source_head_sha256": "7f1975415d07741b0d2a786fd70b9d0e32204ce59d9b113e64342186d3edbc72",
+  "source_result_sha256": "d3fd6629dec100e2b3d63113464a16f62d71db1eb6e72d4aaed7da4feca699cd",
+  "tokenizer": {
+    "bytes": 17525329,
+    "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/tokenizer.json",
+    "sha256": "197d4cc5406ee12cc50c8b5511f2393cc32d9db321545979ce041c1199178356"
+  },
+  "window_overlap": 128
+}

@@ -1,10 +1,9 @@
 """Evaluate one explicit mmBERT checkpoint on the frozen red-team reserve.
 
-The canonical calibration threshold is never selected here.  Current evidence
+The canonical calibration threshold is never selected here. Current evidence
 requires the completed full-evaluation artifact for the same retained update
-snapshot and context cap; historical implicit-512 packaged-selected wrappers
-remain read-compatible.  This runner verifies its run, head, checkpoint, score
-artifact, and input hashes before it loads a model.  The final artifact contains
+snapshot and context cap. This runner verifies its run, head, checkpoint, score
+artifact, and input hashes before it loads a model. The final artifact contains
 aggregate numeric evidence only; raw prompt text and row IDs remain in the
 existing reserve archive.
 """
@@ -42,7 +41,6 @@ from morgott.models.mmbert.core import (
     source_provenance,
 )
 from morgott.models.mmbert.data import batches, routing_views
-from morgott.models.mmbert.head_contract import resolve_head_contract
 from morgott.models.mmbert.score_journal import (
     ScoreJournal,
     ScoreJournalSpec,
@@ -53,15 +51,9 @@ from morgott.normalization import strict_normalize
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = 1
 PURPOSE = "advisory mmBERT checkpoint red-team reserve evaluation"
-LEGACY_ARM6_PURPOSE = "advisory Arm 6 snapshot red-team reserve evaluation"
 FULL_EVALUATION_PURPOSE = "advisory mmBERT development evaluation"
-ARM6_RUN_NAME = "mmbert-lora-full-s42-mb24-nolengthgroup-harmful-balanced"
-NOHARM_RUN_NAME = "mmbert-lora-full-s42-mb24-nolengthgroup-noharm-current-control"
 SHARED_TARGET = "1.0000%"
-PRIMARY_SCORE_COLUMNS = ("score",)
-MULTITASK_SCORE_COLUMNS = ("score", "harmful_intent_score")
-# Backward-compatible name used by the existing Arm 6 tests and artifacts.
-SCORE_COLUMNS = MULTITASK_SCORE_COLUMNS
+SCORE_COLUMNS = ("score",)
 ALLOWED_CHECKPOINT_ROLES = frozenset(
     {"pre_registered_comparison", "periodic_validation", "epoch_final"}
 )
@@ -88,8 +80,6 @@ class EvaluationBinding:
     role: str
     threshold: float
     batch_size: int
-    head_outputs: int
-    score_columns: tuple[str, ...]
     training_max_tokens: int = MAX_TOKENS
     evaluation_max_tokens: int = MAX_TOKENS
     native_context_evaluation: bool = True
@@ -122,27 +112,11 @@ def _expected_inputs(
     }
 
 
-def _score_columns(outputs: int) -> tuple[str, ...]:
-    if outputs == 1:
-        return PRIMARY_SCORE_COLUMNS
-    if outputs == 2:
-        return MULTITASK_SCORE_COLUMNS
-    raise ValueError("unsupported head width")
-
-
 def _validate_run_contract(run: Path, result: dict):
-    """Return the strict one- or two-output contract for an eligible run."""
+    """Return the maintained single-output contract for an eligible run."""
 
-    contract = resolve_head_contract(result)
+    contract = mmbert_evaluate._single_output_head_contract(result)
     identity = result.get("training_identity")
-    objective = result.get("objective")
-    harmful_objective = (
-        objective.get("harmful_intent") if isinstance(objective, dict) else object()
-    )
-    identity_harmful = (
-        identity.get("harmful_objective") if isinstance(identity, dict) else object()
-    )
-    expected_harmful = contract.outputs == 2
     if (
         result.get("purpose") != "maintained full-data advisory mmBERT training"
         or not isinstance(result.get("run_name"), str)
@@ -151,17 +125,11 @@ def _validate_run_contract(run: Path, result: dict):
         or result.get("model_revision") != MODEL_REVISION
         or result.get("adaptation") != "lora"
         or result.get("generic_target") != "instruction_subversion"
-        or result.get("head_contract") is None
+        or result.get("head_contract") != contract
         or not isinstance(identity, dict)
         or identity.get("run_name") != result["run_name"]
         or identity.get("head_contract") != result["head_contract"]
-        or "harmful_objective" not in identity
         or identity.get("length_grouped") is not False
-        or not isinstance(objective, dict)
-        or "harmful_intent" not in objective
-        or (identity_harmful is not None) is not expected_harmful
-        or (harmful_objective is not None) is not expected_harmful
-        or identity_harmful != harmful_objective
     ):
         raise ValueError(
             "completed run is not a strict no-length-grouping mmBERT LoRA run"
@@ -297,12 +265,11 @@ def _packaged_checkpoint(run: Path, result: dict) -> tuple[dict, str]:
 def _score_artifact(
     full_path: Path,
     report: dict,
-    score_columns: tuple[str, ...],
 ) -> tuple[Path, str]:
     return score_artifact(
         full_path,
         report,
-        score_columns=score_columns,
+        score_columns=SCORE_COLUMNS,
         slice_names=("calibration", "dev_test", "promptshield", "sep"),
     )
 
@@ -364,8 +331,7 @@ def validate_binding(
 
     result, run_result_sha256 = _read_json(run / "result.json")
     report, full_evaluation_sha256 = _read_json(full_evaluation)
-    contract = _validate_run_contract(run, result)
-    score_columns = _score_columns(contract.outputs)
+    _validate_run_contract(run, result)
     training_max_tokens = mmbert_evaluate._training_max_tokens(result)
     if evaluation_max_tokens is not None and (
         type(evaluation_max_tokens) is not int
@@ -508,7 +474,6 @@ def validate_binding(
     _, full_score_sha256 = _score_artifact(
         full_evaluation,
         report,
-        score_columns,
     )
     threshold = _validate_threshold(report)
     runtime = report.get("runtime")
@@ -529,8 +494,6 @@ def validate_binding(
         role=role,
         threshold=threshold,
         batch_size=batch_size,
-        head_outputs=contract.outputs,
-        score_columns=score_columns,
         training_max_tokens=training_max_tokens,
         evaluation_max_tokens=evaluation_max_tokens,
         native_context_evaluation=native_context_evaluation,
@@ -547,7 +510,6 @@ def _source_provenance() -> dict:
         ROOT / "experiments/mmbert_evaluation_contract.py",
         ROOT / "src/morgott/models/mmbert/core.py",
         ROOT / "src/morgott/models/mmbert/evaluate.py",
-        ROOT / "src/morgott/models/mmbert/head_contract.py",
         ROOT / "src/morgott/models/mmbert/score_journal.py",
         ROOT / "src/morgott/normalization.py",
     )
@@ -556,10 +518,10 @@ def _source_provenance() -> dict:
 def _scoring_sha256(binding: EvaluationBinding, provenance: dict) -> str:
     return _canonical_sha256(
         {
-            "contract": "mmbert-redteam-reserve-head-aware-scoring-v3",
+            "contract": "mmbert-redteam-reserve-single-output-scoring-v4",
             "evaluation_max_tokens": binding.evaluation_max_tokens,
             "head_contract": binding.result["head_contract"],
-            "score_columns": list(binding.score_columns),
+            "score_columns": list(SCORE_COLUMNS),
             "provenance": provenance,
         }
     )
@@ -620,7 +582,7 @@ def _evaluation_identity_sha256(
             "reserve_identity_sha256": reserve_identity_sha256,
             "reserve_score_panel_sha256": panel_sha256,
             "batch_size": binding.batch_size,
-            "score_columns": list(binding.score_columns),
+            "score_columns": list(SCORE_COLUMNS),
             "scoring_sha256": scoring_sha256,
             "training_max_tokens": binding.training_max_tokens,
             "evaluation_max_tokens": binding.evaluation_max_tokens,
@@ -645,7 +607,6 @@ def _assert_artifacts_unchanged(
     _, full_score_sha256 = _score_artifact(
         full_evaluation,
         binding.full_evaluation,
-        binding.score_columns,
     )
     checkpoint_unchanged = (
         file_sha256(snapshot) == binding.checkpoint_sha256
@@ -768,25 +729,6 @@ def _primary_report(rows: list[dict], scores: np.ndarray, threshold: float) -> d
     }
 
 
-def _auxiliary_report(rows: list[dict], scores: np.ndarray) -> dict:
-    return {
-        "target": "harmful_intent",
-        "role": "unlabelled descriptive diagnostic only",
-        "known_label_rows": 0,
-        "unknown_masked_rows": len(rows),
-        "threshold": None,
-        "metrics": None,
-        "aggregate": _quantiles(scores),
-        "by_subversion_basis": _by_field(rows, scores, "subversion_basis", _quantiles),
-        "by_prompt_kind": _by_field(rows, scores, "prompt_kind", _quantiles),
-        "limitation": (
-            "The reserve supplies no canonical harmful_intent or benign security "
-            "tags. No harmful label, BCE, AUROC, AP, or operating threshold is "
-            "invented from campaign metadata."
-        ),
-    }
-
-
 def _score_matrix_sha256(values: np.ndarray) -> str:
     values = np.ascontiguousarray(values, dtype=np.float64)
     return hashlib.sha256(values.tobytes(order="C")).hexdigest()
@@ -809,17 +751,8 @@ def _build_report(
     provenance: dict,
     scoring_sha256: str,
 ) -> dict:
-    if (
-        head_scores.shape
-        != (
-            len(rows),
-            binding.head_outputs,
-        )
-        or not np.isfinite(head_scores).all()
-    ):
-        raise ValueError(
-            "reserve scoring did not return the declared finite head columns"
-        )
+    if head_scores.shape != (len(rows), 1) or not np.isfinite(head_scores).all():
+        raise ValueError("reserve scoring did not return one finite score per row")
     if truncation.shape != (len(rows),):
         raise ValueError("truncation flags are misaligned")
     primary = _primary_report(rows, head_scores[:, 0], binding.threshold)
@@ -835,15 +768,7 @@ def _build_report(
     )
     return {
         "schema_version": SCHEMA_VERSION,
-        "purpose": (
-            LEGACY_ARM6_PURPOSE
-            if binding.result["run_name"] == ARM6_RUN_NAME
-            and binding.head_outputs == 2
-            and binding.checkpoint_kind == "retained_update_snapshot"
-            and binding.full_evaluation_context_contract
-            == LEGACY_FULL_EVALUATION_CONTEXT_CONTRACT
-            else PURPOSE
-        ),
+        "purpose": PURPOSE,
         "advisory_only": True,
         "promotion_authorized": False,
         "status": "scored",
@@ -908,11 +833,6 @@ def _build_report(
             "reading_rules": list(guard_run.REDTEAM_READING),
         },
         "instruction_subversion": primary,
-        **(
-            {"harmful_intent": _auxiliary_report(rows, head_scores[:, 1])}
-            if binding.head_outputs == 2
-            else {}
-        ),
         "contamination_control": {
             "canonical_dev_test_recall": canonical_metrics["recall"],
             "redteam_subversion_attested_recall": attested_recall,
@@ -933,9 +853,9 @@ def _build_report(
         },
         "scores": {
             "storage": "text-free numeric score journal only",
-            "columns": list(binding.score_columns),
+            "columns": list(SCORE_COLUMNS),
             "dtype": "float64",
-            "shape": [len(rows), binding.head_outputs],
+            "shape": [len(rows), 1],
             "sha256": _score_matrix_sha256(head_scores),
             "journal_identity_sha256": journal.identity_sha256,
             "journal_model_sha256": journal_model_sha256,
@@ -1059,7 +979,7 @@ def evaluate_reserve(
             scoring_sha256=scoring_sha256,
             rows=len(rows),
             batch_size=binding.batch_size,
-            columns=binding.score_columns,
+            columns=SCORE_COLUMNS,
         ),
     )
     resumed_rows = journal.completed_rows
@@ -1073,7 +993,6 @@ def evaluate_reserve(
         head,
         batch_size=binding.batch_size,
         journal=journal,
-        score_columns=binding.score_columns,
         max_tokens=binding.evaluation_max_tokens,
     )
     truncation = _truncation_flags(

@@ -485,31 +485,18 @@ def authorize(policy: dict, action: dict, context: dict) -> tuple[bool, str]:
     return True, "allowed"
 
 
-def execute(
-    policy: dict, action: dict, context: dict, committed_actions: list[dict]
-) -> tuple[bool, str]:
-    allowed, reason = authorize(policy, action, context)
-    if allowed:
-        committed_actions.append(
-            {"tool": action["tool"], "arguments": dict(action["arguments"])}
-        )
-    return allowed, reason
-
-
 def run_policy_ablation(reports_dir: Path = Path("reports")) -> dict:
     decisions = []
     for scenario in SCENARIOS:
-        committed_actions: list[dict] = []
-        _, reason = execute(
+        committed, reason = authorize(
             REFERENCE_POLICY,
             scenario["action"],
             scenario["context"],
-            committed_actions,
         )
         decision = {
             "name": scenario["name"],
             "kind": scenario["kind"],
-            "reference_monitor_committed": bool(committed_actions),
+            "reference_monitor_committed": committed,
             "reference_monitor_reason": reason,
         }
         if "source_reference" in scenario:

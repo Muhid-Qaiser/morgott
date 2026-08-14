@@ -22,10 +22,8 @@ silently execute with the historical 512-token scorer or resume a 512-token
 journal.
 
 Only aggregate JSON and numeric score-journal shards are written. Prompt text
-and row IDs are not copied into either artifact. A width-one head produces one
-sigmoid score column. A width-two head produces the primary and harmful-intent
-columns in one encoder pass per scoring batch. The harmful-intent distribution
-is emitted only for width two and remains an unlabelled diagnostic.
+and row IDs are not copied into either artifact. The maintained single-output
+head produces one instruction-subversion sigmoid score column.
 
 ## Required native decision cells
 
@@ -134,21 +132,23 @@ uv run --locked --extra encoder \
   --batch-size 24
 ```
 
-## Historical compatibility
+## Historical evidence
 
-The old Arm 6 and no-harm wrapper commands remain accepted only for a **wholly
-legacy** full evaluation: all context, scoring-identity, and evaluation-identity
-fields must be absent, the run must resolve to the historical implicit 512-token
-cap, and `--evaluation-max-tokens` must be omitted. Their historical output
-names remain unchanged.
+The runner accepts a wholly legacy implicit-512 full evaluation only when it
+uses the maintained single-output head: all context, scoring-identity, and
+evaluation-identity fields must be absent, and `--evaluation-max-tokens` must
+be omitted.
+The rejected two-output Arm 6 runner is provenance-only in Git history and the
+archived campaign source at
+`reports/provenance/mmbert-context-campaign-source-20260812.tar.gz`.
 
-This exception exists only so the already-published 512 evidence remains
-reproducible. It is not accepted as a new 512-vs-1024 decision cell. Supplying
-any subset of the current cap metadata fails closed, omitting the cap for a
-current full evaluation fails closed, and supplying an explicit cap against a
-legacy full evaluation fails closed. Packaged-selected checkpoint support is
-retained for those historical wrappers, but the context comparison uses the
-fixed retained snapshot.
+The legacy single-output exception exists only so already-published 512
+evidence remains reproducible. It is not accepted as a new 512-vs-1024 decision
+cell. Supplying any subset of the current cap metadata fails closed, omitting
+the cap for a current full evaluation fails closed, and supplying an explicit
+cap against a legacy full evaluation fails closed. Packaged-selected checkpoint
+support is retained for that one-output evidence, but the context comparison
+uses the fixed retained snapshot.
 
 Outputs are immutable and publish atomically. If scoring is interrupted, rerun
 the exact command. Read `instruction_subversion.subversion_attested` as reserve

@@ -39,8 +39,9 @@ make check
 git diff --check
 ```
 
-Data, label, partition, or manifest changes also require the applicable full corpus or routing-only rebuild described in `AGENTS.md`.
-Inspect the resulting manifest hashes, counts, split invariants, and quarantine summary before handoff.
+Use the impact-based data verification rule in `AGENTS.md`; touching corpus-builder files alone does not require a rebuild.
+For output-neutral refactors, run focused equivalence tests and state why generated data is unaffected.
+For data-affecting changes, run the applicable rebuild and inspect its manifest hashes, counts, split invariants, and quarantine summary before handoff.
 
 ## Data and credentials
 

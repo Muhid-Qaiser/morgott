@@ -49,7 +49,6 @@ Output goes to `artifacts/comparisons/<slug>/{evaluation.json,scores.npz}`,
 
 | slug | repo | revision | ctx | what its scalar is |
 | --- | --- | --- | ---: | --- |
-| `mmbert-lora-full-s42-rescore` | registered shadow | `model-artifacts.json` | 512 | sigmoid of the advisory head logit |
 | `modernguard-1` | `guardion/ModernGuard-1` | `a7c09c89…` | 8192 | softmax over the `INJECTION` class |
 | `prompt-guard-2-86m-current-panel` | `meta-llama/Llama-Prompt-Guard-2-86M` | `a8ded8e6…` | 512 | softmax over class index 1, the pinned binary attack score |
 | `protectai-deberta-v3-prompt-injection-v2` | `protectai/deberta-v3-base-prompt-injection-v2` | `90c9989b…` | 512 | softmax over the pinned config label `INJECTION` |
@@ -71,32 +70,6 @@ absent on the pinned revision, it raises `ExtractionUnavailable` and the run
 writes an `evaluation.json` with `status: "extraction_unavailable"` and the
 reason. That is a recorded gap, not a zero and not a silent omission. Every
 adapter also runs a two-row polarity smoke test before scoring 460k rows.
-
-### Baseline 0 is the reference line, and it is re-scored
-
-`mmbert-lora-full-s42`'s registered
-`artifacts/models/mmbert-lora-full-s42/evaluation/evaluation.json` was computed
-on the **previous** corpus: 303,376 canonical dev_test rows. The current corpus
-has 441,896 dev_test rows and the eligible slice has moved. Those stored
-numbers are therefore **not on the same rows** as anything this harness
-produces, and a table mixing them is quietly wrong.
-
-So the harness re-scores the existing registered weights on the current panel.
-This is an evaluation pass, not a retrain: the adapter loads the artifact
-through `morgott.models.mmbert.inference.load_bundle` and scores the same rows
-every other baseline sees. The output carries both the fresh measurement and
-the historical record under `historical_reference`, flagged
-`population_differs: true`.
-
-The incumbent's historical values and their population limitations live in the
-[authoritative model ledger](../../reports/model-experiments.md). If the fresh
-re-score lands far from them, report the discrepancy rather than smoothing it.
-
-`src/morgott/models/mmbert/evaluate.py` guards on the training run's
-provenance digests, which cannot match a rebuilt corpus. That guard is
-correct and is left alone; this harness assembles the population itself and
-reuses only the metric helpers (`_metrics`, `_by_value`, `_by_subtype`,
-`_pair_metrics`, `_real_finance_mask`, `_select_component_thresholds`).
 
 ## Running it
 

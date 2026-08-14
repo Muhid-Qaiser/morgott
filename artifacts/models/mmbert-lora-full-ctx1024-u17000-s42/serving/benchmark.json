@@ -1,0 +1,24 @@
+{
+  "compile_seconds": 5.286973966001824,
+  "cpu_capabilities": [
+    "BF16",
+    "WINOGRAD",
+    "FP32",
+    "INT8",
+    "BIN",
+    "EXPORT_IMPORT"
+  ],
+  "format": "openvino-bf16-cpu-benchmark-v1",
+  "max_tokens": 1024,
+  "measured_requests": 30,
+  "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+  "p50_ms": 762.9990200020984,
+  "p95_ms": 874.8384675003763,
+  "qps": 1.2970893349221366,
+  "reported_inference_precision": "<Type: 'bfloat16'>",
+  "representative_logit": -3.529724359512329,
+  "requested_inference_precision": "bf16",
+  "source_onnx_sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5",
+  "threads": 6,
+  "warmup_requests": 10
+}

@@ -1,0 +1,17 @@
+*
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!model-artifacts.json
+!src/
+!src/**
+src/**/__pycache__/
+src/**/*.py[cod]
+!artifacts/
+artifacts/*
+!artifacts/models/
+artifacts/models/*
+!artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/
+artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/*
+!artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/
+!artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/**

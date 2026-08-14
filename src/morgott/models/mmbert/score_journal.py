@@ -1,14 +1,13 @@
-"""Text-free, resumable numeric score shards for expensive evaluations."""
+"""Text-free, resumable numeric scores for expensive evaluations."""
 
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import json
-import os
+import math
 import re
-import tempfile
-from contextlib import contextmanager
+import sqlite3
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -31,51 +30,8 @@ def require_disjoint_paths(output: Path, score_journal: Path) -> None:
         raise ValueError("score journal and final output paths must be disjoint")
 
 
-def _sha256_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
-
-
-def _file_sha256(path: Path) -> str:
-    with path.open("rb") as handle:
-        return hashlib.file_digest(handle, "sha256").hexdigest()
-
-
-def _canonical_json(value: object) -> bytes:
-    return json.dumps(
-        value,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
-
-
-def _fsync_directory(path: Path) -> None:
-    descriptor = os.open(path, os.O_RDONLY)
-    try:
-        os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
-
-
-def _atomic_bytes(path: Path, value: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, temporary_name = tempfile.mkstemp(
-        dir=path.parent,
-        prefix=f".{path.name}.",
-    )
-    temporary = Path(temporary_name)
-    try:
-        with os.fdopen(descriptor, "wb") as handle:
-            handle.write(value)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-        _fsync_directory(path.parent)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
-def _atomic_json(path: Path, value: object) -> None:
-    _atomic_bytes(path, _canonical_json(value) + b"\n")
+def _canonical_json(value: object) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
 @dataclass(frozen=True)
@@ -120,14 +76,12 @@ class ScoreJournalSpec:
             "rows": self.rows,
             "batch_size": self.batch_size,
             "columns": list(self.columns),
-            # Schema 1 recorded this fixed storage detail in identity. Keep the
-            # literal so existing journal manifests reopen byte-for-byte.
             "dtype": "float64",
         }
 
 
 class ScoreJournal:
-    """Append-only, contiguous numeric score journal with atomic publication."""
+    """Append-only, contiguous numeric score journal backed by SQLite."""
 
     SCHEMA_VERSION = 1
 
@@ -135,157 +89,119 @@ class ScoreJournal:
         self.root = root.resolve()
         self.spec = spec
         self.identity = spec.as_dict()
-        self.identity_sha256 = _sha256_bytes(_canonical_json(self.identity))
-        self.manifest_path = self.root / "manifest.json"
-        self.lock_path = self.root / ".writer.lock"
-        self.shard_directory = self.root / "shards"
+        self._identity_json = _canonical_json(self.identity)
+        self.identity_sha256 = hashlib.sha256(
+            self._identity_json.encode("utf-8")
+        ).hexdigest()
+        self.database_path = self.root / "scores.sqlite3"
+
         self.root.mkdir(parents=True, exist_ok=True)
-        self.shard_directory.mkdir(exist_ok=True)
-        with self._exclusive_lock():
-            self._refresh_locked(create=True)
-
-    @contextmanager
-    def _exclusive_lock(self):
-        descriptor = os.open(self.lock_path, os.O_RDWR | os.O_CREAT, 0o600)
-        try:
-            fcntl.flock(descriptor, fcntl.LOCK_EX)
-            yield
-        finally:
-            fcntl.flock(descriptor, fcntl.LOCK_UN)
-            os.close(descriptor)
-
-    def _refresh_locked(self, *, create: bool = False) -> None:
-        if self.manifest_path.exists():
-            self._manifest = self._read_manifest()
-        else:
-            if not create:
-                raise ValueError("score-journal manifest disappeared")
-            unexpected = [
-                path
-                for path in self.root.iterdir()
-                if path not in {self.lock_path, self.shard_directory}
-            ]
-            if unexpected:
-                raise ValueError("score-journal directory has no valid manifest")
-            self._manifest = self._empty_manifest()
-            _atomic_json(self.manifest_path, self._manifest)
-        self._validate_manifest_shards()
-        self._recover_orphans()
-
-    def _empty_manifest(self) -> dict:
-        return {
-            "schema_version": self.SCHEMA_VERSION,
-            "identity": self.identity,
-            "identity_sha256": self.identity_sha256,
-            "shards": [],
+        database_files = {
+            self.database_path.name,
+            f"{self.database_path.name}-journal",
+            f"{self.database_path.name}-shm",
+            f"{self.database_path.name}-wal",
         }
-
-    def _read_manifest(self) -> dict:
+        unexpected = [
+            path for path in self.root.iterdir() if path.name not in database_files
+        ]
+        if unexpected:
+            raise ValueError("score-journal directory has no valid database")
         try:
-            value = json.loads(self.manifest_path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
-            raise ValueError("invalid score-journal manifest") from error
+            with closing(self._connect()) as database:
+                self._initialize(database)
+                self._completed_rows = self._read_completed(database)
+                self._read_scores(database, self._completed_rows)
+        except sqlite3.Error as error:
+            raise ValueError("invalid score-journal database") from error
+
+    def _connect(self) -> sqlite3.Connection:
+        database = sqlite3.connect(self.database_path, timeout=30)
+        database.execute("PRAGMA busy_timeout = 30000")
+        database.execute("PRAGMA synchronous = FULL")
+        return database
+
+    def _initialize(self, database: sqlite3.Connection) -> None:
+        with database:
+            database.execute("BEGIN IMMEDIATE")
+            version = database.execute("PRAGMA user_version").fetchone()[0]
+            tables = database.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+            if version != 0 or tables:
+                return
+            database.execute(f"PRAGMA user_version = {self.SCHEMA_VERSION}")
+            database.execute(
+                """
+                CREATE TABLE journal (
+                    singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+                    identity_json TEXT NOT NULL,
+                    completed_rows INTEGER NOT NULL CHECK (completed_rows >= 0)
+                )
+                """
+            )
+            database.execute(
+                """
+                CREATE TABLE scores (
+                    row_index INTEGER NOT NULL CHECK (row_index >= 0),
+                    column_index INTEGER NOT NULL CHECK (column_index >= 0),
+                    value REAL NOT NULL CHECK (typeof(value) = 'real'),
+                    PRIMARY KEY (row_index, column_index)
+                ) WITHOUT ROWID
+                """
+            )
+            database.execute(
+                "INSERT INTO journal VALUES (1, ?, 0)",
+                (self._identity_json,),
+            )
+
+    def _read_completed(self, database: sqlite3.Connection) -> int:
+        try:
+            version = database.execute("PRAGMA user_version").fetchone()
+            rows = database.execute(
+                "SELECT identity_json, completed_rows FROM journal"
+            ).fetchall()
+        except sqlite3.Error as error:
+            raise ValueError("score-journal identity or schema mismatch") from error
         if (
-            not isinstance(value, dict)
-            or set(value)
-            != {
-                "schema_version",
-                "identity",
-                "identity_sha256",
-                "shards",
-            }
-            or value.get("schema_version") != self.SCHEMA_VERSION
-            or value.get("identity") != self.identity
-            or value.get("identity_sha256") != self.identity_sha256
-            or not isinstance(value.get("shards"), list)
+            version != (self.SCHEMA_VERSION,)
+            or len(rows) != 1
+            or rows[0][0] != self._identity_json
+            or type(rows[0][1]) is not int
+            or not 0 <= rows[0][1] <= self.spec.rows
         ):
             raise ValueError("score-journal identity or schema mismatch")
-        return value
+        return rows[0][1]
 
-    @staticmethod
-    def _shard_name(start: int, stop: int) -> str:
-        return f"scores-{start:012d}-{stop:012d}.npz"
-
-    def _read_shard(self, path: Path) -> tuple[int, int, np.ndarray]:
-        try:
-            with np.load(path, allow_pickle=False) as payload:
-                if set(payload.files) != {
-                    "identity_sha256",
-                    "scores",
-                    "start",
-                    "stop",
-                }:
-                    raise ValueError("invalid score-journal shard arrays")
-                identity_sha256 = str(payload["identity_sha256"].item())
-                start = int(payload["start"].item())
-                stop = int(payload["stop"].item())
-                scores = np.asarray(payload["scores"])
-        except (OSError, ValueError, EOFError) as error:
-            raise ValueError(f"invalid score-journal shard: {path.name}") from error
-        if (
-            identity_sha256 != self.identity_sha256
-            or path.name != self._shard_name(start, stop)
-            or start < 0
-            or stop <= start
-            or stop > self.spec.rows
-            or scores.dtype != np.dtype(np.float64)
-            or scores.shape != (stop - start, len(self.spec.columns))
-            or not np.isfinite(scores).all()
-        ):
-            raise ValueError(f"score-journal shard contract failed: {path.name}")
-        return start, stop, scores
-
-    def _validate_manifest_shards(self) -> None:
-        expected_start = 0
-        for entry in self._manifest["shards"]:
+    def _read_scores(
+        self,
+        database: sqlite3.Connection,
+        completed_rows: int,
+    ) -> np.ndarray:
+        rows = database.execute(
+            "SELECT row_index, column_index, value "
+            "FROM scores ORDER BY row_index, column_index"
+        ).fetchall()
+        width = len(self.spec.columns)
+        if len(rows) != completed_rows * width:
+            raise ValueError("score-journal score payload is not contiguous")
+        for offset, (row_index, column_index, value) in enumerate(rows):
+            expected_row, expected_column = divmod(offset, width)
             if (
-                not isinstance(entry, dict)
-                or set(entry) != {"path", "sha256", "start", "stop"}
-                or type(entry["start"]) is not int
-                or type(entry["stop"]) is not int
-                or not isinstance(entry["path"], str)
-                or not isinstance(entry["sha256"], str)
-                or _SHA256.fullmatch(entry["sha256"]) is None
-                or entry["start"] != expected_start
-                or entry["path"] != self._shard_name(entry["start"], entry["stop"])
+                row_index != expected_row
+                or column_index != expected_column
+                or not isinstance(value, (int, float))
+                or not math.isfinite(float(value))
             ):
-                raise ValueError("invalid score-journal shard manifest")
-            path = self.shard_directory / entry["path"]
-            if not path.is_file() or _file_sha256(path) != entry["sha256"]:
-                raise ValueError("score-journal shard hash mismatch")
-            start, stop, _ = self._read_shard(path)
-            if start != entry["start"] or stop != entry["stop"]:
-                raise ValueError("score-journal shard range mismatch")
-            expected_start = stop
-
-    def _recover_orphans(self) -> None:
-        known = {entry["path"] for entry in self._manifest["shards"]}
-        orphans = sorted(
-            path
-            for path in self.shard_directory.glob("*.npz")
-            if path.name not in known
+                raise ValueError("invalid score-journal score payload")
+        return np.asarray([row[2] for row in rows], dtype=np.float64).reshape(
+            completed_rows,
+            width,
         )
-        changed = False
-        for path in orphans:
-            start, stop, _ = self._read_shard(path)
-            if start != self.completed_rows:
-                raise ValueError("non-contiguous orphan score-journal shard")
-            self._manifest["shards"].append(
-                {
-                    "path": path.name,
-                    "sha256": _file_sha256(path),
-                    "start": start,
-                    "stop": stop,
-                }
-            )
-            changed = True
-        if changed:
-            _atomic_json(self.manifest_path, self._manifest)
 
     @property
     def completed_rows(self) -> int:
-        shards = self._manifest["shards"]
-        return int(shards[-1]["stop"]) if shards else 0
+        return self._completed_rows
 
     @property
     def complete(self) -> bool:
@@ -304,58 +220,37 @@ class ScoreJournal:
             or not np.isfinite(values).all()
         ):
             raise ValueError("invalid score-journal score array")
+
         observed_start = self.completed_rows
-        requested_start = start
-        with self._exclusive_lock():
-            self._refresh_locked()
-            expected_start = self.completed_rows
-            start = observed_start if requested_start is None else requested_start
-            stop = start + len(values)
-            if (
-                type(start) is not int
-                or start != expected_start
-                or (requested_start is None and expected_start != observed_start)
-                or stop > self.spec.rows
-            ):
+        requested_start = observed_start if start is None else start
+        with closing(self._connect()) as database, database:
+            database.execute("BEGIN IMMEDIATE")
+            expected_start = self._read_completed(database)
+            self._completed_rows = expected_start
+            if type(requested_start) is not int:
                 raise ValueError(
                     "score-journal append is not the next contiguous range"
                 )
-
-            path = self.shard_directory / self._shard_name(start, stop)
-            descriptor, temporary_name = tempfile.mkstemp(
-                dir=self.shard_directory,
-                prefix=f".{path.name}.",
+            stop = requested_start + len(values)
+            if requested_start != expected_start or stop > self.spec.rows:
+                raise ValueError(
+                    "score-journal append is not the next contiguous range"
+                )
+            database.executemany(
+                "INSERT INTO scores VALUES (?, ?, ?)",
+                (
+                    (requested_start + row, column, float(values[row, column]))
+                    for row in range(len(values))
+                    for column in range(len(self.spec.columns))
+                ),
             )
-            temporary = Path(temporary_name)
-            try:
-                with os.fdopen(descriptor, "wb") as handle:
-                    np.savez(
-                        handle,
-                        identity_sha256=np.asarray(self.identity_sha256),
-                        scores=values,
-                        start=np.asarray(start, dtype=np.int64),
-                        stop=np.asarray(stop, dtype=np.int64),
-                    )
-                    handle.flush()
-                    os.fsync(handle.fileno())
-                os.replace(temporary, path)
-                _fsync_directory(self.shard_directory)
-            finally:
-                temporary.unlink(missing_ok=True)
+            database.execute(
+                "UPDATE journal SET completed_rows = ? WHERE singleton = 1",
+                (stop,),
+            )
 
-            entry = {
-                "path": path.name,
-                "sha256": _file_sha256(path),
-                "start": start,
-                "stop": stop,
-            }
-            updated = {
-                **self._manifest,
-                "shards": [*self._manifest["shards"], entry],
-            }
-            _atomic_json(self.manifest_path, updated)
-            self._manifest = updated
-            return start, stop
+        self._completed_rows = stop
+        return requested_start, stop
 
     def missing_ranges(self, shard_rows: int) -> list[tuple[int, int]]:
         if type(shard_rows) is not int or shard_rows < 1:
@@ -366,10 +261,9 @@ class ScoreJournal:
         ]
 
     def scores(self) -> np.ndarray:
-        if not self.complete:
-            raise ValueError("score journal is incomplete")
-        values = [
-            self._read_shard(self.shard_directory / entry["path"])[2]
-            for entry in self._manifest["shards"]
-        ]
-        return np.concatenate(values, axis=0)
+        with closing(self._connect()) as database:
+            completed_rows = self._read_completed(database)
+            self._completed_rows = completed_rows
+            if completed_rows != self.spec.rows:
+                raise ValueError("score journal is incomplete")
+            return self._read_scores(database, completed_rows)

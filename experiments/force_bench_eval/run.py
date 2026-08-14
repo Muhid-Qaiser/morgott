@@ -449,7 +449,7 @@ async def _run_async(output: Path) -> dict:
             ),
         )
     scanner = CascadeScanner.from_artifacts(
-        manifest_path=ROOT / "model-artifacts.json", allow_remote=True
+        manifest_path=ROOT / "model-artifacts.json"
     )
     try:
         for start in range(0, len(pending), BATCH_SIZE):

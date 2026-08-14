@@ -16,6 +16,7 @@ from tokenizers import Tokenizer
 from morgott.data import file_sha256
 from morgott.models.mmbert.data import filter_small_training_sets
 from morgott.models.mmbert.inference import verified_artifact_path
+from morgott.models.mmbert.serving import DEFAULT_MODEL_KEY
 from morgott.normalization import strict_normalize
 from morgott.sources.tasks import _sensitive_text_reasons
 
@@ -181,7 +182,7 @@ def _pair(row: dict, benign: list[dict]) -> dict:
 def _tokenizer() -> tuple[Tokenizer, dict]:
     registry_path = ROOT / "model-artifacts.json"
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
-    spec = registry["models"]["mmbert-lora-full-s42"]["serving"]["tokenizer"]
+    spec = registry["models"][DEFAULT_MODEL_KEY]["serving"]["tokenizer"]
     path = verified_artifact_path(ROOT, spec, name="registered tokenizer")
     return Tokenizer.from_file(str(path)), {
         "registry_sha256": file_sha256(registry_path),

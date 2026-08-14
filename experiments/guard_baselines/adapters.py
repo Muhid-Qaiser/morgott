@@ -18,12 +18,9 @@ from pathlib import Path, PurePosixPath
 
 import numpy as np
 
-from morgott.models.mmbert.core import MAX_TOKENS as MMBERT_MAX_TOKENS
-from morgott.models.mmbert.core import file_sha256, score_texts
-from morgott.normalization import strict_normalize
+from morgott.models.mmbert.core import file_sha256
 
 ROOT = Path(__file__).resolve().parents[2]
-REGISTRY = ROOT / "model-artifacts.json"
 
 # Files that can affect the model or tokenizer actually executed by an adapter.
 # Documentation, plots, and papers in a Hub snapshot are deliberately excluded:
@@ -1119,76 +1116,9 @@ class StreamHeadGuard(GuardBaseline):
         }
 
 
-class IncumbentGuard(GuardBaseline):
-    """The registered advisory shadow, re-scored on the current panel.
-
-    This is an evaluation pass over retained weights, never a retrain. The
-    registered `evaluation.json` was computed on the previous corpus, so its
-    numbers describe different rows; the run records both, flagged.
-    """
-
-    def load(self) -> None:
-        from morgott.models.mmbert import evaluate as mmbert_evaluate
-        from morgott.models.mmbert.inference import load_bundle
-
-        bundle = load_bundle(REGISTRY, self.spec.repo_id)
-        result, self.model, self.tokenizer, self.head, base_model = (
-            mmbert_evaluate._load_run(bundle["head_path"].parent)
-        )
-        if result != bundle["result"]:
-            raise ValueError("registered result changed during model loading")
-        self.model.gradient_checkpointing_disable()
-        self._max_tokens = int(bundle["result"]["max_tokens"])
-        if self._max_tokens != self.spec.max_tokens:
-            raise ExtractionUnavailable(
-                f"registered max_tokens {self._max_tokens} differs from the "
-                f"declared {self.spec.max_tokens}"
-            )
-        self._identity = {
-            "registry": "model-artifacts.json",
-            "adaptation": bundle["adaptation"],
-            "result_sha256": bundle["result_sha256"],
-            "head_sha256": bundle["head_sha256"],
-            "adapter_sha256": bundle["adapter_sha256"],
-            "evaluation_sha256": bundle["evaluation_sha256"],
-            "source_evidence_sha256": bundle["source_evidence_sha256"],
-            "encoder_model_id": bundle["result"]["model_id"],
-            "encoder_model_revision": bundle["result"]["model_revision"],
-            "base_model": base_model,
-            "token_budget": bundle["result"]["token_budget"],
-        }
-        self._smoke()
-
-    def score(self, texts: list[str]) -> tuple[np.ndarray, list[bool]]:
-        normalized = [strict_normalize(text) for text in texts]
-        encoded = self.tokenizer(normalized, add_special_tokens=True)["input_ids"]
-        overflow = [len(ids) > self._max_tokens for ids in encoded]
-        scores = score_texts(
-            self.model,
-            self.tokenizer,
-            self.head,
-            texts,
-            batch_size=len(texts),
-        )
-        return np.asarray(scores, dtype=np.float64), overflow
-
-    def preprocessing(self) -> dict:
-        return {
-            **super().preprocessing(),
-            "text": "strict normalization, as maintained inference applies",
-            "truncation": "first 512 strict-normalized tokens",
-            "inference_dtype": "bfloat16",
-        }
-
-    def unload(self) -> None:
-        super().unload()
-        self.head = None
-
-
 ADAPTERS = {
     "encoder": EncoderGuard,
     "granite": GraniteGuardianGuard,
-    "incumbent": IncumbentGuard,
     "kanana_safeguard": KananaSafeguardGuard,
     "prompt_guard_2": PromptGuard2Encoder,
     "stream_head": StreamHeadGuard,
@@ -1196,36 +1126,13 @@ ADAPTERS = {
 }
 
 BASELINES = {
-    "mmbert-lora-full-s42-rescore": BaselineSpec(
-        slug="mmbert-lora-full-s42-rescore",
-        repo_id="mmbert-lora-full-s42",
-        revision="registry:model-artifacts.json",
-        max_tokens=MMBERT_MAX_TOKENS,
-        # The registered token budget is 8 x 512. Batch composition perturbs
-        # padded scores slightly, so the reference line keeps the registered
-        # batch rather than trading comparability for speed.
-        batch_size=8,
-        role="incumbent reference line, re-scored on the current panel",
-        positive_class="sigmoid of the advisory head logit",
-        adapter="incumbent",
-        historical_evaluation=(
-            "artifacts/models/mmbert-lora-full-s42/evaluation/evaluation.json"
-        ),
-        notes=(
-            "Evaluation pass over registered weights. Not a retrain.",
-            "The registered evaluation.json was computed on the previous "
-            "corpus (303,376 canonical dev_test rows) and is not comparable "
-            "row-for-row with anything scored here.",
-            "Advisory shadow. decision stays allow.",
-        ),
-    ),
     "modernguard-1": BaselineSpec(
         slug="modernguard-1",
         repo_id="guardion/ModernGuard-1",
         revision="a7c09c891f539689c57a0e016f2b394d91b4586b",
         max_tokens=8192,
         batch_size=16,
-        role="same mmBERT backbone as the incumbent at 16x the context",
+        role="same mmBERT backbone family as Morgott at 16x the context",
         positive_class="softmax over the unsafe class index from config.id2label",
         adapter="encoder",
         native_threshold=0.5,

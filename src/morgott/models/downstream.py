@@ -1,4 +1,4 @@
-"""Advisory routing for the selected ``mmbert-lora-full-s42`` cascade."""
+"""Advisory routing for the maintained 1,024-token mmBERT cascade."""
 
 import hashlib
 import json

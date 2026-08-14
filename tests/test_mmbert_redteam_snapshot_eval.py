@@ -27,25 +27,17 @@ BASE_MODEL = {
 }
 
 
-def _head_contract(outputs: int = 2) -> dict:
-    if outputs == 1:
-        return {
-            "architecture": "legacy_sequential_binary_v1",
-            "outputs": 1,
-            "columns": {"0": "instruction_subversion"},
-            "primary_column": 0,
-        }
+def _head_contract() -> dict:
     return {
-        "architecture": "shared_trunk_separate_binary_projections_v1",
-        "outputs": 2,
-        "columns": {"0": "instruction_subversion", "1": "harmful_intent"},
+        "architecture": "legacy_sequential_binary_v1",
+        "outputs": 1,
+        "columns": {"0": "instruction_subversion"},
         "primary_column": 0,
     }
 
 
-def _result(*, outputs: int = 2, run_name: str = run.ARM6_RUN_NAME) -> dict:
-    contract = _head_contract(outputs)
-    harmful = {"target": "harmful_intent"} if outputs == 2 else None
+def _result(*, run_name: str = "single-output-run") -> dict:
+    contract = _head_contract()
     return {
         "schema_version": 1,
         "purpose": "maintained full-data advisory mmBERT training",
@@ -55,11 +47,9 @@ def _result(*, outputs: int = 2, run_name: str = run.ARM6_RUN_NAME) -> dict:
         "adaptation": "lora",
         "generic_target": "instruction_subversion",
         "head_contract": contract,
-        "objective": {"harmful_intent": harmful},
         "training_identity": {
             "run_name": run_name,
             "head_contract": contract,
-            "harmful_objective": harmful,
             "length_grouped": False,
         },
     }
@@ -69,7 +59,7 @@ class BindingTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
-        self.run_dir = self.root / run.ARM6_RUN_NAME
+        self.run_dir = self.root / "single-output-run"
         self.run_dir.mkdir()
         self.snapshot = self.root / "update-017000.pt"
         self.snapshot.write_bytes(b"trusted-snapshot")
@@ -412,7 +402,7 @@ class BindingTests(unittest.TestCase):
             )
 
     def test_packaged_selected_one_head_is_strictly_bound(self):
-        run_dir = self.root / run.NOHARM_RUN_NAME
+        run_dir = self.root / "packaged-single-output-run"
         run_dir.mkdir()
         head = run_dir / "head.safetensors"
         head.write_bytes(b"one-head-package")
@@ -441,7 +431,7 @@ class BindingTests(unittest.TestCase):
             "validation_point_role": "periodic_validation",
             "pre_registered_comparison": True,
         }
-        result = _result(outputs=1, run_name=run.NOHARM_RUN_NAME)
+        result = _result(run_name=run_dir.name)
         result.update(
             {
                 "training": {
@@ -473,12 +463,12 @@ class BindingTests(unittest.TestCase):
         report = dict(self.report)
         report.update(
             {
-                "head_contract": _head_contract(1),
+                "head_contract": _head_contract(),
                 "run_result_sha256": result_sha,
                 "scores": {
                     **self.report["scores"],
                     "sha256": hashlib.sha256(scores.read_bytes()).hexdigest(),
-                    "columns": ["label", *run.PRIMARY_SCORE_COLUMNS],
+                    "columns": ["label", *run.SCORE_COLUMNS],
                 },
             }
         )
@@ -493,8 +483,6 @@ class BindingTests(unittest.TestCase):
             full,
             expected_inputs=self.expected_inputs,
         )
-        self.assertEqual(binding.head_outputs, 1)
-        self.assertEqual(binding.score_columns, ("score",))
         self.assertEqual(binding.checkpoint_kind, "packaged_selected")
         self.assertEqual(binding.role, run.PACKAGED_CHECKPOINT_ROLE)
         self.assertEqual(binding.evaluation_model_sha256, result_sha)
@@ -517,18 +505,19 @@ class BindingTests(unittest.TestCase):
                 expected_inputs=self.expected_inputs,
             )
 
-    def test_head_width_and_harmful_objective_must_agree(self):
-        result = _result(outputs=1, run_name=run.NOHARM_RUN_NAME)
-        result["training_identity"]["harmful_objective"] = {"target": "harmful_intent"}
-        with self.assertRaisesRegex(ValueError, "strict no-length-grouping"):
-            run._validate_run_contract(self.root / run.NOHARM_RUN_NAME, result)
-
-        result = _result(outputs=1, run_name=run.NOHARM_RUN_NAME)
-        result["head_contract"]["architecture"] = (
-            "shared_trunk_separate_binary_projections_v1"
-        )
-        with self.assertRaisesRegex(ValueError, "architecture"):
-            run._validate_run_contract(self.root / run.NOHARM_RUN_NAME, result)
+    def test_two_output_run_is_not_maintained(self):
+        result = _result()
+        result["head_contract"] = {
+            "architecture": "shared_trunk_separate_binary_projections_v1",
+            "outputs": 2,
+            "columns": {
+                "0": "instruction_subversion",
+                "1": "harmful_intent",
+            },
+            "primary_column": 0,
+        }
+        with self.assertRaisesRegex(ValueError, "single-output"):
+            run._validate_run_contract(self.run_dir, result)
 
 
 def _rows() -> list[dict]:
@@ -580,11 +569,11 @@ class ReportTests(unittest.TestCase):
                     columns=run.SCORE_COLUMNS,
                 ),
             )
-            scores = np.asarray([[0.95, 0.8], [0.1, 0.9]], dtype=np.float64)
+            scores = np.asarray([[0.95], [0.1]], dtype=np.float64)
             journal.append(scores)
             binding = run.EvaluationBinding(
                 result={
-                    "run_name": run.ARM6_RUN_NAME,
+                    "run_name": "single-output-run",
                     "head_contract": _head_contract(),
                 },
                 full_evaluation={
@@ -605,8 +594,6 @@ class ReportTests(unittest.TestCase):
                 role="pre_registered_comparison",
                 threshold=0.9,
                 batch_size=1,
-                head_outputs=2,
-                score_columns=run.MULTITASK_SCORE_COLUMNS,
             )
             report = run._build_report(
                 binding=binding,
@@ -646,8 +633,10 @@ class ReportTests(unittest.TestCase):
             report["instruction_subversion"]["bare_harmful_control"]["flag_rate"],
             0.0,
         )
-        self.assertEqual(report["harmful_intent"]["known_label_rows"], 0)
-        self.assertEqual(report["purpose"], run.LEGACY_ARM6_PURPOSE)
+        self.assertNotIn("harmful_intent", report)
+        self.assertEqual(report["purpose"], run.PURPOSE)
+        self.assertEqual(report["scores"]["columns"], ["score"])
+        self.assertEqual(report["scores"]["shape"], [2, 1])
         self.assertEqual(report["training_max_tokens"], 512)
         self.assertEqual(report["evaluation_max_tokens"], 512)
         self.assertTrue(report["native_context_evaluation"])
@@ -656,81 +645,9 @@ class ReportTests(unittest.TestCase):
             run.LEGACY_FULL_EVALUATION_CONTEXT_CONTRACT,
         )
 
-    def test_one_head_report_has_one_score_column_and_omits_harmful_metrics(self):
-        rows = _rows()
-        panel_sha = run.guard_run._journal_panel_sha256(
-            run.guard_run.REDTEAM_SHA256, "redteam_reserve", rows
-        )
-        with tempfile.TemporaryDirectory() as temporary:
-            journal = ScoreJournal(
-                Path(temporary) / "journal",
-                ScoreJournalSpec(
-                    model_sha256="1" * 64,
-                    panel_sha256=panel_sha,
-                    scoring_sha256="2" * 64,
-                    rows=2,
-                    batch_size=1,
-                    columns=run.PRIMARY_SCORE_COLUMNS,
-                ),
-            )
-            scores = np.asarray([[0.95], [0.1]], dtype=np.float64)
-            journal.append(scores)
-            binding = run.EvaluationBinding(
-                result={
-                    "run_name": run.NOHARM_RUN_NAME,
-                    "head_contract": _head_contract(1),
-                },
-                full_evaluation={
-                    "inputs": {"data_manifest_sha256": "3" * 64},
-                    "calibration": {"row_identity_sha256": "4" * 64},
-                    "canonical_dev_test": {
-                        "metrics": {"threshold": 0.9, "recall": 0.75}
-                    },
-                },
-                run_result_sha256="5" * 64,
-                full_evaluation_sha256="6" * 64,
-                full_score_sha256="7" * 64,
-                checkpoint_sha256="8" * 64,
-                checkpoint_kind="packaged_selected",
-                evaluation_model_sha256="5" * 64,
-                update=17000,
-                epoch=2,
-                role=run.PACKAGED_CHECKPOINT_ROLE,
-                threshold=0.9,
-                batch_size=1,
-                head_outputs=1,
-                score_columns=run.PRIMARY_SCORE_COLUMNS,
-            )
-            report = run._build_report(
-                binding=binding,
-                rows=rows,
-                head_scores=scores,
-                panel_sha256=panel_sha,
-                journal=journal,
-                journal_model_sha256="1" * 64,
-                base_model=BASE_MODEL,
-                truncation=np.asarray([False, True]),
-                runtime_seconds=1.0,
-                resumed_rows=0,
-                device="test-device",
-                peak_reserved_bytes=123,
-                provenance={"sources": {}, "uv_lock_sha256": "9" * 64},
-                scoring_sha256="a" * 64,
-            )
-
-        self.assertNotIn("harmful_intent", report)
-        self.assertEqual(report["purpose"], run.PURPOSE)
-        self.assertEqual(report["scores"]["columns"], ["score"])
-        self.assertEqual(report["scores"]["shape"], [2, 1])
-        self.assertEqual(
-            report["threshold_evidence"]["checkpoint_kind"],
-            "packaged_selected",
-        )
-        self.assertEqual(len(report["scores"]["evaluation_identity_sha256"]), 64)
-
-    def test_hash_identities_bind_width_checkpoint_full_eval_batch_and_sources(self):
+    def test_hash_identities_bind_checkpoint_full_eval_batch_and_sources(self):
         base = run.EvaluationBinding(
-            result={"head_contract": _head_contract(1)},
+            result={"head_contract": _head_contract()},
             full_evaluation={},
             run_result_sha256="1" * 64,
             full_evaluation_sha256="2" * 64,
@@ -743,8 +660,6 @@ class ReportTests(unittest.TestCase):
             role=run.PACKAGED_CHECKPOINT_ROLE,
             threshold=0.9,
             batch_size=8,
-            head_outputs=1,
-            score_columns=run.PRIMARY_SCORE_COLUMNS,
         )
         provenance = {"sources": {"run.py": "5" * 64}}
         scoring = run._scoring_sha256(base, provenance)
@@ -764,12 +679,6 @@ class ReportTests(unittest.TestCase):
                 base,
                 evaluation_max_tokens=1024,
                 native_context_evaluation=False,
-            ),
-            replace(
-                base,
-                result={"head_contract": _head_contract(2)},
-                head_outputs=2,
-                score_columns=run.MULTITASK_SCORE_COLUMNS,
             ),
         ]
         for variant in variants:
@@ -838,7 +747,7 @@ class ReportTests(unittest.TestCase):
         )
 
     def test_cli_defaults_are_snapshot_specific_and_noncolliding(self):
-        base = Path("artifacts/mmbert/runs") / run.ARM6_RUN_NAME
+        base = Path("artifacts/mmbert/runs/single-output-run")
         snapshot = Path("artifacts/mmbert/runs/.arm6.snapshots/update-023000.pt")
         with (
             patch.object(sys, "argv", ["run", str(base), "--snapshot", str(snapshot)]),
@@ -860,7 +769,7 @@ class ReportTests(unittest.TestCase):
         )
 
     def test_cli_defaults_to_packaged_selected_checkpoint(self):
-        base = Path("artifacts/mmbert/runs") / run.NOHARM_RUN_NAME
+        base = Path("artifacts/mmbert/runs/single-output-run")
         with (
             patch.object(sys, "argv", ["run", str(base)]),
             patch.object(run, "evaluate_reserve", return_value=Path("done")) as call,
@@ -883,7 +792,7 @@ class ReportTests(unittest.TestCase):
 
     def test_cli_cap_aware_defaults_include_both_contexts(self):
         with tempfile.TemporaryDirectory() as temporary:
-            base = Path(temporary) / run.NOHARM_RUN_NAME
+            base = Path(temporary) / "single-output-run"
             base.mkdir()
             result = {
                 "max_tokens": 1024,

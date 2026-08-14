@@ -15,14 +15,8 @@ from morgott.models.mmbert.core import (
     MODEL_ID,
     MODEL_REVISION,
     file_sha256,
-    new_head,
 )
-from morgott.models.mmbert.head_contract import (
-    HeadContract,
-    new_head_for_result,
-    new_multitask_head,
-    resolve_head_contract,
-)
+from morgott.models.mmbert.train import _head_contract
 
 
 class BaseModelLoadingTests(unittest.TestCase):
@@ -67,93 +61,16 @@ class BaseModelLoadingTests(unittest.TestCase):
 
 
 class HeadContractTests(unittest.TestCase):
-    def test_absent_contract_preserves_the_historical_head_exactly(self):
-        import torch
-
-        expected = new_head(8, 42)
-        actual = new_head_for_result(8, 42, {})
+    def test_absent_or_explicit_single_output_contract_is_supported(self):
+        expected = _head_contract()
+        self.assertEqual(mmbert_evaluate._single_output_head_contract({}), expected)
         self.assertEqual(
-            resolve_head_contract({}),
-            HeadContract(
-                "legacy_sequential_binary_v1",
-                1,
-                ("instruction_subversion",),
-                0,
-            ),
+            mmbert_evaluate._single_output_head_contract({"head_contract": expected}),
+            expected,
         )
-        self.assertEqual(expected.state_dict().keys(), actual.state_dict().keys())
-        for name, value in expected.state_dict().items():
-            self.assertTrue(torch.equal(value, actual.state_dict()[name]), name)
 
-    def test_explicit_single_output_contract_is_supported(self):
-        result = {
-            "head_contract": {
-                "architecture": "legacy_sequential_binary_v1",
-                "outputs": 1,
-                "columns": {"0": "instruction_subversion"},
-                "primary_column": 0,
-            }
-        }
-        head = new_head_for_result(8, 7, result)
-        self.assertEqual(head[-1].out_features, 1)
-
-    def test_multitask_contract_builds_two_outputs_with_primary_at_zero(self):
-        import torch
-
-        result = {
-            "head_contract": {
-                "architecture": "shared_trunk_separate_binary_projections_v1",
-                "outputs": 2,
-                "columns": {
-                    "0": "instruction_subversion",
-                    "1": "harmful_intent",
-                },
-                "primary_column": 0,
-            }
-        }
-        contract = resolve_head_contract(result)
-        head = new_head_for_result(8, 42, result).eval()
-        logits = head(torch.zeros(3, 24))
-        self.assertEqual(
-            contract.columns[contract.primary_column], "instruction_subversion"
-        )
-        self.assertEqual(logits.shape, (3, 2))
-        self.assertEqual(logits[:, contract.primary_column].shape, (3,))
-
-    def test_multitask_primary_path_initializes_identically_to_legacy(self):
-        import torch
-
-        legacy = new_head(8, 42)
-        expected_rng = torch.random.get_rng_state()
-        multitask = new_multitask_head(8, 42)
-        self.assertTrue(torch.equal(torch.random.get_rng_state(), expected_rng))
-        self.assertEqual(
-            set(multitask.state_dict()),
-            {
-                "trunk.0.weight",
-                "trunk.0.bias",
-                "trunk.1.weight",
-                "trunk.1.bias",
-                "primary.weight",
-                "primary.bias",
-                "auxiliary.weight",
-                "auxiliary.bias",
-            },
-        )
-        for index in (0, 1):
-            for name, value in legacy[index].state_dict().items():
-                self.assertTrue(
-                    torch.equal(value, multitask.trunk[index].state_dict()[name]),
-                    f"trunk.{index}.{name}",
-                )
-        for name, value in legacy[4].state_dict().items():
-            self.assertTrue(
-                torch.equal(value, multitask.primary.state_dict()[name]),
-                f"primary.{name}",
-            )
-
-    def test_malformed_or_relabelled_contracts_fail_closed(self):
-        valid = {
+    def test_non_single_output_contract_is_rejected(self):
+        contract = {
             "architecture": "shared_trunk_separate_binary_projections_v1",
             "outputs": 2,
             "columns": {
@@ -162,42 +79,10 @@ class HeadContractTests(unittest.TestCase):
             },
             "primary_column": 0,
         }
-        invalid = (
-            {**valid, "outputs": 3},
-            {**valid, "outputs": True},
-            {**valid, "primary_column": 1},
-            {**valid, "architecture": "legacy_sequential_binary_v1"},
-            {
-                **valid,
-                "columns": {"0": "harmful_intent", "1": "instruction_subversion"},
-            },
-            {**valid, "unexpected": "field"},
-        )
-        for contract in invalid:
-            with self.subTest(contract=contract), self.assertRaises(ValueError):
-                resolve_head_contract({"head_contract": contract})
+        with self.assertRaisesRegex(ValueError, "single-output"):
+            mmbert_evaluate._single_output_head_contract({"head_contract": contract})
 
-    def test_strict_state_loading_rejects_a_width_mismatch(self):
-        legacy = new_head_for_result(8, 42, {})
-        multitask = new_head_for_result(
-            8,
-            42,
-            {
-                "head_contract": {
-                    "architecture": "shared_trunk_separate_binary_projections_v1",
-                    "outputs": 2,
-                    "columns": {
-                        "0": "instruction_subversion",
-                        "1": "harmful_intent",
-                    },
-                    "primary_column": 0,
-                }
-            },
-        )
-        with self.assertRaises(RuntimeError):
-            legacy.load_state_dict(multitask.state_dict(), strict=True)
-
-    def test_evaluator_builds_the_head_from_the_recorded_contract(self):
+    def test_evaluator_builds_the_maintained_head(self):
         class Encoder:
             config = SimpleNamespace(hidden_size=8)
 
@@ -233,15 +118,7 @@ class HeadContractTests(unittest.TestCase):
                 "normalization": "strict",
                 "adaptation": "frozen",
                 "seed": 42,
-                "head_contract": {
-                    "architecture": "shared_trunk_separate_binary_projections_v1",
-                    "outputs": 2,
-                    "columns": {
-                        "0": "instruction_subversion",
-                        "1": "harmful_intent",
-                    },
-                    "primary_column": 0,
-                },
+                "head_contract": _head_contract(),
                 "artifact": {
                     "head": head_path.name,
                     "head_sha256": file_sha256(head_path),
@@ -277,11 +154,7 @@ class HeadContractTests(unittest.TestCase):
                     "_load_pytorch_base_model",
                     return_value=(Encoder(), object()),
                 ),
-                patch.object(
-                    mmbert_evaluate,
-                    "new_head_for_result",
-                    return_value=head,
-                ) as build_head,
+                patch.object(mmbert_evaluate, "new_head", return_value=head) as build,
                 patch.object(
                     mmbert_evaluate,
                     "_verified_base_model_identity",
@@ -301,7 +174,8 @@ class HeadContractTests(unittest.TestCase):
                 ):
                     mmbert_evaluate._load_run(run)
 
-            build_head.assert_called_once_with(8, 42, loaded_result)
+            build.assert_called_once_with(8, 42)
+            self.assertEqual(loaded_result, result)
             self.assertIs(loaded_head, head)
             self.assertEqual(loaded_base, base_model)
             self.assertEqual(head.device, "cuda")

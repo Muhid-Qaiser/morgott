@@ -184,17 +184,22 @@ class CascadeScanner:
         self._local_semaphore = asyncio.Semaphore(1)
         self._remote_semaphore = asyncio.Semaphore(REMOTE_CONCURRENCY)
 
+    @property
+    def runtime_identity(self):
+        return getattr(self._scorer, "identity", None)
+
     @classmethod
     def from_artifacts(
         cls,
         *,
         manifest_path: Path,
-        allow_remote: bool,
+        inference_precision: Literal["auto", "bf16", "fp32"] = "bf16",
     ) -> CascadeScanner:
-        if not isinstance(allow_remote, bool):
-            raise ValueError("allow_remote must be a boolean")
-        scorer = MmbertRuntime.from_artifacts(manifest_path)
-        reviewer = DeepSeekReviewer.from_env() if allow_remote else None
+        scorer = MmbertRuntime.from_artifacts(
+            manifest_path,
+            inference_precision=inference_precision,
+        )
+        reviewer = DeepSeekReviewer.from_env()
         return cls(scorer=scorer, reviewer=reviewer)
 
     async def aclose(self) -> None:
@@ -310,7 +315,7 @@ class CascadeScanner:
                 deepseek_calls=sum(review.attempts for review in reviews),
                 deepseek_failures=sum(review.status == "failed" for review in reviews),
                 max_deepseek_probability=max(probabilities, default=None),
-                model_key=DEFAULT_MODEL_KEY,
+                model_key=getattr(identity, "model_key", DEFAULT_MODEL_KEY),
                 model_id=MODEL_ID,
                 model_revision=MODEL_REVISION,
                 runtime=getattr(identity, "runtime", "injected"),

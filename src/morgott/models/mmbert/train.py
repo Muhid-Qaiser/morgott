@@ -1,4 +1,4 @@
-"""Train the frozen-head, rank-8 LoRA, or bounded LP-FT mmBERT recipe."""
+"""Train the maintained frozen-head or rank-8 LoRA mmBERT recipe."""
 
 from __future__ import annotations
 
@@ -73,14 +73,10 @@ FULL_POPULATION = {
     "validation_components": 36_722,
     "promptshield_validation_rows": 984,
 }
-NEW_LPFT_PAIR_ARCHIVE_SHA256 = (
+ADDITIONAL_PAIR_ARCHIVE_SHA256 = (
     "84a3b1e185755739afca5165ef9aaadb55ce248695bb4c426351f94126ebbbba"
 )
-NEW_LPFT_POPULATION = {**FULL_POPULATION, "matched_pairs": 33_757}
-LPFT_TOP_LAYERS = 2
-LPFT_INITIAL_HEAD_SHA256 = (
-    "a3007323edb6da1d671b80ea1f7f46451384ddb2f45abeb2cae9d645404f5813"
-)
+ADDITIONAL_PAIR_POPULATION = {**FULL_POPULATION, "matched_pairs": 33_757}
 CHECKPOINT_UPDATE_INTERVAL = 500
 ADAMW_BETAS = (0.9, 0.999)
 ADAMW_EPS = 1e-8
@@ -109,7 +105,7 @@ FA2_KERNEL_SHA256 = "1433d3fe1187211c5ce622a7373d8c0487227384a2b8c74064e5ed6dfc8
 # depend on the partition, so runs at different microbatch sizes are
 # statistically equivalent, not reproducible against each other.
 #
-# The arm records which of the three maintained adaptation recipes is used.
+# The arm records which maintained adaptation recipe is used.
 PINNED_RECIPE = {
     "epochs": 3,
     "batch_size": 128,
@@ -143,11 +139,10 @@ VALIDATION_PARTITION_ROWS = (
 )
 CHECKPOINT_FRACTION_BOUNDS = (0.19, 0.21)
 
-# Learning rates are pinned to the three maintained recipes.
+# Learning rates are pinned to the maintained recipes.
 BASELINE_ARM_RATES = {
     "frozen": (3e-4, 3e-4),
     "lora": (3e-4, 1e-4),
-    "lpft": (3e-5, 1e-5),
 }
 
 
@@ -156,8 +151,6 @@ def _arm(args: argparse.Namespace) -> dict:
     return {
         "mode": args.mode,
         "lora_rank": LORA_RANK if args.mode == "lora" else None,
-        "lpft_top_layers": LPFT_TOP_LAYERS if args.mode == "lpft" else None,
-        "lpft_include_embeddings": False,
     }
 
 
@@ -265,27 +258,6 @@ def _preflight_execution(
                 "--trackio requires working NVML GPU telemetry; install the "
                 "tracking extra and verify the NVIDIA driver"
             )
-
-
-def _configure_lpft(encoder) -> tuple[list[str], int]:
-    """Unfreeze the top two encoder layers and final norm."""
-    if (
-        not hasattr(encoder, "layers")
-        or len(encoder.layers) < LPFT_TOP_LAYERS
-        or not hasattr(encoder, "final_norm")
-    ):
-        raise ValueError("LP-FT encoder contract failed")
-    for parameter in encoder.parameters():
-        parameter.requires_grad = False
-    for module in (*encoder.layers[-LPFT_TOP_LAYERS:], encoder.final_norm):
-        for parameter in module.parameters():
-            parameter.requires_grad = True
-    names = sorted(
-        name for name, value in encoder.named_parameters() if value.requires_grad
-    )
-    return names, sum(
-        value.numel() for value in encoder.parameters() if value.requires_grad
-    )
 
 
 _TRACKIO_VALIDATION_METRICS = (
@@ -988,7 +960,7 @@ def _skip_resumed_batches(
 
 
 def _candidate_weights(
-    row: dict, *, mode: str, head, encoder, epoch: int, updates: int, loss: float
+    *, mode: str, head, encoder, epoch: int, updates: int, loss: float
 ) -> dict:
     return {
         "loss": float(loss),
@@ -996,7 +968,7 @@ def _candidate_weights(
         "updates": updates,
         "head": _cpu_state(head),
         "adapter": _adapter_state(encoder) if mode == "lora" else None,
-        "encoder": _lpft_state(encoder) if mode == "lpft" else None,
+        "encoder": None,
     }
 
 
@@ -1087,7 +1059,6 @@ def _save_snapshot(
 
     directory.mkdir(parents=True, exist_ok=True)
     payload = _candidate_weights(
-        row,
         mode=mode,
         head=head,
         encoder=encoder,
@@ -1169,7 +1140,6 @@ def _update_alternates(
         current = alternates.get(name)
         if current is None or value < current["loss"]:
             alternates[name] = _candidate_weights(
-                row,
                 mode=mode,
                 head=head,
                 encoder=encoder,
@@ -1182,11 +1152,8 @@ def _update_alternates(
 def _lr_multiplier(step: int, *, total_updates: int, warmup_updates: int) -> float:
     """Linear warmup then cosine decay, as a multiplier on each group's base LR.
 
-    Warmup is here for the LP-FT arms above all: they unfreeze real encoder
-    layers, and the opening updates at full rate are exactly when a pretrained
-    body loses the features LP-FT exists to preserve. Decay covers the other
-    end -- the constant-rate baseline run peaked at update 9,000 of 25,083 and
-    was still degrading when it was stopped.
+    The constant-rate baseline peaked at update 9,000 of 25,083 and was still
+    degrading when it was stopped.
     """
     if warmup_updates > 0 and step < warmup_updates:
         return (step + 1) / warmup_updates
@@ -1327,7 +1294,7 @@ def _progress_state(
         "alternates": alternates,
         "head": _cpu_state(head),
         "adapter": _adapter_state(encoder) if mode == "lora" else None,
-        "encoder": _lpft_state(encoder) if mode == "lpft" else None,
+        "encoder": None,
         "optimizer": optimizer.state_dict(),
         "scheduler": scheduler.state_dict(),
         "promptshield_cycle": promptshield_cycle.state_dict(),
@@ -1361,7 +1328,6 @@ def _training_source_paths() -> tuple[Path, ...]:
         module.with_name("core.py"),
         module.with_name("data.py"),
         module.with_name("external_data.py"),
-        module.with_name("head_contract.py"),
         package / "data.py",
         package / "normalization.py",
         package / "overlap.py",
@@ -1402,7 +1368,6 @@ def _training_identity(
         "mode": args.mode,
         "arm": _arm(args),
         "head_contract": _head_contract(),
-        "harmful_objective": None,
         "attention": args.attention,
         "selection_rule": args.selection_rule,
         "validation_interval": args.validation_interval,
@@ -1435,12 +1400,7 @@ def _training_identity(
             "gradient_clip_norm": GRADIENT_CLIP_NORM,
         },
         "gradient_checkpointing": (
-            args.mode in {"lora", "lpft"} and not args.no_gradient_checkpointing
-        ),
-        "initial_head_sha256": (
-            file_sha256(args.initial_head)
-            if getattr(args, "initial_head", None) is not None
-            else None
+            args.mode == "lora" and not args.no_gradient_checkpointing
         ),
         "data": {
             "manifest_sha256": data.data_manifest_sha256,
@@ -1787,7 +1747,9 @@ def _validate_population(args: argparse.Namespace, report: dict) -> None:
     invariant, and at the baseline seed both keep their exact historical values.
     """
     additional_pairs = getattr(args, "additional_pairs", None)
-    expected = NEW_LPFT_POPULATION if additional_pairs is not None else FULL_POPULATION
+    expected = (
+        ADDITIONAL_PAIR_POPULATION if additional_pairs is not None else FULL_POPULATION
+    )
     pinned = {key: report.get(key) for key in PINNED_POPULATION_KEYS}
     if pinned != {key: expected[key] for key in PINNED_POPULATION_KEYS}:
         raise ValueError(f"full-mixture population contract failed: {pinned!r}")
@@ -1828,17 +1790,10 @@ def _validate_arm(args: argparse.Namespace) -> dict:
 def _validate_full_recipe(args: argparse.Namespace, report: dict) -> None:
     _runtime_max_tokens(args)
     additional_pairs = getattr(args, "additional_pairs", None)
-    additional_pairs_valid = (
-        # `frozen` never takes them; `lpft` requires them; `lora` may opt in.
-        (args.mode != "frozen" if additional_pairs is not None else True)
-        and (args.mode != "lpft" or additional_pairs is not None)
-        and (
-            additional_pairs is None
-            or (
-                additional_pairs.is_file()
-                and file_sha256(additional_pairs) == NEW_LPFT_PAIR_ARCHIVE_SHA256
-            )
-        )
+    additional_pairs_valid = additional_pairs is None or (
+        args.mode == "lora"
+        and additional_pairs.is_file()
+        and file_sha256(additional_pairs) == ADDITIONAL_PAIR_ARCHIVE_SHA256
     )
     if not additional_pairs_valid:
         raise ValueError("full-mixture additional-pair contract failed")
@@ -1860,20 +1815,12 @@ def _validate_full_recipe(args: argparse.Namespace, report: dict) -> None:
         "shuffle_buffer": args.shuffle_buffer,
         "pair_ranking_weight": args.pair_ranking_weight,
         "gradient_checkpointing": (
-            args.mode in {"lora", "lpft"} and not args.no_gradient_checkpointing
+            args.mode == "lora" and not args.no_gradient_checkpointing
         ),
     }
-    initial_head = getattr(args, "initial_head", None)
-    initial_head_valid = (
-        initial_head is not None
-        and initial_head.is_file()
-        and file_sha256(initial_head) == LPFT_INITIAL_HEAD_SHA256
-    )
     if (
         recipe != PINNED_RECIPE
         or (args.mode == "frozen" and args.no_gradient_checkpointing)
-        or (args.mode == "lpft" and not initial_head_valid)
-        or (args.mode != "lpft" and initial_head is not None)
         or (args.resume and args.preflight_only)
     ):
         raise ValueError(f"full-mixture configuration contract failed: {recipe!r}")
@@ -2154,27 +2101,6 @@ def _validation_logits(
     return np.concatenate(outputs).astype(np.float64)
 
 
-def _validation_bce(
-    encoder,
-    tokenizer,
-    head,
-    rows: list[dict],
-    *,
-    batch_size: int,
-    max_tokens: int = MAX_TOKENS,
-) -> float:
-    logits = _validation_logits(
-        encoder,
-        tokenizer,
-        head,
-        [row["text"] for row in rows],
-        batch_size=batch_size,
-        max_tokens=max_tokens,
-    )
-    labels = np.asarray([row["label"] for row in rows])
-    return _bce_from_logits(labels, logits)
-
-
 _CHECKPOINT_ROW_FPR_TARGET = 0.01
 _FINANCE_SOURCES = frozenset({"banking77", "harper_valley_bank", "tatqa"})
 
@@ -2430,23 +2356,6 @@ def _adapter_state(encoder) -> dict:
     }
 
 
-def _lpft_state(encoder) -> dict:
-    return {
-        name: value.detach().contiguous().cpu().clone()
-        for name, value in encoder.named_parameters()
-        if value.requires_grad
-    }
-
-
-def _restore_lpft_state(encoder, state: dict) -> None:
-    current = dict(encoder.named_parameters())
-    expected = {name for name, value in current.items() if value.requires_grad}
-    if set(state) != expected:
-        raise ValueError("LP-FT state contract failed")
-    for name, value in state.items():
-        current[name].data.copy_(value)
-
-
 def _selected_checkpoint_provenance(
     curve: list[dict],
     *,
@@ -2558,10 +2467,6 @@ def _save_run(
                 for path in sorted(adapter.iterdir())
                 if path.is_file()
             }
-        lpft_path = None
-        if mode == "lpft":
-            lpft_path = temporary / "encoder.safetensors"
-            save_file(_lpft_state(encoder), str(lpft_path))
         targeted_modules = (
             sorted(
                 name
@@ -2607,25 +2512,6 @@ def _save_run(
                 if mode == "lora"
                 else None
             ),
-            "lpft": (
-                {
-                    "top_layers": LPFT_TOP_LAYERS,
-                    "include_embeddings": False,
-                    "trainable_parameters": sum(
-                        parameter.numel()
-                        for parameter in encoder.parameters()
-                        if parameter.requires_grad
-                    ),
-                    "trainable_names": sorted(
-                        name
-                        for name, parameter in encoder.named_parameters()
-                        if parameter.requires_grad
-                    ),
-                    "initial_head_sha256": file_sha256(args.initial_head),
-                }
-                if mode == "lpft"
-                else None
-            ),
             "objective": {
                 "domains": {
                     "morgott": DOMAIN_WEIGHT,
@@ -2636,7 +2522,6 @@ def _save_run(
                 "promptshield_sampling": "class_balanced_cycle",
                 "matched_pair_sampling": "complete_pair_cycle",
                 "pair_ranking_weight": args.pair_ranking_weight,
-                "harmful_intent": None,
             },
             "training": {
                 "epochs": args.epochs,
@@ -2648,14 +2533,11 @@ def _save_run(
                 "token_budget": args.microbatch_size * max_tokens,
                 "mixed_precision": "bfloat16",
                 "gradient_checkpointing": (
-                    mode in {"lora", "lpft"} and not args.no_gradient_checkpointing
+                    mode == "lora" and not args.no_gradient_checkpointing
                 ),
                 "head_learning_rate": args.head_learning_rate,
                 "adapter_learning_rate": (
                     args.adapter_learning_rate if mode == "lora" else None
-                ),
-                "encoder_learning_rate": (
-                    args.adapter_learning_rate if mode == "lpft" else None
                 ),
                 "optimizer": {
                     "name": "AdamW",
@@ -2770,8 +2652,6 @@ def _save_run(
                 "head_sha256": file_sha256(head_path),
                 "adapter": "adapter" if adapter_files else None,
                 "adapter_files": adapter_files,
-                "encoder": lpft_path.name if lpft_path else None,
-                "encoder_sha256": file_sha256(lpft_path) if lpft_path else None,
             },
             "provenance": {
                 "routing_views": {
@@ -2817,7 +2697,6 @@ def _save_run(
 
 def train(args: argparse.Namespace, data: TrainingData) -> Path:
     import torch
-    from safetensors.torch import load_file
 
     run_name = _resolved_run_name(args)
     max_tokens = _runtime_max_tokens(args)
@@ -2844,24 +2723,19 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
         if args.no_encoding_cache
         else _EncodingCache(tokenizer, max_tokens=max_tokens)
     )
-    train_encoder = args.mode in {"lora", "lpft"}
+    train_encoder = args.mode == "lora"
     if train_encoder:
         if not args.no_gradient_checkpointing:
             encoder.gradient_checkpointing_enable(
                 gradient_checkpointing_kwargs={"use_reentrant": False}
             )
             encoder.enable_input_require_grads()
-        if args.mode == "lora":
-            encoder = add_lora(encoder)
-        else:
-            _configure_lpft(encoder)
+        encoder = add_lora(encoder)
     else:
         encoder.gradient_checkpointing_disable()
         for parameter in encoder.parameters():
             parameter.requires_grad = False
     head = new_head(encoder.config.hidden_size, args.seed).to("cuda")
-    if args.mode == "lpft":
-        head.load_state_dict(load_file(str(args.initial_head)), strict=True)
     head_parameters = list(head.parameters())
     parameters = [{"params": head_parameters, "lr": args.head_learning_rate}]
     if train_encoder:
@@ -2904,7 +2778,6 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
             "arm": _arm(args),
             "recipe": PINNED_RECIPE,
             "head_contract": _head_contract(),
-            "harmful_objective": None,
             "seed": args.seed,
             "microbatch_size": args.microbatch_size,
             "max_tokens": max_tokens,
@@ -2917,7 +2790,6 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
             "validation_interval": args.validation_interval,
             "snapshot_every": args.snapshot_every,
             "comparison_update": args.comparison_update,
-            "harmful_head": False,
             "warmup_fraction": args.warmup_fraction,
             "length_grouped": bool(args.length_grouped),
             "length_group_factor": args.length_group_factor,
@@ -3042,12 +2914,9 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
         alternates = state.get("alternates") or {}
         head.load_state_dict(state["head"], strict=True)
         if train_encoder:
-            if args.mode == "lora":
-                from peft import set_peft_model_state_dict
+            from peft import set_peft_model_state_dict
 
-                set_peft_model_state_dict(encoder, state["adapter"])
-            else:
-                _restore_lpft_state(encoder, state["encoder"])
+            set_peft_model_state_dict(encoder, state["adapter"])
         optimizer.load_state_dict(state["optimizer"])
         scheduler.load_state_dict(state["scheduler"])
         promptshield_cycle.load_state_dict(state["promptshield_cycle"])
@@ -3223,9 +3092,7 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
                     time.perf_counter() - metric_window_started,
                     np.finfo(np.float64).eps,
                 )
-                # Preserve the historical training-loss curve: it is the
-                # three-part primary objective and intentionally excludes the
-                # new auxiliary term.
+                # Preserve the historical three-part training-loss curve.
                 epoch_loss_sum += totals["primary_loss"]
                 epoch_loss_count += window_updates
                 window_metrics = {
@@ -3309,18 +3176,14 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
                     )
                     _write_snapshot_index(snapshots, curve)
                 if best is None or interim["selection_loss"] < best["loss"]:
-                    best = {
-                        "loss": interim["selection_loss"],
-                        "epoch": epoch,
-                        "updates": updates,
-                        "head": _cpu_state(head),
-                        "adapter": (
-                            _adapter_state(encoder) if args.mode == "lora" else None
-                        ),
-                        "encoder": (
-                            _lpft_state(encoder) if args.mode == "lpft" else None
-                        ),
-                    }
+                    best = _candidate_weights(
+                        mode=args.mode,
+                        head=head,
+                        encoder=encoder,
+                        epoch=epoch,
+                        updates=updates,
+                        loss=interim["selection_loss"],
+                    )
             if checkpoint_due:
                 _save_checkpoint(
                     checkpoint,
@@ -3403,14 +3266,14 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
             )
             _write_snapshot_index(snapshots, curve)
         if best is None or row["selection_loss"] < best["loss"]:
-            best = {
-                "loss": row["selection_loss"],
-                "epoch": epoch,
-                "updates": updates,
-                "head": _cpu_state(head),
-                "adapter": _adapter_state(encoder) if args.mode == "lora" else None,
-                "encoder": _lpft_state(encoder) if args.mode == "lpft" else None,
-            }
+            best = _candidate_weights(
+                mode=args.mode,
+                head=head,
+                encoder=encoder,
+                epoch=epoch,
+                updates=updates,
+                loss=row["selection_loss"],
+            )
         elapsed = prior_seconds + time.perf_counter() - started
         _save_checkpoint(
             checkpoint,
@@ -3464,19 +3327,14 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
     }
     head.load_state_dict(best["head"], strict=True)
     if train_encoder:
-        if args.mode == "lora":
-            from peft import (
-                get_peft_model_state_dict,
-                set_peft_model_state_dict,
-            )
+        from peft import (
+            get_peft_model_state_dict,
+            set_peft_model_state_dict,
+        )
 
-            set_peft_model_state_dict(encoder, best["adapter"])
-            restored = get_peft_model_state_dict(encoder)
-            selected = best["adapter"]
-        else:
-            _restore_lpft_state(encoder, best["encoder"])
-            restored = _lpft_state(encoder)
-            selected = best["encoder"]
+        set_peft_model_state_dict(encoder, best["adapter"])
+        restored = get_peft_model_state_dict(encoder)
+        selected = best["adapter"]
         if restored.keys() != selected.keys() or any(
             not torch.equal(restored[name].cpu(), selected[name]) for name in restored
         ):
@@ -3505,7 +3363,7 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=("frozen", "lora", "lpft"), default="lora")
+    parser.add_argument("--mode", choices=("frozen", "lora"), default="lora")
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
     parser.add_argument(
         "--external-dir",
@@ -3528,7 +3386,7 @@ def _parser() -> argparse.ArgumentParser:
         type=int,
         choices=SUPPORTED_MAX_TOKENS,
         default=MAX_TOKENS,
-        help="normalized-token context cap; 512 preserves the registered recipe",
+        help="normalized-token context cap; 512 preserves the historical baseline",
     )
     parser.add_argument("--shuffle-buffer", type=int, default=8192)
     parser.add_argument(
@@ -3569,7 +3427,6 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--head-learning-rate", type=float, default=3e-4)
     parser.add_argument("--adapter-learning-rate", type=float, default=1e-4)
-    parser.add_argument("--initial-head", type=Path)
     parser.add_argument("--pair-ranking-weight", type=float, default=0.25)
     parser.add_argument("--no-gradient-checkpointing", action="store_true")
     parser.add_argument("--resume", action="store_true")

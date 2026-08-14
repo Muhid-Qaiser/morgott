@@ -2,8 +2,8 @@
 
 morgott is a research POC for prompt-injection and agent-security work.
 The maintained deliverable is a reproducible, provenance-preserving data corpus.
-The current modelling deliverable is a versioned full-data frozen-mmBERT shadow, the historical reduced-mixture LoRA gate, and one completed full-mixture rank-8 LoRA seed documented in `reports/model-experiments.md`.
-Their small inference artifacts use Git LFS and are available through the explicit advisory `morgott shadow-score` command.
+The maintained model deliverable is the exact update-17,000, 1,024-token mmBERT advisory preview documented in `reports/model-experiments.md`.
+Its safe and ONNX artifacts use Git LFS and are served through the cascade and Azure API.
 No model is approved for blocking.
 
 The security design deliberately separates prediction from authority:
@@ -33,7 +33,7 @@ uv sync --locked
 make check
 ```
 
-Model research and shadow scoring require the optional encoder environment:
+Offline model research, training, and export require the optional encoder environment:
 
 ```bash
 git lfs install
@@ -101,7 +101,8 @@ container `morgott`, mirroring repo paths (`data/sources`, `data/views`,
 `data/manifest.json` and the data card `data/README.md` at the container root).
 Feature caches (`artifacts/combined_generic/`) are rebuildable and not uploaded.
 
-The rule: **any data change → `uv run morgott data` → `scripts/azsync.sh push`.**
+Rebuild with `uv run morgott data` when a change can affect published corpus output; output-neutral structural refactors may use focused equivalence tests instead.
+Run `scripts/azsync.sh push` only when rebuilt published data changes.
 Commands, auth, and new-machine bootstrap (e.g. RunPod: azcopy + the
 `MORGOTT_SAS_URL` line from `.env`, no Azure CLI needed) are in `data/README.md`.
 
@@ -166,62 +167,58 @@ ignored. `morgott scan` is shadow-only and always returns `decision: allow`.
 It verifies inputs against the canonical manifest, uses the untouched 0.5 cutoff, and reports confusion counts plus aggregate, origin-membership source, fixed-prevalence, and normalized-character length development metrics.
 Historical neural and data-ablation runners are not part of the active tree.
 Their metrics and stop decisions remain in the versioned reports and Git history.
-The selected frozen-mmBERT full-data pair-ranking candidate, reduced-mixture LoRA gate, and completed full-mixture LoRA seed are retained only as advisory first-pass research shadows under `artifacts/models/`.
-Their external transfer evidence remains too weak for blocking, and every side effect still requires deterministic policy authorization.
-The existing `shadow-score` path strictly normalizes and truncates each input to its first 512 tokens.
-The separate cascade path scans complete normalized artifacts using ordered 512-token windows with 128-token overlap.
+Historical frozen-mmBERT and 512-token LoRA artifacts remain under `artifacts/models/` as research provenance only.
+Only the exact update-17,000 candidate is registered for maintained inference.
+It scans complete normalized artifacts in ordered 1,024-token windows with 128-token overlap.
+Its external transfer evidence remains too weak for blocking, and every assessment still returns `decision: allow`.
 
 The later owner-authorized LP-FT comparison added repository-grouped SWE-rebench V2 matched pairs and substantially reduced long-task clean flags, but it collapsed on PromptShield transfer and indirect-document recall.
-That candidate was rejected, its weights are not registered, and the maintained LoRA and cascade remain unchanged.
-Its weights, scores, result records, and reproduction code are retained only for later comparison; the progress checkpoint was deleted after its digest was recorded.
+That candidate was rejected and its weights are not registered.
+Its weights, scores, result records, and archived source are retained only for later comparison; the progress checkpoint was deleted after its digest was recorded.
 None of these artifacts by themselves justify another training run; exact
 findings and limitations are in `reports/model-experiments.md`.
 
-The maintained mmBERT package can prepare the pinned external data, preflight the complete canonical mixture, train a frozen head or rank-8 LoRA, reproduce the completed LP-FT comparison, and evaluate a run:
+The maintained mmBERT package can prepare the pinned external data, preflight the complete canonical mixture, train a frozen head or rank-8 LoRA, and evaluate a run:
 
 ```bash
 uv run python -m morgott.models.mmbert.external_data
 uv run python -m morgott.models.mmbert.train \
   --preflight-only \
+  --max-tokens 1024 \
   --no-gradient-checkpointing
 uv run --extra encoder python -m morgott.models.mmbert.train \
   --mode lora \
   --microbatch-size 8 \
+  --max-tokens 1024 \
   --no-gradient-checkpointing
 uv run --extra encoder python -m morgott.models.mmbert.evaluate \
-  artifacts/mmbert/runs/mmbert-lora-full-s42
+  artifacts/mmbert/runs/mmbert-lora-full-s42-ctx1024
 ```
 
 The trainer streams every canonical training row with source-supported injection labels after the external leakage guard, then adds filtered PromptShield training rows and the retained matched pairs.
 Future preflights use a separate, stricter audit fingerprint for overlap filtering without changing canonical hashes or registered model input.
-Its frozen, LoRA, and LP-FT modes share one data contract, loss, checkpoint rule, and artifact format.
-LP-FT and additional-pair support are retained only to reproduce the completed rejected comparison.
-The registered full-mixture LoRA identity fails closed unless it uses microbatch 8 with gradient checkpointing disabled; a different execution recipe needs a different run identity.
+Its frozen and LoRA modes share one data contract, loss, checkpoint rule, and artifact format.
+Generic additional-pair support remains because the registered 1,024-token LoRA candidate used the pinned matched-pair archive.
+The rejected LP-FT implementation is provenance-only in the archived campaign source and is not a maintained training mode.
+The registered snapshot retains its archived 1,024-token execution identity; a new training recipe produces a different run and does not replace it.
 The single generic output treats direct injection, indirect injection, and jailbreak as positive instruction subversion and does not expose separate subtype scores.
 Source-supported harmful content without subversion may remain as a negative counterexample; this is not a harmfulness score.
 It keeps the retained SDPA attention contract; an FA2 run requires its own pinned kernel and mmBERT parity record.
 Having a maintained runner does not waive the evidence gates in
 `docs/roadmap.md` or promote its output.
 
-The registered model keys and exact hashes are in `model-artifacts.json`.
-Score downstream JSONL without producing a decision:
-
-```bash
-uv run --extra encoder morgott shadow-score \
-  mmbert-frozen-s42 input.jsonl scores.jsonl
-```
-
-Each input row must contain unique `id`, non-empty `text`, and trusted `input_channel` set to `direct_user` or `untrusted_content`.
-The output contains only the raw score, channel, model revision, and artifact hashes.
-Use `mmbert-frozen-s42`, `mmbert-lora-s42`, or `mmbert-lora-full-s42`.
-Do not average or OR them without evaluating that new ensemble.
+The sole registered model key and its exact hashes are in `model-artifacts.json`.
+Use the ONNX cascade below or the Azure API for maintained assessment.
 
 ## Shadow cascade POC
 
-The maintained cascade serves the registered FP32 ONNX graph through OpenVINO BF16 on CPU.
-OpenVINO performs the BF16 lowering at startup, so there is one portable model artifact rather than a second precision-specific copy.
+The maintained cascade defaults to `mmbert-lora-full-ctx1024-u17000-s42` and serves its registered FP32 ONNX graph through OpenVINO on CPU.
+The Azure preview requests `auto`: OpenVINO uses BF16 when the assigned CPU exposes it and otherwise uses FP32.
+`/v1/status` reports both the requested and selected precision.
+There is one portable model artifact rather than a precision-specific copy.
 It passes direct-user scores below `0.2` and untrusted-content scores below `0.1`, and it restricts local scores at or above `0.99999`.
-With remote review enabled, multi-window untrusted content without a local high first sends the complete normalized artifact to DeepSeek V4 Flash.
+OpenRouter credentials are mandatory at maintained cascade startup, but provider calls occur only for inputs that reach the existing review route.
+Multi-window untrusted content without a local high first sends the complete normalized artifact to DeepSeek V4 Flash.
 A full-context flag restricts immediately, while a clear result falls back to the existing middle-zone window reviews in batches of up to 4.
 Direct-user and single-window behavior remain unchanged, and the 128-window cap applies to the complete multi-window artifact.
 The synthetic full-context review record uses window index `-1`; ordinary window records retain their nonnegative tokenizer-window indexes.
@@ -246,35 +243,38 @@ Historical trainer, evaluator, and lockfile hashes remain immutable provenance w
 
 ```bash
 uv run --extra encoder --extra encoder-export \
-  python -m morgott.models.mmbert.export_onnx export
-uv run --extra cascade \
+  python -m morgott.models.mmbert.export_onnx export \
+  --model-key mmbert-lora-full-ctx1024-u17000-s42
+uv run --extra cascade --extra encoder-export \
   python -m morgott.models.mmbert.export_onnx verify-panel \
+  --model-key mmbert-lora-full-ctx1024-u17000-s42 \
   --deepseek-evidence \
   artifacts/openrouter_downstream_eval/deepseek_0731_runtime_evidence.jsonl.gz
 uv run --extra cascade \
-  python -m morgott.models.mmbert.export_onnx benchmark
+  python -m morgott.models.mmbert.export_onnx benchmark \
+  --model-key mmbert-lora-full-ctx1024-u17000-s42
 ```
 
 The benchmark prints deployment measurements to stdout and never overwrites registered evidence.
 The verification command also treats its evidence as write-once; use a fresh `--output` directory for a new candidate.
+Export compares the retained SDPA path with eager PyTorch and ONNX Runtime on both short and exactly 1,024-token inputs.
 The production constructor fails closed until the ONNX model and tokenizer hashes are registered under the full-LoRA model in `model-artifacts.json`.
-Register a serving runtime only after representative export parity, the frozen 20,000-row serving-equivalence gate, and deployment-CPU latency and throughput gates pass.
+Register a serving runtime only after representative export parity and the frozen 20,000-row serving-equivalence gate pass, with deployment-CPU latency and throughput recorded separately.
 The verifier binds every provider record to the current prompt, request, model, provider, panel row, and trusted channel; stale prompt evidence fails closed.
 These are already-open shadow engineering results, not new production-quality claims.
-Later-window document behavior is new shadow evidence and is not covered by the retained 512-token evaluation.
+The exact 1,024-token update-17,000 native evaluation is bound to the safe serving package, while later-window document aggregation remains new shadow behavior.
 
 DeepSeek V4 Flash 0731 replaces the April reviewer under the owner's aggregate-quality criterion, but the gain is not uniform and all results remain advisory.
 The exact replacement evidence is in `reports/deepseek-v4-flash-0731-research.md`; the broader model, workload, robustness, and rejected-candidate findings are in `reports/model-experiments.md`; stateful containment findings are in `reports/agentdojo-integration-research.md` and `reports/agent-security-benchmark-options.md`.
 Keep exact experiment metrics in those reports so this operational README does not become a second model ledger.
 
-Run a local-only assessment:
+Run an assessment after setting `OPENROUTER_API_KEY`:
 
 ```bash
 uv run --extra cascade morgott cascade input.txt \
   --input-channel direct_user
 ```
 
-Add `--allow-remote` only when eligible text may leave the process and `OPENROUTER_API_KEY` is set.
 For multi-window untrusted content, eligible text includes the complete normalized artifact before any middle-zone fallback.
 Files and stdin are read in bounded chunks, normalized only after the complete artifact arrives, and scanned without a configured maximum input length.
 The current whole-artifact normalization is intentionally O(N) memory.
@@ -284,7 +284,6 @@ Applications use the same narrow async interface:
 ```python
 scanner = CascadeScanner.from_artifacts(
     manifest_path=Path("model-artifacts.json"),
-    allow_remote=True,
 )
 try:
     assessment = await scanner.assess_text(text, input_channel="direct_user")
@@ -296,8 +295,62 @@ The maintained remote path uses NOOA `CompletionClient` only.
 The Predict-only agent example is in `examples/nooa_preflight.py`; the rejected measured alternative is retained only as metrics and hashes in the evaluation report.
 Neither path uses CodeAct, generated Python, memory, plugins, or tracing.
 
-Before deployment, benchmark the target CPU and require a warm p95 below 500 ms for one 512-token local request plus sustained 5 QPS with zero errors.
-Use two identical worker processes if one process misses 5 QPS before considering schedulers or dynamic batching.
+For this non-production preview, p95 below two seconds and at least 0.5 QPS are recorded targets rather than blocking gates.
+The deployment uses one model worker.
+
+## Azure preview deployment
+
+The Waleed subscription deployment creates one Basic ACR, one 2-vCPU/4-GiB Container App, one Standard Service Bus namespace and queue, one Standard Key Vault, one managed identity, and a 30-day Log Analytics workspace in `morgott-preview-rg`.
+The scheduled job enqueues one versioned command at 02:00 UTC, and the API consumer verifies the Blob manifest before running fixed synthetic canaries.
+API text, canary text, corpus rows, credentials, and provider responses are never logged.
+Routing scratch SQLite, Trackio SQLite, and experiment ledgers remain local.
+
+```bash
+scripts/deploy-azure.sh
+scripts/check-azure-milestone.sh
+```
+
+### Using the Azure API
+
+Sign in as `waleed@vulsight.com`, then retrieve the live endpoint and shared API key without printing the credential:
+
+```bash
+az account set --subscription 25d0cf2e-a75c-46f5-b26c-f57a48f96967
+api_url="https://$(az containerapp show \
+  --name morgott-api \
+  --resource-group morgott-preview-rg \
+  --query properties.configuration.ingress.fqdn \
+  --output tsv)"
+api_key=$(az keyvault secret show \
+  --vault-name morgott-vulsight-kv \
+  --name morgott-api-key \
+  --query value \
+  --output tsv)
+
+curl --fail --silent --show-error "$api_url/v1/assess" \
+  -H "Authorization: Bearer $api_key" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Please summarize this document","input_channel":"direct_user"}' \
+  | jq
+
+unset api_key
+```
+
+`GET /healthz` is unauthenticated.
+`GET /v1/status` and `POST /v1/assess` require the bearer key.
+Assessment input accepts `direct_user` or `untrusted_content`, and every response remains advisory with `decision: allow`.
+
+The deployment copies only `OPENROUTER_API_KEY`, either matching Hugging Face token alias, `MORGOTT_SAS_URL`, optional `OPENAI_API_KEY`, and a generated shared API credential into Key Vault without expiry metadata.
+Only the OpenRouter and shared API secrets are exposed to the app.
+Additional company-owned provider credentials may be stored under explicit Key Vault names when needed, but this preview has no personal BYOK database, selector, or UI.
+Blob, Service Bus, ACR pull, and Key Vault access use the user-assigned managed identity.
+The $100 monthly budget sends alerts at 50, 80, and 100 percent; it does not cap spending or stop resources.
+The deployment validates a zero-traffic candidate revision while an existing revision stays live, or keeps ingress disabled during a first deployment.
+It verifies the selected BF16 or FP32 runtime plus auth, bounds, advisory behavior, Blob, Service Bus, OpenRouter, memory, and 30-request smoke gates before assigning 100 percent traffic.
+`scripts/check-azure-milestone.sh` tracks only the five intended workloads and their rolling 61-day posted costs.
+That calculation is an operational proxy; the Microsoft for Startups portal remains the eligibility authority and should be checked weekly.
+After the Startup portal also shows five workloads, rerun it with `--portal-confirmed` to save the local day-zero marker.
+Keep one replica until all five intended workloads have posted at least $1, then scale the preview to zero with `az containerapp update --name morgott-api --resource-group morgott-preview-rg --min-replicas 0`; the HTTP and Service Bus rules wake it for API calls and the daily canary, while a later deployment intentionally restores one replica for validation.
 
 The first proper routing experiment should stay deliberately small:
 
@@ -326,6 +379,7 @@ is promoted; their durable conclusions are summarized in
 - `tests/`: maintained data, detector, and policy invariants.
 - `artifacts/models/`: the registered advisory model artifacts plus the retained unregistered LP-FT comparison candidate.
 - `experiments/`: rules for disposable or study-specific experiments that do not belong in maintained model code.
+- `scripts/package-mmbert-snapshot.py`: one-model operator script that materializes the retained 1,024-token snapshot into safe serving artifacts.
 - `data/manifest.json`: sole versioned machine data manifest.
 - `reports/dataset-selection.md`: source inclusion and exclusion decisions.
 - `reports/label-audit.md`: label interpretation and known ambiguity.

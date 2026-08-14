@@ -704,7 +704,7 @@ Decision: retain frozen mmBERT with full-balanced BCE and pair ranking at weight
 It moved the SEP tail in all three seeds without an aggregate finance false-positive regression.
 Absolute transfer remains weak because mean canonical-threshold SEP TPR is only 0.27%.
 The model is not wired into `morgott scan` and is not approved for blocking, authorization, transaction approval, or privilege grants.
-The maintained `morgott shadow-score` command verifies the registered artifacts and emits raw scores plus provenance without an authorization decision.
+At the time, `morgott shadow-score` verified the registered 512-token artifacts and emitted raw scores plus provenance without an authorization decision; that command was retired when maintained inference became 1,024-only.
 Trusted provenance must route its score, and every financial or Web3 side effect must still pass the deterministic reference monitor.
 
 The old 81.14% number is not a competing result on this task.
@@ -1296,9 +1296,32 @@ checksum-verified copies of all 21 aggregate result JSONs under
 snapshots through Git LFS under
 `reports/provenance/mmbert-context-checkpoints-20260812/`, and both curated and
 pre-curation Trackio databases through Git LFS under
-`reports/provenance/trackio-20260812/`. The snapshots remain advisory and
-unregistered; per-row score journals are reproducible caches rather than the
-only copy of any finding.
+`reports/provenance/trackio-20260812/`.
+At consolidation time the snapshots remained advisory and unregistered; the
+update-17,000 registration decision below occurred later.
+Per-row score journals are reproducible caches rather than the only copy of any
+finding.
+
+### Update 17,000 registered for the advisory preview (2026-08-14)
+
+`mmbert-lora-full-ctx1024-u17000-s42` is the sole model registered for
+maintained inference.
+The registration packages the checksum-verified update-17,000 snapshot into
+safe head and PEFT adapter files, exports one FP32 ONNX graph, and binds the
+native 1,024-token evaluation plus the ONNX Runtime/OpenVINO serving-equivalence
+evidence recorded in `model-artifacts.json`.
+
+Licensing review permits private internal use only: the base encoder is MIT,
+while mixed-corpus redistribution remains unresolved, so neither the derived
+weights nor the image may be pushed to a public or external model registry.
+The privacy review found no explicit corpus rows, prompts, provider responses,
+or credentials in the packaged head, adapter, tokenizer, ONNX, or evidence
+files.
+The reproducibility review binds the archived snapshot digest, pinned base-model
+revision, tokenizer, source result and evaluation, materialized safe artifacts,
+and serving evidence before load.
+The model remains advisory, every assessment returns `decision: allow`, and
+registration does not promote it to a blocking control.
 
 ### LP-FT arm rejected again
 
@@ -1318,7 +1341,7 @@ not on one common threshold scale.
 
 | System | Canonical | PromptShield | SEP | Reserve attested | Reserve bare-harmful |
 |---|---:|---:|---:|---:|---:|
-| mmbert-lora-full-s42 (registered) | 55.2% | 48.0% | 38.8% | 43.0% | 9.3% |
+| mmbert-lora-full-s42 (registered at the time) | 55.2% | 48.0% | 38.8% | 43.0% | 9.3% |
 | Full pipeline (encoder + selective review) | n/a | n/a | n/a | 91.7% | 22.9% |
 | Llama Prompt Guard 2 86M | 43.1% | 15.7% | 3.3% | 80.0% | 2.6% |
 | ModernGuard-1 | 0.0% | 0.1% | 2.4% | 99.2% | 81.3% |
@@ -1331,17 +1354,17 @@ attested reserve attacks while flagging 81.3% and 95.7% of bare-harmful rows and
 10.9% to 13.6% of canonical benign rows at native cutoff: they approximate
 flag-everything, and their low-FPR coordinates are near the floor because their
 scores saturate at 1.0. The jailbreak head is the opposite degenerate case. Only
-the registered shadow and Prompt Guard 2 separate the two reserve classes, and
+the then-registered shadow and Prompt Guard 2 separate the two reserve classes, and
 Prompt Guard 2 is the more selective of the two on the off-target class.
 
-The reserve also reproduces the open-panel gap: the registered shadow recalls
+The reserve also reproduces the open-panel gap: the then-registered shadow recalls
 43.05% of attested reserve rows against 86.57% on canonical. The harness records
 this as descriptive, since the populations differ in composition as well as in
 publication status.
 
-The registered row above previously carried the Aug 7 length-grouped arm's
+The then-registered row above previously carried the Aug 7 length-grouped arm's
 70.2% / 40.2% / 59.5% values under the registered model's name. The corrected
-55.2% / 48.0% / 38.8% values come from the current registered rescore at
+55.2% / 48.0% / 38.8% values come from the then-current registered rescore at
 `artifacts/comparisons/mmbert-lora-full-s42-rescore/evaluation.json`.
 
 Prompt Guard's current-panel artifact is

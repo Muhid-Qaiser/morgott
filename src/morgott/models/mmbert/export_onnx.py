@@ -17,9 +17,9 @@ from pathlib import Path
 import numpy as np
 
 from ..deepseek_nooa import (
+    EVALUATION_REQUEST_SHA256,
     MAX_ATTEMPTS,
     PROMPT_SHA256,
-    REQUEST_SHA256,
 )
 from ..deepseek_nooa import (
     MODEL as DEEPSEEK_MODEL,
@@ -43,13 +43,20 @@ from .core import (
     pool,
 )
 from .inference import load_bundle
-from .serving import DEFAULT_MODEL_KEY, MmbertRuntime
+from .serving import (
+    DEFAULT_MODEL_KEY,
+    EXPORT_FORMAT,
+    MODEL_MAX_TOKENS,
+    VERIFICATION_FORMAT,
+    WINDOW_OVERLAP,
+    MmbertRuntime,
+    Window,
+    _score_windows,
+)
 
 ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_MANIFEST = ROOT / "model-artifacts.json"
-DEFAULT_OUTPUT = ROOT / "artifacts/models/mmbert-lora-full-s42/serving"
 OPSET_VERSION = 18
-VERIFICATION_FORMAT = "openvino-cpu-bf16-panel-study-v2"
 BENCHMARK_FORMAT = "openvino-bf16-cpu-benchmark-v1"
 REMOTE_EVIDENCE_FIELDS = {
     "attempts",
@@ -71,13 +78,13 @@ REMOTE_EVIDENCE_FIELDS = {
 }
 
 
-def _load_model(manifest_path: Path):
+def _load_model(manifest_path: Path, model_key: str):
     import torch
     from peft import PeftModel, get_peft_model_state_dict
     from safetensors.torch import load_file
     from transformers import AutoModel, AutoTokenizer
 
-    bundle = load_bundle(manifest_path, DEFAULT_MODEL_KEY)
+    bundle = load_bundle(manifest_path, model_key)
     tokenizer = AutoTokenizer.from_pretrained(
         MODEL_ID,
         revision=MODEL_REVISION,
@@ -126,7 +133,7 @@ def _load_model(manifest_path: Path):
     return ServingModel().eval(), tokenizer, bundle
 
 
-def _representative_inputs(tokenizer):
+def _representative_inputs(tokenizer, max_tokens: int):
     short = tokenizer(
         [
             "ordinary account support question",
@@ -137,23 +144,109 @@ def _representative_inputs(tokenizer):
         return_tensors="pt",
     )
     long = tokenizer(
-        [" ".join(["ordinary"] * 600)],
+        [" ".join(["ordinary"] * (max_tokens * 2))],
         add_special_tokens=True,
-        max_length=512,
+        max_length=max_tokens,
         return_tensors="pt",
         truncation=True,
     )
-    return tuple(
+    representative = tuple(
         (values["input_ids"], values["attention_mask"]) for values in (short, long)
     )
+    lengths = [int(input_ids.shape[1]) for input_ids, _ in representative]
+    if not 0 < lengths[0] < max_tokens or lengths[1] != max_tokens:
+        raise ValueError("representative inputs do not cover short and full context")
+    return representative
 
 
-def _export(model, tokenizer, output: Path) -> dict:
-    import onnxruntime as ort
+def _model_outputs(model, representative, attention_implementation: str):
     import torch
 
-    representative = _representative_inputs(tokenizer)
-    input_ids, attention_mask = representative[-1]
+    model.encoder.set_attn_implementation(attention_implementation)
+    if model.encoder.config._attn_implementation != attention_implementation:
+        raise ValueError("model did not select the requested attention implementation")
+    with torch.no_grad():
+        return tuple(
+            model(input_ids, attention_mask).detach().cpu().numpy()
+            for input_ids, attention_mask in representative
+        )
+
+
+def _parity_metrics(reference, actual, *, label: str) -> dict:
+    import torch
+
+    max_abs_error = 0.0
+    max_probability_error = 0.0
+    for expected, observed in zip(reference, actual, strict=True):
+        error = float(np.max(np.abs(expected - observed)))
+        if not np.allclose(expected, observed, rtol=1e-4, atol=1e-4):
+            raise ValueError(f"{label} representative parity failed: {error}")
+        max_abs_error = max(max_abs_error, error)
+        max_probability_error = max(
+            max_probability_error,
+            float(
+                np.max(
+                    np.abs(
+                        torch.sigmoid(torch.from_numpy(expected)).numpy()
+                        - torch.sigmoid(torch.from_numpy(observed)).numpy()
+                    )
+                )
+            ),
+        )
+    return {
+        "passed": True,
+        "max_abs_logit_error": max_abs_error,
+        "max_abs_probability_error": max_probability_error,
+    }
+
+
+def _representative_parity(model, tokenizer, onnx_path: Path, *, max_tokens: int):
+    import onnxruntime as ort
+
+    representative = _representative_inputs(tokenizer, max_tokens)
+    try:
+        sdpa = _model_outputs(model, representative, ATTENTION_IMPLEMENTATION)
+        eager = _model_outputs(model, representative, "eager")
+    finally:
+        model.encoder.set_attn_implementation("eager")
+    session = ort.InferenceSession(
+        str(onnx_path),
+        providers=["CPUExecutionProvider"],
+    )
+    onnx = tuple(
+        session.run(
+            None,
+            {
+                "input_ids": input_ids.numpy().astype(np.int64),
+                "attention_mask": attention_mask.numpy().astype(np.int64),
+            },
+        )[0]
+        for input_ids, attention_mask in representative
+    )
+    comparisons = {
+        "sdpa_to_eager": _parity_metrics(sdpa, eager, label="SDPA-to-eager"),
+        "sdpa_to_onnx": _parity_metrics(sdpa, onnx, label="SDPA-to-ONNX"),
+        "eager_to_onnx": _parity_metrics(eager, onnx, label="eager-to-ONNX"),
+    }
+    eager_to_onnx = comparisons["eager_to_onnx"]
+    return {
+        "rows": sum(len(values) for values in sdpa),
+        "sequence_lengths": [
+            int(input_ids.shape[1]) for input_ids, _ in representative
+        ],
+        "max_abs_logit_error": eager_to_onnx["max_abs_logit_error"],
+        "max_abs_probability_error": eager_to_onnx["max_abs_probability_error"],
+        "rtol": 1e-4,
+        "atol": 1e-4,
+        "comparisons": comparisons,
+    }
+
+
+def _export(model, tokenizer, output: Path, *, max_tokens: int) -> dict:
+    import torch
+
+    model.encoder.set_attn_implementation("eager")
+    input_ids, attention_mask = _representative_inputs(tokenizer, max_tokens)[-1]
     torch.onnx.export(
         model,
         (input_ids, attention_mask),
@@ -169,64 +262,31 @@ def _export(model, tokenizer, output: Path) -> dict:
         do_constant_folding=True,
         dynamo=False,
     )
-    session = ort.InferenceSession(
-        str(output),
-        providers=["CPUExecutionProvider"],
+    return _representative_parity(
+        model,
+        tokenizer,
+        output,
+        max_tokens=max_tokens,
     )
-    max_abs_error = 0.0
-    max_probability_error = 0.0
-    sequence_lengths = []
-    rows = 0
-    for input_ids, attention_mask in representative:
-        with torch.no_grad():
-            reference = model(input_ids, attention_mask).numpy()
-        actual = session.run(
-            None,
-            {
-                "input_ids": input_ids.numpy().astype(np.int64),
-                "attention_mask": attention_mask.numpy().astype(np.int64),
-            },
-        )[0]
-        error = float(np.max(np.abs(reference - actual)))
-        if not np.allclose(reference, actual, rtol=1e-4, atol=1e-4):
-            raise ValueError(f"ONNX representative parity failed: {error}")
-        max_abs_error = max(max_abs_error, error)
-        max_probability_error = max(
-            max_probability_error,
-            float(
-                np.max(
-                    np.abs(
-                        torch.sigmoid(torch.from_numpy(reference)).numpy()
-                        - torch.sigmoid(torch.from_numpy(actual)).numpy()
-                    )
-                )
-            ),
-        )
-        rows += len(reference)
-        sequence_lengths.append(int(input_ids.shape[1]))
-    return {
-        "rows": rows,
-        "sequence_lengths": sequence_lengths,
-        "includes_short_input": any(length < 512 for length in sequence_lengths),
-        "includes_512_token_input": 512 in sequence_lengths,
-        "max_abs_logit_error": max_abs_error,
-        "max_abs_probability_error": max_probability_error,
-        "rtol": 1e-4,
-        "atol": 1e-4,
-    }
 
 
 def export(
     manifest_path: Path = DEFAULT_MANIFEST,
-    output: Path = DEFAULT_OUTPUT,
+    output: Path | None = None,
+    *,
+    model_key: str = DEFAULT_MODEL_KEY,
 ) -> dict:
+    output = output or ROOT / "artifacts/models" / model_key / "serving"
     output = output.resolve()
     if not output.is_relative_to(ROOT):
         raise ValueError("serving artifact must remain inside the repository")
     if output.exists():
         raise FileExistsError(f"refusing to replace serving artifact: {output}")
     output.parent.mkdir(parents=True, exist_ok=True)
-    model, tokenizer, bundle = _load_model(manifest_path)
+    model, tokenizer, bundle = _load_model(manifest_path, model_key)
+    max_tokens = bundle["result"].get("max_tokens")
+    if max_tokens != MODEL_MAX_TOKENS:
+        raise ValueError("registered model has an unsupported context length")
     with tempfile.TemporaryDirectory(
         prefix=".serving-",
         dir=output.parent,
@@ -234,7 +294,7 @@ def export(
         temporary = Path(temporary_name)
         onnx_path = temporary / "model.onnx"
         tokenizer_path = temporary / "tokenizer.json"
-        parity = _export(model, tokenizer, onnx_path)
+        parity = _export(model, tokenizer, onnx_path, max_tokens=max_tokens)
         from huggingface_hub import hf_hub_download
 
         source_tokenizer = Path(
@@ -252,8 +312,8 @@ def export(
         ):
             raise ValueError("downloaded tokenizer differs from the registry")
         result = {
-            "format": "onnx-fp32-v1",
-            "model_key": DEFAULT_MODEL_KEY,
+            "format": EXPORT_FORMAT,
+            "model_key": model_key,
             "model_id": MODEL_ID,
             "model_revision": MODEL_REVISION,
             "source_result_sha256": bundle["result_sha256"],
@@ -262,6 +322,8 @@ def export(
             "source_attention_implementation": ATTENTION_IMPLEMENTATION,
             "export_attention_implementation": "eager",
             "opset": OPSET_VERSION,
+            "max_tokens": max_tokens,
+            "window_overlap": WINDOW_OVERLAP,
             "onnx": {
                 "path": str((output / "model.onnx").relative_to(ROOT)),
                 "sha256": file_sha256(onnx_path),
@@ -285,28 +347,32 @@ def export(
 def verify_panel(
     manifest_path: Path = DEFAULT_MANIFEST,
     panel_dir: Path = ROOT / "artifacts/openrouter_downstream_eval",
-    output: Path = DEFAULT_OUTPUT,
+    output: Path | None = None,
     *,
     deepseek_evidence_path: Path,
+    model_key: str = DEFAULT_MODEL_KEY,
 ) -> dict:
-    from .data import canonical_rows, external_rows, routing_views
-
+    output = (output or ROOT / "artifacts/models" / model_key / "serving").resolve()
     evidence_path = (output / "verification.json").resolve()
     if evidence_path.exists():
         raise FileExistsError(
             f"refusing to replace verification evidence: {evidence_path}"
         )
-    runtime = _candidate_runtime(manifest_path, output)
-    registry = json.loads(manifest_path.read_text(encoding="utf-8"))
-    entry = registry["models"][DEFAULT_MODEL_KEY]
-    score_path = manifest_path.parent / entry["scores"]["path"]
-    if file_sha256(score_path) != entry["scores"]["sha256"]:
-        raise ValueError("reference score array hash mismatch")
-    reference = np.load(score_path, allow_pickle=False)[:, 1]
-    evaluation = json.loads(
-        (manifest_path.parent / entry["evaluation"]["path"]).read_text(encoding="utf-8")
+
+    import onnxruntime as ort
+
+    from ...data import iter_verified_jsonl
+    from .data import canonical_rows, external_rows, routing_views
+
+    runtime = _candidate_runtime(
+        manifest_path,
+        output,
+        model_key=model_key,
     )
-    slices = evaluation["scores"]["slices"]
+    reference_session = ort.InferenceSession(
+        str(output / "model.onnx"),
+        providers=["CPUExecutionProvider"],
+    )
 
     panel_manifest = json.loads(
         (panel_dir / "manifest.json").read_text(encoding="utf-8")
@@ -316,72 +382,73 @@ def verify_panel(
         raise ValueError("frozen panel hash mismatch")
     panel = list(_jsonl_rows(panel_path))
     needed = {
-        dataset: {
-            row["source_index"]: row for row in panel if row["dataset"] == dataset
-        }
+        dataset: {row["row_id"]: row for row in panel if row["dataset"] == dataset}
         for dataset in ("canonical", "promptshield", "sep")
     }
     texts: dict[str, str] = {}
     views = routing_views(ROOT / "data")
-    dev_path, dev_spec = views["dev_test"]
-    if dev_spec["sha256"] != panel_manifest["inputs"]["canonical_dev_test"]["sha256"]:
-        raise ValueError("canonical panel source changed")
-    for index, row in enumerate(canonical_rows(dev_path, dev_spec, split="dev_test")):
-        if index in needed["canonical"]:
-            _accept_text(texts, needed["canonical"][index], row)
+    for split, (path, spec) in views.items():
+        for row in canonical_rows(path, spec, split=split):
+            panel_row = needed["canonical"].get(row["id"])
+            if panel_row is not None:
+                _accept_text(texts, panel_row, row)
+    data_manifest = json.loads(
+        (ROOT / "data/manifest.json").read_text(encoding="utf-8")
+    )
+    quarantine_spec = data_manifest["quarantines"]["routing"]
+    for row in iter_verified_jsonl(
+        ROOT / "data" / quarantine_spec["path"],
+        quarantine_spec["sha256"],
+    ):
+        panel_row = needed["canonical"].get(row["id"])
+        if panel_row is not None:
+            _accept_text(texts, panel_row, row)
     external, _ = external_rows(ROOT / "artifacts/mmbert/data")
     for dataset, source in (
         ("promptshield", "promptshield_test"),
         ("sep", "sep"),
     ):
-        for index, row in enumerate(external[source]):
-            if index in needed[dataset]:
-                _accept_text(texts, needed[dataset][index], row)
+        for row in external[source]:
+            panel_row = needed[dataset].get(row["id"])
+            if panel_row is not None:
+                _accept_text(texts, panel_row, row)
     if len(texts) != len(panel):
         raise ValueError("could not reload every frozen panel row")
+
+    panel_started = time.perf_counter()
+    windows = []
+    long_rows = 0
+    for row in panel:
+        prepared = runtime.prepare(texts[row["panel_id"]])
+        long_rows += len(prepared.windows) > 1
+        windows.append(prepared.windows[0])
 
     candidate_scores = []
     reference_scores = []
     mismatch_count = 0
-    long_rows = 0
-    panel_started = time.perf_counter()
-    for position, row in enumerate(panel, 1):
-        prepared = runtime.prepare(texts[row["panel_id"]])
-        long_rows += len(prepared.windows) > 1
-        # The retained PyTorch panel truncated at 512 tokens. Conversion parity
-        # therefore compares its exact first window; later-window behavior is a
-        # new shadow-only document policy and needs prospective evaluation.
-        score = runtime.score((prepared.windows[0],))[0]
-        start = slices[
-            {
-                "canonical": "dev_test",
-                "promptshield": "promptshield",
-                "sep": "sep",
-            }[row["dataset"]]
-        ][0]
-        expected = float(reference[start + row["source_index"]])
-        candidate_scores.append(score)
-        reference_scores.append(expected)
-        if (
+    for start in range(0, len(panel), 1000):
+        rows = panel[start : start + 1000]
+        block = tuple(windows[start : start + 1000])
+        candidate = runtime.score_batch(block, batch_size=4)
+        reference = _onnx_probabilities(reference_session, block, batch_size=4)
+        candidate_scores.extend(candidate)
+        reference_scores.extend(reference)
+        mismatch_count += sum(
             route(score, input_channel=row["input_channel"]).route
-            != route(
-                expected,
-                input_channel=row["input_channel"],
-            ).route
-        ):
-            mismatch_count += 1
-        if position % 1000 == 0:
-            print(
-                json.dumps(
-                    {
-                        "verified": position,
-                        "zone_mismatches": mismatch_count,
-                    },
-                    sort_keys=True,
-                ),
-                file=sys.stderr,
-                flush=True,
-            )
+            != route(expected, input_channel=row["input_channel"]).route
+            for row, score, expected in zip(rows, candidate, reference, strict=True)
+        )
+        print(
+            json.dumps(
+                {
+                    "verified": min(start + 1000, len(panel)),
+                    "zone_mismatches": mismatch_count,
+                },
+                sort_keys=True,
+            ),
+            file=sys.stderr,
+            flush=True,
+        )
     panel_seconds = time.perf_counter() - panel_started
     records, calibration_ids = _deepseek_evidence(
         panel_dir,
@@ -418,15 +485,23 @@ def verify_panel(
     result = {
         "format": VERIFICATION_FORMAT,
         "advisory_only": True,
-        "model_key": DEFAULT_MODEL_KEY,
+        "model_key": model_key,
         "source_onnx_sha256": runtime.identity.onnx_sha256,
         "tokenizer_sha256": runtime.identity.tokenizer_sha256,
         "panel_sha256": panel_manifest["panel"]["sha256"],
+        "panel_text_replay": "row_id_and_text_sha256",
+        "current_canonical_replay_sha256": {
+            **{split: spec["sha256"] for split, (_, spec) in views.items()},
+            "quarantine": quarantine_spec["sha256"],
+        },
+        "bound_canonical_dev_test_sha256": panel_manifest["inputs"][
+            "canonical_dev_test"
+        ]["sha256"],
         "deepseek_evidence": {
             "model": DEEPSEEK_MODEL,
             "provider": DEEPSEEK_PROVIDER,
             "prompt_sha256": PROMPT_SHA256,
-            "request_sha256": REQUEST_SHA256,
+            "request_sha256": EVALUATION_REQUEST_SHA256,
             "sha256": _jsonl_sha256(deepseek_evidence_path),
         },
         "rows": len(panel),
@@ -450,6 +525,21 @@ def verify_panel(
         raise ValueError("OpenVINO BF16 failed the serving quality gate")
     _write_json(evidence_path, result)
     return result
+
+
+def _onnx_probabilities(
+    session,
+    windows: tuple[Window, ...],
+    *,
+    batch_size: int,
+) -> tuple[float, ...]:
+    def infer(inputs: dict[str, np.ndarray]):
+        outputs = session.run(None, inputs)
+        if len(outputs) != 1:
+            raise ValueError("ONNX reference returned an invalid output count")
+        return outputs[0]
+
+    return _score_windows(windows, batch_size=batch_size, infer=infer)
 
 
 def _deepseek_evidence(
@@ -492,12 +582,12 @@ def _validate_remote_evidence(record: dict) -> None:
         not isinstance(panel_id, str)
         or not panel_id
         or record["prompt_sha256"] != PROMPT_SHA256
-        or record["request_sha256"] != REQUEST_SHA256
+        or record["request_sha256"] != EVALUATION_REQUEST_SHA256
         or record["model"] != DEEPSEEK_MODEL
         or record["provider"] != DEEPSEEK_PROVIDER
         or record["job_id"]
         != hashlib.sha256(
-            f"{PROMPT_SHA256}\0{REQUEST_SHA256}\0{panel_id}".encode()
+            f"{PROMPT_SHA256}\0{EVALUATION_REQUEST_SHA256}\0{panel_id}".encode()
         ).hexdigest()
         or record["input_channel"] not in {"direct_user", "untrusted_content"}
         or not isinstance(record["dataset"], str)
@@ -682,19 +772,22 @@ def _ratio(numerator: int, denominator: int) -> float | None:
 def benchmark(
     manifest_path: Path = DEFAULT_MANIFEST,
     *,
-    output: Path = DEFAULT_OUTPUT,
+    output: Path | None = None,
     warmup: int = 10,
     requests: int = 100,
+    model_key: str = DEFAULT_MODEL_KEY,
 ) -> dict:
     if warmup < 1 or requests < 1:
         raise ValueError("warmup and requests must be positive")
-    runtime = _candidate_runtime(manifest_path, output)
-    seed = runtime.prepare("ordinary " * 1000)
+    output = (output or ROOT / "artifacts/models" / model_key / "serving").resolve()
+    runtime = _candidate_runtime(manifest_path, output, model_key=model_key)
+    max_tokens = runtime.max_tokens
+    seed = runtime.prepare("ordinary " * (max_tokens * 2))
     first_window = seed.windows[0]
     text = seed.normalized_text[first_window.char_start : first_window.char_end]
     prepared = runtime.prepare(text)
-    if len(prepared.windows) != 1 or len(prepared.windows[0].input_ids) != 512:
-        raise ValueError("could not construct the 512-token benchmark input")
+    if len(prepared.windows) != 1 or len(prepared.windows[0].input_ids) != max_tokens:
+        raise ValueError("could not construct the max-token benchmark input")
     for _ in range(warmup):
         runtime.score(runtime.prepare(text).windows)
     representative_probability = runtime.score(prepared.windows)[0]
@@ -721,15 +814,13 @@ def benchmark(
         "reported_inference_precision": runtime.identity.reported_inference_precision,
         "representative_logit": representative_logit,
         "source_onnx_sha256": runtime.identity.onnx_sha256,
-        "source_onnx_bytes": (output / "model.onnx").stat().st_size,
         "threads": runtime.identity.threads,
         "requested_inference_precision": "bf16",
+        "max_tokens": max_tokens,
         "warmup_requests": warmup,
         "measured_requests": requests,
         "p95_ms": p95_ms,
         "qps": qps,
-        "p95_below_500_ms": p95_ms < 500,
-        "sustains_5_qps": qps >= 5,
     }
     return result
 
@@ -737,12 +828,14 @@ def benchmark(
 def _candidate_runtime(
     manifest_path: Path,
     output: Path,
+    *,
+    model_key: str,
 ) -> MmbertRuntime:
     output = output.resolve()
     metadata = json.loads((output / "export.json").read_text(encoding="utf-8"))
     if (
-        metadata.get("format") != "onnx-fp32-v1"
-        or metadata.get("model_key") != DEFAULT_MODEL_KEY
+        metadata.get("format") != EXPORT_FORMAT
+        or metadata.get("model_key") != model_key
     ):
         raise ValueError("candidate export contract failed")
     onnx_path = output / "model.onnx"
@@ -764,6 +857,9 @@ def _candidate_runtime(
         tokenizer_path,
         onnx_sha256=onnx_sha256,
         tokenizer_sha256=tokenizer_sha256,
+        model_key=model_key,
+        max_tokens=metadata.get("max_tokens"),
+        window_overlap=metadata.get("window_overlap"),
     )
 
 
@@ -778,7 +874,7 @@ def _accept_text(texts: dict[str, str], panel_row: dict, source_row: dict) -> No
 def _write_json(path: Path, value: dict) -> None:
     path = path.resolve()
     if path.exists():
-        raise FileExistsError(f"refusing to replace verification evidence: {path}")
+        raise FileExistsError(f"refusing to replace evidence: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(f"{path.suffix}.tmp")
     temporary.write_text(
@@ -820,7 +916,8 @@ def main(argv: list[str] | None = None) -> None:
         choices=("export", "verify-panel", "benchmark"),
     )
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--model-key", default=DEFAULT_MODEL_KEY)
+    parser.add_argument("--output", type=Path)
     parser.add_argument(
         "--panel-dir",
         type=Path,
@@ -831,7 +928,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--requests", type=int, default=100)
     args = parser.parse_args(argv)
     if args.command == "export":
-        result = export(args.manifest, args.output)
+        result = export(args.manifest, args.output, model_key=args.model_key)
     elif args.command == "verify-panel":
         if args.deepseek_evidence is None:
             parser.error("verify-panel requires --deepseek-evidence")
@@ -840,6 +937,7 @@ def main(argv: list[str] | None = None) -> None:
             args.panel_dir,
             args.output,
             deepseek_evidence_path=args.deepseek_evidence,
+            model_key=args.model_key,
         )
     else:
         result = benchmark(
@@ -847,6 +945,7 @@ def main(argv: list[str] | None = None) -> None:
             output=args.output,
             warmup=args.warmup,
             requests=args.requests,
+            model_key=args.model_key,
         )
     print(json.dumps(result, indent=2, sort_keys=True))
 

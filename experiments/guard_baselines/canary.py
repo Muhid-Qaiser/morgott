@@ -108,7 +108,6 @@ def _source_hashes(
         "data_source": mmbert / "data.py",
         "detector_source": root / "src/morgott/models/detector.py",
         "evaluation_source": mmbert / "evaluate.py",
-        "head_contract_source": mmbert / "head_contract.py",
         "inference_source": mmbert / "inference.py",
         "training_source": mmbert / "train.py",
         "normalization_source": root / "src/morgott/normalization.py",
