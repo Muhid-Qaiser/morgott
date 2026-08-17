@@ -1,0 +1,28 @@
+{
+  "artifacts": 38,
+  "concurrency": 4,
+  "full_context_first_simulated_later": true,
+  "inputs": {
+    "local_scores_sha256": "f8b415e5237a78bd6865c714a6e64f447dfa993938eaab562be2ac94a9e2fc9d",
+    "manifest_sha256": "59151100d7e6d36b3dbd20f210d71c379ad320a2d7285b4caba4e60b70f447d3",
+    "max_tokens": 1024,
+    "metrics_code_sha256": "28a30f02276586db5eb7c213abd6d4927dab144f5c86766ea0f250b01a7e6cca",
+    "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+    "provider_summary_sha256": "995994e30f794c2a244696d67c88886a08e041ffa3fcf4d44c780f82a1b87878",
+    "window_overlap": 128
+  },
+  "jobs": 576,
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "network_concurrency_changes_semantics": false,
+  "providers": [
+    "baidu",
+    "cloudflare",
+    "decart",
+    "deepinfra"
+  ],
+  "recorded_total_spend_usd": "0.185016313108",
+  "result_path": "artifacts/pipeline_benchmark/20260816/provider_cascade_windows_results.jsonl",
+  "result_sha256": "3a2ee1612dd5eefbe65f6234a0ecb980fca1e67bf96355242575677fed239d94",
+  "stage": "cascade_windows",
+  "windows": 144
+}

@@ -1,0 +1,54 @@
+{
+  "arms": {
+    "current_full_disabled": {
+      "context": "full",
+      "prompt_sha256": "d991dc6793d5519d18dc0c58d533b112007a4e320e327abc7a7edc52d8c9b573",
+      "reasoning_effort": null
+    },
+    "revised_compact_disabled": {
+      "context": "compact",
+      "prompt_sha256": "63a4bd5ddfa176ff223dbd863d4ffff67d17d4e7a889cde930dab2f56cef4187",
+      "reasoning_effort": null
+    },
+    "revised_compact_high": {
+      "context": "compact",
+      "prompt_sha256": "63a4bd5ddfa176ff223dbd863d4ffff67d17d4e7a889cde930dab2f56cef4187",
+      "reasoning_effort": "high"
+    },
+    "revised_full_disabled": {
+      "context": "full",
+      "prompt_sha256": "63a4bd5ddfa176ff223dbd863d4ffff67d17d4e7a889cde930dab2f56cef4187",
+      "reasoning_effort": null
+    }
+  },
+  "calls": 460,
+  "labels": {
+    "0": 60,
+    "1": 55
+  },
+  "limitations": [
+    "The 115 rows are already consumed public evidence.",
+    "Deterministic safety redaction changes the original BrowseSafe inputs.",
+    "The trusted user task is a fixed synthetic benchmark task.",
+    "This diagnostic cannot certify a production false-positive rate."
+  ],
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "production_changes": false,
+  "provider": "cloudflare",
+  "purpose": "post-hoc long BrowseSafe reviewer prompt/context diagnostic",
+  "redaction_matches_across_arm_inputs": {
+    "credential_value": 2,
+    "email_address": 360,
+    "government_or_vehicle_id": 26,
+    "provider_token": 4,
+    "transaction_identifier": 4
+  },
+  "roles": {
+    "calibration": 152,
+    "evaluation": 308
+  },
+  "rows": 115,
+  "schema_version": 1,
+  "selection_eligible": false,
+  "transport": "strict_hard_verdict"
+}

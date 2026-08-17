@@ -930,15 +930,36 @@ The detailed prompt-selection protocol, per-dataset results, immutable evidence 
 Detailed protocols, complete slices, and hashes live in the dedicated reports linked below.
 This ledger retains only decisions that affect maintained behavior or the next experiment.
 
-#### Retained cascade decision
+#### Retained cascade decision through 2026-08-16
 
 - DeepSeek V4 Flash 0731 replaced the April reviewer after adding 58 true positives with the same 142 false positives on the frozen evaluation.
   FP32 recall, FPR, precision, and call rate are 71.235%, 1.773%, 96.779%, and 22.914%; OpenVINO BF16 reaches 71.386%, 1.798%, 96.742%, and 22.893%.
   PromptShield recall fell 2.176 points and untrusted-content FPR rose 0.375 points, so this is an aggregate advisory improvement rather than uniform transfer.
-  The local gates remain direct-user 0.2, untrusted-content 0.1, and high 0.99999; the reviewer threshold is 0.6224593312018547 and concurrency is capped at four.
+  The incumbent local gates were direct-user 0.2, untrusted-content 0.1, and high 0.99999; the reviewer threshold was 0.6224593312018547 and concurrency was capped at four.
   See [the replacement report](deepseek-v4-flash-0731-research.md).
 - The selected cascade remains advisory, is not approved for blocking, and never grants authority.
   Full-context-first review applies only to remote-enabled multi-window untrusted content; scalar call-minimization and Ionstream fallback candidates were rejected.
+
+#### Balanced advisory promotion on 2026-08-17
+
+- The owner promoted the exact benchmark-selected balanced profile as the maintained advisory default.
+  Its direct and untrusted floors are 0.2 and 0.025, its local-high gate is 0.9999, and its reviewer threshold is 0.5.
+  The DeepSeek V4 Flash 0731 prompt, Cloudflare strict-logprob request, reasoning-disabled contract, concurrency four, 1,024-token windows, 128-token overlap, full-context-first review, ordered fallback batches, failure behavior, and `decision: allow` authority are unchanged.
+- Selection used only the frozen 1,024-row calibration provider panel and its required windows.
+  On 12,352 provider-safe consumed evaluation artifacts, CUDA BF16 reached 72.00% recall, 1.37% FPR, 96.68% precision, and a 13.96% artifact review rate.
+  The unchanged thresholds transported to the full OpenVINO CPU ledger reached 72.10% recall, 1.36% FPR, 96.72% precision, and a 13.94% artifact review rate.
+- A post-review source-slice audit disqualified every strict no-logprob provider under the declared 2 percentage-point slice-loss rule.
+  Decart's exact result remains a diagnostic, but its HackAPrompt source recall was 3.10 points below the best provider, so the benchmark has no strict hard-verdict winner.
+  This correction does not change the selected Cloudflare strict-logprob cascade.
+- The sealed LogInject remote replay supports the selected profile on synthetic out-of-distribution logs at 96.57% attack recall and 0.54% paired clean false restrictions.
+  The revised reviewer prompt and channel split are rejected because the broader screen lost 29 of 142 attacks for one fewer false restriction.
+  High reasoning did not dominate reasoning-disabled review and is not integrated.
+- This is a maintained advisory promotion, not production calibration or blocking authorization.
+  The evaluation roles are consumed development evidence, representative traffic is absent, the complete long-character diagnostic remains a false-positive warning, mutation evidence is local-only, and the Azure load run predates the promoted profile.
+  The next decision-changing evidence is a prospective task-bearing long benign and matched-attack shadow panel.
+- The registry-bound promotion record is `artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion.json`.
+  Azure revision `morgott-api--0000016` serves it at 100% traffic with matching policy, threshold, model, and ONNX identities; its retained 30-request check is smoke evidence rather than a promoted-profile load benchmark.
+  The complete benchmark and provider/runtime limitations are in [the pipeline benchmark](pipeline-benchmark-20260816.md).
 
 #### Learned-detector and workload findings
 

@@ -3,6 +3,7 @@
 morgott is a research POC for prompt-injection and agent-security work.
 The maintained deliverable is a reproducible, provenance-preserving data corpus.
 The maintained model deliverable is the exact update-17,000, 1,024-token mmBERT advisory preview documented in `reports/model-experiments.md`.
+The registry-bound `balanced-20260816` cascade profile is its maintained advisory default.
 Its safe and ONNX artifacts use Git LFS and are served through the cascade and Azure API.
 No model is approved for blocking.
 
@@ -210,13 +211,14 @@ Having a maintained runner does not waive the evidence gates in
 The sole registered model key and its exact hashes are in `model-artifacts.json`.
 Use the ONNX cascade below or the Azure API for maintained assessment.
 
-## Shadow cascade POC
+## Maintained advisory cascade
 
 The maintained cascade defaults to `mmbert-lora-full-ctx1024-u17000-s42` and serves its registered FP32 ONNX graph through OpenVINO on CPU.
 The Azure preview requests `auto`: OpenVINO uses BF16 when the assigned CPU exposes it and otherwise uses FP32.
 `/v1/status` reports both the requested and selected precision.
+It also reports the registry-bound pipeline profile, policy hash, and threshold hash so deployment checks reject stale revisions.
 There is one portable model artifact rather than a precision-specific copy.
-It passes direct-user scores below `0.2` and untrusted-content scores below `0.1`, and it restricts local scores at or above `0.99999`.
+The maintained `balanced-20260816` profile passes direct-user scores below `0.2` and untrusted-content scores below `0.025`, and it restricts local scores at or above `0.9999`.
 OpenRouter credentials are mandatory at maintained cascade startup, but provider calls occur only for inputs that reach the existing review route.
 Multi-window untrusted content without a local high first sends the complete normalized artifact to DeepSeek V4 Flash.
 A full-context flag restricts immediately, while a clear result falls back to the existing middle-zone window reviews in batches of up to 4.
@@ -224,7 +226,10 @@ Direct-user and single-window behavior remain unchanged, and the 128-window cap 
 The synthetic full-context review record uses window index `-1`; ordinary window records retain their nonnegative tokenizer-window indexes.
 An exhausted review fails safe immediately, while a confirmed reviewer flag completes the advisory restrict without starting later calls.
 The selected reviewer is `deepseek/deepseek-v4-flash-0731` through Cloudflare.
-DeepSeek receives the trusted input channel and restricts at `p_subversion >= 0.6224593312018547`; invalid or exhausted reviews fail conservatively.
+DeepSeek receives the trusted input channel and restricts at `p_subversion >= 0.5`; invalid or exhausted reviews fail conservatively.
+The request pins Cloudflare, disables fallback, requires strict structured output and logprobs, and disables reasoning.
+The maintained parser validates the response schema and decision-token logprobs, but it does not independently attest the returned provider build.
+The profile, thresholds, request identities, and exact consumed-development results are bound by `model-artifacts.json` to the serving promotion record.
 Production initialization suppresses LiteLLM's unsolicited error banners so `morgott cascade` keeps stdout as one JSON document even when a retry is needed.
 Every result remains advisory: `decision` is always `allow`, and `advisory_route` never grants authority.
 
@@ -258,11 +263,12 @@ uv run --extra cascade \
 The benchmark prints deployment measurements to stdout and never overwrites registered evidence.
 The verification command also treats its evidence as write-once; use a fresh `--output` directory for a new candidate.
 Export compares the retained SDPA path with eager PyTorch and ONNX Runtime on both short and exactly 1,024-token inputs.
-The production constructor fails closed until the ONNX model and tokenizer hashes are registered under the full-LoRA model in `model-artifacts.json`.
+The production constructor fails closed until the ONNX model, tokenizer, and exact cascade policy are hash-bound under the full-LoRA model in `model-artifacts.json`.
 Register a serving runtime only after representative export parity and the frozen 20,000-row serving-equivalence gate pass, with deployment-CPU latency and throughput recorded separately.
 The verifier binds every provider record to the current prompt, request, model, provider, panel row, and trusted channel; stale prompt evidence fails closed.
-These are already-open shadow engineering results, not new production-quality claims.
-The exact 1,024-token update-17,000 native evaluation is bound to the safe serving package, while later-window document aggregation remains new shadow behavior.
+The original serving-verification file remains immutable model/runtime provenance and predates the promoted gates.
+The separate promotion record binds the exact all-window balanced-cascade evidence without rewriting that history.
+These remain consumed advisory engineering results, not production-quality claims.
 
 DeepSeek V4 Flash 0731 replaces the April reviewer under the owner's aggregate-quality criterion, but the gain is not uniform and all results remain advisory.
 The exact replacement evidence is in `reports/deepseek-v4-flash-0731-research.md`; the broader model, workload, robustness, and rejected-candidate findings are in `reports/model-experiments.md`; stateful containment findings are in `reports/agentdojo-integration-research.md` and `reports/agent-security-benchmark-options.md`.
@@ -310,6 +316,24 @@ scripts/deploy-azure.sh
 scripts/check-azure-milestone.sh
 ```
 
+### Promoting and deploying a cascade profile
+
+The four routing values and profile name in `src/morgott/models/downstream.py` are the runtime source of truth.
+The registry-bound promotion JSON is immutable evidence that those constants, the reviewer request, and the benchmark selection agree.
+
+For a future promotion:
+
+1. Freeze the benchmark selection before changing serving code.
+2. Update the constants and profile name in `src/morgott/models/downstream.py`.
+3. Add a new promotion JSON instead of overwriting prior evidence, then update only the `cascade_policy` path and SHA-256 in `model-artifacts.json`.
+4. Run `make check` and `git diff --check`.
+5. Run `scripts/deploy-azure.sh`.
+
+The deployment script reads the profile, threshold hash, and policy hash from the verified Python and registry state, so it needs no threshold edits.
+It creates a zero-traffic revision, runs the existing smoke and canary checks, verifies all three identities through `/v1/status`, then moves traffic.
+Any failure before publication keeps traffic on the previous revision.
+Dated deployment identity and smoke evidence is retained under `reports/azure-preview-deployment-*.json`.
+
 ### Using the Azure API
 
 Sign in as `waleed@vulsight.com`, then retrieve the live endpoint and shared API key without printing the credential:
@@ -352,17 +376,18 @@ That calculation is an operational proxy; the Microsoft for Startups portal rema
 After the Startup portal also shows five workloads, rerun it with `--portal-confirmed` to save the local day-zero marker.
 Keep one replica until all five intended workloads have posted at least $1, then scale the preview to zero with `az containerapp update --name morgott-api --resource-group morgott-preview-rg --min-replicas 0`; the HTTP and Service Bus rules wake it for API calls and the daily canary, while a later deployment intentionally restores one replica for validation.
 
-The first proper routing experiment should stay deliberately small:
+The first proper routing-model phase is complete, and its historical steps remain in `docs/roadmap.md` and `reports/model-experiments.md`.
+The next evidence phase stays deliberately narrow:
 
-1. Train a cheap linear text baseline on the canonical routing train split.
-2. Compare one end-to-end encoder on the identical selected grouped rows, and state its weighting explicitly; add masked subtype heads only where labels are known.
-3. First report the untouched 0.5 cutoff; tune later thresholds on validation only after application costs and prevalence are known; compare on `dev_test`; report per-source and leave-one-source-out results, not only aggregate accuracy.
-4. Freeze a genuinely prospective final test before claiming generalization.
+1. Collect prospective task-bearing long benign untrusted HTML, email, and document traffic with matched attacks and position slices.
+2. Keep the promoted profile frozen while that shadow panel is collected and adjudicated.
+3. Test at most one task-conditioned reviewer contract on a development role, then transport it unchanged to a sealed evaluation role.
+4. Run full-cascade mutation and browser-agent outcome studies before making defense-in-depth efficacy claims.
+5. Repeat Azure load testing with matched payloads, a true local-pass arm, exact target lengths, decision-presence checks, and provider-native cost accounting.
 
-Large-source caps may be tested as model ablations, but the canonical corpus
-must remain complete. No existing neural, remote-reviewer, or weak-label pilot
-is promoted; their durable conclusions are summarized in
-`reports/model-experiments.md`.
+Large-source caps may be tested as model ablations, but the canonical corpus must remain complete.
+The balanced neural-plus-reviewer cascade is promoted only as maintained advisory behavior; rejected prompt variants, other neural guards, and weak-label pilots remain historical evidence.
+Their durable conclusions are summarized in `reports/model-experiments.md`.
 
 ## Repository map
 
@@ -386,6 +411,7 @@ is promoted; their durable conclusions are summarized in
 - `reports/corpus-sanity-audit.md`: corpus-wide integrity checks and critical limitations.
 - `reports/attention-kernel-audit.md`: measured SDPA versus FlashAttention-2 and context-length constraints.
 - `reports/model-experiments.md`: authoritative historical model decision ledger.
+- `reports/pipeline-benchmark-20260816.md`: complete 1,024-context quality, provider, robustness, and runtime benchmark plus the dated advisory promotion disposition.
 - `docs/data-contract.md`: canonical data, label, source, and split contracts.
 - `docs/threat-model.md`: trust boundary and security claims.
 - `docs/roadmap.md`: evidence-gated next steps.

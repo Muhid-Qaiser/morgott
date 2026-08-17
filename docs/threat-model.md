@@ -7,11 +7,10 @@ authority from text. In the current simulation, every side-effecting proposal
 passes through a fail-closed reference monitor with caller-supplied capabilities
 and exact argument constraints.
 
-The legacy injection-control classifier, the word routing baseline, and corpus routing labels are predictive only.
+The registered `balanced-20260816` cascade, legacy injection-control classifier, word routing baseline, and corpus routing labels are predictive only.
 The routing baseline uses the untouched 0.5 cutoff and has neither production
 calibration nor a prospectively labelled final test.
-Neither current labels nor future scores may block a user or approve a tool
-action.
+No learned score or advisory route may block a user or approve a tool action.
 Finance, cybersecurity, and other sensitive topics are not deny rules; exact
 side effects require scoped authority.
 Some identical text is legitimate when supplied by an authorized user and hostile when embedded in untrusted content.
@@ -31,11 +30,13 @@ Untrusted:
   memory, summaries, classifier scores, generated labels, and remote model responses.
 
 The POC uses simulated commits and has no wallet, email connector, or live capability runtime.
-The maintained shadow cascade requires `OPENROUTER_API_KEY` at startup, but it makes an OpenRouter model API call only when an input reaches the existing review route.
+The maintained advisory cascade requires `OPENROUTER_API_KEY` at startup, but it makes an OpenRouter model API call only when an input reaches the review route.
+Startup verifies the registry-bound profile, threshold hash, reviewer request identities, context contract, and advisory-only decision before loading the scorer.
 For multi-window untrusted content without a local high, the complete normalized artifact leaves the process for one full-context review.
 A clear full-context result may then send middle-zone windows for the existing fallback review, while direct-user and single-window routing stay unchanged.
 The API key remains inside the provider client.
 Remote responses are untrusted, strictly parsed, and converted to a conservative incomplete assessment when invalid.
+The request pins Cloudflare and disables fallback, but the maintained NOOA response parser does not independently attest the returned provider build.
 Callers that cannot permit eligible artifact text to leave the process must not start the maintained cascade.
 The completed PredictStrategy evaluation used the same provider boundary and recorded only hashes, parsed values, timings, usage, and cost.
 The POC does not yet bind capabilities to a task or user identity, issue expirations, or propagate provenance through a live agent runtime.
@@ -129,7 +130,7 @@ The contract remains a required interface for that future runtime, and its tests
 | Direct jailbreak or prompt override | advisory detector plus deterministic action policy |
 | Injection in email, RAG, web, tool output, or memory | provenance-aware routing plus the same action policy |
 | Obfuscated or unseen attack bypasses the detector | reference monitor still denies ungranted side effects |
-| Benign security/finance discussion is flagged | shadow-only routing and measured review cost |
+| Benign security/finance discussion is flagged | advisory-only routing and measured review cost |
 | Harmful content is confused with injection | independent label axes and masked subtype supervision |
 | Source ambiguity becomes a benign label | nullable labels and separate uncertain/auxiliary roles |
 | Train/evaluation leakage inflates results | grouped splits, exact blocking, near-overlap quarantine |

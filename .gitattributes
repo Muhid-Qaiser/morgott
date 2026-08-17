@@ -7,3 +7,10 @@ artifacts/comparisons/**/*.npz filter=lfs diff=lfs merge=lfs -text
 reports/provenance/**/*.pt filter=lfs diff=lfs merge=lfs -text
 reports/provenance/**/*.zst filter=lfs diff=lfs merge=lfs -text
 reports/provenance/**/records/*.json -diff linguist-generated=true
+artifacts/pipeline_benchmark/20260816/*.json linguist-generated=true
+artifacts/pipeline_benchmark/20260816/*.jsonl filter=lfs diff=lfs merge=lfs -text
+artifacts/pipeline_benchmark/20260816/*.jsonl.gz filter=lfs diff=lfs merge=lfs -text
+artifacts/pipeline_benchmark/20260816/azure_load.json filter=lfs diff=lfs merge=lfs -text
+artifacts/pipeline_benchmark/20260816/manifest.json filter=lfs diff=lfs merge=lfs -text
+artifacts/pipeline_benchmark/20260816/tables.json filter=lfs diff=lfs merge=lfs -text
+artifacts/pipeline_benchmark/20260816/source/** linguist-generated=true

@@ -40,9 +40,10 @@ research, but every source must keep license and provenance metadata.
 
 ## Current status
 
-The active deliverable is the canonical data corpus. No model is approved for
-blocking. The retained character n-gram detector and word n-gram
-routing baseline are cheap controls, not intended models.
+The active deliverables are the canonical data corpus and the registry-bound
+`balanced-20260816` maintained advisory cascade. No model is approved for
+blocking. The retained character n-gram detector and word n-gram routing
+baseline are cheap controls, not intended models.
 
 July 2026 external validation showed the historical ModernBERT ensemble does
 not transfer: 0.00% TPR at 1% FPR on the public PromptShield split and 49.2%
@@ -53,8 +54,8 @@ without those qualifiers or treat it as evidence a detector works.
 Owner-authorized bounded exceptions (2026-07-28) produced a frozen-mmBERT
 head, reduced-mixture LoRA gate, and full-mixture rank-8 LoRA seed.
 Only the later 1,024-token update-17,000 candidate remains loadable through
-`model-artifacts.json`; older artifacts are retained as provenance and none is
-wired into blocking.
+`model-artifacts.json`; its balanced profile is the maintained advisory default.
+Older artifacts are retained as provenance, and nothing is wired into blocking.
 A later LP-FT comparison (2026-08-05) reduced long-task clean flags but
 collapsed on PromptShield transfer and indirect-document
 recall; it was rejected and its retained weights stay outside the registry.
@@ -94,7 +95,7 @@ credential broker, or network boundary.
 One local data root (`data/`) and one versioned machine manifest
 (`data/manifest.json`). Never recreate `processed/`, `expanded/`, a second
 manifest, or a second data root. Exact counts and hashes belong only in the
-manifest — never copy them into narrative documents.
+manifest - never copy them into narrative documents.
 
 The build fails closed on any missing source, access gate, schema, or pinned
 digest, and publishes the manifest last:
@@ -124,12 +125,12 @@ corpus, label, source, and split contracts are in `docs/data-contract.md`.
 
 ## Privacy and external providers
 
-The corpus builder makes no remote provider calls. Do not send corpus text to
-a provider merely because an API key exists; any remote-label experiment must
-be explicit, bounded, development-only, and separately reviewed.
-
-Never inspect, print, persist, or commit `.env`, API keys, Hugging Face
-tokens, credentials, raw provider responses, or sensitive prompts.
+The corpus builder remains offline.
+Remote evaluation must be explicit, bounded, privacy-filtered or provider-safe,
+frozen before calls, and covered by a recorded budget; key availability alone
+does not authorize sending corpus text.
+Never inspect, print, persist, or commit `.env`, API keys, Hugging Face tokens,
+credentials, raw provider responses, or sensitive prompts.
 
 ## Verification
 
@@ -151,7 +152,7 @@ The file map is the "Repository map" in `README.md`. Two rules live here, not
 there:
 
 - `model-artifacts.json` is the sole registry for reviewed LFS research
-  weights loadable by maintained inference; the rejected LP-FT comparison
-  stays intentionally outside it.
+  weights and the advisory cascade policy loadable by maintained inference;
+  the rejected LP-FT comparison stays intentionally outside it.
 - `experiments/` holds disposable or study-specific work that is never
   maintained model behavior.

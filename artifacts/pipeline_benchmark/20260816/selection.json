@@ -1,0 +1,136 @@
+{
+  "frozen_from": "6000-row consumed calibration role",
+  "hard_verdict": null,
+  "logprob": {
+    "balanced": {
+      "arm": "logprob",
+      "call_count": 1439,
+      "call_rate": 0.23983333333333334,
+      "configuration_id": "logprob:0.1:0.05:0.99999:0.6224593312",
+      "invalid_called_review_rate": 0.0,
+      "invalid_called_reviews": 0,
+      "max_channel_fpr": 0.0297029702970297,
+      "metrics": {
+        "accuracy": 0.8266666666666667,
+        "fn": 976,
+        "fp": 64,
+        "fpr": 0.01864258665889892,
+        "fpr_95": [
+          0.014626673003987414,
+          0.02373455500154699
+        ],
+        "negatives": 3433,
+        "positives": 2567,
+        "precision": 0.9613293051359516,
+        "precision_95": [
+          0.9509212891528682,
+          0.969600676270866
+        ],
+        "predicted_positive": 1655,
+        "recall": 0.6197896377093884,
+        "recall_95": [
+          0.6008449619667611,
+          0.6383763240794487
+        ],
+        "restriction_rate": 0.2758333333333333,
+        "rows": 6000,
+        "tn": 3369,
+        "tp": 1591
+      },
+      "thresholds": {
+        "direct_low": 0.1,
+        "local_high": 0.99999,
+        "reviewer": 0.6224593312,
+        "untrusted_low": 0.05
+      },
+      "worst_slice_recall": 0.5106666666666667
+    },
+    "conservative": {
+      "arm": "logprob",
+      "call_count": 1411,
+      "call_rate": 0.23516666666666666,
+      "configuration_id": "logprob:0.3:0.025:0.99999:0.99",
+      "invalid_called_review_rate": 0.0,
+      "invalid_called_reviews": 0,
+      "max_channel_fpr": 0.007619047619047619,
+      "metrics": {
+        "accuracy": 0.7538333333333334,
+        "fn": 1452,
+        "fp": 25,
+        "fpr": 0.007282260413632392,
+        "fpr_95": [
+          0.004937537338703585,
+          0.010728433718096078
+        ],
+        "negatives": 3433,
+        "positives": 2567,
+        "precision": 0.9780701754385965,
+        "precision_95": [
+          0.9678268410904487,
+          0.9851024233583108
+        ],
+        "predicted_positive": 1140,
+        "recall": 0.43435917413322944,
+        "recall_95": [
+          0.415296573469379,
+          0.45361794133131594
+        ],
+        "restriction_rate": 0.19,
+        "rows": 6000,
+        "tn": 3408,
+        "tp": 1115
+      },
+      "thresholds": {
+        "direct_low": 0.3,
+        "local_high": 0.99999,
+        "reviewer": 0.99,
+        "untrusted_low": 0.025
+      },
+      "worst_slice_recall": 0.14
+    },
+    "high_recall": {
+      "arm": "logprob",
+      "call_count": 669,
+      "call_rate": 0.1115,
+      "configuration_id": "logprob:0.05:0.025:0.99:0.5",
+      "invalid_called_review_rate": 0.0,
+      "invalid_called_reviews": 0,
+      "max_channel_fpr": 0.03589108910891089,
+      "metrics": {
+        "accuracy": 0.8835,
+        "fn": 592,
+        "fp": 107,
+        "fpr": 0.031168074570346635,
+        "fpr_95": [
+          0.025858898437187368,
+          0.037525305178490474
+        ],
+        "negatives": 3433,
+        "positives": 2567,
+        "precision": 0.9486071085494716,
+        "precision_95": [
+          0.938269465333987,
+          0.957292367565883
+        ],
+        "predicted_positive": 2082,
+        "recall": 0.7693805999220881,
+        "recall_95": [
+          0.752690309803697,
+          0.7852658505246086
+        ],
+        "restriction_rate": 0.347,
+        "rows": 6000,
+        "tn": 3326,
+        "tp": 1975
+      },
+      "thresholds": {
+        "direct_low": 0.05,
+        "local_high": 0.99,
+        "reviewer": 0.5,
+        "untrusted_low": 0.025
+      },
+      "worst_slice_recall": 0.532
+    }
+  },
+  "schema_version": 1
+}

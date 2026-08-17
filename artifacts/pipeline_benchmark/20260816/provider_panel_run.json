@@ -1,0 +1,20 @@
+{
+  "calls": 4096,
+  "concurrency": 4,
+  "endpoint_tags": [
+    "baidu/fp8",
+    "cloudflare",
+    "decart/fp4",
+    "deepinfra/fp8"
+  ],
+  "providers": [
+    "baidu",
+    "cloudflare",
+    "decart",
+    "deepinfra"
+  ],
+  "recorded_spend_usd": "0.133771735428",
+  "result_path": "artifacts/pipeline_benchmark/20260816/provider_panel_results.jsonl",
+  "result_sha256": "529cb1b7f4952e46c3c7b436e1d7c49f7830d491a468588b60f78b67dc04b269",
+  "stage": "panel"
+}

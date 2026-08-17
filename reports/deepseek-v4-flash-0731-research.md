@@ -2,6 +2,10 @@
 
 Date: 2026-08-03.
 
+Status update, 2026-08-17: this report preserves the reviewer replacement decision and its then-maintained `0.2 / 0.1 / 0.99999 / 0.6224593312018547` profile as historical evidence.
+The registry-bound maintained advisory default is now the benchmark-selected balanced profile `0.2 / 0.025 / 0.9999 / 0.5`, with the prompt, Cloudflare request, and cascade flow unchanged.
+See [the complete pipeline benchmark](pipeline-benchmark-20260816.md) and [the model decision ledger](model-experiments.md#balanced-advisory-promotion-on-2026-08-17).
+
 ## Decision
 
 Replace Morgott's retained April reviewer with `deepseek/deepseek-v4-flash-0731` through the tested Cloudflare route and use its independently selected threshold `0.6224593312018547`.
@@ -80,7 +84,7 @@ Of the 40 lost positives, 17 receive a 0731 probability from `0.5` up to but exc
 The selected threshold sits on the calibration limit rather than leaving a free scalar repair.
 Lowering it by one representable probability step raises calibration from 68 to 69 false positives and FPR from `1.9808%` to `2.0099%`, already exceeding the frozen 2% cap.
 Taking the union of the April and 0731 decisions would recover all 40 lost PromptShield positives, but it raises global calibration false positives from 68 to 77 and FPR to `2.2429%`, adds ten evaluation false positives, and requires two remote reviews per artifact.
-An exhaustive calibration-only sweep of a local-score auto-restrict override selected behavior equivalent to the current `0.99999` high gate and produced no gain.
+An exhaustive calibration-only sweep of a local-score auto-restrict override selected behavior equivalent to the then-current `0.99999` high gate and produced no gain.
 These checks reject threshold lowering, a two-review union, and a local-score override on the consumed panel.
 The maintained 0731 route remains unchanged, and any repair needs a prospectively frozen, independently sourced direct-user contrast rather than another PromptShield adjustment.
 

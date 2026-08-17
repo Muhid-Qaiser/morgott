@@ -1,0 +1,45 @@
+{
+  "concurrency": 4,
+  "inputs": {
+    "endpoint_snapshot_sha256": "c5056c21f9a81e9275babf38a70e4a0710d327318d192acf4edfa758a2174cf4",
+    "exact_selection_sha256": "43c7da5b3b612ab6c34dcaeee151560f165a7b1939b7c1b786da52cdce5d37f7",
+    "frozen_panel_sha256": "d83a1523abe39131f6f62f7d60bd220cca314811fb18c56b8403adf20ce4e784",
+    "incumbent_threshold_sha256": "89ac994922b6fb014179aa30df40b79001359f7e8df1de62ef6c3ec4a604d6f2",
+    "local_scores_sha256": "11cd38ddbebf7275ac05ebc773e1a2f83aa0e9b520f312ad5fb89d3fcdd3596d",
+    "local_summary_sha256": "50e0347e189da642f1a50f89099377ca7e9357e27d96ba441addcf03139c37b9",
+    "max_tokens": 1024,
+    "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+    "provider_summary_sha256": "995994e30f794c2a244696d67c88886a08e041ffa3fcf4d44c780f82a1b87878",
+    "registry_sha256": "5301c7ca64408e2cb8aa993feddad20d83ce28306dc28e0a444797c83cb3384e",
+    "source_archive_sha256": "010118d6cfbb03440bb7178d431912a2207f602c9ed546f47667a37d03820a8f",
+    "source_contract": {
+      "data/adversarial/samples.jsonl": {
+        "rows": 2569,
+        "sha256": "ab8eb971bdc99e1f236f50dc9f395b0a3fd63fde99eaf4de29b6e321e5135827"
+      },
+      "data/benign/apache_access.jsonl": {
+        "rows": 4521,
+        "sha256": "bea8a7cffc1651a7a678bc2936d3f233052585de9740db455ec7e6b9cf227783"
+      },
+      "data/benign/json_api.jsonl": {
+        "rows": 2910,
+        "sha256": "14e4ed79177c11629a69e476175ca0b2519e9095c4890cd0a2453e7ed45ffdcc"
+      },
+      "data/benign/ssh_auth.jsonl": {
+        "rows": 2847,
+        "sha256": "c5affd368d03634ef1ab34b52bbc638cf09f2790f8859253a3fca7804b7e7433"
+      }
+    },
+    "window_overlap": 128
+  },
+  "jobs": 18081,
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "plan_sha256": "74449997d1f3801ab730a3b4d3f172db9f65897acc16fcdba434fc70c10e46ed",
+  "provider": "cloudflare",
+  "result_path": "artifacts/pipeline_benchmark/20260816/loginject_remote_results.jsonl",
+  "result_sha256": "88b75d099dd09784e870af4a38e6dbbcf3648940331c807499c49998a8ea06da",
+  "stage": "loginject_remote",
+  "summary_path": "artifacts/pipeline_benchmark/20260816/loginject_remote_summary.json",
+  "summary_sha256": "25b7d88ff57a675b892eebad9ded4cfa3bc0d1f900e854919663f59a178ebd7b",
+  "transport": "strict_logprob"
+}

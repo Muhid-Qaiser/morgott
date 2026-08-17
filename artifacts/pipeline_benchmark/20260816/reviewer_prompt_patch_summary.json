@@ -1,0 +1,522 @@
+{
+  "advance_rule_passed": false,
+  "calls": 73,
+  "calls_this_resume": 0,
+  "channel_split_candidate": {
+    "contract": {
+      "direct_user": "current_full_disabled",
+      "untrusted_content": "revised_full_disabled"
+    },
+    "delta_vs_revised": {
+      "attack_detections": 10,
+      "false_restrictions": 0,
+      "fpr": 0.0,
+      "recall": 0.07194244604316546
+    },
+    "dominates_revised": true,
+    "invalid_called_reviews": 1,
+    "quality": {
+      "accuracy": 0.8549222797927462,
+      "fn": 28,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_95": [
+        0.0,
+        0.0664135880908964
+      ],
+      "negatives": 54,
+      "positives": 139,
+      "precision": 1.0,
+      "precision_95": [
+        0.9665498953066078,
+        1.0
+      ],
+      "predicted_positive": 111,
+      "recall": 0.7985611510791367,
+      "recall_95": [
+        0.7242707722434035,
+        0.8567930217366632
+      ],
+      "restriction_rate": 0.5751295336787565,
+      "rows": 193,
+      "tn": 54,
+      "tp": 111
+    },
+    "slices": {
+      "input_channel": {
+        "direct_user": {
+          "accuracy": 0.7922077922077922,
+          "fn": 16,
+          "fp": 0,
+          "fpr": 0.0,
+          "fpr_95": [
+            0.0,
+            0.1936076805344365
+          ],
+          "negatives": 16,
+          "positives": 61,
+          "precision": 1.0,
+          "precision_95": [
+            0.9213484012671117,
+            1.0
+          ],
+          "predicted_positive": 45,
+          "recall": 0.7377049180327869,
+          "recall_95": [
+            0.6156325821638563,
+            0.8316121363763852
+          ],
+          "restriction_rate": 0.5844155844155844,
+          "rows": 77,
+          "tn": 16,
+          "tp": 45
+        },
+        "untrusted_content": {
+          "accuracy": 0.896551724137931,
+          "fn": 12,
+          "fp": 0,
+          "fpr": 0.0,
+          "fpr_95": [
+            0.0,
+            0.09180986822558396
+          ],
+          "negatives": 38,
+          "positives": 78,
+          "precision": 1.0,
+          "precision_95": [
+            0.9449974429864586,
+            0.9999999999999999
+          ],
+          "predicted_positive": 66,
+          "recall": 0.8461538461538461,
+          "recall_95": [
+            0.7500673346677367,
+            0.9097449509161288
+          ],
+          "restriction_rate": 0.5689655172413793,
+          "rows": 116,
+          "tn": 38,
+          "tp": 66
+        }
+      },
+      "source": {
+        "browsesafe": {
+          "accuracy": 0.8441558441558441,
+          "fn": 12,
+          "fp": 0,
+          "fpr": 0.0,
+          "fpr_95": [
+            0.0,
+            0.09180986822558396
+          ],
+          "negatives": 38,
+          "positives": 39,
+          "precision": 1.0,
+          "precision_95": [
+            0.8754449702581328,
+            0.9999999999999998
+          ],
+          "predicted_positive": 27,
+          "recall": 0.6923076923076923,
+          "recall_95": [
+            0.5357874562585069,
+            0.8143406769308886
+          ],
+          "restriction_rate": 0.35064935064935066,
+          "rows": 77,
+          "tn": 38,
+          "tp": 27
+        },
+        "hackaprompt": {
+          "accuracy": 0.5,
+          "fn": 2,
+          "fp": 0,
+          "fpr": null,
+          "fpr_95": null,
+          "negatives": 0,
+          "positives": 4,
+          "precision": 1.0,
+          "precision_95": [
+            0.34238022750665303,
+            1.0
+          ],
+          "predicted_positive": 2,
+          "recall": 0.5,
+          "recall_95": [
+            0.15003898915214947,
+            0.8499610108478506
+          ],
+          "restriction_rate": 0.5,
+          "rows": 4,
+          "tn": 0,
+          "tp": 2
+        },
+        "jailbreaks_over_time": {
+          "accuracy": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "fpr": null,
+          "fpr_95": null,
+          "negatives": 0,
+          "positives": 8,
+          "precision": 1.0,
+          "precision_95": [
+            0.6755924351161198,
+            1.0
+          ],
+          "predicted_positive": 8,
+          "recall": 1.0,
+          "recall_95": [
+            0.6755924351161198,
+            1.0
+          ],
+          "restriction_rate": 1.0,
+          "rows": 8,
+          "tn": 0,
+          "tp": 8
+        },
+        "llmail": {
+          "accuracy": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "fpr": null,
+          "fpr_95": null,
+          "negatives": 0,
+          "positives": 37,
+          "precision": 1.0,
+          "precision_95": [
+            0.9059421741627975,
+            1.0
+          ],
+          "predicted_positive": 37,
+          "recall": 1.0,
+          "recall_95": [
+            0.9059421741627975,
+            1.0
+          ],
+          "restriction_rate": 1.0,
+          "rows": 37,
+          "tn": 0,
+          "tp": 37
+        },
+        "promptshield": {
+          "accuracy": 0.7846153846153846,
+          "fn": 14,
+          "fp": 0,
+          "fpr": 0.0,
+          "fpr_95": [
+            0.0,
+            0.1936076805344365
+          ],
+          "negatives": 16,
+          "positives": 49,
+          "precision": 1.0,
+          "precision_95": [
+            0.9010990076755959,
+            0.9999999999999999
+          ],
+          "predicted_positive": 35,
+          "recall": 0.7142857142857143,
+          "recall_95": [
+            0.575911164922199,
+            0.8215040554118739
+          ],
+          "restriction_rate": 0.5384615384615384,
+          "rows": 65,
+          "tn": 16,
+          "tp": 35
+        },
+        "tensor_trust": {
+          "accuracy": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "fpr": null,
+          "fpr_95": null,
+          "negatives": 0,
+          "positives": 2,
+          "precision": 1.0,
+          "precision_95": [
+            0.34238022750665303,
+            1.0
+          ],
+          "predicted_positive": 2,
+          "recall": 1.0,
+          "recall_95": [
+            0.34238022750665303,
+            1.0
+          ],
+          "restriction_rate": 1.0,
+          "rows": 2,
+          "tn": 0,
+          "tp": 2
+        }
+      }
+    }
+  },
+  "delta_vs_current": {
+    "attack_detections": -22,
+    "false_restrictions": -33,
+    "fpr": -0.6111111111111112,
+    "recall": -0.15827338129496404
+  },
+  "delta_vs_revised": {
+    "attack_detections": 0,
+    "false_restrictions": 4,
+    "fpr": 0.07407407407407407,
+    "recall": 0.0
+  },
+  "evidence_role": "consumed_complete_long_character_bucket",
+  "invalid_called_reviews": 0,
+  "latency_seconds": {
+    "p50": 2.1999413199955598,
+    "p95": 5.008156430005329
+  },
+  "manifest_sha256": "a29eb0aad3b501d60665c1b5383d624352108e8e51ca3ea6bf2cbbd1c4bc44a2",
+  "quality": {
+    "accuracy": 0.7823834196891192,
+    "fn": 38,
+    "fp": 4,
+    "fpr": 0.07407407407407407,
+    "fpr_95": [
+      0.02918152776550481,
+      0.1755411583859995
+    ],
+    "negatives": 54,
+    "positives": 139,
+    "precision": 0.9619047619047619,
+    "precision_95": [
+      0.9061169787394538,
+      0.9850875406688924
+    ],
+    "predicted_positive": 105,
+    "recall": 0.7266187050359713,
+    "recall_95": [
+      0.6471804479131565,
+      0.7938679740235207
+    ],
+    "restriction_rate": 0.5440414507772021,
+    "rows": 193,
+    "tn": 50,
+    "tp": 101
+  },
+  "recorded_cost_usd": "0.479742064",
+  "recorded_total_spend_usd": "8.101128197468",
+  "results_sha256": "e1c9db3d6ccc964fa6d432bb4387137d0d6ca190f811133db37910f1f5dfb8b6",
+  "rows": 193,
+  "schema_version": 1,
+  "selection_eligible": false,
+  "slices": {
+    "input_channel": {
+      "direct_user": {
+        "accuracy": 0.6623376623376623,
+        "fn": 26,
+        "fp": 0,
+        "fpr": 0.0,
+        "fpr_95": [
+          0.0,
+          0.1936076805344365
+        ],
+        "negatives": 16,
+        "positives": 61,
+        "precision": 1.0,
+        "precision_95": [
+          0.9010990076755959,
+          0.9999999999999999
+        ],
+        "predicted_positive": 35,
+        "recall": 0.5737704918032787,
+        "recall_95": [
+          0.4489523044494656,
+          0.6898477806147472
+        ],
+        "restriction_rate": 0.45454545454545453,
+        "rows": 77,
+        "tn": 16,
+        "tp": 35
+      },
+      "untrusted_content": {
+        "accuracy": 0.8620689655172413,
+        "fn": 12,
+        "fp": 4,
+        "fpr": 0.10526315789473684,
+        "fpr_95": [
+          0.04170257347553526,
+          0.24130521722887316
+        ],
+        "negatives": 38,
+        "positives": 78,
+        "precision": 0.9428571428571428,
+        "precision_95": [
+          0.8620804952516177,
+          0.9775562208992887
+        ],
+        "predicted_positive": 70,
+        "recall": 0.8461538461538461,
+        "recall_95": [
+          0.7500673346677367,
+          0.9097449509161288
+        ],
+        "restriction_rate": 0.603448275862069,
+        "rows": 116,
+        "tn": 34,
+        "tp": 66
+      }
+    },
+    "source": {
+      "browsesafe": {
+        "accuracy": 0.7922077922077922,
+        "fn": 12,
+        "fp": 4,
+        "fpr": 0.10526315789473684,
+        "fpr_95": [
+          0.04170257347553526,
+          0.24130521722887316
+        ],
+        "negatives": 38,
+        "positives": 39,
+        "precision": 0.8709677419354839,
+        "precision_95": [
+          0.7114759374369357,
+          0.9486571562537085
+        ],
+        "predicted_positive": 31,
+        "recall": 0.6923076923076923,
+        "recall_95": [
+          0.5357874562585069,
+          0.8143406769308886
+        ],
+        "restriction_rate": 0.4025974025974026,
+        "rows": 77,
+        "tn": 34,
+        "tp": 27
+      },
+      "hackaprompt": {
+        "accuracy": 0.5,
+        "fn": 2,
+        "fp": 0,
+        "fpr": null,
+        "fpr_95": null,
+        "negatives": 0,
+        "positives": 4,
+        "precision": 1.0,
+        "precision_95": [
+          0.34238022750665303,
+          1.0
+        ],
+        "predicted_positive": 2,
+        "recall": 0.5,
+        "recall_95": [
+          0.15003898915214947,
+          0.8499610108478506
+        ],
+        "restriction_rate": 0.5,
+        "rows": 4,
+        "tn": 0,
+        "tp": 2
+      },
+      "jailbreaks_over_time": {
+        "accuracy": 0.875,
+        "fn": 1,
+        "fp": 0,
+        "fpr": null,
+        "fpr_95": null,
+        "negatives": 0,
+        "positives": 8,
+        "precision": 1.0,
+        "precision_95": [
+          0.6456695649333126,
+          1.0
+        ],
+        "predicted_positive": 7,
+        "recall": 0.875,
+        "recall_95": [
+          0.5291118177871464,
+          0.9775825085499433
+        ],
+        "restriction_rate": 0.875,
+        "rows": 8,
+        "tn": 0,
+        "tp": 7
+      },
+      "llmail": {
+        "accuracy": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "fpr": null,
+        "fpr_95": null,
+        "negatives": 0,
+        "positives": 37,
+        "precision": 1.0,
+        "precision_95": [
+          0.9059421741627975,
+          1.0
+        ],
+        "predicted_positive": 37,
+        "recall": 1.0,
+        "recall_95": [
+          0.9059421741627975,
+          1.0
+        ],
+        "restriction_rate": 1.0,
+        "rows": 37,
+        "tn": 0,
+        "tp": 37
+      },
+      "promptshield": {
+        "accuracy": 0.6461538461538462,
+        "fn": 23,
+        "fp": 0,
+        "fpr": 0.0,
+        "fpr_95": [
+          0.0,
+          0.1936076805344365
+        ],
+        "negatives": 16,
+        "positives": 49,
+        "precision": 1.0,
+        "precision_95": [
+          0.8712710781407846,
+          1.0
+        ],
+        "predicted_positive": 26,
+        "recall": 0.5306122448979592,
+        "recall_95": [
+          0.39380863983661896,
+          0.6629649630682484
+        ],
+        "restriction_rate": 0.4,
+        "rows": 65,
+        "tn": 16,
+        "tp": 26
+      },
+      "tensor_trust": {
+        "accuracy": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "fpr": null,
+        "fpr_95": null,
+        "negatives": 0,
+        "positives": 2,
+        "precision": 1.0,
+        "precision_95": [
+          0.34238022750665303,
+          1.0
+        ],
+        "predicted_positive": 2,
+        "recall": 1.0,
+        "recall_95": [
+          0.34238022750665303,
+          1.0
+        ],
+        "restriction_rate": 1.0,
+        "rows": 2,
+        "tn": 0,
+        "tp": 2
+      }
+    }
+  },
+  "terminal_failures": 0,
+  "valid_output_rate": 1.0,
+  "valid_outputs": 73,
+  "wall_seconds_this_resume": 0.2967147800081875
+}

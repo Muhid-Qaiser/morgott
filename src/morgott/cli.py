@@ -73,7 +73,7 @@ def _parser() -> argparse.ArgumentParser:
 
     cascade = subcommands.add_parser(
         "cascade",
-        help="run the advisory mmBERT and DeepSeek shadow cascade",
+        help="run the maintained advisory mmBERT and DeepSeek cascade",
     )
     cascade.add_argument("input", help="UTF-8 text file, or - for stdin")
     cascade.add_argument(

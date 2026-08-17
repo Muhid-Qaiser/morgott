@@ -25,6 +25,10 @@ artifacts/*
 artifacts/models/*
 !artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/
 !artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/**
+!artifacts/pipeline_benchmark/
+artifacts/pipeline_benchmark/*
+!artifacts/pipeline_benchmark/20260816/
+!artifacts/pipeline_benchmark/20260816/**
 reports/baseline.json
 reports/baseline.md
 reports/routing-baseline.json

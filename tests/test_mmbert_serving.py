@@ -358,7 +358,7 @@ class MmbertServingTests(unittest.TestCase):
                 "dataset": "canonical",
                 "input_channel": "direct_user",
             },
-            # Middle zone only under the 0.1 untrusted floor: a regression to a
+            # Middle zone only under the 0.025 untrusted floor: a regression to a
             # single 0.2 floor would pass this row locally with no provider call.
             {
                 "panel_id": "e",

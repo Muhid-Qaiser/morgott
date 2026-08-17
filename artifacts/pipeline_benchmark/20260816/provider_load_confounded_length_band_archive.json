@@ -1,0 +1,14 @@
+{
+  "archived_on": "2026-08-16",
+  "reason": "The sampler synchronized length-band rotation with load cells after the sparse longest band emptied, so concurrency cells received materially different input-length distributions. These measurements are retained for provenance and excluded from provider latency and throughput comparisons.",
+  "rerun_required": true,
+  "results": {
+    "path": "artifacts/pipeline_benchmark/20260816/provider_load_confounded_length_band_results.jsonl",
+    "rows": 192,
+    "sha256": "6e56ba0e4c1f71a341780b96dd3511fe7df8810c75f74524eb9cd9cef12aaaf9"
+  },
+  "summary": {
+    "path": "artifacts/pipeline_benchmark/20260816/provider_load_confounded_length_band_summary.json",
+    "sha256": "b99eb3faa53771cf7dd06d8957766c58d103bedd6421f5cf7f92610d1ebf10fe"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "advisory_only": true,
+  "artifacts": {
+    "runtime": {
+      "path": "artifacts/pipeline_benchmark/20260816/mutation_1024_runtime.json",
+      "sha256": "c0a085f145439ac3eacdb0659e693df66405263eee07d03f5043f44d8b7d34ea"
+    },
+    "scores": {
+      "path": "artifacts/pipeline_benchmark/20260816/mutation_1024_scores.jsonl.gz",
+      "rows": 6240,
+      "sha256": "f95dc240ff1af184a28ddf8c47cfdcb8b21a2dd92fb7c957116324a1e8be8487"
+    },
+    "summary": {
+      "path": "artifacts/pipeline_benchmark/20260816/mutation_1024_summary.json",
+      "sha256": "3aee9a1252a5a3aaa5bface601f1880c300e1cbb1107d3ca8bd2eb60718f8b51"
+    }
+  },
+  "code": {
+    "local_scorer_sha256": "1fc64fc16c3a5198b56e73d4985064102b140ca7efa10aedd520d294f928f369",
+    "mutation_replay_sha256": "dfc24d76e48adfa0441771c2f140f993508271865c6aef6d8fdc162c0f8267ac",
+    "retained_reconstruction_sha256": "3522fedeff008d499a2611acdeb67967813e1bf77cb9e6bc339cb661ea4ef7db"
+  },
+  "model": {
+    "head_sha256": "7f1975415d07741b0d2a786fd70b9d0e32204ce59d9b113e64342186d3edbc72",
+    "max_tokens": 1024,
+    "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+    "registry_sha256": "5301c7ca64408e2cb8aa993feddad20d83ce28306dc28e0a444797c83cb3384e",
+    "result_sha256": "d3fd6629dec100e2b3d63113464a16f62d71db1eb6e72d4aaed7da4feca699cd",
+    "window_overlap": 128
+  },
+  "production_changes": false,
+  "provider_calls": 0,
+  "purpose": "text-free current-1024 replay of the frozen mutation population",
+  "raw_text_retained": false,
+  "retained_population": {
+    "inputs": {
+      "evaluation.json": {
+        "path": "artifacts/promptshield_training/runs/mmbert_lora_r8_s42/evaluation_external_v2/evaluation.json",
+        "sha256": "0b1c3d7554f2ba9237ca0fea86e50f844306613fa3fcbd9bac6ba37b3a9344ab"
+      },
+      "mutation_base_ids.npy": {
+        "path": "artifacts/promptshield_training/runs/mmbert_lora_r8_s42/evaluation_external_v2/mutation_base_ids.npy",
+        "sha256": "7b82458cc7c7b16198aeda3596abc3e71c947a7bbf8c74c80983b872b9e24566"
+      },
+      "mutation_no_op.npy": {
+        "path": "artifacts/promptshield_training/runs/mmbert_lora_r8_s42/evaluation_external_v2/mutation_no_op.npy",
+        "sha256": "bf515cd318c50b53e33ea9c9dec8a5580e434a4c836b9490ea883b5f9f52fcb9"
+      },
+      "mutation_text_sha256.npy": {
+        "path": "artifacts/promptshield_training/runs/mmbert_lora_r8_s42/evaluation_external_v2/mutation_text_sha256.npy",
+        "sha256": "5ff42ee4f0a3d01632158aae4a9100cf4560517075de28a9cc53b4ddb706a424"
+      }
+    },
+    "manifest_sha256": "5b4138ef08cd84456749fc9ad8100024bc07d65417a6dbe4f39295e1c1b8cdb8",
+    "summary_sha256": "57ba976f7736a0744ea7b954ba1c56433b1506af22209eb4dcf71071a6aa769b"
+  },
+  "schema_version": 1
+}

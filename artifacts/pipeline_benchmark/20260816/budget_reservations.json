@@ -1,0 +1,16 @@
+{
+  "baseline_usd": "24",
+  "closed": true,
+  "legacy_accounting": {
+    "booked_known_usd": "17.972814461468",
+    "completed_azure_estimate_usd": "4.9249116",
+    "failed_azure_estimate_usd": "4.9249116",
+    "provider_recorded_usd": "8.122991261468",
+    "unpriced_terminal_calls": true
+  },
+  "limit_usd": "25",
+  "note": "The completed study predates durable reservations. It is closed at the full 24 USD usable budget so no later call can spend against uncertain unpriced failures.",
+  "reservations": {},
+  "reserve_usd": "1",
+  "schema_version": 1
+}

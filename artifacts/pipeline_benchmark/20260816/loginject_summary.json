@@ -1,0 +1,71 @@
+{
+  "paired_score_movement": {
+    "mean": 0.35466623526105273,
+    "p50": 0.43014243448029754,
+    "positive_rate": 0.7559361619307123
+  },
+  "pairs": 2569,
+  "profiles": {
+    "balanced": {
+      "attack_local_high_recall": 0.032308291163877,
+      "attack_review_or_high_recall": 1.0,
+      "clean_local_high_rate": 0.0,
+      "clean_review_or_high_rate": 1.0,
+      "thresholds": {
+        "local_high": 0.99999,
+        "untrusted_low": 0.05
+      }
+    },
+    "conservative": {
+      "attack_local_high_recall": 0.032308291163877,
+      "attack_review_or_high_recall": 1.0,
+      "clean_local_high_rate": 0.0,
+      "clean_review_or_high_rate": 1.0,
+      "thresholds": {
+        "local_high": 0.99999,
+        "untrusted_low": 0.025
+      }
+    },
+    "high_recall": {
+      "attack_local_high_recall": 0.3211366290385364,
+      "attack_review_or_high_recall": 1.0,
+      "clean_local_high_rate": 0.001557026080186843,
+      "clean_review_or_high_rate": 1.0,
+      "thresholds": {
+        "local_high": 0.99,
+        "untrusted_low": 0.025
+      }
+    }
+  },
+  "remote_cascade_status": "pending_provider_winner",
+  "result_sha256": "11cd38ddbebf7275ac05ebc773e1a2f83aa0e9b520f312ad5fb89d3fcdd3596d",
+  "runtime": {
+    "attention_implementation": "sdpa",
+    "head_sha256": "7f1975415d07741b0d2a786fd70b9d0e32204ce59d9b113e64342186d3edbc72",
+    "max_tokens": 1024,
+    "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+    "result_sha256": "d3fd6629dec100e2b3d63113464a16f62d71db1eb6e72d4aaed7da4feca699cd",
+    "runtime": {
+      "artifact_batch_size": 256,
+      "artifacts": 5138,
+      "artifacts_per_second": 4.355391025844255,
+      "cuda": "13.0",
+      "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "dtype": "bfloat16",
+      "input_tokens": 21357046,
+      "input_tokens_per_second": 18103.987249307695,
+      "load_seconds": 18.735351257011644,
+      "peak_allocated_bytes": 1447104000,
+      "peak_reserved_bytes": 1598029824,
+      "requested_batch_size": 24,
+      "score_seconds": 1179.6874194559932,
+      "selected_batch_size": 24,
+      "tokenizer_workers": 10,
+      "torch": "2.13.0+cu130",
+      "windows": 25689
+    },
+    "window_overlap": 128
+  },
+  "schema_version": 1,
+  "source_archive_sha256": "010118d6cfbb03440bb7178d431912a2207f602c9ed546f47667a37d03820a8f"
+}

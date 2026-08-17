@@ -1,9 +1,10 @@
-"""Async shadow cascade over the retained mmBERT and DeepSeek candidates."""
+"""Maintained advisory cascade over the registered mmBERT and DeepSeek profile."""
 
 from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import math
 import tempfile
 import time
@@ -13,6 +14,7 @@ from pathlib import Path
 from typing import Literal, Protocol
 
 from .deepseek_nooa import (
+    MODEL,
     PROMPT_SHA256,
     PROVIDER,
     REMOTE_CONCURRENCY,
@@ -22,16 +24,78 @@ from .deepseek_nooa import (
 )
 from .downstream import (
     LLM_FLAG_PROBABILITY,
+    PIPELINE_PROFILE,
+    THRESHOLD_CONTRACT,
     THRESHOLD_SHA256,
     route,
     subversion_probability,
 )
 from .mmbert.core import MODEL_ID, MODEL_REVISION
-from .mmbert.serving import DEFAULT_MODEL_KEY, MmbertRuntime, PreparedText, Window
+from .mmbert.inference import verified_artifact_path
+from .mmbert.serving import (
+    DEFAULT_MODEL_KEY,
+    MODEL_MAX_TOKENS,
+    WINDOW_OVERLAP,
+    MmbertRuntime,
+    PreparedText,
+    Window,
+)
 
 MAX_REMOTE_WINDOWS = 128
 FULL_CONTEXT_REVIEW_INDEX = -1
 ALLOWED_CHANNELS = frozenset({"direct_user", "untrusted_content"})
+POLICY_FORMAT = "morgott-advisory-cascade-profile-v1"
+
+
+def _verify_registered_policy(manifest_path: Path) -> str:
+    manifest_path = manifest_path.resolve()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    entry = manifest.get("models", {}).get(DEFAULT_MODEL_KEY)
+    serving = entry.get("serving") if isinstance(entry, dict) else None
+    if not isinstance(serving, dict):
+        raise ValueError("registered cascade policy is missing")
+    spec = serving.get("cascade_policy")
+    policy_path = verified_artifact_path(
+        manifest_path.parent,
+        spec,
+        name="cascade policy",
+    )
+    policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    expected_contract = {
+        "advisory_decision": "allow",
+        "cascade": {
+            "max_remote_windows": MAX_REMOTE_WINDOWS,
+            "max_tokens": MODEL_MAX_TOKENS,
+            "untrusted_multi_window": "full_context_first_then_middle_windows",
+            "window_overlap": WINDOW_OVERLAP,
+            "window_review_batch_size": REMOTE_CONCURRENCY,
+        },
+        "model_key": DEFAULT_MODEL_KEY,
+        "profile": PIPELINE_PROFILE,
+        "review_failure": "restrict_incomplete",
+        "reviewer": {
+            "fallbacks_allowed": False,
+            "logprobs": True,
+            "model": MODEL,
+            "prompt_sha256": PROMPT_SHA256,
+            "reasoning_enabled": False,
+            "remote_concurrency": REMOTE_CONCURRENCY,
+            "request_sha256": REQUEST_SHA256,
+            "requested_provider": PROVIDER,
+            "strict_json_schema": True,
+        },
+        "threshold_sha256": THRESHOLD_SHA256,
+        "thresholds": THRESHOLD_CONTRACT,
+    }
+    if (
+        policy.get("schema_version") != 1
+        or policy.get("format") != POLICY_FORMAT
+        or policy.get("status") != "maintained_advisory"
+        or policy.get("advisory_only") is not True
+        or policy.get("runtime_contract") != expected_contract
+    ):
+        raise ValueError("registered cascade policy differs from maintained code")
+    return spec["sha256"]
 
 
 def _validated_review(review: WindowReview) -> WindowReview:
@@ -164,6 +228,8 @@ class CascadeAssessment:
     prompt_sha256: str
     provider: str
     provider_request_sha256: str
+    pipeline_profile: str
+    policy_sha256: str | None
     threshold_sha256: str
     local_latency_ms: float
     provider_latency_ms: float
@@ -178,15 +244,21 @@ class CascadeScanner:
         *,
         scorer: _WindowScorer,
         reviewer: _WindowReviewer | None,
+        policy_sha256: str | None = None,
     ) -> None:
         self._scorer = scorer
         self._reviewer = reviewer
+        self._policy_sha256 = policy_sha256
         self._local_semaphore = asyncio.Semaphore(1)
         self._remote_semaphore = asyncio.Semaphore(REMOTE_CONCURRENCY)
 
     @property
     def runtime_identity(self):
         return getattr(self._scorer, "identity", None)
+
+    @property
+    def policy_sha256(self) -> str | None:
+        return self._policy_sha256
 
     @classmethod
     def from_artifacts(
@@ -195,12 +267,17 @@ class CascadeScanner:
         manifest_path: Path,
         inference_precision: Literal["auto", "bf16", "fp32"] = "bf16",
     ) -> CascadeScanner:
+        policy_sha256 = _verify_registered_policy(manifest_path)
         scorer = MmbertRuntime.from_artifacts(
             manifest_path,
             inference_precision=inference_precision,
         )
         reviewer = DeepSeekReviewer.from_env()
-        return cls(scorer=scorer, reviewer=reviewer)
+        return cls(
+            scorer=scorer,
+            reviewer=reviewer,
+            policy_sha256=policy_sha256,
+        )
 
     async def aclose(self) -> None:
         if self._reviewer is not None:
@@ -324,6 +401,8 @@ class CascadeScanner:
                 prompt_sha256=PROMPT_SHA256,
                 provider=PROVIDER,
                 provider_request_sha256=REQUEST_SHA256,
+                pipeline_profile=PIPELINE_PROFILE,
+                policy_sha256=self._policy_sha256,
                 threshold_sha256=THRESHOLD_SHA256,
                 local_latency_ms=local_latency_ms,
                 provider_latency_ms=provider_latency_ms,

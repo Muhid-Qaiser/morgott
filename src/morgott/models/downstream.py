@@ -8,17 +8,19 @@ from typing import Literal
 
 MMBERT_LOW_BY_CHANNEL = {
     "direct_user": 0.2,
-    "untrusted_content": 0.1,
+    "untrusted_content": 0.025,
 }
-MMBERT_HIGH = 0.99999
-LLM_FLAG_PROBABILITY = 0.6224593312018547
+MMBERT_HIGH = 0.9999
+LLM_FLAG_PROBABILITY = 0.5
+PIPELINE_PROFILE = "balanced-20260816"
+THRESHOLD_CONTRACT = {
+    "mmbert_low_by_channel": MMBERT_LOW_BY_CHANNEL,
+    "mmbert_high": MMBERT_HIGH,
+    "deepseek_flag": LLM_FLAG_PROBABILITY,
+}
 THRESHOLD_SHA256 = hashlib.sha256(
     json.dumps(
-        {
-            "mmbert_low_by_channel": MMBERT_LOW_BY_CHANNEL,
-            "mmbert_high": MMBERT_HIGH,
-            "deepseek_flag": LLM_FLAG_PROBABILITY,
-        },
+        THRESHOLD_CONTRACT,
         sort_keys=True,
         separators=(",", ":"),
     ).encode()

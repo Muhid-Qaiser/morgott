@@ -1,0 +1,16 @@
+{
+  "calls": 24704,
+  "concurrency": 8,
+  "endpoint_tags": [
+    "cloudflare",
+    "decart/fp4"
+  ],
+  "providers": [
+    "cloudflare",
+    "decart"
+  ],
+  "recorded_spend_usd": "0.861823984588",
+  "result_path": "artifacts/pipeline_benchmark/20260816/provider_evaluation_results.jsonl",
+  "result_sha256": "ea748c6f09b0268d7fecc744c6e6b0320ca5a66c0c6b2282d1bbb8a4a2a3a99f",
+  "stage": "evaluation"
+}

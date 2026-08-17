@@ -1,0 +1,15 @@
+{
+  "benchmark_ended_utc_approximate": "2026-08-16T19:08:00Z",
+  "benchmark_started_utc_approximate": "2026-08-16T12:09:00Z",
+  "cells_completed_before_failure": 48,
+  "exception": "TypeError: '<' not supported between instances of 'NoneType' and 'str'",
+  "failure_stage": "final_atomic_json_serialization",
+  "git_commit": "4317815408ec0a3188a4a8af3d903ff469956039",
+  "cost_estimate_is_upper_bound": false,
+  "estimated_remote_cost_usd": "4.9249116",
+  "measured_requests_completed": 4800,
+  "production_changes": false,
+  "requests_per_cell": 100,
+  "schema_version": 1,
+  "warmup_requests_completed": 240
+}

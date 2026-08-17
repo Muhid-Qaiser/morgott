@@ -1,0 +1,28 @@
+{
+  "attention_implementation": "sdpa",
+  "head_sha256": "7f1975415d07741b0d2a786fd70b9d0e32204ce59d9b113e64342186d3edbc72",
+  "max_tokens": 1024,
+  "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+  "result_path": "artifacts/pipeline_benchmark/20260816/morgott_1024_scores.jsonl.gz",
+  "result_sha256": "f8b415e5237a78bd6865c714a6e64f447dfa993938eaab562be2ac94a9e2fc9d",
+  "runtime": {
+    "artifact_batch_size": 256,
+    "artifacts": 20000,
+    "artifacts_per_second": 76.43003782875527,
+    "cuda": "13.0",
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "dtype": "bfloat16",
+    "input_tokens": 4105602,
+    "input_tokens_per_second": 15689.565808490666,
+    "load_seconds": 12.71454904100392,
+    "peak_allocated_bytes": 1447104000,
+    "peak_reserved_bytes": 2631925760,
+    "requested_batch_size": 24,
+    "score_seconds": 261.6772223089938,
+    "selected_batch_size": 24,
+    "tokenizer_workers": 10,
+    "torch": "2.13.0+cu130",
+    "windows": 22626
+  },
+  "window_overlap": 128
+}

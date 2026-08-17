@@ -1,0 +1,187 @@
+{
+  "advisory_only": true,
+  "cost_usd": "0.033111652",
+  "frozen_from": "provider-safe 1024-row calibration panel and windows only",
+  "inputs": {
+    "analysis_code_sha256": "54c202eabf9b89e8b6755a8a0feddc020cfbeab111f9770475eef008a01a6c4a",
+    "hard_helper_code_sha256": "b57c298069cb96682e54840a2e2541ccd71df87c8bb7be324b043fecac201397",
+    "local_scores_sha256": "f8b415e5237a78bd6865c714a6e64f447dfa993938eaab562be2ac94a9e2fc9d",
+    "manifest_sha256": "59151100d7e6d36b3dbd20f210d71c379ad320a2d7285b4caba4e60b70f447d3",
+    "metrics_code_sha256": "28a30f02276586db5eb7c213abd6d4927dab144f5c86766ea0f250b01a7e6cca",
+    "provider_cascade_windows": {
+      "jobs": 576,
+      "path": "artifacts/pipeline_benchmark/20260816/provider_cascade_windows_results.jsonl",
+      "providers": [
+        "baidu",
+        "cloudflare",
+        "decart",
+        "deepinfra"
+      ],
+      "run_path": "artifacts/pipeline_benchmark/20260816/provider_cascade_windows_run.json",
+      "run_sha256": "1b9acdeb4bd9324c0c019b8370ee1187eff0519cbea25797418b077eee04574f",
+      "sha256": "3a2ee1612dd5eefbe65f6234a0ecb980fca1e67bf96355242575677fed239d94"
+    },
+    "provider_panel": {
+      "path": "artifacts/pipeline_benchmark/20260816/provider_panel_results.jsonl",
+      "providers": [
+        "baidu",
+        "cloudflare",
+        "decart",
+        "deepinfra"
+      ],
+      "rows_per_provider": 1024,
+      "run_path": "artifacts/pipeline_benchmark/20260816/provider_panel_run.json",
+      "run_sha256": "ca7d675f08b8fb02df6cf56aa4faa8c3dfb030acf250ff99576e73418c4f1ee8",
+      "sha256": "529cb1b7f4952e46c3c7b436e1d7c49f7830d491a468588b60f78b67dc04b269"
+    }
+  },
+  "latency_seconds": {
+    "p95": 4.922362886997144
+  },
+  "profile_infeasibility": {},
+  "profile_semantics": "maintained_multi_window_exact",
+  "profiles": {
+    "balanced": {
+      "arm": "logprob",
+      "call_count": 182,
+      "call_rate": 0.177734375,
+      "configuration_id": "logprob:0.2:0.025:0.9999:0.5",
+      "invalid_called_reviews": 0,
+      "max_channel_fpr": 0.022494887525562373,
+      "metrics": {
+        "accuracy": 0.875,
+        "fn": 116,
+        "fp": 12,
+        "fpr": 0.01889763779527559,
+        "fpr_95": [
+          0.010842694051482665,
+          0.032738476888940736
+        ],
+        "negatives": 635,
+        "positives": 389,
+        "precision": 0.9578947368421052,
+        "precision_95": [
+          0.927857335874226,
+          0.975752558168106
+        ],
+        "predicted_positive": 285,
+        "recall": 0.7017994858611826,
+        "recall_95": [
+          0.6545454785001025,
+          0.7451068404565381
+        ],
+        "restriction_rate": 0.2783203125,
+        "rows": 1024,
+        "tn": 623,
+        "tp": 273
+      },
+      "review_units": 183,
+      "semantics": "maintained_multi_window_exact",
+      "thresholds": {
+        "direct_low": 0.2,
+        "local_high": 0.9999,
+        "reviewer": 0.5,
+        "untrusted_low": 0.025
+      },
+      "worst_slice_recall": 0.5971223021582733
+    },
+    "conservative": {
+      "arm": "logprob",
+      "call_count": 223,
+      "call_rate": 0.2177734375,
+      "configuration_id": "logprob:0.3:0.05:0.99999:0.99",
+      "invalid_called_reviews": 0,
+      "max_channel_fpr": 0.010224948875255624,
+      "metrics": {
+        "accuracy": 0.7783203125,
+        "fn": 222,
+        "fp": 5,
+        "fpr": 0.007874015748031496,
+        "fpr_95": [
+          0.0033678631799829613,
+          0.018298637372823296
+        ],
+        "negatives": 635,
+        "positives": 389,
+        "precision": 0.9709302325581395,
+        "precision_95": [
+          0.9337638912657986,
+          0.9875205491982202
+        ],
+        "predicted_positive": 172,
+        "recall": 0.42930591259640105,
+        "recall_95": [
+          0.38104549557748457,
+          0.4789489149791065
+        ],
+        "restriction_rate": 0.16796875,
+        "rows": 1024,
+        "tn": 630,
+        "tp": 167
+      },
+      "review_units": 224,
+      "semantics": "maintained_multi_window_exact",
+      "thresholds": {
+        "direct_low": 0.3,
+        "local_high": 0.99999,
+        "reviewer": 0.99,
+        "untrusted_low": 0.05
+      },
+      "worst_slice_recall": 0.2158273381294964
+    },
+    "high_recall": {
+      "arm": "logprob",
+      "call_count": 93,
+      "call_rate": 0.0908203125,
+      "configuration_id": "logprob:0.2:0.025:0.99:0.5",
+      "invalid_called_reviews": 0,
+      "max_channel_fpr": 0.034764826175869123,
+      "metrics": {
+        "accuracy": 0.8984375,
+        "fn": 86,
+        "fp": 18,
+        "fpr": 0.028346456692913385,
+        "fpr_95": [
+          0.01800442950517188,
+          0.044360744624637634
+        ],
+        "negatives": 635,
+        "positives": 389,
+        "precision": 0.9439252336448598,
+        "precision_95": [
+          0.9131119811331502,
+          0.9642390843209493
+        ],
+        "predicted_positive": 321,
+        "recall": 0.7789203084832905,
+        "recall_95": [
+          0.7350667421896948,
+          0.8173189470688467
+        ],
+        "restriction_rate": 0.3134765625,
+        "rows": 1024,
+        "tn": 617,
+        "tp": 303
+      },
+      "review_units": 93,
+      "semantics": "maintained_multi_window_exact",
+      "thresholds": {
+        "direct_low": 0.2,
+        "local_high": 0.99,
+        "reviewer": 0.5,
+        "untrusted_low": 0.025
+      },
+      "worst_slice_recall": 0.5971223021582733
+    }
+  },
+  "provider": {
+    "name": "cloudflare",
+    "transport": "strict_logprob"
+  },
+  "reliability": {
+    "artifact_invalid_outputs": 0,
+    "valid_output_rate": 1.0,
+    "window_invalid_outputs": 0
+  },
+  "schema_version": 1
+}

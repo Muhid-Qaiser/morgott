@@ -60,6 +60,10 @@
           "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/verification.json",
           "sha256": "91d72df38e4e52a28e363830f606a09f36027ff91826ed960ebd716b126c2835"
         },
+        "cascade_policy": {
+          "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion.json",
+          "sha256": "1c173136f385e8d755e01b73ebcf592acd025d6d94169fb76f1f10abdedd957f"
+        },
         "benchmark": {
           "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/benchmark.json",
           "sha256": "d481497fd7a1b323740eabb04b8f76317242f1b360181405fd2193d1df6e38ef"
@@ -72,6 +76,6 @@
     "Scores never grant authority and are not approved for blocking.",
     "The maintained preview scans ordered 1,024-token windows; older model artifacts are provenance only.",
     "PromptShield and SEP are already-consumed development evaluations.",
-    "The full-mixture LoRA is one seed and remains an unpromoted advisory result."
+    "The balanced-20260816 cascade profile is the maintained advisory default; it is not approved for blocking."
   ]
 }

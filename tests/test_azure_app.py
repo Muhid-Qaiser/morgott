@@ -17,6 +17,7 @@ from morgott.azure_app import (
     _validate_command,
     create_app,
 )
+from morgott.models.downstream import THRESHOLD_SHA256
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,7 @@ class _Assessment:
 
 
 class _Scanner:
+    policy_sha256 = "d" * 64
     runtime_identity = SimpleNamespace(
         model_key="mmbert-lora-full-ctx1024-u17000-s42",
         onnx_sha256="b" * 64,
@@ -99,6 +101,9 @@ class AzureAppTests(unittest.IsolatedAsyncioTestCase):
                 )
                 status = (await client.get("/v1/status", headers=headers)).json()
                 self.assertEqual(status["context_length"], 1024)
+                self.assertEqual(status["pipeline_profile"], "balanced-20260816")
+                self.assertEqual(status["policy_sha256"], "d" * 64)
+                self.assertEqual(status["threshold_sha256"], THRESHOLD_SHA256)
                 self.assertEqual(status["requested_precision"], "auto")
                 self.assertEqual(status["precision"], "fp32")
 

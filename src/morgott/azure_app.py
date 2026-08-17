@@ -31,6 +31,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from .models.cascade import CascadeScanner
+from .models.downstream import PIPELINE_PROFILE, THRESHOLD_SHA256
 from .normalization import strict_normalize
 
 MAX_TEXT_BYTES = 64 * 1024
@@ -342,6 +343,9 @@ def create_app(
         identity = scanner.runtime_identity
         return {
             "ready": consumer_ready(),
+            "pipeline_profile": PIPELINE_PROFILE,
+            "policy_sha256": scanner.policy_sha256,
+            "threshold_sha256": THRESHOLD_SHA256,
             "model_key": identity.model_key,
             "onnx_sha256": identity.onnx_sha256,
             "context_length": identity.max_tokens,

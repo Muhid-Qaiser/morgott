@@ -1,0 +1,43 @@
+{
+  "absolute_score_delta": {
+    "maximum": 0.10039382932432867,
+    "mean": 0.0019340008409773311,
+    "p95": 0.009463193906533838
+  },
+  "artifacts_per_second": 9.400362747913581,
+  "decision_disagreement_rate": {
+    "0.1": 0.001953125,
+    "0.2": 0.001953125,
+    "0.99999": 0.005859375
+  },
+  "decision_disagreements": {
+    "0.1": 1,
+    "0.2": 1,
+    "0.99999": 3
+  },
+  "input_tokens_per_second": 1805.145048851788,
+  "rows": 512,
+  "runtime": {
+    "compile_seconds": 3.6113586480059894,
+    "cpu_capabilities": [
+      "BF16",
+      "WINOGRAD",
+      "FP32",
+      "INT8",
+      "BIN",
+      "EXPORT_IMPORT"
+    ],
+    "inference_precision": "bf16",
+    "max_tokens": 1024,
+    "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+    "onnx_sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5",
+    "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+    "reported_inference_precision": "<Type: 'bfloat16'>",
+    "requested_inference_precision": "auto",
+    "runtime": "openvino-2026.2.1-21919-ede283a88e3-releases/2026/2-cpu-bf16",
+    "threads": 6,
+    "tokenizer_sha256": "197d4cc5406ee12cc50c8b5511f2393cc32d9db321545979ce041c1199178356",
+    "window_overlap": 128
+  },
+  "seconds": 54.46598325300147
+}

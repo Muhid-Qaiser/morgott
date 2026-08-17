@@ -1,0 +1,22 @@
+{
+  "max_tokens": 512,
+  "model": "meta-llama/Llama-Prompt-Guard-2-86M",
+  "result_path": "artifacts/pipeline_benchmark/20260816/prompt_guard_2_86m_scores.jsonl.gz",
+  "result_sha256": "8b8f46705b0e9a68290051eb3029dc384feb191f1e079b9d2eedbf782a8668f8",
+  "revision": "a8ded8e697ce7c355e395a0df51f94adb4a2fd27",
+  "runtime": {
+    "artifacts": 20000,
+    "artifacts_per_second": 90.57987283302347,
+    "batch_size": 32,
+    "device": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "dtype": "float16",
+    "input_tokens": 4287725,
+    "input_tokens_per_second": 19419.079262148778,
+    "load_seconds": 2.2248186750075547,
+    "peak_allocated_bytes": 2082858496,
+    "peak_reserved_bytes": 3833593856,
+    "score_seconds": 220.7996034270036,
+    "windows": 25777
+  },
+  "window_overlap": 64
+}

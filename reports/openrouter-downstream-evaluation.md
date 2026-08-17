@@ -2,6 +2,9 @@
 
 Date: 2026-07-29; updated 2026-08-02
 
+Status update, 2026-08-17: this report preserves the earlier cascade selection as historical evidence.
+The maintained advisory default is now the registry-bound `balanced-20260816` profile documented in [the complete pipeline benchmark](pipeline-benchmark-20260816.md).
+
 ## Decision
 
 The evaluated LLMs should not be used as unconditional vetoes after a high-recall mmBERT first stage.
@@ -642,8 +645,8 @@ Do not interpret the gain as production validation.
 The prompt was selected with already-open synthetic boundary and mixed-domain development data, PromptShield recall regressed, the provider is external and mutable, and no prospective prevalence-matched final test exists.
 Learned output still cannot block, approve, grant authority, or bypass the reference monitor.
 
-The later DeepSeek V4 Flash 0731 comparison supersedes only the reviewer identity, provider, and threshold in this maintained contract.
-Under the owner's aggregate-quality criterion, the current route uses 0731 through Cloudflare at `0.6224593312018547`; the historical April metrics and artifacts above remain unchanged provenance.
+The later DeepSeek V4 Flash 0731 comparison superseded only the reviewer identity, provider, and threshold in this historical contract.
+Under the owner's aggregate-quality criterion, the route used 0731 through Cloudflare at `0.6224593312018547` through 2026-08-16; the historical April metrics and artifacts above remain unchanged provenance.
 The replacement evidence and its PromptShield limitation are recorded in [the 0731 research report](deepseek-v4-flash-0731-research.md).
 
 ## Artifacts and limitations

@@ -1,0 +1,77 @@
+{
+  "advisory_only": true,
+  "evaluation": {
+    "cuda_bf16": {
+      "artifact_review_units": 1705,
+      "artifacts": 12352,
+      "artifacts_with_provider_review": 1724,
+      "fpr": 0.013733148544790222,
+      "precision": 0.9668491484184915,
+      "recall": 0.7200453001132503,
+      "window_review_units": 33
+    },
+    "openvino_cpu_transported": {
+      "artifact_review_units": 1703,
+      "artifacts": 12352,
+      "artifacts_with_provider_review": 1722,
+      "fpr": 0.013607156356305909,
+      "precision": 0.96718322698268,
+      "recall": 0.720951302378256,
+      "window_review_units": 33
+    },
+    "role": "consumed provider-safe development evaluation",
+    "selection_sha256": "43c7da5b3b612ab6c34dcaeee151560f165a7b1939b7c1b786da52cdce5d37f7",
+    "evaluation_sha256": "4690c1e4772ae69cfdcacf0c82f9f22183857a62bb5e7988ff6e78bf8d56087a",
+    "openvino_scores_sha256": "dbc284f0ee4d7a414d32d54a636f8feb68052d301a9fff2829115d58e0b66853",
+    "openvino_runtime_sha256": "69640a96968e24b54597232399cd32eee10bdf4f8541b831c1a9c162833bb951",
+    "provider_summary_sha256": "995994e30f794c2a244696d67c88886a08e041ffa3fcf4d44c780f82a1b87878",
+    "source_registry_sha256": "5301c7ca64408e2cb8aa993feddad20d83ce28306dc28e0a444797c83cb3384e",
+    "tokenizer_window_sequence_parity": {
+      "differences": 0,
+      "multi_window_artifacts": 225
+    }
+  },
+  "format": "morgott-advisory-cascade-profile-v1",
+  "limitations": [
+    "The calibration and evaluation roles are consumed development evidence, not representative production traffic.",
+    "The long-document benign false-positive warning remains unresolved.",
+    "The profile is maintained for advisory routing only and is not approved for blocking.",
+    "Provider identity is requested and fallbacks are disabled; the maintained NOOA response parser does not independently attest the returned provider build."
+  ],
+  "promoted_on": "2026-08-17",
+  "runtime_contract": {
+    "advisory_decision": "allow",
+    "cascade": {
+      "max_remote_windows": 128,
+      "max_tokens": 1024,
+      "untrusted_multi_window": "full_context_first_then_middle_windows",
+      "window_overlap": 128,
+      "window_review_batch_size": 4
+    },
+    "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+    "profile": "balanced-20260816",
+    "review_failure": "restrict_incomplete",
+    "reviewer": {
+      "fallbacks_allowed": false,
+      "logprobs": true,
+      "model": "deepseek/deepseek-v4-flash-0731",
+      "prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+      "reasoning_enabled": false,
+      "remote_concurrency": 4,
+      "request_sha256": "8138ecb7533351edfbd82194d591e2e491082443b6f13e61c7bf7f996568ce91",
+      "requested_provider": "cloudflare",
+      "strict_json_schema": true
+    },
+    "threshold_sha256": "e9b375b079667fd7c82bc5439fcde772ad3d3b04b7fb44277b8f180478558353",
+    "thresholds": {
+      "deepseek_flag": 0.5,
+      "mmbert_high": 0.9999,
+      "mmbert_low_by_channel": {
+        "direct_user": 0.2,
+        "untrusted_content": 0.025
+      }
+    }
+  },
+  "schema_version": 1,
+  "status": "maintained_advisory"
+}

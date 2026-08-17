@@ -1,0 +1,15 @@
+{
+  "current_source_status": "post_study_reviewed_source",
+  "frozen_manifest_git_commit": "4317815e613ea4a1fedc59df9aa800d76fd26305",
+  "frozen_manifest_source_status": "incomplete_uncommitted_runner",
+  "hard_verdict_pre_source_gate": {
+    "evaluation_path": "artifacts/pipeline_benchmark/20260816/hard_verdict_evaluation_pre_source_gate.json",
+    "evaluation_sha256": "527c51ae234021f80b842ef4b2e5ba18a5102d6bfdf4d6f1b0fa04309517e681",
+    "selection_path": "artifacts/pipeline_benchmark/20260816/hard_verdict_selection_pre_source_gate.json",
+    "selection_sha256": "f7966b184e97e23d5751752bb4e27396faf538e3be4a45f4c7fc77950c679e50",
+    "source_path": "artifacts/pipeline_benchmark/20260816/source/hard_verdict_pre_source_gate.py",
+    "source_sha256": "b57c298069cb96682e54840a2e2541ccd71df87c8bb7be324b043fecac201397"
+  },
+  "note": "The frozen manifest names a base commit that did not contain the untracked benchmark runner. Exact per-artifact code hashes and this recovered byte-identical hard-verdict helper are retained, but the full original runner source cannot be reconstructed from that commit.",
+  "schema_version": 1
+}

@@ -1,0 +1,19 @@
+{
+  "advance_rule": "recover at least 8 of 27 reviewer-fixable misses with no more than 2 of 54 false positives",
+  "base_prompt_summary_sha256": "670c27d90994d95eae190ef84cd14368e2f35683353a4569eb0cdc6f20862293",
+  "calls": 73,
+  "limitations": [
+    "The complete 193-row long bucket is consumed evaluation evidence.",
+    "Only the 73 artifacts reachable by the frozen balanced local gates are called.",
+    "The same deterministic redactions and synthetic trusted tasks are reused."
+  ],
+  "patch_sha256": "f4ba31bc34a8feffd435a1145dd5b59df1ab3283f8bbb7820b7a8e5dcaf52c8b",
+  "production_changes": false,
+  "provider": "cloudflare",
+  "purpose": "post-hoc one-sentence reviewer prompt patch diagnostic",
+  "reasoning": "disabled",
+  "rows": 193,
+  "schema_version": 1,
+  "selection_eligible": false,
+  "transport": "strict_hard_verdict"
+}

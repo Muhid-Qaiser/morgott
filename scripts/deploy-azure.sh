@@ -166,10 +166,13 @@ fi
 
 log "Verifying the registered 1,024-token serving artifact"
 git lfs pull --include="artifacts/models/$MODEL_KEY/serving/**" --exclude=""
-uv run --locked python - <<'PY'
+policy_identity=$(
+	uv run --locked python - <<'PY'
 import json
 from pathlib import Path
 
+from morgott.models.cascade import _verify_registered_policy
+from morgott.models.downstream import PIPELINE_PROFILE, THRESHOLD_SHA256
 from morgott.models.mmbert.core import file_sha256
 
 key = "mmbert-lora-full-ctx1024-u17000-s42"
@@ -188,7 +191,18 @@ for name in ("onnx", "tokenizer", "export", "verification"):
     path = manifest.parent / spec["path"]
     if not path.is_file() or file_sha256(path) != spec["sha256"]:
         raise SystemExit(f"registered serving artifact failed: {name}")
+policy_sha256 = _verify_registered_policy(manifest)
+print(json.dumps({
+    "policy_sha256": policy_sha256,
+    "profile": PIPELINE_PROFILE,
+    "threshold_sha256": THRESHOLD_SHA256,
+}, sort_keys=True))
 PY
+)
+PIPELINE_PROFILE=$(jq -er '.profile' <<<"$policy_identity")
+POLICY_SHA256=$(jq -er '.policy_sha256' <<<"$policy_identity")
+THRESHOLD_SHA256=$(jq -er '.threshold_sha256' <<<"$policy_identity")
+readonly PIPELINE_PROFILE POLICY_SHA256 THRESHOLD_SHA256
 
 log "Registering Azure providers and validating infrastructure"
 for namespace in \
@@ -434,7 +448,10 @@ curl --fail --silent --show-error \
 	"https://$fqdn/v1/status" |
 	jq -e \
 		--arg key "$MODEL_KEY" \
-		'.ready == true and .model_key == $key and .context_length == 1024 and .requested_precision == "auto" and (.precision == "bf16" or .precision == "fp32")' \
+		--arg profile "$PIPELINE_PROFILE" \
+		--arg policy "$POLICY_SHA256" \
+		--arg threshold "$THRESHOLD_SHA256" \
+		'.ready == true and .model_key == $key and .pipeline_profile == $profile and .policy_sha256 == $policy and .threshold_sha256 == $threshold and .context_length == 1024 and .requested_precision == "auto" and (.precision == "bf16" or .precision == "fp32")' \
 		>/dev/null
 rm -f "$curl_config"
 
@@ -491,4 +508,5 @@ fi
 published=true
 log "Azure preview deployed: https://$fqdn"
 log "Image: $image"
+log "Policy: $PIPELINE_PROFILE ($POLICY_SHA256)"
 log "Observed deployment-to-Running: ${deployment_to_running_seconds}s"

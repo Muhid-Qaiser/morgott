@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import io
 import json
 import math
@@ -212,6 +213,24 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.reviewed_windows[0].index, FULL_CONTEXT_REVIEW_INDEX)
         self.assertEqual(reviewer.texts, ["distributed instruction"])
 
+    async def test_full_context_reviewer_uses_the_promoted_boundary(self):
+        for probability, expected in (
+            (math.nextafter(0.5, 0.0), ("pass", "deepseek_full_context_clear")),
+            (0.5, ("restrict", "deepseek_full_context_flag")),
+        ):
+            with self.subTest(probability=probability):
+                scanner = CascadeScanner(
+                    scorer=_Scorer([0.01, 0.01]),
+                    reviewer=_Reviewer(probability=probability),
+                )
+
+                result = await scanner.assess_text(
+                    "long untrusted content",
+                    input_channel="untrusted_content",
+                )
+
+                self.assertEqual((result.advisory_route, result.reason), expected)
+
     async def test_untrusted_multi_window_full_clear_passes_all_low_input(self):
         reviewer = _Reviewer(probability=0.1)
         scanner = CascadeScanner(
@@ -276,7 +295,7 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         for high_index in (0, 1, 2):
             with self.subTest(high_index=high_index):
                 scores = [0.1, 0.5, 0.1]
-                scores[high_index] = 0.99999
+                scores[high_index] = 0.9999
                 scanner = CascadeScanner(
                     scorer=_Scorer(scores),
                     reviewer=None,
@@ -639,11 +658,58 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
             )
 
         self.assertIs(scanner._reviewer, reviewer)
+        self.assertEqual(
+            scanner.policy_sha256,
+            "1c173136f385e8d755e01b73ebcf592acd025d6d94169fb76f1f10abdedd957f",
+        )
         load_scorer.assert_called_once_with(
             Path("model-artifacts.json"),
             inference_precision="auto",
         )
         load_reviewer.assert_called_once()
+
+    def test_production_constructor_rejects_registry_policy_drift(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            policy = json.loads(
+                Path(
+                    "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion.json"
+                ).read_text(encoding="utf-8")
+            )
+            policy["runtime_contract"]["profile"] = "wrong-profile"
+            policy_path = root / "promotion.json"
+            policy_path.write_text(json.dumps(policy), encoding="utf-8")
+            manifest_path = root / "model-artifacts.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 2,
+                        "advisory_only": True,
+                        "models": {
+                            "mmbert-lora-full-ctx1024-u17000-s42": {
+                                "serving": {
+                                    "cascade_policy": {
+                                        "path": "promotion.json",
+                                        "sha256": hashlib.sha256(
+                                            policy_path.read_bytes()
+                                        ).hexdigest(),
+                                    }
+                                }
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with (
+                mock.patch(
+                    "morgott.models.cascade.MmbertRuntime.from_artifacts"
+                ) as load_scorer,
+                self.assertRaisesRegex(ValueError, "differs from maintained code"),
+            ):
+                CascadeScanner.from_artifacts(manifest_path=manifest_path)
+
+            load_scorer.assert_not_called()
 
 
 if __name__ == "__main__":

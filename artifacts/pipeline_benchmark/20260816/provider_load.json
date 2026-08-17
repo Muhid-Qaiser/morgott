@@ -1,0 +1,177 @@
+{
+  "cells": [
+    {
+      "attempts": {
+        "1": 31,
+        "2": 1
+      },
+      "cell_id": "cloudflare:strict_logprob:c1",
+      "concurrency": 1,
+      "cost_usd": "0.003003448",
+      "input_tokens": 27272,
+      "input_tokens_per_second": 847.063583631335,
+      "latency_seconds": {
+        "p50": 0.7175447874979,
+        "p95": 2.1783346981537757,
+        "p99": 4.033482923733539
+      },
+      "length_bands": {
+        "1024-4095": 11,
+        "4096-15999": 10,
+        "<1024": 11
+      },
+      "requests": 32,
+      "requests_per_second": 0.9939144425125667,
+      "terminal_failure_rate": 0.0,
+      "terminal_failures": 0,
+      "valid_outputs": 32,
+      "wall_seconds": 32.1959301839961
+    },
+    {
+      "attempts": {
+        "1": 32
+      },
+      "cell_id": "cloudflare:strict_logprob:c4",
+      "concurrency": 4,
+      "cost_usd": "0.003212496",
+      "input_tokens": 28972,
+      "input_tokens_per_second": 3960.416602239982,
+      "latency_seconds": {
+        "p50": 0.7761936970055103,
+        "p95": 1.127332668902818,
+        "p99": 2.248351271672875
+      },
+      "length_bands": {
+        "1024-4095": 10,
+        "4096-15999": 11,
+        "<1024": 11
+      },
+      "requests": 32,
+      "requests_per_second": 4.374338370553618,
+      "terminal_failure_rate": 0.0,
+      "terminal_failures": 0,
+      "valid_outputs": 32,
+      "wall_seconds": 7.315392018004786
+    },
+    {
+      "accepted": true,
+      "attempts": {
+        "1": 32
+      },
+      "cell_id": "cloudflare:strict_logprob:c8",
+      "concurrency": 8,
+      "cost_usd": "0.003371116",
+      "input_tokens": 29093,
+      "input_tokens_per_second": 7163.994537743008,
+      "latency_seconds": {
+        "p50": 0.8746724775046459,
+        "p95": 1.1781335694540758,
+        "p99": 1.3789100379614685
+      },
+      "length_bands": {
+        "1024-4095": 10,
+        "4096-15999": 11,
+        "<1024": 11
+      },
+      "requests": 32,
+      "requests_per_second": 7.87982762890648,
+      "terminal_failure_rate": 0.0,
+      "terminal_failures": 0,
+      "valid_outputs": 32,
+      "wall_seconds": 4.061002538001048
+    },
+    {
+      "attempts": {
+        "1": 32
+      },
+      "cell_id": "decart:strict_hard_verdict:c1",
+      "concurrency": 1,
+      "cost_usd": "0.00080841438",
+      "input_tokens": 30360,
+      "input_tokens_per_second": 1059.3389853020694,
+      "latency_seconds": {
+        "p50": 0.8197822055008146,
+        "p95": 1.3670146982469304,
+        "p99": 1.5071033487003298
+      },
+      "length_bands": {
+        "1024-4095": 10,
+        "4096-15999": 11,
+        "<1024": 11
+      },
+      "requests": 32,
+      "requests_per_second": 1.1165628303579125,
+      "terminal_failure_rate": 0.0,
+      "terminal_failures": 0,
+      "valid_outputs": 32,
+      "wall_seconds": 28.659381388992188
+    },
+    {
+      "attempts": {
+        "1": 32
+      },
+      "cell_id": "decart:strict_hard_verdict:c4",
+      "concurrency": 4,
+      "cost_usd": "0.00092602998",
+      "input_tokens": 34856,
+      "input_tokens_per_second": 3094.3580969712334,
+      "latency_seconds": {
+        "p50": 0.7719354545042734,
+        "p95": 3.175646338551449,
+        "p99": 4.9914775861115785
+      },
+      "length_bands": {
+        "1024-4095": 11,
+        "4096-15999": 10,
+        "<1024": 10,
+        ">=16000": 1
+      },
+      "requests": 32,
+      "requests_per_second": 2.8408153288696196,
+      "terminal_failure_rate": 0.0,
+      "terminal_failures": 0,
+      "valid_outputs": 32,
+      "wall_seconds": 11.264371772005688
+    },
+    {
+      "accepted": true,
+      "attempts": {
+        "1": 32
+      },
+      "cell_id": "decart:strict_hard_verdict:c8",
+      "concurrency": 8,
+      "cost_usd": "0.00124137450",
+      "input_tokens": 66159,
+      "input_tokens_per_second": 11737.67657850482,
+      "latency_seconds": {
+        "p50": 0.8786903029977111,
+        "p95": 1.8294844733951323,
+        "p99": 4.452642050817963
+      },
+      "length_bands": {
+        "1024-4095": 11,
+        "4096-15999": 10,
+        "<1024": 10,
+        ">=16000": 1
+      },
+      "requests": 32,
+      "requests_per_second": 5.67731753067843,
+      "terminal_failure_rate": 0.0,
+      "terminal_failures": 0,
+      "valid_outputs": 32,
+      "wall_seconds": 5.636464726005215
+    }
+  ],
+  "eligible_length_bands": {
+    "1024-4095": 855,
+    "4096-15999": 83,
+    "<1024": 11412,
+    ">=16000": 2
+  },
+  "maximum_estimate_usd": "1.3481173932000000",
+  "recorded_spend_after_usd": "0.892891681468",
+  "recorded_spend_before_usd": "0.880328802608",
+  "requests_per_cell": 32,
+  "result_sha256": "fcbc4ea29c2caf0f6dd91df6f4dcf4c3c85d2309ee410293875bb101f332980a",
+  "samples_are_unique_across_cells": true
+}

@@ -1,7 +1,8 @@
 # Roadmap
 
-morgott is still at the data-foundation stage. The broad corpus is not a trained
-or promoted model, and the old POC results do not choose the final architecture.
+The corpus foundation and first maintained advisory model milestone are complete.
+The active work is prospective traffic evaluation, long-input error reduction, and stateful containment.
+No model is approved for blocking.
 
 ## P0 - finish and freeze the corpus
 
@@ -21,9 +22,9 @@ Exit condition: a clean rebuild produces the versioned manifest, all maintained
 tests and manifest invariants pass, and no second manifest or legacy data root
 exists.
 
-## P1 - first proper routing model
+## P1 - first proper routing model (completed advisory milestone)
 
-Start with the smallest fair comparison:
+The phase began with the smallest fair comparison:
 
 1. A character/word linear baseline on the canonical routing train split.
 2. One frozen encoder comparison on identical grouped rows before any limited top-layer unfreezing.
@@ -52,10 +53,8 @@ Required reporting:
 - document-level false positives by number of windows;
 - latency, memory, model revision, data-manifest hash, and random seeds.
 
-Do not add ensembles, LoRA, custom losses, remote reviewers, or long-context
-machinery until a measured error analysis predicts what each addition should
-fix. Do not train every window of a positive document as positive without a
-known attack span.
+This was the gate before the later bounded LoRA, reviewer, and long-context exceptions.
+Do not train every window of a positive document as positive without a known attack span.
 
 The repository owner authorized one bounded exception on 2026-07-28 after the external tail failure was measured and later authorized one full-mixture rank-8 LoRA seed.
 That scope contains the full-data frozen mmBERT head, one update-matched reduced-mixture LoRA engineering gate, and one full-mixture LoRA seed.
@@ -126,7 +125,7 @@ Known cross-corpus overlap prevents a source-OOD claim relative to the complete 
 SEP remains already-consumed transfer development data.
 All retained downstream checkpoints are advisory and must be compared independently rather than combined into an unevaluated ensemble.
 The historical 512-token scores remain comparison evidence and are not registered for maintained inference.
-The sole registered Azure preview uses the update-17,000 candidate with 1,024-token windows, while complete long-document aggregation remains an explicit evidence gap.
+The sole registered Azure preview used the update-17,000 candidate with 1,024-token windows; the complete all-window cascade replay was added later in the 2026-08-16 pipeline benchmark.
 
 ### Downstream cascade candidate
 
@@ -141,17 +140,26 @@ The completed full-data LoRA cannot inherit the partial-LoRA score gates directl
 The copied policy reaches 78.40% recall at 3.62% FPR, while a post-hoc `0.99999` high-gate extension reaches 66.79% recall at 1.81% FPR with 22.17% DeepSeek calls.
 That July extension was not in the predeclared grid.
 
-The August channel-aware follow-up supersedes the July maintained route.
+The August channel-aware follow-up superseded the July route and remained the maintained incumbent through 2026-08-16.
 It uses a `0.2` direct-user floor, a `0.1` untrusted-content floor, a shared `0.99999` high gate, trusted `input_channel` metadata, and a hybrid outer-intent prompt.
 The channel-specific floor keeps calibration FPR at 1.9808% while adding 10 true positives and 49 provider calls over 6,000 rows.
-The selected reviewer is now DeepSeek V4 Flash 0731 on Cloudflare with its separately calibrated `0.6224593312018547` threshold.
+The then-selected reviewer was DeepSeek V4 Flash 0731 on Cloudflare with its separately calibrated `0.6224593312018547` threshold.
 On the frozen 14,000-row evaluation role, the then-registered 512-token FP32 route reached 71.235% / 1.773% / 96.779% recall / FPR / precision at a 22.914% provider call rate.
 This adds 58 true positives with no additional false positives over the April route, although PromptShield recall falls by 2.176 points and untrusted-content FPR rises by 0.375 points.
 Its OpenVINO BF16 runtime reached 71.386% / 1.798% / 96.742%, differed from FP32 on 27 of 20,000 final routes, and passed every serving-equivalence gate.
 A frozen-ledger-only call-minimization check rejected further scalar gate tightening: the exact-decision rule saved seven evaluation calls and lost one true positive, while the best simple noninferior calibration grid saved 87 calls but lost nine true positives on evaluation.
 Keep the existing gates; any future low-call policy must be a materially different prospectively frozen architecture rather than another retune on this consumed panel.
-The selection follows the owner's aggregate-quality criterion and remains already-open advisory development evidence rather than a production promotion.
+The selection followed the owner's aggregate-quality criterion and remained already-open advisory development evidence rather than a production promotion.
 See [the 0731 research and decision report](../reports/deepseek-v4-flash-0731-research.md).
+
+On 2026-08-17, the owner promoted the benchmark-selected exact balanced profile as the maintained advisory default.
+It uses direct and untrusted floors `0.2` and `0.025`, local high `0.9999`, reviewer threshold `0.5`, the unchanged Cloudflare strict-logprob request, and the existing 1,024/128 full-context-first window flow.
+On 12,352 provider-safe consumed evaluation artifacts, CUDA BF16 reached 72.00% recall and 1.37% FPR; transport of the frozen profile to the full OpenVINO CPU ledger reached 72.10% recall and 1.36% FPR.
+The source-complete provider audit selected no strict no-logprob winner; Decart remains diagnostic because its HackAPrompt recall loss exceeded the declared 2 percentage-point slice gate.
+Cloudflare remains the selected strict-logprob route.
+The registry binds the exact profile and evidence record, but the promotion changes advisory defaults only and preserves `decision: allow`.
+The long-document warning, absence of representative adjudicated traffic, and consumed development roles still prohibit blocking, SLA, or production-quality claims.
+See [the complete pipeline benchmark](../reports/pipeline-benchmark-20260816.md).
 Two separately frozen Ionstream canaries then failed the exact classifier reliability gate at both four and one concurrent requests because 8 of 20 and 2 of 20 rows respectively exhausted HTTP 429 retries.
 Ionstream calibration and evaluation were not opened, provider fallback remains disabled, and the measured Cloudflare route remains selected.
 
@@ -229,7 +237,7 @@ The serving verifier now binds typed reviewer evidence to the current prompt, re
 The following integration work remains:
 
 1. Map `restrict` to privilege reduction or deterministic reference-monitor policy rather than treating a learned score as authorization.
-2. Shadow the complete pipeline on representative traffic and recalibrate before deployment.
+2. Shadow the complete pipeline on representative traffic before any blocking or production-quality claim.
 
 The disposable OpenRouter experiment runner is reproducibility code, not the production adapter.
 Do not import it into the maintained package.

@@ -1,0 +1,42 @@
+{
+  "calls": 386,
+  "channels": {
+    "direct_user": 77,
+    "untrusted_content": 116
+  },
+  "labels": {
+    "0": 54,
+    "1": 139
+  },
+  "limitations": [
+    "The 193 rows are already consumed evaluation evidence.",
+    "Deterministic safety redaction changes 109 source inputs.",
+    "Trusted task interpretation is synthetic because the frozen rows do not carry the actual surrounding user task.",
+    "The cascade result replays the same artifact-level approximation as the original 85.61 percent recall and 70.37 percent FPR headline."
+  ],
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "production_changes": false,
+  "provider": "cloudflare",
+  "purpose": "post-hoc matched reviewer comparison on the complete consumed long-character bucket",
+  "reasoning": "disabled",
+  "redacted_rows": 109,
+  "redaction_matches": {
+    "credential_value": 3,
+    "email_address": 107,
+    "government_or_vehicle_id": 6,
+    "provider_token": 1,
+    "transaction_identifier": 1
+  },
+  "rows": 193,
+  "schema_version": 1,
+  "selection_eligible": false,
+  "sources": {
+    "browsesafe": 77,
+    "hackaprompt": 4,
+    "jailbreaks_over_time": 8,
+    "llmail": 37,
+    "promptshield": 65,
+    "tensor_trust": 2
+  },
+  "transport": "strict_hard_verdict"
+}

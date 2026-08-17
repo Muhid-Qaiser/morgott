@@ -1,0 +1,42 @@
+{
+  "calls": 240,
+  "concurrency": 4,
+  "endpoint_tags": [
+    "akashml/fp8",
+    "atlas-cloud/fp4",
+    "baidu/fp8",
+    "baseten/fp8",
+    "cloudflare",
+    "coreweave/fp8",
+    "decart/fp4",
+    "deepinfra/fp8",
+    "digitalocean",
+    "fireworks",
+    "inceptron/fp4",
+    "open-inference/fp4",
+    "phala",
+    "siliconflow/fp8",
+    "wafer/fast"
+  ],
+  "providers": [
+    "akashml",
+    "atlas-cloud",
+    "baidu",
+    "baseten",
+    "cloudflare",
+    "coreweave",
+    "decart",
+    "deepinfra",
+    "digitalocean",
+    "fireworks",
+    "inceptron",
+    "open-inference",
+    "phala",
+    "siliconflow",
+    "wafer"
+  ],
+  "recorded_spend_usd": "0.005435730708",
+  "result_path": "artifacts/pipeline_benchmark/20260816/provider_canary_results.jsonl",
+  "result_sha256": "3af06f5490ce3f744b7c946e3365dfb989d7352f56d36fb73a529b78d852afac",
+  "stage": "canary"
+}
