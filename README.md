@@ -411,6 +411,7 @@ Their durable conclusions are summarized in `reports/model-experiments.md`.
 - `reports/corpus-sanity-audit.md`: corpus-wide integrity checks and critical limitations.
 - `reports/attention-kernel-audit.md`: measured SDPA versus FlashAttention-2 and context-length constraints.
 - `reports/model-experiments.md`: authoritative historical model decision ledger.
+- `reports/retrieval-assisted-reviewer-findings-20260819.md`: consolidated retrieval-assisted reviewer evidence and the selected integration recipe.
 - `reports/pipeline-benchmark-20260816.md`: complete 1,024-context quality, provider, robustness, and runtime benchmark plus the dated advisory promotion disposition.
 - `docs/data-contract.md`: canonical data, label, source, and split contracts.
 - `docs/threat-model.md`: trust boundary and security claims.

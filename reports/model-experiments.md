@@ -1478,3 +1478,22 @@ imply zero scores, and do not block the completed context decision.
 AprielGuard remains unscored because access was unavailable and no speculative
 result is useful. It is not a required blocker for this ladder; no result should
 be inferred from the absence of an artifact.
+
+## Retrieval-assisted reviewer selection, 2026-08-19
+
+Retrieval-assisted DeepSeek review improved the advisory cascade enough to justify a maintained candidate, but it did not authorize blocking.
+The consolidated evidence and exact qualifications are in `reports/retrieval-assisted-reviewer-findings-20260819.md`.
+
+PPLX Embed V1 4B at 256 dimensions remained the best tested embedding configuration.
+The prospective WMT comparison favored the source-lineage bank over the all-row bank by 4.198 recall points, with a paired 95% interval of `[1.358, 7.037]` points and no FPR difference.
+The lineage bank is therefore the implementation candidate, while the completed all-row HNSW work remains scale and mechanics evidence.
+
+The fixed full-row HNSW `efSearch=1024`, top-160, exact-rescore configuration reached 99.409% mean set Recall@20 and matched exact NumPy downstream recall and FPR.
+Its persistent provider-free runtime measured 55.476 ms p95 at four workers and about 1.17 GiB process RSS, without co-resident mmBERT, live query embedding, or DeepSeek.
+
+The full-row HNSW plus partitioned Unicode BM25 and 2:1 RRF arm moved recall from 93.182% to 93.636% and FPR from 0.249% to 0.124%.
+The paired intervals included no change, so this is favorable exploratory evidence rather than a statistically established hybrid gain.
+The owner selected the hybrid as an advisory defense-in-depth candidate, with dense-only behavior on sparse failure and the existing no-example reviewer on dense failure.
+
+The maintained candidate still requires a hash-bound lineage HNSW bundle, the lineage sparse sidecar, exact fallback tests, and a same-input Azure before-and-after result.
+ColBERT, learned sparse retrieval, raw-attention token selection, Qdrant, GraphRAG, and output-verification machinery are deferred.
