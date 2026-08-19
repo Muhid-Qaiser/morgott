@@ -26,7 +26,7 @@ cascade = [
     "nooa==0.0.8; python_version < '3.14'",
     "litellm==1.90.2; python_version < '3.14'",
     "numpy>=2,<3",
-    "openvino==2026.2.1",
+    "openvino==2026.3.0",
     "tokenizers>=0.22,<1",
 ]
 azure = [
@@ -42,7 +42,7 @@ encoder-export = [
 ]
 # Opt-in only. This pulls an executable attention kernel from the Hub, so it is
 # deliberately not part of `encoder`; see reports/attention-kernel-audit.md.
-fa2 = ["kernels==0.15.2"]
+fa2 = ["kernels==0.16.0"]
 # Opt-in only. Trackio is local-first -- metrics stay in a local SQLite store
 # under ~/.cache/huggingface/trackio unless a Space is explicitly named.
 # No corpus text is ever logged. The GPU extra supplies NVML telemetry so a
@@ -60,7 +60,7 @@ showcase = [
 dev = [
   "httpx>=0.27,<1",
   "pre-commit>=4.6.1,<5",
-  "ruff>=0.16.1,<0.17",
+  "ruff>=0.16.2,<0.17",
 ]
 
 [project.scripts]
