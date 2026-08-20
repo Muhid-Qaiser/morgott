@@ -236,7 +236,7 @@ fi
 log "Verifying the registered 1,024-token serving artifact"
 git lfs pull --include="artifacts/models/$MODEL_KEY/serving/**" --exclude=""
 CASCADE_POLICY_PATH="artifacts/models/$MODEL_KEY/serving/promotion-retrieval.json"
-EVIDENCE_PATH="reports/retrieval-lineage-hybrid-parity-20260820.json"
+EVIDENCE_PATH="reports/retrieval-lineage-hybrid-parity-relaxed-20260820.json"
 RETRIEVAL_MANIFEST_PATH="artifacts/models/$MODEL_KEY/serving/retrieval/lineage-hybrid-v3/manifest.json"
 if ! RETRIEVAL_MANIFEST_SHA256=$(jq -er \
 	--arg key "$MODEL_KEY" \

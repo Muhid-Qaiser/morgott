@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -40,7 +41,12 @@ class AzureDeployScriptTests(unittest.TestCase):
         self.assertIn("promotion is blocked pending", result.stderr.lower())
 
     def test_private_bundle_is_downloaded_verified_and_baked(self) -> None:
-        evidence = "reports/retrieval-lineage-hybrid-parity-20260820.json"
+        policy = json.loads(
+            Path(
+                "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion-retrieval.json"
+            ).read_text(encoding="utf-8")
+        )
+        evidence = policy["evidence"]["path"]
         required = (
             (self.script, '"morgott-lineage-hybrid-v1"'),
             (self.script, "az storage blob download"),

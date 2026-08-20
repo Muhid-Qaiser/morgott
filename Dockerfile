@@ -14,8 +14,8 @@ RUN uv sync --frozen --no-dev --no-install-project --extra azure --extra cascade
 
 COPY src ./src
 COPY --chown=morgott:morgott model-artifacts.json ./
-COPY --chown=morgott:morgott reports/retrieval-lineage-hybrid-parity-20260820.json \
-    ./reports/retrieval-lineage-hybrid-parity-20260820.json
+COPY --chown=morgott:morgott reports/retrieval-lineage-hybrid-parity-relaxed-20260820.json \
+    ./reports/retrieval-lineage-hybrid-parity-relaxed-20260820.json
 COPY --chown=morgott:morgott artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving \
     ./artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving
 RUN uv sync --frozen --no-dev --extra azure --extra cascade

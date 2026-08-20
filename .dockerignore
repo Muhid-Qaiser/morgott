@@ -5,7 +5,7 @@
 !model-artifacts.json
 !reports/
 reports/*
-!reports/retrieval-lineage-hybrid-parity-20260820.json
+!reports/retrieval-lineage-hybrid-parity-relaxed-20260820.json
 !src/
 !src/**
 src/**/__pycache__/
