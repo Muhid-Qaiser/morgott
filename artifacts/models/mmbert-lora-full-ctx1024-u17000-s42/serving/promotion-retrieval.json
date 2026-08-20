@@ -1,14 +1,14 @@
 {
   "advisory_only": true,
   "evidence": {
-    "path": "reports/retrieval-lineage-hybrid-parity-20260820.json",
-    "sha256": "e79ac4d38348e20fb31d0e3062ce6da82d31cc3a8d4c0c6bb790f4571f8e1561"
+    "path": "reports/retrieval-lineage-hybrid-parity-relaxed-20260820.json",
+    "sha256": "39dee8adb4a92443a2223040aa8de5c8a502f4f56163771119d1e96a97ea5a56"
   },
   "format": "morgott-advisory-cascade-profile-v2",
   "limitations": [
-    "The strict-provider-safe hybrid and dense arms tied on aggregate recall and FPR, and the paired interval does not prove an incremental hybrid gain.",
+    "The source-lineage hybrid and dense arms tied on aggregate recall and FPR, and the paired interval does not prove an incremental hybrid gain.",
     "The source-lineage bank won one prospective source-heldout comparison; that result is not broad real-world robustness evidence.",
-    "The rebuilt strict-provider-safe bundle requires new matched zero-traffic Azure evidence before any traffic decision.",
+    "The source-lineage bundle requires matched zero-traffic Azure validation before each traffic decision.",
     "Retrieval and learned output remain advisory and are not approved for blocking or granting authority."
   ],
   "promoted_on": "2026-08-20",
@@ -47,7 +47,7 @@
         "sparse": "dense_packet"
       },
       "labels_per_class": 2,
-      "manifest_sha256": "a80cb09b32c7c22c7c9c1d240d0eeb63ce3803721488b8477f8dd45a6979eb84",
+      "manifest_sha256": "7dbc27a1b334b7eb9ef1a36ecc6cd9e1bd12aa14ddd6e586f41ca3f5caf65275",
       "rrf": {
         "dense_weight": 2.0,
         "k": 60,

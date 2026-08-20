@@ -1,0 +1,24 @@
+{
+  "contains_raw_text_or_vectors": false,
+  "different_packets": 0,
+  "different_unit_ids": [],
+  "exact_packet_matches": 110,
+  "method": "hybrid_pplx-4b_unicode_partitioned8_sparse50_dense20_rrf2_replay",
+  "provider_calls": false,
+  "queries": 110,
+  "rrf": {
+    "dense_weight": 2.0,
+    "k": 60,
+    "sparse_weight": 1.0
+  },
+  "schema_version": 1,
+  "source": {
+    "hnsw_extension_sha256": "ce611f976e3da5d0c28984de0361aeed902f46371a4b4eae27dcd7a739c27881",
+    "prior_retrieval_sha256": "6f17f1aab3f25f943d79eea65ae6e58f4449bcedb96e9764a85f2000c964cb18",
+    "serving_manifest_sha256": "7dbc27a1b334b7eb9ef1a36ecc6cd9e1bd12aa14ddd6e586f41ca3f5caf65275",
+    "sparse_identity_sha256": "0e633e655f17971e444fb07e7023ad6689551e8a8bff800ee7c4aa7b6a6d638f"
+  },
+  "sparse_branch_differences": 0,
+  "status": "passed",
+  "variant": "faiss_hnsw_ef1024_top160"
+}

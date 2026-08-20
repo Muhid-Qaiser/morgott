@@ -237,7 +237,7 @@ log "Verifying the registered 1,024-token serving artifact"
 git lfs pull --include="artifacts/models/$MODEL_KEY/serving/**" --exclude=""
 CASCADE_POLICY_PATH="artifacts/models/$MODEL_KEY/serving/promotion-retrieval.json"
 EVIDENCE_PATH="reports/retrieval-lineage-hybrid-parity-20260820.json"
-RETRIEVAL_MANIFEST_PATH="artifacts/models/$MODEL_KEY/serving/retrieval/lineage-hybrid-v2/manifest.json"
+RETRIEVAL_MANIFEST_PATH="artifacts/models/$MODEL_KEY/serving/retrieval/lineage-hybrid-v3/manifest.json"
 if ! RETRIEVAL_MANIFEST_SHA256=$(jq -er \
 	--arg key "$MODEL_KEY" \
 	--arg path "$RETRIEVAL_MANIFEST_PATH" '
@@ -364,7 +364,7 @@ if (
 ):
     raise SystemExit("retrieval bundle manifest contract failed")
 bundle_root = PurePosixPath(
-    f"artifacts/models/{model_key}/serving/retrieval/lineage-hybrid-v2"
+    f"artifacts/models/{model_key}/serving/retrieval/lineage-hybrid-v3"
 )
 seen = set()
 roles = Counter()

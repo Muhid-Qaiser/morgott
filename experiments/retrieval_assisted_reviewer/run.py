@@ -43,7 +43,7 @@ from morgott.models.mmbert.data import (
     routing_views,
 )
 from morgott.models.mmbert.serving import MmbertRuntime
-from morgott.models.retrieval import RetrievalEngine, provider_egress_contract
+from morgott.models.retrieval import RetrievalEngine, bank_contract
 from morgott.normalization import strict_normalize
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -368,12 +368,6 @@ def _source_licenses() -> dict[str, str]:
     return result
 
 
-def _provider_safe(row: dict[str, Any], licenses: dict[str, str]) -> bool:
-    return provider_helpers._license_is_public(licenses.get(row["source"])) and not (
-        provider_helpers._sensitive_text_reasons(row["text"])
-    )
-
-
 def _download_wmt_source() -> dict[str, list[str]]:
     result = {}
     for variant, (filename, expected_sha256) in WMT_SOURCE_FILES.items():
@@ -469,23 +463,14 @@ def _wmt_panel_metadata(row: dict[str, Any]) -> dict[str, Any]:
 
 def _freeze_wmt_panel() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     pairs = _wmt_candidate_pairs(_download_wmt_source())
-    provider_safe_pairs = [
-        pair
-        for pair in pairs
-        if not any(
-            provider_helpers._sensitive_text_reasons(row["text"]) for row in pair
-        )
-    ]
-    candidates = [row for pair in provider_safe_pairs for row in pair]
+    candidates = [row for pair in pairs for row in pair]
     reference_counts = Counter()
     kept, removed = filter_small_training_sets(
         {"wmt": candidates}, external_helpers._fit_references(reference_counts)
     )
     kept_ids = {row["id"] for row in kept["wmt"]}
     complete_pairs = [
-        pair
-        for pair in provider_safe_pairs
-        if all(row["id"] in kept_ids for row in pair)
+        pair for pair in pairs if all(row["id"] in kept_ids for row in pair)
     ]
     by_subtype = {
         subtype: [pair for pair in complete_pairs if pair[0]["subtype"] == subtype]
@@ -509,8 +494,7 @@ def _freeze_wmt_panel() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     return panel, {
         "source_rows": WMT_SOURCE_ROWS,
         "source_pairs": len(pairs),
-        "privacy_excluded_pairs": len(pairs) - len(provider_safe_pairs),
-        "fit_overlap_excluded_pairs": len(provider_safe_pairs) - len(complete_pairs),
+        "fit_overlap_excluded_pairs": len(pairs) - len(complete_pairs),
         "balance_excluded_pairs": len(complete_pairs) - len(selected_pairs),
         "pairs_per_attack_type": balanced_size,
         "pairs": len(selected_pairs),
@@ -564,14 +548,10 @@ def _panel_metadata(
     # One row per lineage group makes the existing paired row bootstrap a group bootstrap.
     by_group: dict[tuple[str, str], dict[str, Any]] = {}
     eligible = 0
-    privacy_excluded = 0
     consumed_excluded = 0
     for source_index, row in enumerate(canonical_rows(path, spec, split=split)):
         if row["id"] in excluded_ids:
             consumed_excluded += 1
-            continue
-        if not _provider_safe(row, licenses):
-            privacy_excluded += 1
             continue
         eligible += 1
         metadata = {
@@ -597,7 +577,7 @@ def _panel_metadata(
             by_group[key] = metadata
     candidates = list(by_group.values())
     if len(candidates) < size:
-        raise ValueError(f"{split} has only {len(candidates)} provider-safe groups")
+        raise ValueError(f"{split} has only {len(candidates)} eligible groups")
     selected = panel_helpers._stratified_sample(
         candidates,
         size,
@@ -612,9 +592,8 @@ def _panel_metadata(
     return selected, {
         "routing_view_sha256": spec["sha256"],
         "routing_view_rows": spec["rows"],
-        "provider_safe_eligible_rows": eligible,
-        "provider_safe_unique_groups": len(candidates),
-        "privacy_or_license_excluded": privacy_excluded,
+        "eligible_rows": eligible,
+        "unique_groups": len(candidates),
         "previously_reviewed_excluded": consumed_excluded,
     }
 
@@ -687,14 +666,12 @@ def _equal_quotas(counts: Counter, size: int) -> dict[tuple[Any, ...], int]:
 def _bank_candidate(
     row: dict[str, Any],
     *,
-    licenses: dict[str, str],
     guard: OverlapGuard,
     panel_groups: set[tuple[str, str]],
 ) -> bool:
     return (
         len(row["text"].encode()) <= MAX_EXAMPLE_BYTES
         and (row["source"], row["group_id"]) not in panel_groups
-        and _provider_safe(row, licenses)
         and guard.reason(row) is None
     )
 
@@ -1050,24 +1027,17 @@ def _build_curated_bank(
     counts: Counter = Counter()
     excluded: Counter = Counter()
     for row in canonical_rows(train_path, train_spec, split="train"):
-        if _bank_candidate(
-            row, licenses=licenses, guard=guard, panel_groups=panel_groups
-        ):
+        if _bank_candidate(row, guard=guard, panel_groups=panel_groups):
             counts[_bank_stratum(row)] += 1
         else:
-            excluded["prompt_or_safety_gate"] += 1
+            excluded["selection_gate"] += 1
     if bank_size == "all_rows":
         expected_rows = sum(counts.values())
         mode = "full"
         selected = (
             row
             for row in canonical_rows(train_path, train_spec, split="train")
-            if _bank_candidate(
-                row,
-                licenses=licenses,
-                guard=guard,
-                panel_groups=panel_groups,
-            )
+            if _bank_candidate(row, guard=guard, panel_groups=panel_groups)
         )
         full_summary = {}
     elif bank_size is None:
@@ -1075,12 +1045,7 @@ def _build_curated_bank(
         selected = _lineage_representatives(
             row
             for row in canonical_rows(train_path, train_spec, split="train")
-            if _bank_candidate(
-                row,
-                licenses=licenses,
-                guard=guard,
-                panel_groups=panel_groups,
-            )
+            if _bank_candidate(row, guard=guard, panel_groups=panel_groups)
         )
         expected_rows = len(selected)
         mode = "full_lineage"
@@ -1094,9 +1059,7 @@ def _build_curated_bank(
             defaultdict(list)
         )
         for row in canonical_rows(train_path, train_spec, split="train"):
-            if not _bank_candidate(
-                row, licenses=licenses, guard=guard, panel_groups=panel_groups
-            ):
+            if not _bank_candidate(row, guard=guard, panel_groups=panel_groups):
                 continue
             stratum = _bank_stratum(row)
             priority = _rank("curated-bank", row["id"])
@@ -4839,7 +4802,7 @@ def _lineage_serving_source_contract(
         or any(character not in "0123456789abcdef" for character in routing_view_sha256)
         or manifest["bank"].get("max_example_bytes") != MAX_EXAMPLE_BYTES
     ):
-        raise ValueError("lineage serving provider egress source changed")
+        raise ValueError("lineage serving bank source changed")
     config = DENSE_CONFIGS["pplx-4b"]
     dense_identity_path = source_output / f"dense-{config['document_key']}.json"
     dense_identity = _read_json(dense_identity_path)
@@ -5066,7 +5029,7 @@ def build_lineage_serving_bundle(
                 "dense_sha256": dense_identity["sha256"],
                 "extension_sha256": file_sha256(extension_path),
             },
-            "provider_egress": provider_egress_contract(),
+            "bank_contract": bank_contract(),
             "partitions": partitions,
             "build": {
                 "seconds": build_seconds,

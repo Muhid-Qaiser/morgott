@@ -5,7 +5,6 @@ It does not change the API, Azure deployment, model registry, thresholds, review
 
 The runner stores raw example text only in the gitignored local SQLite bank.
 Frozen panels, score records, retrieval ledgers, and provider ledgers contain identities, hashes, parsed outputs, timings, token usage, and cost, but no raw prompts or provider responses.
-Only public-license rows that pass Morgott's local sensitive-text screen may be sent remotely.
 
 ## Qwen Stage 0 contract canary
 
@@ -182,12 +181,8 @@ The local development host is not the target deployment, so this command cannot 
 The selected serving bundle uses the full-lineage bank and the fixed `efSearch=1024/top160` recipe:
 
 ```bash
-lineage_study=artifacts/retrieval_assisted_reviewer_lineage_allowlist_v2
-
-uv run --locked --extra cascade \
-  python -m experiments.retrieval_assisted_reviewer.run \
-  --output "$lineage_study" reuse-bank-vectors \
-  --source-output artifacts/retrieval_assisted_reviewer_full --config pplx-4b
+lineage_study=artifacts/retrieval_assisted_reviewer_full
+sparse_study=artifacts/retrieval_assisted_reviewer_full_sparse_v2
 
 uv run --locked --extra cascade --with faiss-cpu==1.15.0 \
   python -m experiments.retrieval_assisted_reviewer.run \
@@ -196,16 +191,16 @@ uv run --locked --extra cascade --with faiss-cpu==1.15.0 \
 
 uv run --locked --extra cascade --with faiss-cpu==1.15.0 \
   python -m experiments.retrieval_assisted_reviewer.run \
-  --output artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v2 \
+  --output artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v3 \
   build-lineage-serving-bundle \
-  --source-output "$lineage_study" --sparse-source "$lineage_study"
+  --source-output "$lineage_study" --sparse-source "$sparse_study"
 
 uv run --locked --extra cascade \
   python -m experiments.retrieval_assisted_reviewer.run \
   --output "$lineage_study" write-lineage-hybrid-parity \
-  --sparse-source "$lineage_study" \
-  --serving-manifest artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v2/manifest.json \
-  --evidence-output reports/retrieval-lineage-hybrid-parity-20260820.json
+  --sparse-source "$sparse_study" \
+  --serving-manifest artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v3/manifest.json \
+  --evidence-output reports/retrieval-lineage-hybrid-parity-relaxed-20260820.json
 ```
 
 The vector-reuse command performs an exact identity join and makes no provider call.

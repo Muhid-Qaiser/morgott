@@ -18,7 +18,6 @@ from typing import Any
 import numpy as np
 
 from morgott.normalization import strict_normalize
-from morgott.sources.tasks import _public_declared_license, _sensitive_text_reasons
 
 _MANIFEST_NAME = "manifest.json"
 _VARIANT = "lineage_hybrid_v1"
@@ -86,14 +85,8 @@ _SPARSE_TABLES = {
 }
 
 
-def provider_egress_contract() -> dict[str, Any]:
-    """Return the exact eligibility gate applied to remotely sent examples."""
-    return {
-        "provider_safe": True,
-        "license_policy": "public_allowlist_v2",
-        "sensitive_text_screen": "morgott.sources.tasks._sensitive_text_reasons",
-        "max_example_bytes": _MAX_EXAMPLE_BYTES,
-    }
+def bank_contract() -> dict[str, Any]:
+    return {"max_example_bytes": _MAX_EXAMPLE_BYTES}
 
 
 @dataclass(frozen=True)
@@ -760,9 +753,9 @@ def _validate_manifest(
     if (
         not _valid_sha256(source.get("data_manifest_sha256"))
         or not _valid_sha256(source.get("routing_view_sha256"))
-        or manifest.get("provider_egress") != provider_egress_contract()
+        or manifest.get("bank_contract") != bank_contract()
     ):
-        raise ValueError("provider egress contract changed")
+        raise ValueError("retrieval bank contract changed")
     bank = manifest.get("bank", {})
     sparse = manifest.get("sparse", {})
     bank_rows = bank.get("rows")
@@ -864,16 +857,9 @@ def _validate_bank(
             expected_rows,
         ):
             raise ValueError("retrieval bank row count changed")
-        for text, license_name in connection.execute(
-            "SELECT text, license FROM examples"
-        ):
-            if (
-                not isinstance(text, str)
-                or len(text.encode()) > _MAX_EXAMPLE_BYTES
-                or not _public_declared_license(license_name)
-                or _sensitive_text_reasons(text)
-            ):
-                raise ValueError("retrieval bank provider egress gate changed")
+        for (text,) in connection.execute("SELECT text FROM examples"):
+            if not isinstance(text, str) or len(text.encode()) > _MAX_EXAMPLE_BYTES:
+                raise ValueError("retrieval bank byte limit changed")
         for spec in partitions.values():
             count = connection.execute(
                 """

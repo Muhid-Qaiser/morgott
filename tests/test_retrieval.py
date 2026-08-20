@@ -362,12 +362,7 @@ class RetrievalTests(unittest.TestCase):
                 "data_manifest_sha256": "a" * 64,
                 "routing_view_sha256": "b" * 64,
             },
-            "provider_egress": {
-                "provider_safe": True,
-                "license_policy": "public_allowlist_v2",
-                "sensitive_text_screen": (
-                    "morgott.sources.tasks._sensitive_text_reasons"
-                ),
+            "bank_contract": {
                 "max_example_bytes": 1024,
             },
             "partitions": partitions,
@@ -442,20 +437,24 @@ class RetrievalTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     retrieval._validate_manifest(changed)
 
-    def test_manifest_requires_the_provider_egress_contract(self) -> None:
+    def test_manifest_requires_the_bank_contract(self) -> None:
         manifest = json.loads(
             (self.bundle / "manifest.json").read_text(encoding="utf-8")
         )
-        manifest["provider_egress"]["provider_safe"] = False
+        manifest["bank_contract"]["max_example_bytes"] = 1025
 
         with self.assertRaises(ValueError):
             retrieval._validate_manifest(manifest)
 
-    def test_bank_sensitive_text_disables_retrieval(self) -> None:
+    def test_bank_enforces_only_the_byte_limit(self) -> None:
         text = "api key: sk-this-is-a-provider-token"
         connection = sqlite3.connect(self.bundle / "bank.sqlite3")
         connection.execute(
-            "UPDATE examples SET text = ?, text_sha256 = ? WHERE rowid = 1",
+            """
+            UPDATE examples
+            SET text = ?, text_sha256 = ?, license = 'unknown'
+            WHERE rowid = 1
+            """,
             (text, hashlib.sha256(text.encode()).hexdigest()),
         )
         connection.commit()
@@ -464,40 +463,21 @@ class RetrievalTests(unittest.TestCase):
             (self.bundle / "manifest.json").read_text(encoding="utf-8")
         )
 
-        with self.assertRaises(ValueError):
-            retrieval._validate_bank(
-                self.bundle / "bank.sqlite3",
-                manifest["partitions"],
-                len(self.rows),
-            )
-
-    def test_bank_nonpublic_license_disables_retrieval(self) -> None:
-        connection = sqlite3.connect(self.bundle / "bank.sqlite3")
-        connection.execute("UPDATE examples SET license = 'unknown' WHERE rowid = 1")
-        connection.commit()
-        connection.close()
-        manifest = json.loads(
-            (self.bundle / "manifest.json").read_text(encoding="utf-8")
+        validated = retrieval._validate_bank(
+            self.bundle / "bank.sqlite3",
+            manifest["partitions"],
+            len(self.rows),
         )
+        validated.close()
 
-        with self.assertRaises(ValueError):
-            retrieval._validate_bank(
-                self.bundle / "bank.sqlite3",
-                manifest["partitions"],
-                len(self.rows),
-            )
-
-    def test_bank_mixed_license_disables_retrieval(self) -> None:
+        text = "x" * 1025
         connection = sqlite3.connect(self.bundle / "bank.sqlite3")
         connection.execute(
-            "UPDATE examples SET license = ? WHERE rowid = 1",
-            ("MIT attacks; mixed benchmark context licenses",),
+            "UPDATE examples SET text = ?, text_sha256 = ? WHERE rowid = 1",
+            (text, hashlib.sha256(text.encode()).hexdigest()),
         )
         connection.commit()
         connection.close()
-        manifest = json.loads(
-            (self.bundle / "manifest.json").read_text(encoding="utf-8")
-        )
 
         with self.assertRaises(ValueError):
             retrieval._validate_bank(

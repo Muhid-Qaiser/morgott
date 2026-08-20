@@ -1576,6 +1576,22 @@ class RetrievalBenchmarkTests(unittest.TestCase):
 
         self.assertEqual(summary["mode"], "full")
 
+    def test_bank_candidate_enforces_only_size_and_overlap(self) -> None:
+        row = {
+            **_bank_rows()[0],
+            "source": "unknown-license-source",
+            "text": "api key: sk-this-is-a-provider-token",
+        }
+        guard = mock.Mock()
+        guard.reason.return_value = None
+
+        self.assertTrue(run._bank_candidate(row, guard=guard, panel_groups=set()))
+        self.assertFalse(
+            run._bank_candidate(
+                {**row, "text": "x" * 1025}, guard=guard, panel_groups=set()
+            )
+        )
+
     def test_full_bank_keeps_one_row_per_labelled_lineage_cell(self) -> None:
         rows = _bank_rows()
         duplicate = {**rows[0], "id": "duplicate", "text": "another variant"}

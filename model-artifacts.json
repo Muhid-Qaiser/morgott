@@ -62,13 +62,13 @@
         },
         "cascade_policy": {
           "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion-retrieval.json",
-          "sha256": "57430193f414dd2178d78b840d7f7804b17f238e7da9e96aef72f1ad4abfaf5c"
+          "sha256": "b01bc94cdbf5b76f6b8008b41ff6d057d5fbcf8c963d21e5c43b22186adbffec"
         },
         "retrieval": {
           "format": "morgott-lineage-hybrid-v1",
           "manifest": {
-            "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v2/manifest.json",
-            "sha256": "a80cb09b32c7c22c7c9c1d240d0eeb63ce3803721488b8477f8dd45a6979eb84"
+            "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v3/manifest.json",
+            "sha256": "7dbc27a1b334b7eb9ef1a36ecc6cd9e1bd12aa14ddd6e586f41ca3f5caf65275"
           }
         },
         "benchmark": {

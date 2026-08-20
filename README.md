@@ -220,7 +220,7 @@ It also reports the registry-bound pipeline profile, policy hash, and threshold 
 There is one portable model artifact rather than a precision-specific copy.
 The maintained `balanced-retrieval-20260819` profile passes direct-user scores below `0.2` and untrusted-content scores below `0.025`, and it restricts local scores at or above `0.9999`.
 Inputs on the review route use the registered source-lineage HNSW plus BM25/RRF example retriever before the fixed DeepSeek reviewer.
-The private bank admits only provider-safe rows with an exact approved public-license value, the maintained sensitive-text screen, and the fixed byte limit; startup rechecks every row.
+The private bank enforces the fixed byte limit at build time and startup.
 OpenRouter credentials are mandatory at maintained cascade startup, but provider calls occur only for inputs that reach the review route.
 Multi-window untrusted content without a local high first sends the complete normalized artifact to DeepSeek V4 Flash.
 A full-context flag restricts immediately, while a clear result falls back to the existing middle-zone window reviews in batches of up to 4.
@@ -244,7 +244,7 @@ az storage blob download-batch \
   --account-name vulsightdata \
   --source morgott \
   --destination . \
-  --pattern 'artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v2/*' \
+  --pattern 'artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v3/*' \
   --auth-mode login \
   --overwrite true
 ```
@@ -354,7 +354,7 @@ It reads the profile, threshold hash, and policy hash from the verified Python a
 It stages the exact private retrieval payloads listed by the registered manifest from a hash-matching local copy or the existing Blob container, verifies every file size and SHA-256, and bakes those bytes into the immutable ACR image without adding them to Git.
 It creates a zero-traffic revision and checks its exact model, policy, threshold, and retrieval identities through the protected API.
 One frozen public synthetic request must exercise retrieval and DeepSeek with the expected score range, packet, prompt, embedding request, reviewer provider, and reviewer request identities.
-Local preflight binds that provider-safe probe by SHA-256, score range, and expected review route.
+Local preflight binds that probe by SHA-256, score range, and expected review route.
 The same candidate smoke then checks auth, bounds, advisory behavior, 30 local-pass requests, and at least 512 MiB of memory headroom.
 The script cannot move traffic, and the previous revision remains active while the candidate is retained at zero traffic.
 Any validation failure keeps traffic on the previous revision.
