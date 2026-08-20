@@ -10,12 +10,12 @@ hooks: setup
 	$(UV_RUN) pre-commit install
 
 format:
-	$(UV_RUN) ruff check --fix src tests
-	$(UV_RUN) ruff format src tests
+	$(UV_RUN) ruff check --fix src tests scripts examples
+	$(UV_RUN) ruff format src tests scripts examples
 
 lint:
-	$(UV_RUN) ruff format --check src tests
-	$(UV_RUN) ruff check src tests
+	$(UV_RUN) ruff format --check src tests scripts examples
+	$(UV_RUN) ruff check src tests scripts examples
 
 check: lint test
 

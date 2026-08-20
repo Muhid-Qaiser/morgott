@@ -161,8 +161,10 @@ def main(argv: list[str] | None = None) -> None:
         }
     elif args.command == "cascade":
         summary = asyncio.run(_run_cascade(args))
-    else:
+    elif args.command == "scan":
         summary = scan(args.text, args.model, args.channel)
+    else:
+        raise AssertionError(f"unhandled command: {args.command}")
     print(json.dumps(summary, indent=2, sort_keys=True))
 
 

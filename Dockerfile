@@ -1,6 +1,6 @@
 FROM python:3.12-slim-bookworm
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.29 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.31 /uv /bin/uv
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

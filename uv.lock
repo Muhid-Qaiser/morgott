@@ -1363,6 +1363,8 @@ source = { editable = "." }
 dependencies = [
     { name = "datasets" },
     { name = "ijson" },
+    { name = "numpy" },
+    { name = "pyarrow" },
     { name = "scikit-learn" },
 ]
 
@@ -1376,7 +1378,6 @@ cascade = [
     { name = "faiss-cpu" },
     { name = "litellm", marker = "python_full_version < '3.14'" },
     { name = "nooa", marker = "python_full_version < '3.14'" },
-    { name = "numpy" },
     { name = "openvino" },
     { name = "tokenizers" },
 ]
@@ -1397,7 +1398,6 @@ showcase = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "pandas" },
-    { name = "pyarrow" },
     { name = "uvicorn" },
 ]
 tracking = [
@@ -1423,13 +1423,13 @@ requires-dist = [
     { name = "kernels", marker = "extra == 'fa2'", specifier = "==0.16.0" },
     { name = "litellm", marker = "python_full_version < '3.14' and extra == 'cascade'", specifier = "==1.90.2" },
     { name = "nooa", marker = "python_full_version < '3.14' and extra == 'cascade'", specifier = "==0.0.8" },
-    { name = "numpy", marker = "extra == 'cascade'", specifier = ">=2,<3" },
+    { name = "numpy", specifier = ">=2,<3" },
     { name = "onnx", marker = "extra == 'encoder-export'", specifier = ">=1.17,<2" },
     { name = "onnxruntime", marker = "extra == 'encoder-export'", specifier = ">=1.20,<2" },
     { name = "openvino", marker = "extra == 'cascade'", specifier = "==2026.3.0" },
     { name = "pandas", marker = "extra == 'showcase'", specifier = ">=3.0.5,<4" },
     { name = "peft", marker = "extra == 'encoder'", specifier = ">=0.20.0,<0.21" },
-    { name = "pyarrow", marker = "extra == 'showcase'", specifier = ">=25.0.0,<26" },
+    { name = "pyarrow", specifier = ">=25.0.0,<26" },
     { name = "safetensors", marker = "extra == 'encoder'", specifier = ">=0.4" },
     { name = "scikit-learn", specifier = ">=1.6,<2" },
     { name = "tokenizers", marker = "extra == 'cascade'", specifier = ">=0.22,<1" },

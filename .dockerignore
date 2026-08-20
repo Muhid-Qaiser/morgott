@@ -10,6 +10,7 @@ reports/*
 !src/**
 src/**/__pycache__/
 src/**/*.py[cod]
+src/*.egg-info/
 !artifacts/
 artifacts/*
 !artifacts/models/

@@ -32,5 +32,7 @@ jobs:
           prune-cache: true
       - name: Install locked dependencies
         run: uv sync --locked --extra cascade --extra encoder
+      - name: Check whitespace
+        run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD
       - name: Run checks
         run: make check

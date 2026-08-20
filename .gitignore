@@ -7,6 +7,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+.claude/settings.local.json
 
 # Rebuilt from pinned public sources. Track only the canonical manifest.
 data/*
@@ -18,8 +19,6 @@ data/*
 data-archive/redteam/
 
 # Rebuilt by `make benchmark`.
-artifacts/
-!artifacts/
 artifacts/*
 !artifacts/models/
 artifacts/models/*
@@ -31,10 +30,64 @@ artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/
 artifacts/pipeline_benchmark/*
 !artifacts/pipeline_benchmark/20260816/
 !artifacts/pipeline_benchmark/20260816/**
+
+# Tracked evaluation evidence, fully versioned in these directories.
+!artifacts/agentdiff_linear_incident_eval/
+!artifacts/agentdiff_linear_incident_eval/**
+!artifacts/agentdiff_reaction_eval/
+!artifacts/agentdiff_reaction_eval/**
+!artifacts/agentdiff_reaction_recovery_eval/
+!artifacts/agentdiff_reaction_recovery_eval/**
+!artifacts/agentdojo_detector_eval_channel_low/
+!artifacts/agentdojo_detector_eval_channel_low/**
+!artifacts/agentdojo_live_eval_slack_exact/
+!artifacts/agentdojo_live_eval_slack_exact/**
+!artifacts/agentdojo_live_eval_slack_stable/
+!artifacts/agentdojo_live_eval_slack_stable/**
+!artifacts/agentdojo_policy_eval/
+!artifacts/agentdojo_policy_eval/**
+!artifacts/aspi_clarification_local_diagnostic/
+!artifacts/aspi_clarification_local_diagnostic/**
+!artifacts/financial_ctf_eval/
+!artifacts/financial_ctf_eval/**
+!artifacts/force_bench_eval/
+!artifacts/force_bench_eval/**
+!artifacts/injecagent_detector_eval/
+!artifacts/injecagent_detector_eval/**
+!artifacts/injecagent_task_reviewer_eval/
+!artifacts/injecagent_task_reviewer_eval/**
+!artifacts/mmbert_lpft_comparison/
+!artifacts/mmbert_lpft_comparison/**
+!artifacts/statebench_coupled_exchange_eval/
+!artifacts/statebench_coupled_exchange_eval/**
+!artifacts/swechat_traffic_eval/
+!artifacts/swechat_traffic_eval/**
+
+# Tracked evidence directories whose other contents are local caches or raw
+# outputs that stay ignored; new evidence there is added with `git add -f`.
+!artifacts/agentdojo_live_eval/
+artifacts/agentdojo_live_eval/*
+!artifacts/agentdojo_live_eval_safe_reads/
+artifacts/agentdojo_live_eval_safe_reads/*
+!artifacts/agentdojo_live_eval_sensor_warning/
+artifacts/agentdojo_live_eval_sensor_warning/*
+!artifacts/agentdojo_live_eval_slack_safe_reads/
+artifacts/agentdojo_live_eval_slack_safe_reads/*
+!artifacts/cascade_mutation_asr/
+artifacts/cascade_mutation_asr/*
+!artifacts/combined_generic/
+artifacts/combined_generic/*
+!artifacts/comparisons/
+artifacts/comparisons/*
+!artifacts/mmbert/
+artifacts/mmbert/*
+!artifacts/mmbert_lpft_new_data/
+artifacts/mmbert_lpft_new_data/*
+!artifacts/openrouter_downstream_eval/
+artifacts/openrouter_downstream_eval/*
+
 reports/baseline.json
 reports/baseline.md
-reports/routing-baseline.json
-reports/routing-baseline.md
 reports/routing-quick-ablation.json
 reports/routing-quick-ablation.md
 reports/modernbert-*.json

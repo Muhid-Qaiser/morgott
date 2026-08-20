@@ -3458,13 +3458,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--run-name",
-        "--trackio-name",
-        dest="run_name",
         default=None,
         help=(
             "single identity used for the output directory, progress checkpoint, "
             "snapshots, result metadata, and Trackio label; defaults to a derived "
-            "arm name. --trackio-name is a deprecated compatibility alias"
+            "arm name"
         ),
     )
     parser.add_argument(
