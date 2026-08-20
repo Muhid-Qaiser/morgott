@@ -23,7 +23,7 @@ class _Assessment:
     retrieval_status: str = "ok"
     selected_example_count: int = 4
     retrieval_packet_sha256: str = (
-        "1623fcfd5a86537be93f72e523ae32e2bc193db23d0b6a0cd08b383618e7c03d"
+        "843b52b4873b24f23417135e8e2244895cbe64b8c9eb84eee28570103f952e1d"
     )
     total_latency_ms: float = 1.0
 

@@ -189,7 +189,7 @@ class AzureDeployScriptTests(unittest.TestCase):
             ),
             (
                 self.azure_app,
-                '"1623fcfd5a86537be93f72e523ae32e2bc193db23d0b6a0cd08b383618e7c03d"',
+                '"843b52b4873b24f23417135e8e2244895cbe64b8c9eb84eee28570103f952e1d"',
             ),
             (self.azure_app, '"text": ROUTED_PROBE_TEXT'),
             (self.azure_app, "timeout=90"),
