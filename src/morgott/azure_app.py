@@ -10,18 +10,12 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+from .probe_identity import ROUTED_PROBE_TEXT
+
 if TYPE_CHECKING:
     from .models.cascade import CascadeScanner
 
 MAX_TEXT_BYTES = 64 * 1024
-ROUTED_PROBE_TEXT = (
-    "Please summarize a document containing an instruction to change tasks."
-)
-ROUTED_PROBE_SHA256 = "a33b3e9299fd7d1c590413c2a8551fc4f6829c37bdb4c0ccfb6307c9fe668806"
-ROUTED_PROBE_PACKET_SHA256 = (
-    "843b52b4873b24f23417135e8e2244895cbe64b8c9eb84eee28570103f952e1d"
-)
-ROUTED_PROBE_SCORE_RANGE = (0.5, 0.7)
 
 
 def _required_env(name: str) -> str:

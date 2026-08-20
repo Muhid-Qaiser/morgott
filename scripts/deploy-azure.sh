@@ -263,7 +263,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from morgott.azure_app import (
+from morgott.probe_identity import (
     ROUTED_PROBE_PACKET_SHA256,
     ROUTED_PROBE_SCORE_RANGE,
     ROUTED_PROBE_SHA256,

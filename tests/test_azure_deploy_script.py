@@ -1,11 +1,124 @@
 from __future__ import annotations
 
+import io
 import json
 import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.error
 from pathlib import Path
+from unittest.mock import patch
+
+from morgott import azure_app
+
+
+class _FakeResponse(io.BytesIO):
+    def __init__(self, payload: dict, status: int = 200):
+        super().__init__(json.dumps(payload).encode())
+        self.status = status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+class AzureSmokeBehaviorTests(unittest.TestCase):
+    """The local smoke must issue its checks in the frozen order.
+
+    These behavioral checks replace raw source-text assertions: they run
+    smoke_local against a stubbed HTTP layer and assert the auth probe, the
+    bounds probe, the exact routed probe, and the 30 local-pass requests in
+    order, with the routed-probe identity and timeout intact.
+    """
+
+    def _run_smoke(self):
+        calls = []
+
+        status_payload = {
+            "ready": True,
+            "requested_precision": "auto",
+            "precision": "fp32",
+            "context_length": 1024,
+        }
+        probe_payload = {
+            "advisory_route": "restrict",
+            "reason": "deepseek_flag",
+            "decision": "allow",
+            "retrieval_status": "ok",
+            "retrieval_packet_sha256": "f" * 64,
+        }
+        local_payload = {"decision": "allow", "advisory_route": "pass"}
+
+        def fake_urlopen(request, timeout=None):
+            index = len(calls)
+            calls.append(
+                {
+                    "url": request.full_url,
+                    "body": None if request.data is None else request.data,
+                    "authorization": request.get_header("Authorization"),
+                    "timeout": timeout,
+                }
+            )
+            if index == 0:
+                raise urllib.error.HTTPError(
+                    request.full_url, 401, "unauthorized", None, None
+                )
+            if index == 1:
+                return _FakeResponse(status_payload)
+            if index == 2:
+                raise urllib.error.HTTPError(
+                    request.full_url, 422, "too large", None, None
+                )
+            if index == 3:
+                return _FakeResponse(probe_payload)
+            return _FakeResponse(local_payload)
+
+        environment = {
+            "MORGOTT_API_KEY": "company-preview-key-with-at-least-32-characters",
+            "MORGOTT_INFERENCE_PRECISION": "auto",
+        }
+        with (
+            patch.dict("os.environ", environment),
+            patch("morgott.azure_app.urllib.request.urlopen", fake_urlopen),
+        ):
+            result = azure_app.smoke_local()
+        return calls, result
+
+    def test_the_smoke_checks_run_in_the_frozen_order(self):
+        calls, result = self._run_smoke()
+
+        self.assertEqual(len(calls), 34)
+        self.assertTrue(calls[0]["url"].endswith("/v1/status"))
+        self.assertIsNone(calls[0]["authorization"])
+        self.assertTrue(calls[1]["url"].endswith("/v1/status"))
+        self.assertIsNotNone(calls[1]["authorization"])
+        oversized = json.loads(calls[2]["body"])
+        self.assertGreater(len(oversized["text"]), azure_app.MAX_TEXT_BYTES)
+        self.assertEqual(oversized["input_channel"], "direct_user")
+        self.assertEqual(result["routed_probe"]["retrieval_packet_sha256"], "f" * 64)
+        self.assertEqual(result["status"]["ready"], True)
+
+    def test_the_routed_probe_precedes_every_local_pass_request(self):
+        calls, _ = self._run_smoke()
+
+        probe = json.loads(calls[3]["body"])
+        self.assertEqual(
+            probe,
+            {
+                "text": azure_app.ROUTED_PROBE_TEXT,
+                "input_channel": "untrusted_content",
+            },
+        )
+        self.assertEqual(calls[3]["timeout"], 90)
+        local = calls[4:]
+        self.assertEqual(len(local), 30)
+        for call in local:
+            body = json.loads(call["body"])
+            self.assertEqual(body["input_channel"], "direct_user")
+            self.assertNotEqual(body["text"], azure_app.ROUTED_PROBE_TEXT)
 
 
 class AzureDeployScriptTests(unittest.TestCase):
@@ -185,20 +298,35 @@ class AzureDeployScriptTests(unittest.TestCase):
         self.assertNotIn("az containerapp job", self.script)
         self.assertNotIn("azure-servicebus", self.pyproject)
 
+    def test_probe_identity_is_the_single_consistent_source(self) -> None:
+        import hashlib
+
+        from morgott.probe_identity import (
+            ROUTED_PROBE_PACKET_SHA256,
+            ROUTED_PROBE_SCORE_RANGE,
+            ROUTED_PROBE_SHA256,
+            ROUTED_PROBE_TEXT,
+        )
+
+        self.assertEqual(
+            hashlib.sha256(ROUTED_PROBE_TEXT.encode()).hexdigest(),
+            ROUTED_PROBE_SHA256,
+        )
+        self.assertRegex(ROUTED_PROBE_PACKET_SHA256, r"^[0-9a-f]{64}$")
+        low, high = ROUTED_PROBE_SCORE_RANGE
+        self.assertLess(0.0, low)
+        self.assertLess(low, high)
+        self.assertLess(high, 1.0)
+        # Both consumers read the one canonical module, so a promotion
+        # updates src/morgott/probe_identity.py and nothing else.
+        self.assertIn("from morgott.probe_identity import", self.script)
+        self.assertNotIn("ROUTED_PROBE_TEXT = ", self.azure_app)
+        self.assertIn("from .probe_identity import ROUTED_PROBE_TEXT", self.azure_app)
+
     def test_validation_requires_one_exact_routed_probe_and_memory_headroom(
         self,
     ) -> None:
         required = (
-            (
-                self.azure_app,
-                '"a33b3e9299fd7d1c590413c2a8551fc4f6829c37bdb4c0ccfb6307c9fe668806"',
-            ),
-            (
-                self.azure_app,
-                '"843b52b4873b24f23417135e8e2244895cbe64b8c9eb84eee28570103f952e1d"',
-            ),
-            (self.azure_app, '"text": ROUTED_PROBE_TEXT'),
-            (self.azure_app, "timeout=90"),
             (
                 self.script,
                 '(result.route, result.reason) != ("review", "deepseek_required")',
@@ -222,9 +350,8 @@ class AzureDeployScriptTests(unittest.TestCase):
             with self.subTest(expected=expected):
                 self.assertIn(expected, document)
 
-        routed_probe = self.azure_app.index("_, routed_probe = request")
-        local_pass = self.azure_app.index("for _ in range(30)")
-        self.assertLess(routed_probe, local_pass)
+        # Probe-before-local-pass ordering, the probe payload, and its 90s
+        # timeout are asserted behaviorally in AzureSmokeBehaviorTests.
         for removed in (
             "ABBA",
             "CANARY_PAIRS",
