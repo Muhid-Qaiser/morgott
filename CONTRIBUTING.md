@@ -21,7 +21,7 @@ CI remains the source of truth when hooks are not installed or are bypassed.
 
 ## Workflow
 
-1. Create a short-lived branch using `feat/`, `fix/`, `docs/`, `chore/`, or `codex/` followed by a concise slug.
+1. Create a short-lived branch using `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`, `test/`, `perf/`, or `ci/` followed by a concise slug.
 2. Make the smallest change that satisfies the intended outcome.
 3. Run `make check` and any domain-specific verification required by `AGENTS.md`.
 4. Open a focused pull request and describe its data and security impact.
@@ -40,8 +40,6 @@ git diff --check
 ```
 
 Use the impact-based data verification rule in `AGENTS.md`; touching corpus-builder files alone does not require a rebuild.
-For output-neutral refactors, run focused equivalence tests and state why generated data is unaffected.
-For data-affecting changes, run the applicable rebuild and inspect its manifest hashes, counts, split invariants, and quarantine summary before handoff.
 
 ## Data and credentials
 

@@ -12,6 +12,19 @@ entry point, stop rule, and evidence destination that does not belong in
 maintained model behavior.
 Promote only code that has a continuing caller and a stable contract.
 
+Forward-only conventions for new studies (existing directories keep their
+frozen layout because recorded provenance hashes bind their paths and bytes):
+
+- one directory per study, holding a README that states the question and the
+  stop rule;
+- no bare `_vN` suffix directories; a genuinely new question gets a new
+  descriptive study name;
+- split the runner from metrics/reporting code so a study's evidence can be
+  recomputed without re-invoking providers.
+
+`experiments/mmbert_evaluation_contract.py` is the one retained shared helper:
+frozen snapshot evaluations import it, and `tests/` pins its contract.
+
 Three loose files predate this directory contract and remain in place because
 historical reports bind their paths: `benchmark_mmbert_full_lora.py`,
 `evaluate_prompt_guard_2_full_mixture.py`, and `lfm25-frozen-backbone.patch`.

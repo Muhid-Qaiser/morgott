@@ -20,5 +20,8 @@ Paths embedded inside those records describe the originating run and are not cur
 Control seeds, evaluation arrays, and the exact completed runners remain available from Git history.
 The compact maintained successor is `src/morgott/models/mmbert/`; any new run records its own provenance and does not rewrite these historical records.
 
-The registered shadows normalize and truncate each input to its first 512 tokens.
-They do not chunk long documents or identify an injected span.
+The historical pre-ctx1024 artifacts normalize and truncate each input to its
+first 512 tokens. The registered `mmbert-lora-full-ctx1024-u17000-s42` instead
+scans the complete normalized artifact in ordered 1,024-token windows with a
+128-token overlap (`max_tokens` and `window_overlap` in `model-artifacts.json`).
+None of these artifacts identify an injected span.

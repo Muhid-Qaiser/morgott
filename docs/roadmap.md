@@ -129,28 +129,24 @@ The sole registered Azure preview used the update-17,000 candidate with 1,024-to
 
 ### Downstream cascade candidate
 
-The July no-manual-review development candidate used the partial-data `mmbert-lora-s42` artifact followed by DeepSeek V4 Flash only for mmBERT scores from `0.2` through values below `0.999`.
-Scores below `0.2` pass the advisory sensor, scores at or above `0.999` restrict, and middle-zone rows restrict when the normalized DeepSeek two-token probability is at least `0.9`.
-An exhausted DeepSeek failure also restricts.
-The `0.9` threshold was selected on the fixed 6,000-row calibration split and applied once to the separate 14,000-row evaluation split.
-It is an operating threshold, not a calibrated production probability.
-Exact evidence, provider settings, metrics, and limitations are in [the OpenRouter downstream evaluation](../reports/openrouter-downstream-evaluation.md).
+Each consumed cascade experiment below is recorded as its decision plus any
+operative constraint; complete narratives, metrics, and provider settings stay
+in the linked reports and [the model ledger](../reports/model-experiments.md).
 
-The completed full-data LoRA cannot inherit the partial-LoRA score gates directly.
-The copied policy reaches 78.40% recall at 3.62% FPR, while a post-hoc `0.99999` high-gate extension reaches 66.79% recall at 1.81% FPR with 22.17% DeepSeek calls.
-That July extension was not in the predeclared grid.
-
-The August channel-aware follow-up superseded the July route and remained the maintained incumbent through 2026-08-16.
-It uses a `0.2` direct-user floor, a `0.1` untrusted-content floor, a shared `0.99999` high gate, trusted `input_channel` metadata, and a hybrid outer-intent prompt.
-The channel-specific floor keeps calibration FPR at 1.9808% while adding 10 true positives and 49 provider calls over 6,000 rows.
-The then-selected reviewer was DeepSeek V4 Flash 0731 on Cloudflare with its separately calibrated `0.6224593312018547` threshold.
-On the frozen 14,000-row evaluation role, the then-registered 512-token FP32 route reached 71.235% / 1.773% / 96.779% recall / FPR / precision at a 22.914% provider call rate.
-This adds 58 true positives with no additional false positives over the April route, although PromptShield recall falls by 2.176 points and untrusted-content FPR rises by 0.375 points.
-Its OpenVINO BF16 runtime reached 71.386% / 1.798% / 96.742%, differed from FP32 on 27 of 20,000 final routes, and passed every serving-equivalence gate.
-A frozen-ledger-only call-minimization check rejected further scalar gate tightening: the exact-decision rule saved seven evaluation calls and lost one true positive, while the best simple noninferior calibration grid saved 87 calls but lost nine true positives on evaluation.
-Keep the existing gates; any future low-call policy must be a materially different prospectively frozen architecture rather than another retune on this consumed panel.
-The selection followed the owner's aggregate-quality criterion and remained already-open advisory development evidence rather than a production promotion.
-See [the 0731 research and decision report](../reports/deepseek-v4-flash-0731-research.md).
+- July no-manual-review candidate (partial-data `mmbert-lora-s42` plus DeepSeek
+  middle zone at `0.9`): consumed development evidence with an operating
+  threshold, not a calibrated production probability. See
+  [the OpenRouter downstream evaluation](../reports/openrouter-downstream-evaluation.md).
+  The completed full-data LoRA cannot inherit the partial-LoRA score gates
+  directly, and the July `0.99999` high-gate extension was not in the
+  predeclared grid.
+- August channel-aware route (floors `0.2`/`0.1`, shared `0.99999` high gate,
+  DeepSeek V4 Flash 0731 on Cloudflare): the maintained incumbent through
+  2026-08-16; its OpenVINO BF16 runtime passed every serving-equivalence gate.
+  A frozen-ledger-only call-minimization check rejected further scalar gate
+  tightening.
+  Keep the existing gates; any future low-call policy must be a materially different prospectively frozen architecture rather than another retune on this consumed panel.
+  See [the 0731 research and decision report](../reports/deepseek-v4-flash-0731-research.md).
 
 On 2026-08-17, the owner promoted the benchmark-selected exact balanced profile as the maintained advisory default.
 It uses direct and untrusted floors `0.2` and `0.025`, local high `0.9999`, reviewer threshold `0.5`, the unchanged Cloudflare strict-logprob request, and the existing 1,024/128 full-context-first window flow.
@@ -160,60 +156,51 @@ Cloudflare remains the selected strict-logprob route.
 The registry binds the exact profile and evidence record, but the promotion changes advisory defaults only and preserves `decision: allow`.
 The long-document warning, absence of representative adjudicated traffic, and consumed development roles still prohibit blocking, SLA, or production-quality claims.
 See [the complete pipeline benchmark](../reports/pipeline-benchmark-20260816.md).
-Two separately frozen Ionstream canaries then failed the exact classifier reliability gate at both four and one concurrent requests because 8 of 20 and 2 of 20 rows respectively exhausted HTTP 429 retries.
-Ionstream calibration and evaluation were not opened, provider fallback remains disabled, and the measured Cloudflare route remains selected.
+Two separately frozen Ionstream canaries failed the exact classifier reliability gate; Ionstream calibration and evaluation were not opened, provider fallback remains disabled, and the measured Cloudflare route remains selected.
 
-A separate matched-boundary sequence tested script-aware normalization, the broader April-reviewer prompt, and the existing word n-gram control without changing the maintained route.
-The final frozen 1,008-row multilingual panel used all 15 remaining scenario-disjoint source scenarios and passed every predeclared gate at 97.02% / 1.79% English recall / FPR, 98.21% / 0.60% Russian, and 95.83% / 1.19% Ukrainian.
-The linear gate added 13 low-tail reviews, all attacks, while total candidate review load remained 88.29%.
-This is successful source-specific synthetic development evidence, but all source scenarios are now consumed and the remote-call rate is too high to supersede the maintained cascade.
-Do not integrate or retune it until an independently sourced matched panel and representative benign denominator reproduce the gain.
+On 2026-08-19 the owner promoted the registry-bound `balanced-retrieval-20260819` profile as the maintained advisory default (recorded here 2026-08-20).
+The review route now runs the registered source-lineage HNSW plus BM25/RRF example retriever before the fixed DeepSeek reviewer, with direct and untrusted floors `0.2` and `0.025` and local high `0.9999`.
+The consolidated evidence and the selected integration recipe are in [the retrieval-assisted reviewer findings](../reports/retrieval-assisted-reviewer-findings-20260819.md).
+The promotion changes advisory defaults only: every assessment still returns `decision: allow`, and the blocking, SLA, and production-quality prohibitions above are unchanged.
 
-A frozen provider-free transfer check then scored 571 privacy-filtered, zero-fit-overlap benign prompts from the public Operant AI false-positive dataset.
-The linear gate admitted only 1.40% overall but admitted 14.29% of the 49 English rows, above its frozen 10% per-language cap, while the current mmBERT high gate admitted two source-benign rows.
-The linear candidate was rejected and its planned OpenRouter reviewer phase was canceled.
+The subsequent consumed reviewer and boundary diagnostics, as decisions plus
+operative constraints (full narratives in the ledger and topic reports):
 
-The next provider-free diagnostic froze 280 unseen payload families from the ACL Inj-SQuAD and Inj-TriviaQA release into 1,657 complete clean-plus-three-position groups.
-The registered local gate admitted only 65.10% of attacked documents and 61.80% of exact payload spans, with SQuAD head admission at 32.62% and clean TriviaQA review at 52.14%.
-A post-hoc threshold grid found no scalar repair, and a 128-token development candidate increased benign load and compute too sharply.
-The remote phase was canceled because low-zone attacks cannot reach the reviewer.
-This narrows the next architecture target to request-conditioned task-versus-content assessment and deterministic authorization rather than text-only window retuning.
-
-A subsequent task-conditioned canary paired the trusted source question with one privacy-safe document per source and each of the 20 already-consumed payload families.
-The reviewer produced zero clean flags and 100% attack-over-clean ordering, but its fixed `0.85` threshold reached only 75% SQuAD-head recall, 45% TriviaQA-head recall, and 25% TriviaQA-midpoint recall.
-The canary therefore failed its frozen operating-point gates and the remaining 280 payload families were not remotely reviewed.
-A post-hoc lower threshold is diagnosis, not promotion evidence.
-Any follow-up must use independent request-conditioned calibration and evaluation data and solve the all-document call-load problem before integration is considered.
-
-The independent StruQ follow-up froze both splits before calls after privacy screening and full-fit overlap filtering.
-Calibration retained `0.85`, and the untouched 157-pair evaluation flagged all 471 attacks with 100% paired ordering while flagging 1 clean input, or 0.637%.
-This supports the task-conditioned architecture hypothesis only for three explicit fixed-output attack constructions.
-It does not solve the 100% remote-review rate or establish transfer to natural documents, varied attacker goals, tool outputs, retrieval content, or adaptive attacks, so no maintained interface or threshold changed.
-
-The next fixed transfer used all 1,054 InjecAgent user-and-attacker pairs across 62 varied tool-output goals.
-The unchanged response-only cascade reached 70.40% base recall and 100% enhanced recall with 0 of 17 clean templates restricted.
-Task-conditioned DeepSeek V4 Flash 0731 at the transferred `0.85` threshold raised base recall to 78.27%, retained zero clean flags, and ranked every attack above its paired clean response, but failed aggregate and worst-slice gates.
-A post-hoc `0.3` grid point reaches 96.96% recall with zero clean flags on this consumed source, so it diagnoses score-scale mismatch but cannot select a maintained threshold.
-The next threshold gate needs a larger independent clean tool-output denominator, separately sourced varied attacks, and a frozen invocation strategy.
-
-The subsequent API-Bank clean study first exposed a projection defect in the benchmark adapter.
-Sending the complete serialized API call and result as untrusted content produced a 20.31% exact-unique flag rate at `0.3`, while sending only the returned value reduced it to 3.68%.
-The corrected projection still failed the frozen clean gates at `0.3`.
-A sealed post-hoc grid found `0.5` to be the first fixed `0.1` point that passed all retained API-Bank gates, with 0.70% exact-unique flags and 94.88% InjecAgent recall.
-
-That `0.5` candidate was frozen before AgentDyn reviewer outcomes were opened.
-After retrying every and only 55 rate-limited calls at concurrency `8`, it flagged all 560 task-and-goal attacks across all suites, goals, and tasks.
-This validates transfer for one explicit fixed instruction template, but not integration: the threshold used consumed clean evidence, API-Bank excluded fit-overlapping outputs, and AgentDyn had no clean, adaptive, or tool-execution arm.
-
-The prospectively frozen AgentPIMA gate then supplied 672 progressive attacks and their matched clean artifacts across 112 trusted tasks.
-Threshold `0.5` retained about 95% attack recall but flagged 38.52% and 27.63% of the two exact-unique clean variants and at least one clean input for 91.07% of tasks.
-An exhaustive post-hoc diagnostic found that satisfying every clean gate reduced worst-variant attack recall to 50.45%, so the candidate is rejected rather than retuned.
-The next architecture target is deterministic authorization plus a frozen low-call invocation policy, not another scalar threshold over this all-row reviewer.
-
-The independent SafeClawBench follow-up then tested whether direct-user prompt specialization could repair the context-free boundary detector.
-The maintained cascade detected only 9 of 89 DPI prompts because 80 positives passed below the local reviewer floor, while all-row 0731 with the current prompt reached 48 positives at 11 of 94 ADI false positives.
-The specialized prompt reduced all-row performance to 3 positives and 2 false positives, and no threshold on the consumed panel met its fixed quality targets.
-This rejects prompt and scalar-gate repair and narrows the next architecture target to trusted task, policy, and capability context plus deterministic action outcomes on an independent source.
+- Matched-boundary multilingual sequence (script-aware normalization, April
+  prompt, word n-gram gate): passed every predeclared gate on the final frozen
+  panel, but all source scenarios are consumed and the remote-call rate is too
+  high to supersede the maintained cascade.
+  Do not integrate or retune it until an independently sourced matched panel and representative benign denominator reproduce the gain.
+- Operant AI provider-free transfer check: the linear gate broke its frozen 10%
+  per-language cap on English rows; the candidate was rejected and its planned
+  OpenRouter reviewer phase was canceled.
+- Inj-SQuAD/Inj-TriviaQA known-span diagnostic: the registered local gate
+  admits too few attacked documents and payload spans, no scalar repair exists,
+  and the remote phase was canceled because low-zone attacks cannot reach the
+  reviewer.
+  This narrows the next architecture target to request-conditioned task-versus-content assessment and deterministic authorization rather than text-only window retuning.
+- Task-conditioned canary: zero clean flags with perfect ordering but failed
+  its frozen operating-point gates; a post-hoc lower threshold is diagnosis,
+  not promotion evidence.
+  Any follow-up must use independent request-conditioned calibration and evaluation data and solve the all-document call-load problem before integration is considered.
+- StruQ follow-up: supports the task-conditioned hypothesis only for three
+  explicit fixed-output attack constructions; no maintained interface or
+  threshold changed.
+- InjecAgent transfer: failed aggregate and worst-slice gates at the
+  transferred `0.85`; the post-hoc `0.3` point diagnoses score-scale mismatch
+  but cannot select a maintained threshold.
+  The next threshold gate needs a larger independent clean tool-output denominator, separately sourced varied attacks, and a frozen invocation strategy.
+- API-Bank clean study plus AgentDyn: the output-only projection is the correct
+  runtime boundary and a sealed grid found `0.5`, which then flagged all
+  AgentDyn attacks; this validates one explicit fixed instruction template, not
+  integration, because the threshold used consumed clean evidence and AgentDyn
+  had no clean, adaptive, or tool-execution arm.
+- AgentPIMA gate: threshold `0.5` was rejected rather than retuned because
+  satisfying every clean gate halves worst-variant attack recall.
+  The next architecture target is deterministic authorization plus a frozen low-call invocation policy, not another scalar threshold over this all-row reviewer.
+- SafeClawBench follow-up: rejects prompt and scalar-gate repair and narrows
+  the next architecture target to trusted task, policy, and capability context
+  plus deterministic action outcomes on an independent source.
 
 The maintained code verifies and serves the registered full-mixture LoRA through ordered windows, strictly parses DeepSeek decision-token log probabilities, and fails conservatively after bounded retries.
 For remote-enabled multi-window untrusted content without a local high, it now reviews the complete normalized artifact once before the existing middle-window branch.
@@ -224,13 +211,8 @@ See [the long-context reviewer report](../reports/long-context-reviewer-research
 Middle-window batches stop before later batches after a definitive flag or exhausted failure, so a decisive fallback batch can avoid up to 124 of the 128 permitted window calls.
 Production reviewer initialization also suppresses LiteLLM's unsolicited error banners so handled retries cannot corrupt the CLI's machine-readable JSON output.
 All-clear multi-window artifacts now incur the full review and every eligible fallback window, so this remains uncalibrated for representative benign traffic.
-The prospectively frozen LongBench Pro control stopped before OpenRouter after 7 of 471 natural documents hit the local-high branch and the remaining all-clear workload projected 17,877 fallback reviews against an 8,192-window ceiling.
-A post-hoc PIArena replay found that the eight highest-scoring fallback windows preserve the consumed panel's exhaustive-union decisions and would fit the LongBench workload budget, but this rule is not integrated or promoted.
-The first such panel used 59 fit-disjoint LongBench v2 pairs and stopped before OpenRouter because none of its clean artifacts reached the local high zone, despite nine high-zone attacks.
-That panel is consumed and did not authorize a cascade change.
-The next panel supplied 100 fit-disjoint pairs balanced across all five official Chinese LongBench tasks and contained 3 local-high clean artifacts plus 44 local-high attacks.
-Its exact full-context plus top-eight candidate caught 99 attacks and lost no local-high attack catch, but restricted 11 clean controls against the frozen maximum of 2 and reached only 88 fully correct pairs against the minimum of 90.
-The candidate is rejected and the maintained exhaustive fallback remains unchanged.
+The three consumed long-document panels each ended in a decision without a cascade change: the LongBench Pro control stopped before OpenRouter because the all-clear workload projected far past the window ceiling; the LongBench v2 panel stopped before OpenRouter and did not authorize a change; and the Chinese LongBench panel rejected the full-context-plus-top-eight candidate on its clean gates, so the maintained exhaustive fallback remains unchanged.
+The post-hoc top-eight fallback replay is diagnosis only and is not integrated or promoted.
 Do not spend another consumed benchmark on scalar threshold or window-count tuning.
 The next architecture target is trusted task or policy context plus deterministic authorization outcomes, evaluated prospectively on realistic stateful tasks.
 The serving verifier now binds typed reviewer evidence to the current prompt, request, provider, panel identity, and trusted channel, while harmful non-injection classification stays outside the subversion route.

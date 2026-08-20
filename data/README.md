@@ -4,20 +4,23 @@ This is the canonical copy of the morgott corpus (prompt-injection / routing gua
 
 ## Layout
 
+Sizes are approximate as of 2026-08; exact counts and hashes live only in
+`data/manifest.json`.
+
 | Path | Size | Class | What it is |
 |------|------|-------|------------|
 | `README.md` | — | — | This data card (repo path: `data/README.md`) |
-| `data/manifest.json` | 92K | precious | Integrity anchor: SHA-256 hashes, row counts, roles, and provenance for every file below. Also tracked in git. |
-| `data/sources/` | 12G | **precious** | 33 canonical standardized source shards (jsonl). Rebuildable only via authenticated HuggingFace re-downloads (four are gated) plus the exact build pipeline — treat as irreplaceable. |
-| `data/views/` | 7.8G | derived | Deterministic training/eval views: `routing/` (train/validation/dev_test/uncertain) and `injection/` (per-benchmark eval slices + direct/indirect train). Ready to train on directly. |
-| `data/quarantine/` | 739M | derived | Rows excluded for conflict/leakage/sensitivity (routing, injection, mind2web + swebench sensitive). |
-| `data/audits/` | 212K | derived | Overlap/near-duplicate evidence backing the quarantine decisions. |
-| `data-archive/` | 36M | **precious** | Retained model-generated matched pairs (11,046 pairs) plus the first-party red-team campaign corpus under `redteam/` (raw parquets + derived projection). Both are stochastic generator output, not reproducible, and are **not** canonical corpus sources. See its own README + SHA256SUMS. |
-| `artifacts/models/` | 1.3G | precious | Trained model weights (safetensors/onnx/adapters) for the mmbert LoRA/frozen/LP-FT runs. Also in git-LFS. |
+| `data/manifest.json` | ~100K | precious | Integrity anchor: SHA-256 hashes, row counts, roles, and provenance for every file below. Also tracked in git. |
+| `data/sources/` | ~12G | **precious** | The manifest-declared canonical standardized source shards (jsonl). Rebuildable only via authenticated HuggingFace re-downloads (four are gated) plus the exact build pipeline, so treat as irreplaceable. |
+| `data/views/` | ~8G | derived | Deterministic training/eval views: `routing/` (train/validation/dev_test/uncertain) and `injection/` (per-benchmark eval slices + direct/indirect train). Ready to train on directly. |
+| `data/quarantine/` | ~750M | derived | Rows excluded for conflict/leakage/sensitivity (routing, injection, mind2web + swebench sensitive). |
+| `data/audits/` | ~200K | derived | Overlap/near-duplicate evidence backing the quarantine decisions. |
+| `data-archive/` | ~36M | **precious** | Retained model-generated matched pairs plus the first-party red-team campaign corpus under `redteam/` (raw parquets + derived projection). Both are stochastic generator output, not reproducible, and are **not** canonical corpus sources. See its own README + SHA256SUMS. |
+| `artifacts/models/` | ~1.3G | precious | Trained model weights (safetensors/onnx/adapters) for the mmbert LoRA/frozen/LP-FT runs. Also in git-LFS. |
 
 Everything marked *derived* is rebuilt deterministically from `data/sources/` + the repo pipeline via `uv run morgott data`; hashes are pinned in `data/manifest.json`, and the build fails closed on any mismatch.
 
-**Deliberately not uploaded:** `artifacts/combined_generic/` feature caches (~19G) — pure recompute speed-ups, regenerated on demand.
+**Deliberately not uploaded:** the `artifacts/combined_generic/` feature caches (~19G), which are pure recompute speed-ups regenerated on demand. Two small lfm25 evidence files inside that directory (`lfm25_full_runs/.../evaluation.json` and `result.json`) are tracked in git rather than uploaded here.
 
 ## Source shards (`data/sources/`)
 

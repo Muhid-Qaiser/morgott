@@ -107,7 +107,12 @@ TAT-QA questions, paragraphs, and serialized tables share hybrid-context lineage
 with official dev/test held out. FinanceBench is dev-test only and grouped by
 document. Mind2Web contributes only confirmed official training tasks after local
 secret and PII screening; suspicious raw task text stays in source-level quarantine.
-API-Bank remains deferred until tool-output diagnostics show a gap.
+API-Bank completed its role as an external clean tool-output diagnostic: the
+output-only projection is the correct runtime boundary, but both projections
+and the post-hoc threshold grid are consumed, so it stays excluded as a
+routing source and its generated dialogue must never be fitted (see
+`reports/dataset-selection.md` and
+`reports/task-conditioned-reviewer-evaluation.md`).
 
 Authenticated Hugging Face access has been explicitly authorized after the
 user accepted the applicable gates. Never print tokens or `.env` contents.
