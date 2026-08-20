@@ -725,7 +725,7 @@ def _cached_batch_logits(
 
     Mirrors `core.batch_logits` exactly; `tokenizer.pad` is the same code path
     `tokenizer(..., padding=True)` uses internally, so the encoder input is
-    bitwise identical. `tests.test_mmbert_training` asserts that.
+    bitwise identical. `tests.test_mmbert_cuda_equivalence` asserts that.
 
     Falls back to the pinned implementation when no cache is supplied, so the
     hash-locked module stays the single definition of the forward pass.

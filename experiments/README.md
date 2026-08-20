@@ -17,3 +17,10 @@ historical reports bind their paths: `benchmark_mmbert_full_lora.py`,
 `evaluate_prompt_guard_2_full_mixture.py`, and `lfm25-frozen-backbone.patch`.
 Treat them as historical exceptions; new studies use subdirectories with a
 README.
+
+A few tests in `tests/` exercise code in this directory
+(`test_guard_baseline_*.py`, `test_mmbert_longcode_snapshot_eval.py`,
+`test_mmbert_redteam_snapshot_eval.py`). They stay in the default suite as a
+deliberate exception: they gate maintained provenance contracts, so a change
+that breaks them must fail `make check` even though the code under test lives
+in experiments.
