@@ -1,12 +1,93 @@
 from __future__ import annotations
 
+import re
+import unicodedata
 from pathlib import Path
 
 from datasets import load_dataset
 from huggingface_hub import hf_hub_download
 from huggingface_hub.errors import GatedRepoError
 
-from ..data import SOURCES, _fetch, file_sha256
+from ..data import SOURCES, _fetch, _github_raw, _set_source_role, file_sha256
+
+_SENSITIVE_TEXT_PATTERNS = {
+    "email_address": re.compile(
+        r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE
+    ),
+    "private_key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+    "provider_token": re.compile(
+        r"\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|"
+        r"AKIA[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.)"
+    ),
+    "credential_value": re.compile(
+        r"\b(?:password|passcode|api[ _-]?key|access[ _-]?token|secret)\s*"
+        r"(?:is|to|=|:)\s*[^\s,;]{4,}",
+        re.IGNORECASE,
+    ),
+    "payment_credential": re.compile(
+        r"\b(?:(?:(?:gift|credit|debit)\s+)?card(?:\s+with)?\s+"
+        r"(?:the\s+)?number|credit\s+number)\b\s*(?:is|of|:)?\s*"
+        r"[A-Z0-9][A-Z0-9 -]{5,}\b|\b(?:cvv|pin)\s*(?:is|:)?\s*\d{3,8}\b",
+        re.IGNORECASE,
+    ),
+    "government_or_vehicle_id": re.compile(
+        r"\b(?:social security|ssn|passport|document|driver'?s? license|"
+        r"license plate|vin)\b(?:\s+(?:number|no\.?))?\s*(?:is|of|:)?\s*"
+        r"[A-Z0-9-]{5,}\b",
+        re.IGNORECASE,
+    ),
+    "phone_number": re.compile(
+        r"\bphone(?:\s+number)?\s*(?:is|of|:)?\s*\+?\d[\d .()-]{6,}\d\b",
+        re.IGNORECASE,
+    ),
+    "transaction_identifier": re.compile(
+        r"\b(?:booking|confirmation|order|ticket|rewards?|loyalty|membership)"
+        r"(?:\s+(?:number|no\.?|id))?\s*(?:is|of|for|:)?\s*"
+        r"(?=[A-Z0-9-]{6,}\b)(?=[A-Z0-9-]*\d)[A-Z0-9-]{6,}\b|"
+        r"\brecord locator\s*(?:is|of|:)?\s*[A-Z0-9-]{5,}\b",
+        re.IGNORECASE,
+    ),
+    "street_address": re.compile(
+        r"\b(?:street|billing|home|shipping)?\s*address\s*"
+        r"(?:(?:is|:|of)\s*)?"
+        r"(?:\d{1,6}\b|p\.?o\.?\s+box\b)",
+        re.IGNORECASE,
+    ),
+    "ssn_format": re.compile(r"(?<!\d)\d{3}-\d{2}-\d{4}(?!\d)"),
+    "iban": re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"),
+}
+
+
+def _sensitive_text_reasons(text: str) -> list[str]:
+    normalized = unicodedata.normalize("NFKC", text)
+    return sorted(
+        name
+        for name, pattern in _SENSITIVE_TEXT_PATTERNS.items()
+        if pattern.search(normalized)
+    )
+
+
+def _sensitive_quarantine(row: dict) -> dict | None:
+    """Route a row to source-level quarantine when the PII screen matches."""
+
+    reasons = _sensitive_text_reasons(row["text"])
+    if not reasons:
+        return None
+    row["source_sensitive_text_reasons"] = reasons
+    row = _set_source_role(row, "uncertain")
+    row["data_role"] = "quarantine"
+    row["quarantine_reason"] = "potential_secret_or_pii"
+    return row
+
+
+def _github_pinned(
+    source: str, filename: str, expected_sha256: str
+) -> tuple[bytes, str]:
+    data, digest = _github_raw(source, filename)
+    if digest != expected_sha256:
+        raise ValueError(f"{source}:{filename} does not match its pinned digest")
+    return data, digest
+
 
 FILES = {
     "gandalf": {

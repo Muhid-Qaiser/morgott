@@ -16,7 +16,9 @@ from ..data import _sample, _set_source_role, text_hash
 from ._shared import FILES, _download, _download_files, _parquet_dataset
 
 
-def _gandalf_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _gandalf_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     dataset, downloads = _parquet_dataset("gandalf")
 
     def rows() -> Iterator[dict]:
@@ -37,7 +39,7 @@ def _gandalf_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
                 row["source_similarity"] = float(source_row["similarity"])
                 yield _set_source_role(row, role)
 
-    return rows(), downloads, {}
+    return rows(), downloads, {}, None
 
 
 def _llmail_attack_attempt(value: object) -> str:
@@ -55,7 +57,9 @@ def _llmail_attack_attempt(value: object) -> str:
     raise ValueError("llmail has an unexpected attack-attempt label")
 
 
-def _llmail_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _llmail_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     paths, downloads = _download_files("llmail")
     profile = {
         "normalized_source_labels": {},
@@ -281,10 +285,12 @@ def _llmail_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
             row["source_attack_attempt"] = "False"
             yield _set_source_role(row, "dev_test")
 
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None
 
 
-def _tensor_trust_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _tensor_trust_raw_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     paths, downloads = _download_files("tensor_trust_raw")
     profile = {
         "raw_attack_rows": 0,
@@ -501,10 +507,12 @@ def _tensor_trust_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
                 )
                 yield _set_source_role(row, "auxiliary")
 
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None
 
 
-def _browsesafe_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _browsesafe_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     dataset, downloads = _parquet_dataset("browsesafe")
 
     def rows() -> Iterator[dict]:
@@ -537,7 +545,7 @@ def _browsesafe_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
                 )
                 yield _set_source_role(row, role)
 
-    return rows(), downloads, {"positive_payload_spans_available": False}
+    return rows(), downloads, {"positive_payload_spans_available": False}, None
 
 
 def _hackaprompt_sample(source_row: dict, index: int) -> dict:
@@ -604,7 +612,9 @@ def _hackaprompt_sample(source_row: dict, index: int) -> dict:
     return _set_source_role(row, "candidate")
 
 
-def _hackaprompt_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _hackaprompt_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     filename, expected = FILES["hackaprompt"]["full"]
     path, digest = _download("hackaprompt", filename, expected)
     dataset = load_dataset("parquet", data_files={"full": str(path)})["full"]
@@ -661,7 +671,7 @@ def _hackaprompt_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
         profile["collections"] = dict(sorted(collections.items()))
         profile["unique_session_ids"] = len(sessions)
 
-    return rows(), {filename: digest}, profile
+    return rows(), {filename: digest}, profile, None
 
 
 def _wildjailbreak_sample(source_row: dict, split: str, index: int) -> dict:
@@ -730,7 +740,9 @@ def _wildjailbreak_sample(source_row: dict, split: str, index: int) -> dict:
     return _set_source_role(row, "candidate" if split == "train" else "dev_test")
 
 
-def _wildjailbreak_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _wildjailbreak_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     paths, downloads = _download_files("wildjailbreak")
     profile = {"missing_adversarial_text_rows_uncertain": 0}
 
@@ -754,7 +766,7 @@ def _wildjailbreak_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
                         profile["missing_adversarial_text_rows_uncertain"] += 1
                     yield _wildjailbreak_sample(source_row, split, index)
 
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None
 
 
 def _wildguard_sample(source_row: dict, split: str, index: int) -> dict:
@@ -814,7 +826,9 @@ def _wildguard_sample(source_row: dict, split: str, index: int) -> dict:
     return _set_source_role(row, role)
 
 
-def _wildguard_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _wildguardmix_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     dataset, downloads = _parquet_dataset("wildguardmix")
     profile = {"empty_prompt_rows_omitted": 0}
 
@@ -832,4 +846,4 @@ def _wildguard_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
                     continue
                 yield _wildguard_sample(source_row, split, index)
 
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None

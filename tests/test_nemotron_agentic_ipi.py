@@ -1,7 +1,8 @@
 import json
 import unittest
 
-from morgott.data import _parse_nemotron_agentic_ipi, _set_source_role
+from morgott.data import _set_source_role
+from morgott.sources.core import _parse_nemotron_agentic_ipi
 
 
 def _source_row() -> dict:

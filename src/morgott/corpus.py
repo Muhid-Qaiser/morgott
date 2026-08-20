@@ -15,47 +15,11 @@ from .data import (
     build_dataset,
     file_sha256,
 )
+from .data import (
+    _consume_source_rows as _consume_source,
+)
 from .routing import materialize_routing_views
 from .sources import LOADERS
-
-
-def _consume_source(path: Path, rows: Iterable[dict]) -> dict:
-    counts = Counter()
-    row_ids = set()
-    with _atomic_text_writer(path) as handle:
-        for row in rows:
-            if row["id"] in row_ids:
-                raise ValueError(f"duplicate canonical row id: {row['id']}")
-            row_ids.add(row["id"])
-            role = row.get("source_role")
-            eligible = row.get("routing_training_eligible")
-            expected_eligible = role in {"candidate", "dev_test"}
-            if type(eligible) is not bool or eligible != expected_eligible:
-                raise ValueError(
-                    f"{row['id']} has inconsistent routing source role/eligibility"
-                )
-            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n")
-            counts["rows"] += 1
-            counts[f"role:{role}"] += 1
-            counts[f"security:{row['security_label']}"] += 1
-            counts[f"routing:{row['routing_label']}"] += 1
-    summary = {
-        "rows": counts["rows"],
-        "roles": {
-            key.removeprefix("role:"): value
-            for key, value in sorted(counts.items())
-            if key.startswith("role:")
-        },
-        "security_labels": {
-            key.removeprefix("security:"): value
-            for key, value in sorted(counts.items())
-            if key.startswith("security:")
-        },
-        "routing_benign": counts["routing:0"],
-        "routing_non_benign": counts["routing:1"],
-        "sha256": file_sha256(path),
-    }
-    return summary
 
 
 def _consume_source_quarantine(path: Path, rows: Iterable[dict]) -> dict:
@@ -101,14 +65,7 @@ def _extend_corpus(data_dir: Path, *, core_manifest_path: Path) -> dict:
     source_quarantines = {}
     downloads = {}
     for source, loader in LOADERS.items():
-        loaded = loader()
-        if len(loaded) == 3:
-            rows, source_downloads, source_profile = loaded
-            quarantine_rows = None
-        elif len(loaded) == 4:
-            rows, source_downloads, source_profile, quarantine_rows = loaded
-        else:
-            raise ValueError(f"{source} loader returned an invalid result")
+        rows, source_downloads, source_profile, quarantine_rows = loader()
         summary = _consume_source(source_dir / f"{source}.jsonl", rows)
         summary["path"] = str((source_dir / f"{source}.jsonl").relative_to(data_dir))
         source_outputs[source] = summary

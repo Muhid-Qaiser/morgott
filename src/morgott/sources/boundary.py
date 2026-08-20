@@ -206,7 +206,9 @@ def _validate_boundary_rows(rows_by_split: dict[str, list[dict]]) -> dict:
     }
 
 
-def _agentic_boundary_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _agentic_boundary_pairs_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     paths, downloads = _download_files("agentic_boundary_pairs")
     rows_by_split = {}
     for split, path in paths.items():
@@ -222,4 +224,4 @@ def _agentic_boundary_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
             for source_row in rows_by_split[split]:
                 yield _boundary_pair_sample(source_row, split)
 
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None

@@ -6,7 +6,6 @@ import io
 import json
 import re
 import tarfile
-import unicodedata
 from collections import Counter
 from collections.abc import Iterator
 
@@ -16,65 +15,25 @@ import pyarrow.parquet as pq
 from ..data import (
     SOURCES,
     _csv_rows,
-    _github_raw,
     _sample,
     _set_source_role,
     text_hash,
 )
 from ._shared import (
+    _SENSITIVE_TEXT_PATTERNS as _SENSITIVE_TEXT_PATTERNS,
+)
+from ._shared import (
     FILES,
     _download,
     _download_files,
+    _github_pinned,
     _parquet_dataset,
+    _sensitive_quarantine,
     _verified_archive,
 )
-
-_SENSITIVE_TEXT_PATTERNS = {
-    "email_address": re.compile(
-        r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE
-    ),
-    "private_key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
-    "provider_token": re.compile(
-        r"\b(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|"
-        r"AKIA[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.)"
-    ),
-    "credential_value": re.compile(
-        r"\b(?:password|passcode|api[ _-]?key|access[ _-]?token|secret)\s*"
-        r"(?:is|to|=|:)\s*[^\s,;]{4,}",
-        re.IGNORECASE,
-    ),
-    "payment_credential": re.compile(
-        r"\b(?:(?:(?:gift|credit|debit)\s+)?card(?:\s+with)?\s+"
-        r"(?:the\s+)?number|credit\s+number)\b\s*(?:is|of|:)?\s*"
-        r"[A-Z0-9][A-Z0-9 -]{5,}\b|\b(?:cvv|pin)\s*(?:is|:)?\s*\d{3,8}\b",
-        re.IGNORECASE,
-    ),
-    "government_or_vehicle_id": re.compile(
-        r"\b(?:social security|ssn|passport|document|driver'?s? license|"
-        r"license plate|vin)\b(?:\s+(?:number|no\.?))?\s*(?:is|of|:)?\s*"
-        r"[A-Z0-9-]{5,}\b",
-        re.IGNORECASE,
-    ),
-    "phone_number": re.compile(
-        r"\bphone(?:\s+number)?\s*(?:is|of|:)?\s*\+?\d[\d .()-]{6,}\d\b",
-        re.IGNORECASE,
-    ),
-    "transaction_identifier": re.compile(
-        r"\b(?:booking|confirmation|order|ticket|rewards?|loyalty|membership)"
-        r"(?:\s+(?:number|no\.?|id))?\s*(?:is|of|for|:)?\s*"
-        r"(?=[A-Z0-9-]{6,}\b)(?=[A-Z0-9-]*\d)[A-Z0-9-]{6,}\b|"
-        r"\brecord locator\s*(?:is|of|:)?\s*[A-Z0-9-]{5,}\b",
-        re.IGNORECASE,
-    ),
-    "street_address": re.compile(
-        r"\b(?:street|billing|home|shipping)?\s*address\s*"
-        r"(?:(?:is|:|of)\s*)?"
-        r"(?:\d{1,6}\b|p\.?o\.?\s+box\b)",
-        re.IGNORECASE,
-    ),
-    "ssn_format": re.compile(r"(?<!\d)\d{3}-\d{2}-\d{4}(?!\d)"),
-    "iban": re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"),
-}
+from ._shared import (
+    _sensitive_text_reasons as _sensitive_text_reasons,
+)
 
 _PROVIDER_EGRESS_LICENSES = frozenset(
     {
@@ -88,15 +47,6 @@ _PROVIDER_EGRESS_LICENSES = frozenset(
         "ODC-BY",
     }
 )
-
-
-def _sensitive_text_reasons(text: str) -> list[str]:
-    normalized = unicodedata.normalize("NFKC", text)
-    return sorted(
-        name
-        for name, pattern in _SENSITIVE_TEXT_PATTERNS.items()
-        if pattern.search(normalized)
-    )
 
 
 def _public_declared_license(value: object) -> bool:
@@ -147,7 +97,9 @@ def _mind2web_sample(source_row: dict) -> dict:
     return row
 
 
-def _mind2web_rows():
+def _mind2web_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     conversion_revision = SOURCES["mind2web"]["conversion_revision"]
     paths, downloads = _download_files("mind2web", revision=conversion_revision)
     downloads = {
@@ -169,14 +121,12 @@ def _mind2web_rows():
                         f"mind2web has duplicate annotation id: {annotation_id}"
                     )
                 annotation_ids.add(annotation_id)
-                reasons = _sensitive_text_reasons(row["text"])
-                if reasons:
-                    row["source_sensitive_text_reasons"] = reasons
-                    row = _set_source_role(row, "uncertain")
-                    row["data_role"] = "quarantine"
-                    row["quarantine_reason"] = "potential_secret_or_pii"
-                    quarantined.append(row)
-                    reason_counts.update(reasons)
+                quarantine_row = _sensitive_quarantine(row)
+                if quarantine_row is not None:
+                    quarantined.append(quarantine_row)
+                    reason_counts.update(
+                        quarantine_row["source_sensitive_text_reasons"]
+                    )
                 else:
                     accepted.append(_set_source_role(row, "candidate"))
     if len(annotation_ids) != 1_009:
@@ -259,7 +209,9 @@ def _swebench_verified_sample(source_row: dict) -> dict:
     return _set_source_role(row, "dev_test")
 
 
-def _swebench_verified_rows():
+def _swebench_verified_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     filename, expected = FILES["swebench_verified"]["dev_test"]
     path, digest = _download("swebench_verified", filename, expected)
     columns = (
@@ -287,14 +239,10 @@ def _swebench_verified_rows():
                 )
             instance_ids.add(instance_id)
             repositories[row["source_repository"]] += 1
-            reasons = _sensitive_text_reasons(row["text"])
-            if reasons:
-                row["source_sensitive_text_reasons"] = reasons
-                row = _set_source_role(row, "uncertain")
-                row["data_role"] = "quarantine"
-                row["quarantine_reason"] = "potential_secret_or_pii"
-                quarantined.append(row)
-                reason_counts.update(reasons)
+            quarantine_row = _sensitive_quarantine(row)
+            if quarantine_row is not None:
+                quarantined.append(quarantine_row)
+                reason_counts.update(quarantine_row["source_sensitive_text_reasons"])
             else:
                 accepted.append(row)
     if len(instance_ids) != 500:
@@ -403,7 +351,9 @@ def _taskmaster_sample(
     return _set_source_role(row, role)
 
 
-def _taskmaster_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _taskmaster_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     data, digest = _verified_archive("taskmaster")
     profile = {
         "projection": "all non-empty user and assistant turn text from Taskmaster 1-3",
@@ -521,7 +471,7 @@ def _taskmaster_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
             }
         )
 
-    return rows(), {"taskmaster.tar.gz": digest}, profile
+    return rows(), {"taskmaster.tar.gz": digest}, profile, None
 
 
 def _banking77_sample(source_row: dict, split: str, index: int) -> dict:
@@ -547,7 +497,9 @@ def _banking77_sample(source_row: dict, split: str, index: int) -> dict:
     return _set_source_role(row, "candidate" if split == "train" else "dev_test")
 
 
-def _banking77_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _banking77_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     expected = {
         "banking_data/train.csv": "b06e26ac675513959a63135f11b94ea7786ed02da65db93a5650d8838cbc664b",
         "banking_data/test.csv": "d12d6e3bc4c3103966ae786dc435913c0c563dfa328f5a3646d0e62cfeeb474d",
@@ -555,9 +507,7 @@ def _banking77_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
     contents = {}
     downloads = {}
     for filename, expected_digest in expected.items():
-        data, digest = _github_raw("banking77", filename)
-        if digest != expected_digest:
-            raise ValueError(f"banking77:{filename} does not match its pinned digest")
+        data, digest = _github_pinned("banking77", filename, expected_digest)
         contents[filename] = data
         downloads[filename] = digest
     datasets = {
@@ -577,7 +527,7 @@ def _banking77_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
         },
         "lineage_limit": "the source exposes no conversation lineage; each query is a singleton group",
     }
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None
 
 
 def _false_reject_sample(source_row: dict, split: str, index: int) -> dict:
@@ -609,7 +559,9 @@ def _false_reject_sample(source_row: dict, split: str, index: int) -> dict:
     return _set_source_role(row, "dev_test" if split == "test" else "candidate")
 
 
-def _false_reject_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _false_reject_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     paths, downloads = _download_files("false_reject")
     profile = {
         "projection": "prompt only",
@@ -633,7 +585,7 @@ def _false_reject_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
                     count += 1
             profile["raw_rows"][split] = count
 
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None
 
 
 def _schema_guided_dialogue_sample(
@@ -684,7 +636,9 @@ def _schema_guided_dialogue_sample(
     return _set_source_role(row, "candidate" if split == "train" else "dev_test")
 
 
-def _schema_guided_dialogue_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _schema_guided_dialogue_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     data, digest = _verified_archive("schema_guided_dialogue")
     profile = {
         "projection": "all non-empty user and system utterances",
@@ -751,7 +705,7 @@ def _schema_guided_dialogue_rows() -> tuple[Iterator[dict], dict[str, str], dict
             }
         )
 
-    return rows(), {"schema_guided_dialogue.tar.gz": digest}, profile
+    return rows(), {"schema_guided_dialogue.tar.gz": digest}, profile, None
 
 
 def _massive_sample(source_row: dict, index: int) -> dict:
@@ -792,7 +746,9 @@ def _massive_sample(source_row: dict, index: int) -> dict:
     return _set_source_role(row, "candidate" if split == "train" else "dev_test")
 
 
-def _massive_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _massive_en_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     data, digest = _verified_archive("massive_en")
     profile = {
         "projection": "all non-empty en-US utterances",
@@ -817,7 +773,7 @@ def _massive_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
                 yield row
         profile["raw_rows"] = dict(sorted(counts.items()))
 
-    return rows(), {"amazon-massive-dataset-1.1.tar.gz": digest}, profile
+    return rows(), {"amazon-massive-dataset-1.1.tar.gz": digest}, profile, None
 
 
 def _coconot_sample(source_row: dict, split: str, index: int) -> dict:
@@ -860,7 +816,9 @@ def _coconot_sample(source_row: dict, split: str, index: int) -> dict:
     return _set_source_role(row, role)
 
 
-def _coconot_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _coconot_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     datasets, downloads = _parquet_dataset("coconot")
 
     def rows() -> Iterator[dict]:
@@ -873,10 +831,12 @@ def _coconot_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
         "excluded": "chosen, rejected, and contrast response text",
         "raw_rows": {role: len(dataset) for role, dataset in datasets.items()},
     }
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None
 
 
-def _jbb_benign_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _jbb_benign_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     filename, expected = FILES["jbb_benign"]["dev_test"]
     path, digest = _download("jbb_benign", filename, expected)
     source_rows = _csv_rows(
@@ -914,7 +874,7 @@ def _jbb_benign_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
         "excluded": "matched affirmative target response",
         "raw_rows": len(source_rows),
     }
-    return rows(), {filename: digest}, profile
+    return rows(), {filename: digest}, profile, None
 
 
 def _lmsys_arena_safety(source_row: dict) -> tuple[bool, dict[str, float | bool]]:
@@ -1034,7 +994,9 @@ def _lmsys_arena_sample(
     return _set_source_role(row, source_role)
 
 
-def _lmsys_arena_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _lmsys_arena_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     datasets, downloads = _parquet_dataset("lmsys_arena")
     profile = {
         "projection": (
@@ -1106,4 +1068,4 @@ def _lmsys_arena_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
             }
         )
 
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None

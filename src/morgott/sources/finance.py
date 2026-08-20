@@ -13,7 +13,8 @@ from pathlib import Path
 
 import ijson
 
-from ..data import SOURCES, _github_raw, _sample, _set_source_role
+from ..data import SOURCES, _sample, _set_source_role
+from ._shared import _github_pinned
 
 
 def _harper_checkout() -> tuple[tempfile.TemporaryDirectory, Path, str]:
@@ -105,7 +106,9 @@ def _harper_has_lexical_content(text: str) -> bool:
     return any(character.isalnum() for character in without_markers)
 
 
-def _harper_valley_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _harper_valley_bank_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     temporary, root, digest = _harper_checkout()
     metadata_paths = {path.stem: path for path in root.glob("data/metadata/*.json")}
     transcript_paths = {path.stem: path for path in root.glob("data/transcript/*.json")}
@@ -240,7 +243,7 @@ def _harper_valley_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
             }
         )
 
-    return rows(), {"projected_git_tree": digest}, profile
+    return rows(), {"projected_git_tree": digest}, profile, None
 
 
 def _tatqa_table_text(table: list[list[str]]) -> str:
@@ -289,7 +292,7 @@ def _tatqa_sample(
     return _set_source_role(row, role)
 
 
-def _tatqa_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _tatqa_rows() -> tuple[Iterator[dict], dict[str, str], dict, Iterator[dict] | None]:
     expected = {
         "dataset_raw/tatqa_dataset_train.json": (
             "2df6e722cdbaaa37efcbfb280f5c9a15be29a6ec18f618ef936fe63cc6d07c69"
@@ -304,9 +307,7 @@ def _tatqa_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
     contents = {}
     downloads = {}
     for filename, expected_digest in expected.items():
-        data, digest = _github_raw("tatqa", filename)
-        if digest != expected_digest:
-            raise ValueError(f"tatqa:{filename} does not match its pinned digest")
+        data, digest = _github_pinned("tatqa", filename, expected_digest)
         split = filename.removeprefix("dataset_raw/tatqa_dataset_").removesuffix(
             ".json"
         )
@@ -436,15 +437,15 @@ def _tatqa_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
             for split in ("train", "dev", "test")
         }
 
-    return rows(), downloads, profile
+    return rows(), downloads, profile, None
 
 
-def _financebench_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
+def _financebench_rows() -> tuple[
+    Iterator[dict], dict[str, str], dict, Iterator[dict] | None
+]:
     filename = "data/financebench_open_source.jsonl"
-    data, digest = _github_raw("financebench", filename)
     expected = "a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877"
-    if digest != expected:
-        raise ValueError("financebench public sample does not match its pinned digest")
+    data, digest = _github_pinned("financebench", filename, expected)
     source_rows = [json.loads(line) for line in data.splitlines() if line.strip()]
     if len(source_rows) != 150:
         raise ValueError("financebench public sample no longer has 150 examples")
@@ -564,4 +565,4 @@ def _financebench_rows() -> tuple[Iterator[dict], dict[str, str], dict]:
             }
         )
 
-    return rows(), {filename: digest}, profile
+    return rows(), {filename: digest}, profile, None
