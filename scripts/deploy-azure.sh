@@ -738,8 +738,8 @@ if ! jq -e \
 	    and .status.requested_precision == "auto"
 	    and (.status.precision == "bf16" or .status.precision == "fp32")
     and .routed_probe.decision == "allow"
-    and .routed_probe.advisory_route == "pass"
-    and .routed_probe.reason == "deepseek_clear"
+    and .routed_probe.advisory_route == "restrict"
+    and .routed_probe.reason == "deepseek_flag"
     and .routed_probe.complete == true
     and .routed_probe.artifact_sha256 == $probe
     and .routed_probe.middle_windows == 1
