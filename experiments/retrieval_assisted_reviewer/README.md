@@ -179,42 +179,39 @@ Advancement requires mean candidate set Recall@20 of at least 0.98, at least 0.9
 Selected packet parity is diagnostic, and any passing variant still requires a separate full-cascade gate before promotion.
 The local development host is not the target deployment, so this command cannot establish deployment latency by itself.
 
-Build the provider-free persistent `efSearch=1024/top160` runtime canary into a new write-once directory:
+The selected serving bundle uses the full-lineage bank and the fixed `efSearch=1024/top160` recipe:
 
 ```bash
-persistent_output=artifacts/retrieval_assisted_reviewer_hnsw_persistent
+lineage_study=artifacts/retrieval_assisted_reviewer_lineage_allowlist_v2
+
+uv run --locked --extra cascade \
+  python -m experiments.retrieval_assisted_reviewer.run \
+  --output "$lineage_study" reuse-bank-vectors \
+  --source-output artifacts/retrieval_assisted_reviewer_full --config pplx-4b
+
 uv run --locked --extra cascade --with faiss-cpu==1.15.0 \
   python -m experiments.retrieval_assisted_reviewer.run \
-  --output "$persistent_output" build-persistent-hnsw \
-  --source-output artifacts/retrieval_assisted_reviewer_full_rows
-```
+  --output "$lineage_study" \
+  benchmark-hnsw-extension --config pplx-4b
 
-The build writes four Faiss indexes and compact uint32 bank-row maps, then requires exact ranking and four-example packet parity before and after serialization.
-Its eight deterministic query vectors come from persisted bank document vectors and are strictly a persistence canary, not a replay of the completed extension query matrix or retrieval-quality evidence.
-It makes no provider calls and does not copy the dense source matrix into the runtime bundle.
-
-Run the bundle in a fresh local process constrained to the Azure preview CPU and memory envelope:
-
-```bash
-systemd-run --user --wait --collect --pipe --working-directory="$PWD" \
-  -p AllowedCPUs=0,1 -p CPUQuota=200% \
-  -p MemoryMax=4G -p MemorySwapMax=0 \
-  env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
-  BLIS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 \
-  uv run --locked --extra cascade --with faiss-cpu==1.15.0 \
+uv run --locked --extra cascade --with faiss-cpu==1.15.0 \
   python -m experiments.retrieval_assisted_reviewer.run \
-  --output "$persistent_output" benchmark-persistent-hnsw
+  --output artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v2 \
+  build-lineage-serving-bundle \
+  --source-output "$lineage_study" --sparse-source "$lineage_study"
+
+uv run --locked --extra cascade \
+  python -m experiments.retrieval_assisted_reviewer.run \
+  --output "$lineage_study" write-lineage-hybrid-parity \
+  --sparse-source "$lineage_study" \
+  --serving-manifest artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v2/manifest.json \
+  --evidence-output reports/retrieval-lineage-hybrid-parity-20260820.json
 ```
 
-The local result verifies bundle hashes and canary parity, measures fresh-process serialized-index load and RSS, and reports warm concurrency-one and concurrency-four search, exact rescore, bank lookup, packet assembly, and throughput.
-The command does not clear the operating-system page cache, inspect cgroup limits, load the maintained mmBERT runtime, call PPLX, or establish an Azure deployment conclusion.
-
-The executed all-row bundle contains four Faiss indexes with compact row maps totaling about 939.3 MiB, plus the separately stored 721 MiB metadata bank.
-The offline single-threaded build took 334.857 seconds and exact ranking and selected-packet parity held for all eight persistence canaries after reload.
-Under a transient service configured with a two-CPU quota, 4 GiB memory limit, and no swap, bundle verification took 0.895 seconds, index deserialization took 0.474 seconds, and loaded-process RSS was about 1.15 GiB.
-Warm total retrieval p95 was 8.304 ms at concurrency one and 55.476 ms at concurrency four, with 189.2 and 167.2 queries per second respectively.
-The process still reported the host's full CPU affinity, so this is a quota-constrained local proxy rather than a strict two-core or Azure hardware result.
-The persistence and search-only mechanics pass, but co-resident mmBERT memory, cold storage download and page-cache behavior, singleton remote PPLX latency, and longer reviewer prefill remain untested.
+The vector-reuse command performs an exact identity join and makes no provider call.
+Run the existing prepare, sparse-replay, and reviewer steps before these commands; the parity writer then recomputes the fixed HNSW-plus-BM25 packets without a provider call.
+The builder copies the bank and sparse sidecar, excludes the dense source vectors, hashes all 10 payloads, and verifies the result through the maintained retrieval runtime.
+The retained quality, cost, latency, memory, and packet-parity results are in `reports/retrieval-assisted-reviewer-findings-20260819.md`.
 
 Materialize the direct cascade continuation into a separate write-once study after the extension artifact passes its retrieval gates:
 

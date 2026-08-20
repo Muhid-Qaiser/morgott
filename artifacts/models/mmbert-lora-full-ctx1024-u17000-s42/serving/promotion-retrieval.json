@@ -1,0 +1,75 @@
+{
+  "advisory_only": true,
+  "evidence": {
+    "path": "reports/retrieval-lineage-hybrid-parity-20260820.json",
+    "sha256": "e79ac4d38348e20fb31d0e3062ce6da82d31cc3a8d4c0c6bb790f4571f8e1561"
+  },
+  "format": "morgott-advisory-cascade-profile-v2",
+  "limitations": [
+    "The strict-provider-safe hybrid and dense arms tied on aggregate recall and FPR, and the paired interval does not prove an incremental hybrid gain.",
+    "The source-lineage bank won one prospective source-heldout comparison; that result is not broad real-world robustness evidence.",
+    "The rebuilt strict-provider-safe bundle requires new matched zero-traffic Azure evidence before any traffic decision.",
+    "Retrieval and learned output remain advisory and are not approved for blocking or granting authority."
+  ],
+  "promoted_on": "2026-08-20",
+  "runtime_contract": {
+    "advisory_decision": "allow",
+    "cascade": {
+      "max_remote_windows": 128,
+      "max_tokens": 1024,
+      "untrusted_multi_window": "full_context_first_then_middle_windows",
+      "window_overlap": 128,
+      "window_review_batch_size": 4
+    },
+    "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+    "profile": "balanced-retrieval-20260819",
+    "review_failure": "restrict_incomplete",
+    "reviewer": {
+      "fallbacks_allowed": false,
+      "logprobs": true,
+      "model": "deepseek/deepseek-v4-flash-0731",
+      "no_example_prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+      "prompt_sha256": "f2b1eb3c80410b301d0ad87d6a23ac7c8d4bb6d6904b3a3ea2b676a7d26ac5bb",
+      "reasoning_enabled": false,
+      "remote_concurrency": 4,
+      "request_sha256": "8138ecb7533351edfbd82194d591e2e491082443b6f13e61c7bf7f996568ce91",
+      "requested_provider": "cloudflare",
+      "strict_json_schema": true
+    },
+    "retrieval": {
+      "embedding_dimension": 256,
+      "embedding_model": "perplexity/pplx-embed-v1-4b",
+      "embedding_provider": "perplexity/int8",
+      "embedding_request_sha256": "6e43255c631b68ff62594f18e702f48756feffe88ec2ec29e692147a6692062c",
+      "examples_per_request": 4,
+      "failure_behavior": {
+        "embedding_or_dense": "no_example_reviewer",
+        "sparse": "dense_packet"
+      },
+      "labels_per_class": 2,
+      "manifest_sha256": "a80cb09b32c7c22c7c9c1d240d0eeb63ce3803721488b8477f8dd45a6979eb84",
+      "rrf": {
+        "dense_weight": 2.0,
+        "k": 60,
+        "sparse_weight": 1.0
+      },
+      "sparse_candidates_per_label": 50,
+      "variant": "lineage_hybrid_v1"
+    },
+    "threshold_sha256": "e9b375b079667fd7c82bc5439fcde772ad3d3b04b7fb44277b8f180478558353",
+    "thresholds": {
+      "deepseek_flag": 0.5,
+      "mmbert_high": 0.9999,
+      "mmbert_low_by_channel": {
+        "direct_user": 0.2,
+        "untrusted_content": 0.025
+      }
+    }
+  },
+  "schema_version": 2,
+  "status": "maintained_advisory",
+  "supersedes": {
+    "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion.json",
+    "sha256": "1c173136f385e8d755e01b73ebcf592acd025d6d94169fb76f1f10abdedd957f"
+  }
+}

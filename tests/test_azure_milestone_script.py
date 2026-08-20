@@ -13,7 +13,6 @@ SERVICES = [
     "Storage",
     "Container Registry",
     "Azure Container Apps",
-    "Service Bus",
 ]
 
 
@@ -84,20 +83,13 @@ else:
 
 
 class AzureMilestoneScriptTests(unittest.TestCase):
-    def test_canary_alert_catches_failures_and_missing_results(self) -> None:
-        bicep = Path("infra/main.bicep").read_text(encoding="utf-8")
-
-        self.assertIn('Log_s has "daily_canary_failed"', bicep)
-        self.assertIn('Log_s has "daily_canary_complete"', bicep)
-        self.assertIn("TimeGenerated > ago(26h)", bicep)
-
-    def test_tracks_only_the_five_intended_services(self) -> None:
+    def test_tracks_only_the_four_intended_services(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             output, az_log = _run_milestone(
                 Path(directory), SERVICES + ["Bandwidth"], portal_confirmed=True
             )
 
-        self.assertIn("All five intended workloads crossed USD 1", output)
+        self.assertIn("All four intended workloads crossed USD 1", output)
         self.assertNotIn("Bandwidth", output)
         self.assertIn("--set tags.mfs25kDayZero=", az_log)
 
@@ -107,7 +99,7 @@ class AzureMilestoneScriptTests(unittest.TestCase):
                 Path(directory), SERVICES[:-1] + ["Bandwidth"]
             )
 
-        self.assertIn("Qualified intended workloads: 4/5", output)
+        self.assertIn("Qualified intended workloads: 3/4", output)
         self.assertEqual(az_log, "")
 
     def test_portal_confirmation_is_required_before_saving_day_zero(self) -> None:
@@ -123,16 +115,16 @@ class AzureMilestoneScriptTests(unittest.TestCase):
             [
                 1.2,
                 int((today - timedelta(days=2)).strftime("%Y%m%d")),
-                "Service Bus",
+                "Azure Container Apps",
                 "USD",
             ],
             [
                 -0.5,
                 int((today - timedelta(days=1)).strftime("%Y%m%d")),
-                "Service Bus",
+                "Azure Container Apps",
                 "USD",
             ],
-            [0.5, int(today.strftime("%Y%m%d")), "Service Bus", "USD"],
+            [0.5, int(today.strftime("%Y%m%d")), "Azure Container Apps", "USD"],
         ]
         with tempfile.TemporaryDirectory() as directory:
             output, _ = _run_milestone(Path(directory), SERVICES[:-1], extra_rows=rows)

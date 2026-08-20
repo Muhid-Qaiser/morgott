@@ -36,7 +36,7 @@ from tokenizers import Tokenizer
 from experiments.pipeline_benchmark import local, metrics, providers
 from morgott.models import downstream
 from morgott.models.mmbert.core import file_sha256
-from morgott.sources.tasks import _sensitive_text_reasons
+from morgott.sources.tasks import _public_declared_license, _sensitive_text_reasons
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT = ROOT / "artifacts" / "pipeline_benchmark" / "20260816"
@@ -248,13 +248,7 @@ def _stratified_sample(
 
 
 def _license_is_public(value: object) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    lowered = value.casefold()
-    return not any(
-        phrase in lowered
-        for phrase in ("no standard", "unknown", "not declared", "proprietary")
-    )
+    return _public_declared_license(value)
 
 
 def prepare(output: Path) -> None:

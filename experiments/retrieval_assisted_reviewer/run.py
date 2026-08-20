@@ -12,6 +12,7 @@ import heapq
 import json
 import os
 import platform
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -42,6 +43,7 @@ from morgott.models.mmbert.data import (
     routing_views,
 )
 from morgott.models.mmbert.serving import MmbertRuntime
+from morgott.models.retrieval import RetrievalEngine, provider_egress_contract
 from morgott.normalization import strict_normalize
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -75,6 +77,7 @@ FULLROW_SPARSE_IDENTITY_PATH = "sparse-unicode-partitioned8-fullrows.json"
 FULLROW_SPARSE_RAW_CANDIDATES = 320
 FULLROW_SPARSE_RETAINED_LINEAGES = 50
 FULLROW_SPARSE_TIMEOUT_MS = 250.0
+LINEAGE_SPARSE_TIMEOUT_MS = 250.0
 FULLROW_SPARSE_METHOD = "sparse_unicode_partitioned8_fullrows_raw320_lineage50"
 HNSW_HYBRID_DENSE_ARM = "dense_pplx-4b_faiss_hnsw_ef1024_top160_hnsw_extension"
 HNSW_HYBRID_METHOD = (
@@ -97,13 +100,9 @@ HNSW_OVERRETRIEVE = 4 * CANDIDATES_PER_LABEL
 HNSW_EXTENSION_SETTINGS = ((512, 160), (512, 320), (1_024, 160), (1_024, 320))
 HNSW_EXTENSION_MIN_SLICE_RANKINGS = 20
 HNSW_CASCADE_NUMPY_ARM = "dense_pplx-4b_numpy_hnsw_extension"
-PERSISTENT_HNSW_VARIANT = "faiss_hnsw_ef1024_top160"
-PERSISTENT_HNSW_MANIFEST = "persistent-hnsw-manifest.json"
-PERSISTENT_HNSW_EVIDENCE = "persistent-hnsw-canary-evidence.json"
-PERSISTENT_HNSW_QUERIES = "persistent-hnsw-canary-queries.npy"
-PERSISTENT_HNSW_CANARIES_PER_PARTITION = 2
-PERSISTENT_HNSW_CANARY_POOL = 16
-PERSISTENT_HNSW_REPEATS = 10
+LINEAGE_HNSW_VARIANT = "faiss_hnsw_ef1024_top160"
+LINEAGE_SERVING_VARIANT = "lineage_hybrid_v1"
+LINEAGE_SERVING_MANIFEST = "manifest.json"
 EMBEDDING_BATCH_SIZE = 512
 MAX_REVIEW_JOB_RECORDS = 2
 MAX_COST_USD = Decimal("50")
@@ -2744,6 +2743,107 @@ async def embed_bank(output: Path, *, config_name: str, concurrency: int) -> Non
     print(json.dumps({"dense_bank": str(dense_path), "rows": rows}, sort_keys=True))
 
 
+def reuse_bank_vectors(
+    output: Path,
+    *,
+    source_output: Path,
+    config_name: str,
+) -> dict[str, Any]:
+    target_manifest = _study_manifest(output)
+    source_output = source_output.resolve()
+    source_manifest = _study_manifest(source_output)
+    config = DENSE_CONFIGS[config_name]
+    identity_name = f"dense-{config['document_key']}.json"
+    source_identity_path = source_output / identity_name
+    source_identity = _read_json(source_identity_path)
+    source_dense = source_output / str(source_identity.get("path", ""))
+    if (
+        target_manifest["bank"].get("mode") != "full_lineage"
+        or source_manifest["bank"].get("mode") != "full_lineage"
+        or source_identity.get("document_key") != config["document_key"]
+        or source_identity.get("model") != config["document_model"]
+        or source_identity.get("dimension") != config["dimension"]
+        or source_identity.get("input_type") != config["document_input_type"]
+        or source_identity.get("bank_sha256") != source_manifest["bank"]["sha256"]
+        or source_identity.get("rows") != source_manifest["bank"]["rows"]
+        or not source_dense.is_file()
+        or file_sha256(source_dense) != source_identity.get("sha256")
+    ):
+        raise ValueError("source dense bank identity changed")
+
+    dense_path = output / f"dense-{config['document_key']}.sqlite3"
+    identity_path = output / identity_name
+    temporary = output / f".{dense_path.name}.tmp"
+    if dense_path.exists() or identity_path.exists() or temporary.exists():
+        raise FileExistsError("refusing to replace a dense bank")
+
+    connection = sqlite3.connect(temporary)
+    complete = False
+    try:
+        connection.execute("PRAGMA synchronous = FULL")
+        connection.execute(
+            "CREATE TABLE vectors (example_rowid INTEGER PRIMARY KEY, vector BLOB NOT NULL)"
+        )
+        connection.execute("ATTACH DATABASE ? AS source_dense", (str(source_dense),))
+        connection.execute(
+            "ATTACH DATABASE ? AS source_bank",
+            (str(source_output / source_manifest["bank"]["path"]),),
+        )
+        connection.execute(
+            "ATTACH DATABASE ? AS target_bank",
+            (str(output / target_manifest["bank"]["path"]),),
+        )
+        connection.execute(
+            """
+            INSERT INTO vectors
+            SELECT target.rowid, vectors.vector
+            FROM target_bank.examples AS target
+            JOIN source_bank.examples AS source
+              ON source.example_id = target.example_id
+             AND source.text_sha256 = target.text_sha256
+             AND source.label = target.label
+             AND source.input_channel = target.input_channel
+            JOIN source_dense.vectors AS vectors
+              ON vectors.example_rowid = source.rowid
+            ORDER BY target.rowid
+            """
+        )
+        rows = connection.execute("SELECT COUNT(*) FROM vectors").fetchone()[0]
+        if rows != target_manifest["bank"]["rows"]:
+            raise ValueError("source dense bank does not cover the target bank")
+        connection.commit()
+        if connection.execute("PRAGMA quick_check").fetchone() != ("ok",):
+            raise ValueError("reused dense bank integrity check failed")
+        complete = True
+    finally:
+        connection.close()
+        if not complete:
+            temporary.unlink(missing_ok=True)
+
+    temporary.replace(dense_path)
+    identity = {
+        "schema_version": 1,
+        "document_key": config["document_key"],
+        "model": config["document_model"],
+        "dimension": config["dimension"],
+        "input_type": config["document_input_type"],
+        "bank_sha256": target_manifest["bank"]["sha256"],
+        "rows": rows,
+        "path": dense_path.name,
+        "sha256": file_sha256(dense_path),
+        "provider_calls": False,
+        "reused_from": {
+            "manifest_sha256": file_sha256(source_output / "manifest.json"),
+            "bank_sha256": source_manifest["bank"]["sha256"],
+            "dense_identity_sha256": file_sha256(source_identity_path),
+            "dense_sha256": source_identity["sha256"],
+        },
+    }
+    _atomic_json(identity_path, identity)
+    print(json.dumps({"dense_bank": str(dense_path), "rows": rows}, sort_keys=True))
+    return identity
+
+
 def _load_dense_index(
     output: Path,
     manifest: dict[str, Any],
@@ -4076,6 +4176,14 @@ def _measure_index_search(
     return result
 
 
+def _hnsw_extension_settings(bank_mode: str) -> tuple[tuple[int, int], ...]:
+    if bank_mode == "full_lineage":
+        return ((1_024, 160),)
+    if bank_mode in {"full", "all_rows"}:
+        return HNSW_EXTENSION_SETTINGS
+    raise ValueError("HNSW extension requires a full retrieval bank")
+
+
 def _benchmark_dense_index_worker(
     output: Path,
     *,
@@ -4097,8 +4205,8 @@ def _benchmark_dense_index_worker(
     ):
         raise ValueError("HNSW extension worker result path is not isolated")
     manifest = _study_manifest(output)
-    if manifest["bank"].get("mode") not in {"full", "all_rows"}:
-        raise ValueError("dense-index benchmark requires the full-row bank")
+    bank_mode = str(manifest["bank"].get("mode"))
+    _hnsw_extension_settings(bank_mode)
     config = DENSE_CONFIGS[config_name]
     _, units = _load_local_evidence(output, "validation")
     queries = np.load(query_path, allow_pickle=False)
@@ -4204,7 +4312,7 @@ def _benchmark_dense_index_worker(
         else:
             searches = []
             settings = (
-                HNSW_EXTENSION_SETTINGS
+                _hnsw_extension_settings(bank_mode)
                 if hnsw_extension
                 else tuple((value, HNSW_OVERRETRIEVE) for value in HNSW_EF_SEARCH)
             )
@@ -4249,6 +4357,7 @@ def _benchmark_dense_index_worker(
         "backend": backend,
         "benchmark_profile": "hnsw_extension" if hnsw_extension else "historical",
         "metric": "inner_product_on_l2_normalized_vectors",
+        "bank_mode": bank_mode,
         "bank_rows": manifest["bank"]["rows"],
         "bank_sha256": manifest["bank"]["sha256"],
         "dimension": config["dimension"],
@@ -4438,8 +4547,8 @@ async def benchmark_hnsw_extension(output: Path, *, config_name: str) -> None:
             f"refusing to replace HNSW extension benchmark: {result_path}"
         )
     manifest = _study_manifest(output)
-    if manifest["bank"].get("mode") not in {"full", "all_rows"}:
-        raise ValueError("HNSW extension benchmark requires the full-row bank")
+    bank_mode = str(manifest["bank"].get("mode"))
+    extension_settings = _hnsw_extension_settings(bank_mode)
     config = DENSE_CONFIGS[config_name]
     _, units = _load_local_evidence(output, "validation")
     texts = _reload_unit_texts(output, "validation")
@@ -4521,7 +4630,7 @@ async def benchmark_hnsw_extension(output: Path, *, config_name: str) -> None:
 
     expected_variants = {
         f"faiss_hnsw_ef{ef_search}_top{overretrieve}"
-        for ef_search, overretrieve in HNSW_EXTENSION_SETTINGS
+        for ef_search, overretrieve in extension_settings
     }
     if (
         worker_results["numpy"].get("benchmark_profile") != "historical"
@@ -4596,6 +4705,7 @@ async def benchmark_hnsw_extension(output: Path, *, config_name: str) -> None:
         "schema_version": 1,
         "split": "validation",
         "config": config_name,
+        "bank_mode": bank_mode,
         "document_key": config["document_key"],
         "dimension": config["dimension"],
         "bank_rows": manifest["bank"]["rows"],
@@ -4675,6 +4785,7 @@ def _validate_hnsw_extension_source_contract(artifact: dict[str, Any]) -> None:
     config = DENSE_CONFIGS["pplx-4b"]
     query_matrix = artifact.get("query_matrix", {})
     variants = artifact.get("backends", {}).get("faiss_hnsw", {}).get("variants", {})
+    bank_mode = str(artifact.get("bank_mode", "full"))
     expected_parameters = {
         f"faiss_hnsw_ef{ef_search}_top{overretrieve}": {
             "m": HNSW_M,
@@ -4684,7 +4795,7 @@ def _validate_hnsw_extension_source_contract(artifact: dict[str, Any]) -> None:
             "exact_rescore": CANDIDATES_PER_LABEL,
             "exact_rescore_dtype": "float32",
         }
-        for ef_search, overretrieve in HNSW_EXTENSION_SETTINGS
+        for ef_search, overretrieve in _hnsw_extension_settings(bank_mode)
     }
     if (
         query_matrix.get("fresh_for_this_run") is not True
@@ -4701,13 +4812,34 @@ def _validate_hnsw_extension_source_contract(artifact: dict[str, Any]) -> None:
         raise ValueError("HNSW cascade source contract changed")
 
 
-def _persistent_hnsw_source_contract(
+def _lineage_serving_source_contract(
     source_output: Path,
-) -> tuple[dict[str, Any], dict[str, Any], Path]:
+    sparse_source: Path,
+) -> tuple[
+    dict[str, Any],
+    dict[str, Any],
+    Path,
+    dict[str, Any],
+    Path,
+]:
     source_output = source_output.resolve()
     manifest = _study_manifest(source_output)
-    if manifest["bank"].get("mode") not in {"full", "all_rows"}:
-        raise ValueError("persistent HNSW requires the full-row bank")
+    bank_mode = str(manifest["bank"].get("mode"))
+    _hnsw_extension_settings(bank_mode)
+    data_manifest_sha256 = manifest.get("inputs", {}).get("data_manifest_sha256")
+    routing_view_sha256 = manifest["bank"].get("routing_view_sha256")
+    if (
+        not isinstance(data_manifest_sha256, str)
+        or len(data_manifest_sha256) != 64
+        or any(
+            character not in "0123456789abcdef" for character in data_manifest_sha256
+        )
+        or not isinstance(routing_view_sha256, str)
+        or len(routing_view_sha256) != 64
+        or any(character not in "0123456789abcdef" for character in routing_view_sha256)
+        or manifest["bank"].get("max_example_bytes") != MAX_EXAMPLE_BYTES
+    ):
+        raise ValueError("lineage serving provider egress source changed")
     config = DENSE_CONFIGS["pplx-4b"]
     dense_identity_path = source_output / f"dense-{config['document_key']}.json"
     dense_identity = _read_json(dense_identity_path)
@@ -4722,23 +4854,52 @@ def _persistent_hnsw_source_contract(
         or not dense_path.is_file()
         or file_sha256(dense_path) != dense_identity.get("sha256")
     ):
-        raise ValueError("persistent HNSW dense source identity changed")
+        raise ValueError("lineage serving dense source identity changed")
     extension_path = source_output / "validation-hnsw-extension-pplx-4b.json"
     extension = _read_json(extension_path)
     _validate_hnsw_extension_source_contract(extension)
-    decision = extension.get("variant_decisions", {}).get(PERSISTENT_HNSW_VARIANT, {})
+    decision = extension.get("variant_decisions", {}).get(LINEAGE_HNSW_VARIANT, {})
     if (
         extension.get("schema_version") != 1
         or extension.get("config") != "pplx-4b"
+        or str(extension.get("bank_mode", "full")) != bank_mode
         or extension.get("bank_sha256") != manifest["bank"]["sha256"]
         or extension.get("bank_rows") != manifest["bank"]["rows"]
         or decision.get("advances_to_cascade") is not True
     ):
-        raise ValueError("persistent HNSW extension evidence changed")
-    return manifest, dense_identity, extension_path
+        raise ValueError("lineage serving HNSW evidence changed")
+    if bank_mode != "full_lineage":
+        raise ValueError("lineage serving requires the full-lineage bank")
+    sparse_source = sparse_source.resolve()
+    sparse_identity_path = sparse_source / PARTITIONED_SPARSE_IDENTITY_PATH
+    sparse_identity = _read_json(sparse_identity_path)
+    sparse_path = sparse_source / str(sparse_identity.get("path", ""))
+    if (
+        sparse_identity.get("schema_version") != 1
+        or sparse_identity.get("path") != PARTITIONED_SPARSE_INDEX_PATH
+        or sparse_identity.get("bank_sha256") != manifest["bank"]["sha256"]
+        or sparse_identity.get("bank_rows") != manifest["bank"]["rows"]
+        or sparse_identity.get("tokenizer") != "unicode61 remove_diacritics 2"
+        or sparse_identity.get("maximum_terms") != PARTITIONED_SPARSE_MAX_TERMS
+        or sparse_identity.get("candidates_per_label")
+        != HYBRID_DIAGNOSTIC_CANDIDATES_PER_LABEL
+        or sparse_identity.get("contentless") is not True
+        or set(sparse_identity.get("partitions", {}))
+        != set(PARTITIONED_SPARSE_TABLES.values())
+        or not sparse_path.is_file()
+        or file_sha256(sparse_path) != sparse_identity.get("sha256")
+    ):
+        raise ValueError("lineage sparse source identity changed")
+    return (
+        manifest,
+        dense_identity,
+        extension_path,
+        sparse_identity,
+        sparse_identity_path,
+    )
 
 
-def _load_persistent_hnsw_source(
+def _load_lineage_hnsw_source(
     source_output: Path,
     manifest: dict[str, Any],
     dense_identity: dict[str, Any],
@@ -4764,9 +4925,9 @@ def _load_persistent_hnsw_source(
             if vector.shape != (DENSE_CONFIGS["pplx-4b"]["dimension"],) or not np.all(
                 np.isfinite(vector)
             ):
-                raise ValueError("persistent HNSW source vector is invalid")
+                raise ValueError("lineage serving source vector is invalid")
             if int(rowid) > np.iinfo(np.uint32).max:
-                raise ValueError("persistent HNSW bank rowid exceeds uint32")
+                raise ValueError("lineage serving bank rowid exceeds uint32")
             grouped[(str(channel), int(label))].append((int(rowid), vector))
     finally:
         connection.close()
@@ -4779,7 +4940,7 @@ def _load_persistent_hnsw_source(
         set(grouped) != expected
         or sum(map(len, grouped.values())) != manifest["bank"]["rows"]
     ):
-        raise ValueError("persistent HNSW source partitions changed")
+        raise ValueError("lineage serving source partitions changed")
     return {
         key: (
             np.ascontiguousarray(np.stack([row[1] for row in rows]), dtype=np.float32),
@@ -4789,130 +4950,15 @@ def _load_persistent_hnsw_source(
     }
 
 
-def _persistent_hnsw_request(
-    indexes: dict[tuple[str, int], Any],
-    rowids: dict[tuple[str, int], np.ndarray],
-    bank: sqlite3.Connection,
-    canary: dict[str, Any],
-    query: np.ndarray,
-) -> tuple[dict[str, Any], dict[str, float]]:
-    started = time.perf_counter()
-    rankings: dict[int, list[str]] = {}
-    scores: dict[str, list[float]] = {}
-    search_seconds = 0.0
-    channel = str(canary["input_channel"])
-    for label in (0, 1):
-        index = indexes[(channel, label)]
-        search_started = time.perf_counter()
-        count = min(160, int(index.ntotal))
-        _, raw_positions = index.search(query.reshape(1, -1), count)
-        positions = np.asarray(
-            list(
-                dict.fromkeys(
-                    int(value) for value in raw_positions[0] if int(value) >= 0
-                )
-            ),
-            dtype=np.int64,
-        )
-        vectors = np.asarray(index.reconstruct_batch(positions), dtype=np.float32)
-        exact_scores = vectors @ np.asarray(query, dtype=np.float32)
-        search_seconds += time.perf_counter() - search_started
-        candidate_rowids = rowids[(channel, label)][positions]
-        placeholders = ",".join("?" for _ in candidate_rowids)
-        metadata = {
-            int(rowid): (str(example_id), int(row_label), str(row_channel))
-            for rowid, example_id, row_label, row_channel in bank.execute(
-                f"""
-                SELECT rowid, example_id, label, input_channel FROM examples
-                WHERE rowid IN ({placeholders})
-                """,
-                [int(value) for value in candidate_rowids],
-            )
-        }
-        if len(metadata) != len(candidate_rowids):
-            raise ValueError("persistent HNSW row map returned an unknown bank row")
-        ranked = []
-        for rowid, score in zip(candidate_rowids, exact_scores, strict=True):
-            example_id, row_label, row_channel = metadata[int(rowid)]
-            if (row_channel, row_label) != (channel, label):
-                raise ValueError("persistent HNSW row map partition changed")
-            ranked.append((example_id, float(score)))
-        ranked.sort(key=lambda value: (-value[1], value[0]))
-        ranked = ranked[:CANDIDATES_PER_LABEL]
-        rankings[label] = [value[0] for value in ranked]
-        scores[str(label)] = [value[1] for value in ranked]
-    try:
-        selected = _select_examples(bank, rankings, input_channel=channel)
-        query_row = bank.execute(
-            "SELECT text, input_channel FROM examples WHERE rowid = ?",
-            (int(canary["source_rowid"]),),
-        ).fetchone()
-        if query_row is None or str(query_row[1]) != channel:
-            raise ValueError("persistent HNSW canary source changed")
-        packet = _packet(
-            bank,
-            example_ids=selected,
-            text=str(query_row[0]),
-            reverse=False,
-        )
-        status = "ok"
-        failure_code = None
-        packet_sha256 = _sha256_text(packet)
-    except ValueError:
-        selected = []
-        status = "failed"
-        failure_code = "insufficient_balanced_candidates"
-        packet_sha256 = None
-    total_seconds = time.perf_counter() - started
-    evidence = {
-        "query_id": canary["query_id"],
-        "status": status,
-        "failure_code": failure_code,
-        "candidate_ids": {str(label): rankings[label] for label in (0, 1)},
-        "candidate_scores": scores,
-        "selected_ids": selected,
-        "packet_sha256": packet_sha256,
-    }
-    return evidence, {
-        "search_and_rescore_ms": search_seconds * 1_000,
-        "row_lookup_and_packet_ms": (total_seconds - search_seconds) * 1_000,
-        "total_ms": total_seconds * 1_000,
-    }
-
-
-def _persistent_hnsw_load(
-    output: Path,
-    partitions: dict[str, dict[str, Any]],
-    faiss_module: Any,
-) -> tuple[dict[tuple[str, int], Any], dict[tuple[str, int], np.ndarray]]:
-    indexes = {}
-    rowids = {}
-    for spec in partitions.values():
-        key = (str(spec["input_channel"]), int(spec["label"]))
-        index = faiss_module.read_index(str(output / spec["index_path"]))
-        index.hnsw.efSearch = 1_024
-        mapped = np.load(
-            output / spec["rowids_path"], allow_pickle=False, mmap_mode="r"
-        )
-        if (
-            mapped.dtype != np.dtype("uint32")
-            or mapped.shape != (int(index.ntotal),)
-            or int(index.ntotal) != int(spec["rows"])
-        ):
-            raise ValueError("persistent HNSW row map changed")
-        indexes[key] = index
-        rowids[key] = mapped
-    return indexes, rowids
-
-
-def build_persistent_hnsw(
+def build_lineage_serving_bundle(
     output: Path,
     *,
     source_output: Path,
+    sparse_source: Path,
     faiss_module: Any | None = None,
 ) -> Path:
     if output.exists():
-        raise FileExistsError(f"refusing to replace persistent HNSW bundle: {output}")
+        raise FileExistsError(f"refusing to replace lineage serving bundle: {output}")
     if faiss_module is None:
         try:
             import faiss as faiss_module
@@ -4922,10 +4968,17 @@ def build_persistent_hnsw(
             ) from error
     faiss_module.omp_set_num_threads(1)
     source_output = source_output.resolve()
-    manifest, dense_identity, extension_path = _persistent_hnsw_source_contract(
-        source_output
+    (
+        manifest,
+        dense_identity,
+        extension_path,
+        sparse_identity,
+        sparse_identity_path,
+    ) = _lineage_serving_source_contract(
+        source_output,
+        sparse_source,
     )
-    source = _load_persistent_hnsw_source(
+    source = _load_lineage_hnsw_source(
         source_output,
         manifest,
         dense_identity,
@@ -4936,9 +4989,11 @@ def build_persistent_hnsw(
     ) as temporary:
         stage = Path(temporary)
         bank_path = source_output / manifest["bank"]["path"]
-        (stage / "bank.sqlite3").symlink_to(os.path.relpath(bank_path, output))
-        indexes = {}
-        rowids = {}
+        shutil.copyfile(bank_path, stage / "bank.sqlite3")
+        shutil.copyfile(
+            sparse_source.resolve() / sparse_identity["path"],
+            stage / "sparse.sqlite3",
+        )
         partitions = {}
         build_started = time.perf_counter()
         for channel in ("direct_user", "untrusted_content"):
@@ -4959,8 +5014,6 @@ def build_persistent_hnsw(
                 faiss_module.write_index(index, str(index_path))
                 with rowids_path.open("wb") as handle:
                     np.save(handle, partition_rowids, allow_pickle=False)
-                indexes[key] = index
-                rowids[key] = partition_rowids
                 partitions[name] = {
                     "input_channel": channel,
                     "label": label,
@@ -4970,95 +5023,23 @@ def build_persistent_hnsw(
                     "index_bytes": index_path.stat().st_size,
                     "rowids_path": rowids_path.name,
                     "rowids_sha256": file_sha256(rowids_path),
+                    "rowids_bytes": rowids_path.stat().st_size,
                     "rowids_dtype": "uint32",
                 }
         build_seconds = time.perf_counter() - build_started
-        bank = sqlite3.connect(
-            bank_path.resolve().as_uri() + "?mode=ro&immutable=1", uri=True
-        )
-        canaries = []
-        query_vectors = []
-        in_memory_evidence = []
-        try:
-            for channel in ("direct_user", "untrusted_content"):
-                for label in (0, 1):
-                    matrix, partition_rowids = source[(channel, label)]
-                    pool = np.unique(
-                        np.linspace(
-                            0,
-                            len(partition_rowids) - 1,
-                            min(PERSISTENT_HNSW_CANARY_POOL, len(partition_rowids)),
-                            dtype=np.int64,
-                        )
-                    )
-                    accepted = 0
-                    for position in pool:
-                        source_rowid = int(partition_rowids[int(position)])
-                        canary = {
-                            "query_id": _sha256_text(
-                                f"persistent-hnsw\0{manifest['bank']['sha256']}\0"
-                                f"{channel}\0{label}\0{source_rowid}"
-                            ),
-                            "input_channel": channel,
-                            "source_label": label,
-                            "source_rowid": source_rowid,
-                        }
-                        query = np.asarray(matrix[int(position)], dtype=np.float32)
-                        evidence, _ = _persistent_hnsw_request(
-                            indexes, rowids, bank, canary, query
-                        )
-                        if evidence["status"] != "ok":
-                            continue
-                        canaries.append(canary)
-                        query_vectors.append(query)
-                        in_memory_evidence.append(evidence)
-                        accepted += 1
-                        if accepted == PERSISTENT_HNSW_CANARIES_PER_PARTITION:
-                            break
-                    if accepted != PERSISTENT_HNSW_CANARIES_PER_PARTITION:
-                        raise ValueError(
-                            "persistent HNSW could not select stable packet canaries"
-                        )
-        finally:
-            bank.close()
-        query_matrix = np.ascontiguousarray(query_vectors, dtype=np.float32)
-        query_path = stage / PERSISTENT_HNSW_QUERIES
-        with query_path.open("wb") as handle:
-            np.save(handle, query_matrix, allow_pickle=False)
-        del indexes, rowids, source
+        del source
         gc.collect()
-        loaded_indexes, loaded_rowids = _persistent_hnsw_load(
-            stage, partitions, faiss_module
-        )
-        bank = sqlite3.connect(
-            (stage / "bank.sqlite3").resolve().as_uri() + "?mode=ro&immutable=1",
-            uri=True,
-        )
-        try:
-            roundtrip_evidence = [
-                _persistent_hnsw_request(
-                    loaded_indexes, loaded_rowids, bank, canary, query
-                )[0]
-                for canary, query in zip(canaries, query_matrix, strict=True)
-            ]
-        finally:
-            bank.close()
-        if roundtrip_evidence != in_memory_evidence:
-            raise ValueError("persistent HNSW serialization changed canary results")
-        evidence_path = stage / PERSISTENT_HNSW_EVIDENCE
-        _atomic_json(
-            evidence_path,
-            {
-                "schema_version": 1,
-                "canaries": canaries,
-                "expected": in_memory_evidence,
-                "contains_raw_text": False,
-            },
-        )
+        bank_spec = {
+            "path": "bank.sqlite3",
+            "rows": manifest["bank"]["rows"],
+            "mode": manifest["bank"]["mode"],
+            "sha256": manifest["bank"]["sha256"],
+            "bytes": (stage / "bank.sqlite3").stat().st_size,
+        }
         result = {
             "schema_version": 1,
-            "purpose": "provider-free HNSW persistence and resource canary",
-            "variant": PERSISTENT_HNSW_VARIANT,
+            "purpose": "portable lineage hybrid retrieval bundle",
+            "variant": LINEAGE_SERVING_VARIANT,
             "parameters": {
                 "m": HNSW_M,
                 "ef_construction": HNSW_EF_CONSTRUCTION,
@@ -5067,285 +5048,231 @@ def build_persistent_hnsw(
                 "exact_rescore": CANDIDATES_PER_LABEL,
                 "exact_rescore_dtype": "float32",
             },
-            "dimension": DENSE_CONFIGS["pplx-4b"]["dimension"],
-            "bank": {
-                "path": "bank.sqlite3",
-                "rows": manifest["bank"]["rows"],
-                "sha256": manifest["bank"]["sha256"],
+            "dense": {
+                "model": DENSE_CONFIGS["pplx-4b"]["document_model"],
+                "dimension": DENSE_CONFIGS["pplx-4b"]["dimension"],
+                "input_type": DENSE_CONFIGS["pplx-4b"]["document_input_type"],
+                "metric": "inner_product",
             },
+            "dimension": DENSE_CONFIGS["pplx-4b"]["dimension"],
+            "bank": bank_spec,
             "source": {
-                "output": str(source_output),
                 "manifest_sha256": file_sha256(source_output / "manifest.json"),
+                "data_manifest_sha256": manifest["inputs"]["data_manifest_sha256"],
+                "routing_view_sha256": manifest["bank"]["routing_view_sha256"],
                 "dense_identity_sha256": file_sha256(
                     source_output / "dense-pplx-4b-256.json"
                 ),
                 "dense_sha256": dense_identity["sha256"],
                 "extension_sha256": file_sha256(extension_path),
             },
+            "provider_egress": provider_egress_contract(),
             "partitions": partitions,
-            "canary": {
-                "queries": len(canaries),
-                "query_path": query_path.name,
-                "query_sha256": file_sha256(query_path),
-                "query_dtype": "float32",
-                "evidence_path": evidence_path.name,
-                "evidence_sha256": file_sha256(evidence_path),
-                "source": "deterministic persisted document vectors",
-                "retrieval_quality_evidence": False,
-            },
-            "roundtrip": {"ranking_and_packet_parity": True},
             "build": {
                 "seconds": build_seconds,
                 "faiss_version": str(faiss_module.__version__),
                 "faiss_compile_options": str(faiss_module.get_compile_options()),
                 "native_threads": 1,
             },
-            "limitations": [
-                "Canaries test runtime persistence, not the completed extension query matrix or retrieval quality.",
-                "The bank-vector queries are not representative live traffic.",
-                "The current host is not the 2-vCPU/4-GiB Azure target.",
-            ],
         }
-        manifest_path = stage / PERSISTENT_HNSW_MANIFEST
+        sparse_path = stage / "sparse.sqlite3"
+        result["source"]["sparse_identity_sha256"] = file_sha256(sparse_identity_path)
+        result["sparse"] = {
+            "path": sparse_path.name,
+            "sha256": file_sha256(sparse_path),
+            "bytes": sparse_path.stat().st_size,
+            "bank_sha256": manifest["bank"]["sha256"],
+            "tokenizer": sparse_identity["tokenizer"],
+            "contentless": True,
+            "maximum_terms": PARTITIONED_SPARSE_MAX_TERMS,
+            "candidates_per_label": HYBRID_DIAGNOSTIC_CANDIDATES_PER_LABEL,
+            "timeout_ms": LINEAGE_SPARSE_TIMEOUT_MS,
+        }
+        files = [
+            {
+                "role": "bank",
+                "path": bank_spec["path"],
+                "sha256": bank_spec["sha256"],
+                "bytes": bank_spec["bytes"],
+            },
+            {
+                "role": "sparse",
+                "path": result["sparse"]["path"],
+                "sha256": result["sparse"]["sha256"],
+                "bytes": result["sparse"]["bytes"],
+            },
+        ]
+        for partition in partitions.values():
+            files.extend(
+                (
+                    {
+                        "role": "index",
+                        "path": partition["index_path"],
+                        "sha256": partition["index_sha256"],
+                        "bytes": partition["index_bytes"],
+                    },
+                    {
+                        "role": "row_map",
+                        "path": partition["rowids_path"],
+                        "sha256": partition["rowids_sha256"],
+                        "bytes": partition["rowids_bytes"],
+                    },
+                )
+            )
+        result["files"] = files
+        manifest_path = stage / LINEAGE_SERVING_MANIFEST
         _atomic_json(manifest_path, result)
+        if not RetrievalEngine(
+            stage,
+            file_sha256(manifest_path),
+            faiss_module=faiss_module,
+        ).available:
+            raise ValueError("lineage serving bundle failed runtime verification")
         stage.replace(output)
-    path = output / PERSISTENT_HNSW_MANIFEST
-    print(json.dumps({"persistent_hnsw": str(path)}, sort_keys=True))
+    path = output / LINEAGE_SERVING_MANIFEST
+    print(json.dumps({"lineage_serving_bundle": str(path)}, sort_keys=True))
     return path
 
 
-def benchmark_persistent_hnsw(
+def write_lineage_hybrid_parity(
     output: Path,
     *,
-    faiss_module: Any | None = None,
-    repeats: int = PERSISTENT_HNSW_REPEATS,
-) -> Path:
-    from concurrent.futures import ThreadPoolExecutor
-
-    import psutil
-
-    if repeats < 1:
-        raise ValueError("persistent HNSW benchmark repeats must be positive")
-    result_path = output / "persistent-hnsw-local-resource.json"
-    if result_path.exists():
-        raise FileExistsError(
-            f"refusing to replace persistent HNSW benchmark: {result_path}"
-        )
-    if faiss_module is None:
-        try:
-            import faiss as faiss_module
-        except ImportError as error:
-            raise RuntimeError(
-                "run this diagnostic with a pinned faiss-cpu package"
-            ) from error
-    faiss_module.omp_set_num_threads(1)
-    process = psutil.Process()
-    rss_before = process.memory_info().rss
-    verification_started = time.perf_counter()
-    manifest_path = output / PERSISTENT_HNSW_MANIFEST
-    manifest = _read_json(manifest_path)
-    expected_parameters = {
-        "m": HNSW_M,
-        "ef_construction": HNSW_EF_CONSTRUCTION,
-        "ef_search": 1_024,
-        "overretrieve": 160,
-        "exact_rescore": CANDIDATES_PER_LABEL,
-        "exact_rescore_dtype": "float32",
-    }
-    expected_partitions = {
-        f"{channel}-{label}"
-        for channel in ("direct_user", "untrusted_content")
-        for label in (0, 1)
-    }
-    partitions = manifest.get("partitions", {})
-    bank_spec = manifest.get("bank", {})
-    canary_spec = manifest.get("canary", {})
-    evidence_path = output / str(canary_spec.get("evidence_path", ""))
-    query_path = output / str(canary_spec.get("query_path", ""))
+    sparse_source: Path,
+    serving_manifest: Path,
+    evidence_output: Path,
+) -> dict[str, Any]:
+    evidence_output = evidence_output.resolve()
+    if evidence_output.exists() or evidence_output.is_symlink():
+        raise FileExistsError(f"refusing to replace parity evidence: {evidence_output}")
+    output = output.resolve()
+    sparse_source = sparse_source.resolve()
+    (
+        manifest,
+        _,
+        extension_path,
+        sparse_identity,
+        sparse_identity_path,
+    ) = _lineage_serving_source_contract(output, sparse_source)
+    extension = _read_json(extension_path)
+    evidence = extension.get("retrieval_evidence", {})
+    variants = evidence.get("variants") if isinstance(evidence, dict) else None
+    records = variants.get(LINEAGE_HNSW_VARIANT) if isinstance(variants, dict) else None
+    _, units = _load_local_evidence(output, "validation")
+    unit_ids = [unit["unit_id"] for unit in units]
     if (
-        manifest.get("schema_version") != 1
-        or manifest.get("variant") != PERSISTENT_HNSW_VARIANT
-        or manifest.get("parameters") != expected_parameters
-        or manifest.get("dimension") != DENSE_CONFIGS["pplx-4b"]["dimension"]
-        or set(partitions) != expected_partitions
-        or sum(int(spec.get("rows", -1)) for spec in partitions.values())
-        != bank_spec.get("rows")
-        or file_sha256(output / str(bank_spec.get("path", "")))
-        != bank_spec.get("sha256")
-        or not evidence_path.is_file()
-        or file_sha256(evidence_path) != canary_spec.get("evidence_sha256")
-        or not query_path.is_file()
-        or file_sha256(query_path) != canary_spec.get("query_sha256")
-        or any(
-            file_sha256(output / str(spec.get("index_path", "")))
-            != spec.get("index_sha256")
-            or file_sha256(output / str(spec.get("rowids_path", "")))
-            != spec.get("rowids_sha256")
-            for spec in partitions.values()
-        )
+        not isinstance(evidence, dict)
+        or not isinstance(variants, dict)
+        or evidence.get("contains_raw_text_or_query_vectors") is not False
+        or evidence.get("sha256")
+        != _sha256_text(json.dumps(variants, sort_keys=True, separators=(",", ":")))
+        or not isinstance(records, list)
+        or not unit_ids
+        or len(unit_ids) != len(set(unit_ids))
+        or any(not isinstance(record, dict) for record in records)
+        or [record.get("unit_id") for record in records] != unit_ids
     ):
-        raise ValueError("persistent HNSW bundle identity changed")
-    evidence = _read_json(evidence_path)
-    canaries = evidence.get("canaries")
-    expected = evidence.get("expected")
+        raise ValueError("lineage HNSW retrieval evidence changed")
+
+    retrieval_path = sparse_source / "validation-retrieval.jsonl"
+    saved_rows = [
+        row
+        for row in _read_jsonl(retrieval_path)
+        if row.get("method") == PARTITIONED_HYBRID_METHOD
+    ]
+    saved = {row.get("unit_id"): row for row in saved_rows}
+    if len(saved) != len(saved_rows) or set(saved) != set(unit_ids):
+        raise ValueError("saved exact hybrid records do not cover validation")
+
+    serving_manifest = serving_manifest.resolve()
+    serving = _read_json(serving_manifest)
+    extension_sha256 = file_sha256(extension_path)
+    sparse_identity_sha256 = file_sha256(sparse_identity_path)
+    serving_source = serving.get("source", {})
     if (
-        evidence.get("schema_version") != 1
-        or evidence.get("contains_raw_text") is not False
-        or not isinstance(canaries, list)
-        or not isinstance(expected, list)
-        or len(canaries) != canary_spec.get("queries")
-        or len(expected) != len(canaries)
+        serving.get("schema_version") != 1
+        or serving.get("variant") != LINEAGE_SERVING_VARIANT
+        or serving.get("bank", {}).get("sha256") != manifest["bank"]["sha256"]
+        or serving.get("sparse", {}).get("sha256") != sparse_identity["sha256"]
+        or serving_source.get("manifest_sha256")
+        != file_sha256(output / "manifest.json")
+        or serving_source.get("extension_sha256") != extension_sha256
+        or serving_source.get("sparse_identity_sha256") != sparse_identity_sha256
     ):
-        raise ValueError("persistent HNSW canary evidence changed")
-    verification_seconds = time.perf_counter() - verification_started
-    rss_after_verification = process.memory_info().rss
-    load_started = time.perf_counter()
-    indexes, rowids = _persistent_hnsw_load(output, partitions, faiss_module)
-    queries = np.load(query_path, allow_pickle=False)
-    if queries.dtype != np.dtype("float32") or queries.shape != (
-        len(canaries),
-        DENSE_CONFIGS["pplx-4b"]["dimension"],
-    ):
-        raise ValueError("persistent HNSW canary query matrix changed")
-    load_seconds = time.perf_counter() - load_started
-    rss_after_load = process.memory_info().rss
-    bank_path = (output / str(bank_spec["path"])).resolve()
-    bank = sqlite3.connect(bank_path.as_uri() + "?mode=ro&immutable=1", uri=True)
+        raise ValueError("final lineage serving manifest changed")
+
+    texts = _reload_unit_texts(output, "validation")
+    sparse, rowids = _open_partitioned_sparse_index(sparse_source, manifest)
+    bank = sqlite3.connect(
+        (output / manifest["bank"]["path"]).resolve().as_uri() + "?mode=ro&immutable=1",
+        uri=True,
+    )
+    packet_differences = []
+    sparse_differences = []
     try:
-        actual = [
-            _persistent_hnsw_request(indexes, rowids, bank, canary, query)[0]
-            for canary, query in zip(canaries, queries, strict=True)
-        ]
+        for unit, record in zip(units, records, strict=True):
+            _, replay = _partitioned_replay_records(
+                bank,
+                sparse,
+                rowids,
+                query_text=texts[unit["unit_id"]][1],
+                unit=unit,
+                dense_record={
+                    **record,
+                    "method": PARTITIONED_DENSE_REPLAY_METHOD,
+                    "latency_ms": 0.0,
+                },
+            )
+            reference = saved[unit["unit_id"]]
+            reference_selected = reference.get("selected_ids")
+            reference_branches = reference.get("branch_candidate_ids")
+            reference_sparse = (
+                reference_branches.get("sparse")
+                if isinstance(reference_branches, dict)
+                else None
+            )
+            if (
+                reference.get("status") != "ok"
+                or not isinstance(reference_selected, list)
+                or not isinstance(reference_sparse, dict)
+                or set(reference_sparse) != {"0", "1"}
+            ):
+                raise ValueError("saved exact hybrid record is invalid")
+            if replay["selected_ids"] != reference_selected:
+                packet_differences.append(unit["unit_id"])
+            if replay["branch_candidate_ids"]["sparse"] != reference_sparse:
+                sparse_differences.append(unit["unit_id"])
     finally:
         bank.close()
-    ranking_matches = sum(
-        row["candidate_ids"] == reference["candidate_ids"]
-        and row["candidate_scores"] == reference["candidate_scores"]
-        for row, reference in zip(actual, expected, strict=True)
-    )
-    packet_matches = sum(
-        row["selected_ids"] == reference["selected_ids"]
-        and row["packet_sha256"] == reference["packet_sha256"]
-        for row, reference in zip(actual, expected, strict=True)
-    )
-    if actual != expected:
-        raise ValueError("persistent HNSW canary parity changed")
-    rss_after_parity = process.memory_info().rss
+        sparse.close()
 
-    def measured(workers: int) -> dict[str, Any]:
-        tasks = list(range(len(canaries))) * repeats
-        chunks = [tasks[index::workers] for index in range(workers)]
-
-        def run_chunk(chunk: list[int]) -> list[dict[str, float]]:
-            connection = sqlite3.connect(
-                bank_path.as_uri() + "?mode=ro&immutable=1", uri=True
-            )
-            try:
-                if chunk:
-                    index = chunk[0]
-                    _persistent_hnsw_request(
-                        indexes,
-                        rowids,
-                        connection,
-                        canaries[index],
-                        queries[index],
-                    )
-                return [
-                    _persistent_hnsw_request(
-                        indexes,
-                        rowids,
-                        connection,
-                        canaries[index],
-                        queries[index],
-                    )[1]
-                    for index in chunk
-                ]
-            finally:
-                connection.close()
-
-        started = time.perf_counter()
-        if workers == 1:
-            timings = run_chunk(chunks[0])
-        else:
-            with ThreadPoolExecutor(max_workers=workers) as executor:
-                timings = [
-                    row for rows in executor.map(run_chunk, chunks) for row in rows
-                ]
-        wall_seconds = time.perf_counter() - started
-        result = {
-            "queries": len(timings),
-            "workers": workers,
-            "wall_seconds": wall_seconds,
-            "throughput_qps": len(timings) / wall_seconds,
-        }
-        for field in (
-            "search_and_rescore_ms",
-            "row_lookup_and_packet_ms",
-            "total_ms",
-        ):
-            values = [row[field] for row in timings]
-            result[field] = {
-                "p50": _percentile(values, 50),
-                "p95": _percentile(values, 95),
-                "p99": _percentile(values, 99),
-            }
-        return result
-
-    warm = {
-        f"concurrency_{workers}": measured(workers)
-        for workers in INDEX_BENCHMARK_WORKERS
-    }
-    rss_after_warm = process.memory_info().rss
-    if sys.platform == "win32":
-        peak_rss = process.memory_info().peak_wset
-    else:
-        import resource
-
-        maximum_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        peak_rss = int(maximum_rss * (1 if sys.platform == "darwin" else 1_024))
+    different_units = sorted(set(packet_differences) | set(sparse_differences))
     result = {
         "schema_version": 1,
-        "status": "passed",
-        "bundle_manifest_sha256": file_sha256(manifest_path),
-        "variant": PERSISTENT_HNSW_VARIANT,
-        "parameters": expected_parameters,
-        "cold": {
-            "bundle_verification_seconds": verification_seconds,
-            "serialized_index_load_seconds": load_seconds,
-            "page_cache_cleared": False,
-            "process_contract": "invoke this command in a fresh constrained process",
+        "status": "passed" if not different_units else "failed",
+        "provider_calls": False,
+        "contains_raw_text_or_vectors": False,
+        "variant": LINEAGE_HNSW_VARIANT,
+        "method": PARTITIONED_HYBRID_METHOD,
+        "queries": len(units),
+        "exact_packet_matches": len(units) - len(packet_differences),
+        "different_packets": len(packet_differences),
+        "sparse_branch_differences": len(sparse_differences),
+        "different_unit_ids": different_units,
+        "rrf": {
+            "dense_weight": DENSE_RRF_WEIGHT,
+            "k": RRF_K,
+            "sparse_weight": 1.0,
         },
-        "parity": {
-            "queries": len(canaries),
-            "ranking_exact_matches": ranking_matches,
-            "packet_exact_matches": packet_matches,
-            "all_exact": True,
+        "source": {
+            "serving_manifest_sha256": file_sha256(serving_manifest),
+            "hnsw_extension_sha256": extension_sha256,
+            "sparse_identity_sha256": sparse_identity_sha256,
+            "prior_retrieval_sha256": file_sha256(retrieval_path),
         },
-        "warm": warm,
-        "rss_bytes": {
-            "before_bundle_verification": rss_before,
-            "after_bundle_verification": rss_after_verification,
-            "after_serialized_index_load": rss_after_load,
-            "after_canary_parity": rss_after_parity,
-            "after_warm_benchmark": rss_after_warm,
-            "peak": peak_rss,
-        },
-        "execution": {
-            "source_matrices_loaded": False,
-            "provider_calls": False,
-            "native_threads_per_search": 1,
-            "python_concurrency": list(INDEX_BENCHMARK_WORKERS),
-            "repeats": repeats,
-            "current_host": "local development machine",
-            "current_host_is_target_deployment": False,
-            "target_deployment": "Azure preview with 2 vCPU and 4 GiB RAM",
-            "deployment_conclusion_allowed": False,
-        },
-        "environment": _benchmark_environment(faiss_module),
     }
-    _atomic_json(result_path, result)
-    print(json.dumps({"persistent_hnsw_benchmark": str(result_path)}, sort_keys=True))
-    return result_path
+    _atomic_json(evidence_output, result)
+    print(json.dumps({"lineage_hybrid_parity": str(evidence_output)}, sort_keys=True))
+    return result
 
 
 def _validate_hnsw_cascade_evidence(
@@ -7935,6 +7862,9 @@ def main() -> int:
     embed_parser.add_argument("--config", choices=tuple(DENSE_CONFIGS), required=True)
     # ponytail: provider quotas vary; raise only after a successful batch canary.
     embed_parser.add_argument("--concurrency", type=int, default=1)
+    reuse_parser = subparsers.add_parser("reuse-bank-vectors")
+    reuse_parser.add_argument("--config", choices=("pplx-4b",), required=True)
+    reuse_parser.add_argument("--source-output", type=Path, required=True)
     qwen_parser = subparsers.add_parser("qwen-stage0-canary")
     qwen_parser.add_argument("--provider", choices=QWEN_STAGE0_PROVIDERS, required=True)
     qwen_local_parser = subparsers.add_parser("qwen-local-stage0-canary")
@@ -7953,11 +7883,13 @@ def main() -> int:
     index_parser.add_argument("--config", choices=("pplx-4b",), required=True)
     hnsw_extension_parser = subparsers.add_parser("benchmark-hnsw-extension")
     hnsw_extension_parser.add_argument("--config", choices=("pplx-4b",), required=True)
-    persistent_hnsw_parser = subparsers.add_parser("build-persistent-hnsw")
-    persistent_hnsw_parser.add_argument(
-        "--source-output", type=Path, default=DEFAULT_ALL_ROWS_OUTPUT
-    )
-    subparsers.add_parser("benchmark-persistent-hnsw")
+    lineage_bundle_parser = subparsers.add_parser("build-lineage-serving-bundle")
+    lineage_bundle_parser.add_argument("--source-output", type=Path, required=True)
+    lineage_bundle_parser.add_argument("--sparse-source", type=Path, required=True)
+    parity_parser = subparsers.add_parser("write-lineage-hybrid-parity")
+    parity_parser.add_argument("--sparse-source", type=Path, required=True)
+    parity_parser.add_argument("--serving-manifest", type=Path, required=True)
+    parity_parser.add_argument("--evidence-output", type=Path, required=True)
     hnsw_cascade_parser = subparsers.add_parser("materialize-hnsw-cascade")
     hnsw_cascade_parser.add_argument(
         "--source-output", type=Path, default=DEFAULT_HNSW_CASCADE_SOURCE
@@ -8016,6 +7948,12 @@ def main() -> int:
                 concurrency=args.concurrency,
             )
         )
+    elif args.command == "reuse-bank-vectors":
+        reuse_bank_vectors(
+            output,
+            source_output=args.source_output,
+            config_name=args.config,
+        )
     elif args.command == "qwen-stage0-canary":
         asyncio.run(qwen_stage0_canary(output, provider=args.provider))
     elif args.command == "qwen-local-stage0-canary":
@@ -8039,10 +7977,19 @@ def main() -> int:
         asyncio.run(benchmark_dense_indexes(output, config_name=args.config))
     elif args.command == "benchmark-hnsw-extension":
         asyncio.run(benchmark_hnsw_extension(output, config_name=args.config))
-    elif args.command == "build-persistent-hnsw":
-        build_persistent_hnsw(output, source_output=args.source_output)
-    elif args.command == "benchmark-persistent-hnsw":
-        benchmark_persistent_hnsw(output)
+    elif args.command == "build-lineage-serving-bundle":
+        build_lineage_serving_bundle(
+            output,
+            source_output=args.source_output,
+            sparse_source=args.sparse_source,
+        )
+    elif args.command == "write-lineage-hybrid-parity":
+        write_lineage_hybrid_parity(
+            output,
+            sparse_source=args.sparse_source,
+            serving_manifest=args.serving_manifest,
+            evidence_output=args.evidence_output,
+        )
     elif args.command == "materialize-hnsw-cascade":
         materialize_hnsw_cascade(
             output,

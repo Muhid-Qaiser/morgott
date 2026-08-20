@@ -1,6 +1,7 @@
 # Retrieval-assisted reviewer consolidated findings
 
 Date: 2026-08-19.
+Updated: 2026-08-20.
 
 This report consolidates the executed retrieval-assisted DeepSeek studies and records the current implementation decision.
 It does not replace the machine-readable artifacts or claim that a consumed development panel represents production traffic.
@@ -23,11 +24,15 @@ The owner-selected advisory production candidate is:
 12. Preserve Morgott's existing `decision: allow` behavior because all learned results remain advisory.
 
 The hybrid branch is an explicit owner-selected defense-in-depth choice.
-Its consumed-panel point estimates improved both recall and FPR, but the paired confidence intervals included no change and the recall point gain was below the predeclared one-point material-gain threshold.
+On the superseding strict-provider-safe development rerun, dense and hybrid retrieval tied on aggregate recall and FPR, while the paired recall interval allowed either loss or gain.
 This implementation decision must not be restated as a statistically demonstrated hybrid advantage.
 
-The exact lineage HNSW bundle and the complete lineage HNSW-plus-BM25 path still require build, parity, co-resident Azure, and before-versus-after evidence.
-The completed all-row HNSW work is scale and algorithm evidence, not a substitute for those lineage artifacts.
+The provider-egress bank now uses an exact public-license allowlist and excludes ambiguous mixed-license rows.
+Every retained document vector was reused after an identity join, so the migration made no document-embedding calls.
+Fresh HNSW retrieval reproduced every exact-dense selected packet, and a provider-free replay reproduced every strict-provider-safe HNSW-plus-BM25 packet.
+The completed all-row HNSW work remains scale and algorithm evidence rather than the production bank selection.
+The rebuilt strict-provider-safe bundle passed its exact zero-traffic runtime smoke on 2026-08-20.
+The owner then authorized a POC traffic rollout without treating the earlier contradictory latency results as a gate pass.
 
 ColBERT, a learned-sparse model, raw-attention token selection, Qdrant, GraphRAG, and output-verification machinery are not part of this candidate.
 They add no required capability to the smallest tested flow.
@@ -196,7 +201,69 @@ It did not load mmBERT, embed a live query, assemble the longer prompt, or call 
 Machine-readable evidence: `artifacts/retrieval_assisted_reviewer_hnsw_persistent/persistent-hnsw-manifest.json` and `artifacts/retrieval_assisted_reviewer_hnsw_persistent/persistent-hnsw-local-resource.json`.
 
 The conclusion is narrow: in-process HNSW is proven viable for the immutable all-row scale and removes row count alone as a reason to deploy Qdrant.
-The production lineage HNSW must still reproduce quality and runtime parity with its own immutable bundle.
+
+### Maintained source-lineage HNSW bundle
+
+The rebuilt strict-provider-safe source-lineage HNSW run reached 99.818% mean Recall@20 and 99.713% on the worst adequately sized slice.
+It reproduced all selected packets from the same-query exact NumPy control.
+Replaying the fixed Unicode BM25 and 2:1 RRF branch reproduced every freshly reviewed hybrid packet.
+
+| Runtime evidence | Exact NumPy | HNSW candidate | Finding |
+|---|---:|---:|---|
+| Four-worker search p95 | 37.791 ms | 11.481 ms | About 3.3 times faster |
+| Selected-packet parity | Reference | 100% | No reviewer-input change |
+
+The strict-provider-safe reviewer rerun moved recall from 71.818% without retrieval to 94.091% for both dense and hybrid retrieval.
+FPR moved from 0.373% to 0.249% for both retrieval arms.
+The recall gain versus baseline was 22.273 points with paired 95% intervals of `[16.818, 27.727]` points for dense and hybrid.
+Hybrid changed 80 of the 110 routed packets and selected 48 example slots absent from the saved dense top 20, but six reviewer verdicts canceled to the same aggregate outcome.
+Directly against dense, the hybrid recall delta was zero with a paired interval of `[-2.273, 2.273]` points, and the FPR delta and interval were both zero.
+This supports the full retrieval pipeline over the no-example reviewer, but it still does not establish an incremental hybrid quality gain.
+
+The retained resource canary is bound to an earlier manifest revision, so its latency and memory values are not attributed to the rebuilt bundle here.
+The registered recipe is bound in `artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion-retrieval.json`.
+The tracked strict-provider-safe parity record is `reports/retrieval-lineage-hybrid-parity-20260820.json`.
+
+### Co-resident Azure zero-traffic canary
+
+The completed Azure run compared the no-example stable revision with the retrieval-assisted candidate on 15 randomized AB/BA pairs of one fixed public synthetic review-route probe.
+Both revisions used the same model and threshold identities on a 2-vCPU, 4-GiB shape, but the stable revision used OpenVINO 2026.2.1 and the candidate used OpenVINO 2026.3.0.
+
+| Measurement | Stable no-example | Retrieval-assisted candidate | Observed change |
+|---|---:|---:|---:|
+| Local-pass p95 | 30.187 ms | 31.062 ms | +0.875 ms |
+| Local-pass throughput | 40.468 QPS | 38.008 QPS | -6.08% |
+| Process peak RSS | 2.437 GiB | 2.508 GiB | +73.1 MiB |
+| Routed client p95 | 15,140.900 ms | 6,835.620 ms | -8,305.280 ms |
+| Routed provider p95 | 14,085.435 ms | 1,923.671 ms | -12,161.764 ms |
+| Routed service total p95 | 14,115.295 ms | 1,956.960 ms | -12,158.334 ms |
+
+The candidate retrieval p95 was 146.113 ms, with marginal stage p95 values of 133.325 ms for embedding, 10.667 ms for dense search, 3.284 ms for sparse search, and 1.528 ms for fusion.
+Those component percentiles are not additive because they summarize different requests and the dense and sparse branches execute concurrently.
+The candidate process peak left 1.492 GiB of headroom against the declared 4-GiB revision limit, but cgroup-v2 current, peak, and limit values were unavailable, so the record uses process `VmHWM` and the declared Azure limit.
+
+The stable arm recorded 16 reviewer calls, 5,160 reviewer input tokens, 120 reviewer output tokens, and zero terminal reviewer failures.
+The candidate recorded 15 reviewer calls, 9,195 reviewer input tokens, 105 reviewer output tokens, 165 embedding input tokens, all 15 retrievals as `ok`, four selected examples per request, and zero terminal reviewer failures.
+The only response-exposed candidate cost was $0.00000495 for embeddings, while reviewer billed cost was not exposed, so the run does not support a total-cost comparison.
+Both local smokes recorded zero errors.
+
+Deployment to `Running` took 174 seconds.
+The candidate remained at 0% traffic and was not promoted.
+The routed latency point estimates passed the predeclared no-added-second gate, but the large provider-latency difference cannot be attributed to retrieval in this small run.
+This is a 15-pair synthetic deployment canary with provider variance and an OpenVINO-version difference, not quality evidence or a production latency distribution.
+Machine-readable evidence: [azure-preview-retrieval-canary-20260819T174113Z.json](azure-preview-retrieval-canary-20260819T174113Z.json).
+
+A subsequent promotion run on the same protocol failed the frozen less-than-one-second added-p95 gate and automatically restored the stable revision before traffic moved.
+The then-current script exited before persisting that failed summary, so its exact measurements are unavailable; the consumed single-probe comparison path has since been removed.
+The opposing pass and fail results show that nearest-rank p95 over 15 repeated requests is a single provider-tail observation, not a reproducible retrieval-latency estimate.
+Repeating the same test until it passes would be optional stopping, so the next attempt requires a predeclared larger, multi-probe paired protocol that preserves every run.
+
+### Owner-authorized POC rollout on 2026-08-20
+
+Azure revision `morgott-api--0000019` passed the exact model, policy, retrieval-manifest, packet, prompt, provider, and memory-headroom smoke while receiving 0% traffic.
+The same revision then received 100% preview traffic, and a public routed request returned retrieval status `ok`, four selected examples, one successful DeepSeek call, zero DeepSeek failures, and advisory decision `allow`.
+Revision `morgott-api--0000016` remains healthy and active at 0% as the rollback point.
+This was an explicit owner-authorized POC rollout, not a new latency experiment, quality evaluation, or statistically valid promotion-gate result.
 
 ## BM25 and RRF
 
@@ -314,12 +381,13 @@ It was faster but less reliable than first-eight BM25, so it was rejected withou
 
 ## Cost record
 
-At the 2026-08-19 audit point, the current mutable ledger reserved or settled $21.426396146 against its $50 cap with a separate $2 reserve.
+At the 2026-08-20 audit point, the current mutable ledger reserved or settled $21.540407656 against its $50 cap with a separate $2 reserve.
 This sum comes from `artifacts/retrieval_assisted_reviewer-budget.json` and is a research accounting snapshot, not a closed total or projected production cost.
 
 Notable incremental calls were:
 
-- The fresh 110-query PPLX HNSW matrix used 21,881 tokens, took 2.255 seconds as one batch, and cost $0.00065643.
+- The strict-provider-safe 110-query PPLX HNSW matrix used 21,881 tokens, took 2.829 seconds as one batch, and cost $0.00065643.
+- The rebuild reused every retained document vector, spent another $0.00065643 on the exact-dense query pass, and spent $0.09358736 on 330 fresh baseline, dense, and hybrid reviewer calls.
 - The HNSW cascade made 119 new reviewer calls after 211 exact response reuses and cost $0.037944432, or $0.038600862 including that embedding batch.
 - The full-row hybrid called the reviewer only for 59 changed packets and cost $0.025870504.
 - Each eight-call Qwen remote canary cost $0.00000276.
@@ -328,9 +396,13 @@ Notable incremental calls were:
 Production measurement must report embedding tokens, longer-prompt tokens, reviewer calls, cost per routed request, and cost per total request.
 OpenRouter's API permits embedding dimensions and provider preferences, while its routing documentation says provider fallback is enabled unless disabled.
 An immutable index therefore requires a pinned compatible embedding route and must never fall back to another model's vector space.
+OpenRouter does not expose an immutable PPLX weight revision behind that route.
+The maintained policy binds the endpoint slug and request identity, and zero-traffic validation checks a frozen selected-packet hash.
+The replacement scheduled retrieval canary is deferred with the new promotion protocol, and neither check cryptographically attests every provider weight.
 See the official [OpenRouter embeddings API](https://openrouter.ai/docs/api/api-reference/embeddings/create-embeddings) and [provider-routing guide](https://openrouter.ai/docs/guides/routing/provider-selection).
 
-The owner does not require zero data retention, but the live query still crosses a provider boundary and the private example bank remains local.
+The owner does not require zero data retention, but the live query still crosses a provider boundary.
+The private bank and indexes remain local or in the private Azure artifact store, while the four selected provider-safe public example texts cross to the pinned DeepSeek provider with the reviewed text.
 OpenRouter documents provider-specific logging, retention, and training policies, so the selected endpoint and account policy must be recorded rather than inferred from key availability.
 See the official [provider logging and retention documentation](https://openrouter.ai/docs/guides/privacy/provider-logging/).
 
@@ -343,9 +415,12 @@ See the official [provider logging and retention documentation](https://openrout
 | WMT matched-pair source | Prospective source-heldout when run, now consumed | Lineage over all-row on one synthetic transfer suite |
 | HNSW, hybrid, IDF, and ColBERT replays | Post-hoc on consumed validation | Mechanics, scale, latency, packet change, and exploratory quality only |
 | Qwen public-safe canaries | Contract and resource diagnostics | No Morgott retrieval quality conclusion |
+| Strict-provider-safe source-lineage HNSW bundle | Completed locally and uploaded privately | Exact-dense retrieval, immutable payload, and provider-egress contract |
+| Strict-provider-safe HNSW plus BM25 packet replay | Completed provider-free replay | Exact fresh reviewed-packet parity for the maintained recipe |
 | New source-and-time-heldout selection block | Not collected | Required for an unbiased hybrid or reranker quality claim |
 | Untouched confirmation block | Not collected | Required to reproduce the new direction |
-| Co-resident Azure end-to-end run | Not executed | Required for production latency and memory claims |
+| Earlier co-resident Azure end-to-end run | Completed at 0% traffic on the superseded bundle | Historical deployment latency and process-memory evidence only |
+| Strict-provider-safe Azure end-to-end run | Not run | Required before any traffic decision |
 
 Provider latency was noisy enough that marginal p95 comparisons sometimes contradicted paired request deltas.
 Local component timing must therefore be reported separately from end-to-end routed latency.
@@ -375,17 +450,25 @@ The record must include:
 The baseline and candidate must run in randomized AB/BA order on the same privacy-approved fixed requests.
 Existing Azure pass-path numbers are historical references rather than a valid routed baseline for this feature.
 
+### Current before-and-after summary
+
+| Metric | Before | Integrated candidate | Change or interpretation |
+|---|---:|---:|---|
+| Strict-provider-safe development recall | 71.818% | 94.091% | +22.273 points, paired 95% interval `[16.818, 27.727]` |
+| Strict-provider-safe development FPR | 0.373% | 0.249% | -0.124 point, paired interval `[-0.373, 0.000]` |
+| Four-worker dense search p95 | 37.791 ms exact NumPy | 11.481 ms HNSW | About 3.3 times faster |
+| Hybrid packet parity after HNSW substitution | Exact-dense reference | 100% | No additional HNSW-specific reviewer calls after the fresh exact-hybrid run |
+| Azure routed latency and rollout | One 15-pair run passed; a later identical run failed | Strict bundle is live for owner-authorized POC use | Latency remains inconclusive; rollout is not a benchmark pass |
+
 ## Remaining gates
 
 Before the candidate can be described as target-proven, complete these checks without changing the frozen recipe:
 
-1. Build and hash-bind the source-lineage HNSW and partitioned Unicode FTS5 bundles.
-2. Prove score-tolerant Recall@20, adequately sized slice recall, selected-packet parity, full-cascade parity, serialization parity, and injected-failure fallback behavior against exact lineage NumPy.
-3. Run the full lineage hybrid on a new independently adjudicated source-and-time-heldout selection block and preserve a separate untouched confirmation block.
-4. Report the hybrid as an owner-selected advisory layer even if its gain remains statistically unresolved, and report any regression without hiding it behind the aggregate.
-5. Load mmBERT, the lineage dense bundle, the sparse sidecar, and the API in the same 2-vCPU, 4-GiB Azure revision.
-6. Require at least 512 MiB peak memory headroom, no swap or OOM, deterministic artifact verification, and less than 1 second added p95 on DeepSeek-routed requests.
-7. Deploy through a zero-traffic revision, run the before-and-after canary, and retain rollback to the no-example reviewer.
-8. Keep the result advisory and keep every side effect behind the deterministic reference monitor.
+1. Run the full lineage hybrid on a new independently adjudicated source-and-time-heldout selection block and preserve a separate untouched confirmation block.
+2. Report the hybrid as an owner-selected advisory layer even if its gain remains statistically unresolved, and report any regression without hiding it behind the aggregate.
+3. Rerun the resource gate for the strict-provider-safe bundle and preserve cgroup, swap, and process-memory evidence.
+4. Treat the favorable routed latency point estimate as provider-noisy deployment evidence rather than a retrieval speedup claim.
+5. Treat the current 100% preview rollout as an owner-authorized POC state, preserve the healthy rollback revision, and require a larger predeclared multi-probe protocol before making latency or production-readiness claims.
+6. Keep the result advisory and keep every side effect behind the deterministic reference monitor.
 
 No vector database or reranker should be added unless these checks expose a requirement that the current in-process static design cannot meet.

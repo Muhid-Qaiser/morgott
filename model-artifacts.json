@@ -61,8 +61,15 @@
           "sha256": "91d72df38e4e52a28e363830f606a09f36027ff91826ed960ebd716b126c2835"
         },
         "cascade_policy": {
-          "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion.json",
-          "sha256": "1c173136f385e8d755e01b73ebcf592acd025d6d94169fb76f1f10abdedd957f"
+          "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion-retrieval.json",
+          "sha256": "57430193f414dd2178d78b840d7f7804b17f238e7da9e96aef72f1ad4abfaf5c"
+        },
+        "retrieval": {
+          "format": "morgott-lineage-hybrid-v1",
+          "manifest": {
+            "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/retrieval/lineage-hybrid-v2/manifest.json",
+            "sha256": "a80cb09b32c7c22c7c9c1d240d0eeb63ce3803721488b8477f8dd45a6979eb84"
+          }
         },
         "benchmark": {
           "path": "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/benchmark.json",
@@ -76,6 +83,6 @@
     "Scores never grant authority and are not approved for blocking.",
     "The maintained preview scans ordered 1,024-token windows; older model artifacts are provenance only.",
     "PromptShield and SEP are already-consumed development evaluations.",
-    "The balanced-20260816 cascade profile is the maintained advisory default; it is not approved for blocking."
+    "The balanced-retrieval-20260819 cascade profile is the maintained advisory default; it is not approved for blocking."
   ]
 }

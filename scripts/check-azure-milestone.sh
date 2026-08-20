@@ -5,7 +5,7 @@ readonly SUBSCRIPTION_ID="25d0cf2e-a75c-46f5-b26c-f57a48f96967"
 readonly OWNER="waleed@vulsight.com"
 readonly RESOURCE_GROUP="morgott-preview-rg"
 readonly DAY_ZERO_TAG="mfs25kDayZero"
-readonly SERVICES_JSON='["Virtual Machines","Storage","Container Registry","Azure Container Apps","Service Bus"]'
+readonly SERVICES_JSON='["Virtual Machines","Storage","Container Registry","Azure Container Apps"]'
 
 user=$(az account show --query user.name -o tsv)
 subscription=$(az account show --query id -o tsv)
@@ -105,8 +105,8 @@ day_zero=$(az group show \
 	--query "tags.$DAY_ZERO_TAG" \
 	--output tsv)
 
-if [[ $qualified_count != 5 ]]; then
-	printf '\nQualified intended workloads: %s/5. Day zero has not started.\n' "$qualified_count"
+if [[ $qualified_count != 4 ]]; then
+	printf '\nQualified intended workloads: %s/4. Day zero has not started.\n' "$qualified_count"
 	if [[ -n $day_zero ]]; then
 		az group update \
 			--name "$RESOURCE_GROUP" \
@@ -120,7 +120,7 @@ fi
 if [[ -z $day_zero ]]; then
 	candidate_day_zero=$(jq -r '[.[].crossing] | max' <<<"$summary")
 	if [[ ${1:-} != --portal-confirmed ]]; then
-		printf '\nCost data suggests day zero %s. Confirm five workloads in the Startup portal, then rerun with --portal-confirmed.\n' "$candidate_day_zero"
+		printf '\nCost data suggests day zero %s. Confirm four workloads in the Startup portal, then rerun with --portal-confirmed.\n' "$candidate_day_zero"
 		exit 0
 	fi
 	day_zero=$candidate_day_zero
@@ -128,9 +128,9 @@ if [[ -z $day_zero ]]; then
 		--name "$RESOURCE_GROUP" \
 		--set "tags.$DAY_ZERO_TAG=$day_zero" \
 		--output none
-	printf '\nAll five intended workloads crossed USD 1. Saved day zero: %s.\n' "$day_zero"
+	printf '\nAll four intended workloads crossed USD 1. Saved day zero: %s.\n' "$day_zero"
 else
-	printf '\nAll five intended workloads remain above USD 1. Saved day zero: %s.\n' "$day_zero"
+	printf '\nAll four intended workloads remain above USD 1. Saved day zero: %s.\n' "$day_zero"
 fi
 
 elapsed_days=$(((\

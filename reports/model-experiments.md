@@ -1495,5 +1495,21 @@ The full-row HNSW plus partitioned Unicode BM25 and 2:1 RRF arm moved recall fro
 The paired intervals included no change, so this is favorable exploratory evidence rather than a statistically established hybrid gain.
 The owner selected the hybrid as an advisory defense-in-depth candidate, with dense-only behavior on sparse failure and the existing no-example reviewer on dense failure.
 
-The maintained candidate still requires a hash-bound lineage HNSW bundle, the lineage sparse sidecar, exact fallback tests, and a same-input Azure before-and-after result.
+The maintained source-lineage bank now uses an exact provider-egress license allowlist and excludes ambiguous mixed-license rows.
+Every retained document vector was reused by verified identity, so the migration required no document-embedding calls.
+Its fresh HNSW run reached 99.818% mean Recall@20, reproduced all exact-dense selected packets, and reduced four-worker dense search p95 from 37.791 ms to 11.481 ms.
+Fresh baseline, dense, and hybrid reviewer evidence moved recall from 71.818% without retrieval to 94.091% for both retrieval arms, while FPR moved from 0.373% to 0.249%.
+Dense and hybrid tied on aggregate quality, so the owner-selected hybrid remains a defense-in-depth choice rather than a demonstrated incremental gain.
+The rebuilt source-lineage HNSW bundle, sparse sidecar, exact fallback tests, and reviewed hybrid packet parity are complete and registry-bound.
+The retained provider-free resource canary is bound to an earlier manifest revision, so it is not treated as registered-bundle evidence.
+The rebuilt bundle passed exact zero-traffic validation on 2026-08-20 and was then owner-promoted to 100% preview traffic for POC use, with the previous revision retained at 0% for rollback.
+That rollout is not a latency-gate pass and does not replace genuinely fresh source-and-time-heldout quality evidence.
 ColBERT, learned sparse retrieval, raw-attention token selection, Qdrant, GraphRAG, and output-verification machinery are deferred.
+
+#### Azure zero-traffic deployment canary on 2026-08-19
+
+The candidate remained at 0% traffic and was not promoted.
+The first single-probe AB/BA canary passed the latency gate, while a later run of the same protocol failed and rolled back before traffic moved.
+The contradictory results make latency inconclusive and keep Azure promotion blocked pending a larger predeclared multi-probe paired protocol.
+The complete measurements and qualifications are in [retrieval-assisted-reviewer-findings-20260819.md](retrieval-assisted-reviewer-findings-20260819.md).
+Machine-readable evidence is in [azure-preview-retrieval-canary-20260819T174113Z.json](azure-preview-retrieval-canary-20260819T174113Z.json).

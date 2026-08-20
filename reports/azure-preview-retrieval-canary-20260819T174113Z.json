@@ -1,0 +1,289 @@
+{
+  "candidate": {
+    "identity": {
+      "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+      "onnx_sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5",
+      "pipeline_profile": "balanced-retrieval-20260819",
+      "policy_sha256": "a771f15bd523cdfbb33910ba29dc73d2d93c7010e54e7381302708c55351618e",
+      "precision": "fp32",
+      "retrieval_enabled": true,
+      "retrieval_manifest_sha256": "ff9f410e4b13f45a421a13420866133f9c63df775f83883ee11593e409e0da14",
+      "runtime": "openvino-2026.3.0-22451-8a17657b995-releases/2026/3-cpu-fp32",
+      "threshold_sha256": "e9b375b079667fd7c82bc5439fcde772ad3d3b04b7fb44277b8f180478558353"
+    },
+    "image": "morgottvulsightacr.azurecr.io/morgott-api@sha256:cfedff554344c97db4e1ec70999eaa1f11fefd8c42423f3c78b29db9afb90766",
+    "local_pass_smoke": {
+      "cgroup_memory_current_bytes": null,
+      "cgroup_memory_limit_bytes": null,
+      "cgroup_memory_peak_bytes": null,
+      "errors": 0,
+      "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+      "onnx_sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5",
+      "openvino": "2026.3.0-22451-8a17657b995-releases/2026/3",
+      "p50_ms": 25.516449999997803,
+      "p95_ms": 31.0624999999618,
+      "peak_rss_kib": 2630236,
+      "precision": "fp32",
+      "qps": 38.00842444058166,
+      "requests": 30,
+      "routes": {
+        "pass": 30,
+        "restrict": 0
+      },
+      "runtime": "openvino-2026.3.0-22451-8a17657b995-releases/2026/3-cpu-fp32"
+    },
+    "memory_bytes": {
+      "current": null,
+      "current_source": null,
+      "limit": 4294967296,
+      "limit_source": "azure_revision",
+      "peak": 2693361664,
+      "peak_source": "process_vm_hwm",
+      "revision_resources": {
+        "cpu": 2.0,
+        "memory": "4Gi"
+      }
+    },
+    "revision": "morgott-api--0000018",
+    "routed": {
+      "embedding_request_sha256": "6e43255c631b68ff62594f18e702f48756feffe88ec2ec29e692147a6692062c",
+      "mmbert_score_range": [
+        0.6131224274440685,
+        0.6131224274440685
+      ],
+      "no_example_prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+      "prompt_sha256": "f2b1eb3c80410b301d0ad87d6a23ac7c8d4bb6d6904b3a3ea2b676a7d26ac5bb",
+      "requests": 15,
+      "retrieval_statuses": {
+        "ok": 15
+      },
+      "routes": {
+        "pass": 0,
+        "restrict": 15
+      },
+      "timings_ms": {
+        "client_latency_ms": {
+          "p50": 1799.95,
+          "p95": 6835.62
+        },
+        "dense_retrieval_latency_ms": {
+          "p50": 5.474300000059884,
+          "p95": 10.6665000000703
+        },
+        "embedding_latency_ms": {
+          "p50": 44.793799999979456,
+          "p95": 133.32470000000285
+        },
+        "fusion_latency_ms": {
+          "p50": 1.3371999999662876,
+          "p95": 1.527699999996912
+        },
+        "local_latency_ms": {
+          "p50": 27.504000000021733,
+          "p95": 42.01880000005076
+        },
+        "provider_latency_ms": {
+          "p50": 775.5518999999822,
+          "p95": 1923.6711000000923
+        },
+        "retrieval_latency_ms": {
+          "p50": 52.01890000000731,
+          "p95": 146.1132000000589
+        },
+        "sparse_retrieval_latency_ms": {
+          "p50": 2.4422000000186017,
+          "p95": 3.2841000000871645
+        },
+        "total_latency_ms": {
+          "p50": 803.0641999999943,
+          "p95": 1956.9603999999572
+        }
+      },
+      "totals": {
+        "deepseek_calls": 15,
+        "deepseek_failures": 0,
+        "embedding_cost_usd": 4.95e-06,
+        "embedding_input_tokens": 165,
+        "reviewed_window_input_token_count": 15,
+        "reviewed_window_input_tokens": 9195,
+        "reviewed_window_output_token_count": 15,
+        "reviewed_window_output_tokens": 105,
+        "selected_example_count": 60,
+        "token_count": 165,
+        "window_count": 15
+      }
+    }
+  },
+  "candidate_size": "2cpu-4gi",
+  "delta": {
+    "client_p95_ms": -8305.279999999999
+  },
+  "deployment_to_running_seconds": 174,
+  "order": [
+    "candidate",
+    "stable",
+    "stable",
+    "candidate",
+    "candidate",
+    "stable",
+    "stable",
+    "candidate",
+    "stable",
+    "candidate",
+    "stable",
+    "candidate",
+    "candidate",
+    "stable",
+    "stable",
+    "candidate",
+    "stable",
+    "candidate",
+    "candidate",
+    "stable",
+    "candidate",
+    "stable",
+    "stable",
+    "candidate",
+    "stable",
+    "candidate",
+    "candidate",
+    "stable",
+    "candidate",
+    "stable"
+  ],
+  "order_seed_sha256": "9d882f0a7d3fb0682bf39297fa81a8b06b2e4ff2ab45ac60e7cd44cac07aa986",
+  "probe_identity": {
+    "expected_final_advisory_route": "restrict",
+    "expected_retrieval_packet_sha256": "843b52b4873b24f23417135e8e2244895cbe64b8c9eb84eee28570103f952e1d",
+    "expected_route": "review",
+    "expected_score_range": [
+      0.5,
+      0.7
+    ],
+    "observed_local_precision": "bf16",
+    "observed_local_score": 0.586202029276724,
+    "request_sha256": "ef0f2eff1bcec71966678108612c4b767a6f07535e149ebd8399fe9ff753e419",
+    "sha256": "a33b3e9299fd7d1c590413c2a8551fc4f6829c37bdb4c0ccfb6307c9fe668806"
+  },
+  "promoted": false,
+  "promotion_requested": false,
+  "provider_cost_identity": {
+    "assessment_requests": 30,
+    "embedding_dimension": 256,
+    "embedding_model": "perplexity/pplx-embed-v1-4b",
+    "embedding_provider": "perplexity/int8",
+    "embedding_request_sha256": "6e43255c631b68ff62594f18e702f48756feffe88ec2ec29e692147a6692062c",
+    "limitation": "only response-exposed cost fields are included; reviewer billed cost is not exposed",
+    "recorded_budget_usd": 0.1,
+    "response_exposed_candidate_cost_usd": 4.95e-06,
+    "retrieval_manifest_sha256": "ff9f410e4b13f45a421a13420866133f9c63df775f83883ee11593e409e0da14",
+    "reviewer_call_upper_bound": 90,
+    "reviewer_model": "deepseek/deepseek-v4-flash-0731",
+    "reviewer_no_example_prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+    "reviewer_prompt_sha256": "f2b1eb3c80410b301d0ad87d6a23ac7c8d4bb6d6904b3a3ea2b676a7d26ac5bb",
+    "reviewer_provider": "cloudflare",
+    "reviewer_request_sha256": "8138ecb7533351edfbd82194d591e2e491082443b6f13e61c7bf7f996568ce91"
+  },
+  "recorded_at": "2026-08-19T17:41:13Z",
+  "request_sha256": "ef0f2eff1bcec71966678108612c4b767a6f07535e149ebd8399fe9ff753e419",
+  "schema_version": 1,
+  "scope": "same public synthetic routed request; deployment canary, not quality evidence",
+  "source_identity": {
+    "image_fingerprint": "86b152795805cdec744a6033545c506e8d0d7a70aa41c047194791d29f288d72",
+    "source_commit": "44288c00902fa3a1af75f5607e5c68bf12f76797"
+  },
+  "stable": {
+    "identity": {
+      "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+      "onnx_sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5",
+      "pipeline_profile": "balanced-20260816",
+      "policy_sha256": "1c173136f385e8d755e01b73ebcf592acd025d6d94169fb76f1f10abdedd957f",
+      "precision": "fp32",
+      "runtime": "openvino-2026.2.1-21919-ede283a88e3-releases/2026/2-cpu-fp32",
+      "threshold_sha256": "e9b375b079667fd7c82bc5439fcde772ad3d3b04b7fb44277b8f180478558353"
+    },
+    "image": "morgottvulsightacr.azurecr.io/morgott-api@sha256:797347cf52e708967ed9f53be2df322797f0b589764841b58f7aec0c21a54678",
+    "local_pass_smoke": {
+      "errors": 0,
+      "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+      "onnx_sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5",
+      "openvino": "2026.2.1-21919-ede283a88e3-releases/2026/2",
+      "p50_ms": 23.974649999217945,
+      "p95_ms": 30.187099997419864,
+      "peak_rss_kib": 2555388,
+      "precision": "fp32",
+      "qps": 40.46818452040005,
+      "requests": 30,
+      "routes": {
+        "pass": 30,
+        "restrict": 0
+      },
+      "runtime": "openvino-2026.2.1-21919-ede283a88e3-releases/2026/2-cpu-fp32"
+    },
+    "memory_bytes": {
+      "current": null,
+      "current_source": null,
+      "limit": 4294967296,
+      "limit_source": "azure_revision",
+      "peak": 2616717312,
+      "peak_source": "process_vm_hwm",
+      "revision_resources": {
+        "cpu": 2.0,
+        "memory": "4Gi"
+      }
+    },
+    "revision": "morgott-api--0000016",
+    "routed": {
+      "embedding_request_sha256": null,
+      "mmbert_score_range": [
+        0.6131224274440685,
+        0.6131224274440685
+      ],
+      "no_example_prompt_sha256": null,
+      "prompt_sha256": "6793cd3df00ea49c6da801692ef94b8200b212056fba27d298830186843b99a1",
+      "requests": 15,
+      "retrieval_statuses": {},
+      "routes": {
+        "pass": 0,
+        "restrict": 15
+      },
+      "timings_ms": {
+        "client_latency_ms": {
+          "p50": 1718.93,
+          "p95": 15140.9
+        },
+        "local_latency_ms": {
+          "p50": 29.70389999973122,
+          "p95": 57.173499997588806
+        },
+        "provider_latency_ms": {
+          "p50": 706.7131999974663,
+          "p95": 14085.43490000011
+        },
+        "total_latency_ms": {
+          "p50": 738.9347999996971,
+          "p95": 14115.294600000198
+        }
+      },
+      "totals": {
+        "deepseek_calls": 16,
+        "deepseek_failures": 0,
+        "reviewed_window_input_token_count": 15,
+        "reviewed_window_input_tokens": 5160,
+        "reviewed_window_output_token_count": 15,
+        "reviewed_window_output_tokens": 120,
+        "token_count": 165,
+        "window_count": 15
+      }
+    }
+  },
+  "stable_comparator_contract": {
+    "model_key": "mmbert-lora-full-ctx1024-u17000-s42",
+    "onnx_sha256": "e58706410c76915b622e43b31dc23d6deb1a0416beb1448cf96b2259cb0cb0c5",
+    "pipeline_profile": "balanced-20260816",
+    "policy_sha256": "1c173136f385e8d755e01b73ebcf592acd025d6d94169fb76f1f10abdedd957f",
+    "retrieval_enabled": false,
+    "retrieval_manifest_sha256": null,
+    "threshold_sha256": "e9b375b079667fd7c82bc5439fcde772ad3d3b04b7fb44277b8f180478558353"
+  }
+}

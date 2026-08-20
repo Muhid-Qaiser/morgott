@@ -12,9 +12,20 @@ from pathlib import Path
 from unittest import mock
 
 from morgott.cli import main
-from morgott.models.cascade import FULL_CONTEXT_REVIEW_INDEX, CascadeScanner
-from morgott.models.deepseek_nooa import REMOTE_CONCURRENCY, WindowReview
+from morgott.models.cascade import (
+    FULL_CONTEXT_REVIEW_INDEX,
+    CascadeScanner,
+    RetrievalReviewer,
+    _verify_retrieval_parity,
+)
+from morgott.models.deepseek_nooa import PROMPT_SHA256, REMOTE_CONCURRENCY, WindowReview
 from morgott.models.mmbert.serving import MmbertRuntime, PreparedText, Window
+from morgott.models.retrieval import (
+    EmbeddingResult,
+    RetrievalResult,
+    RetrievedExample,
+    SparseResult,
+)
 
 
 def _window(index=0, text="hello"):
@@ -25,6 +36,15 @@ def _window(index=0, text="hello"):
         input_ids=(101, index + 1, 102),
         attention_mask=(1, 1, 1),
     )
+
+
+def _retrieval_manifest_for(evidence):
+    return {
+        "source": {
+            "extension_sha256": evidence["source"]["hnsw_extension_sha256"],
+            "sparse_identity_sha256": evidence["source"]["sparse_identity_sha256"],
+        }
+    }
 
 
 class _Scorer:
@@ -71,9 +91,11 @@ class _Reviewer:
         self.status = status
         self.input_channels = []
         self.texts = []
+        self.query_texts = []
 
-    async def review(self, text, *, input_channel):
+    async def review(self, text, *, input_channel, query_text=None):
         self.texts.append(text)
+        self.query_texts.append(query_text)
         self.input_channels.append(input_channel)
         log_odds = (
             math.log(self.probability / (1 - self.probability))
@@ -96,12 +118,16 @@ class _ParallelReviewer(_Reviewer):
         self.active = 0
         self.max_active = 0
 
-    async def review(self, text, *, input_channel):
+    async def review(self, text, *, input_channel, query_text=None):
         self.active += 1
         self.max_active = max(self.max_active, self.active)
         await asyncio.sleep(0)
         self.active -= 1
-        return await super().review(text, input_channel=input_channel)
+        return await super().review(
+            text,
+            input_channel=input_channel,
+            query_text=query_text,
+        )
 
 
 class _ClosableReviewer(_Reviewer):
@@ -118,9 +144,9 @@ class _SequenceReviewer:
         self.probabilities = iter(probabilities)
         self.texts = []
 
-    async def review(self, text, *, input_channel):
+    async def review(self, text, *, input_channel, query_text=None):
         self.texts.append(text)
-        del input_channel
+        del input_channel, query_text
         probability = next(self.probabilities)
         return WindowReview(
             status="ok",
@@ -136,8 +162,8 @@ class _FirstDecisiveReviewer:
         self.status = status
         self.calls = 0
 
-    async def review(self, text, *, input_channel):
-        del text, input_channel
+    async def review(self, text, *, input_channel, query_text=None):
+        del text, input_channel, query_text
         self.calls += 1
         decisive = self.calls == 1
         failed = decisive and self.status == "failed"
@@ -153,9 +179,232 @@ class _FirstDecisiveReviewer:
 
 
 class _ForbiddenReviewer:
-    async def review(self, text, *, input_channel):
-        del text, input_channel
+    async def review(self, text, *, input_channel, query_text=None):
+        del text, input_channel, query_text
         raise AssertionError("remote review must not be called")
+
+
+class RetrievalReviewerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_retrieval_examples_and_trace_reach_the_reviewer(self):
+        examples = tuple(
+            RetrievedExample(
+                example_id=f"example-{label}-{index}",
+                text=f"example text {label} {index}",
+                text_sha256="a" * 64,
+                label=label,
+                input_channel="direct_user",
+                source=f"source-{label}-{index}",
+                group_id=f"group-{label}-{index}",
+            )
+            for index in range(2)
+            for label in (0, 1)
+        )
+
+        class Base(_Reviewer):
+            async def review_with_examples(self, text, *, input_channel, examples):
+                self.packet = (text, input_channel, examples)
+                return await self.review(text, input_channel=input_channel)
+
+            async def aclose(self):
+                self.closed = True
+
+        class Embedder:
+            async def embed(self, text):
+                self.text = text
+                return EmbeddingResult(
+                    vector=[1.0] + [0.0] * 255,
+                    elapsed_ms=6.0,
+                    input_tokens=3,
+                    cost_usd=0.000001,
+                )
+
+            async def aclose(self):
+                self.closed = True
+
+        class Engine:
+            available = True
+            manifest_sha256 = "b" * 64
+
+            def sparse(self, text, input_channel):
+                return SparseResult(
+                    status="ok",
+                    candidate_ids=(("a",), ("b",)),
+                    elapsed_ms=4.0,
+                    bundle_sha256=self.manifest_sha256,
+                    query_sha256=hashlib.sha256(text.encode()).hexdigest(),
+                    input_channel=input_channel,
+                )
+
+            def retrieve(self, text, input_channel, embedding, sparse_result):
+                del text, input_channel, embedding, sparse_result
+                return RetrievalResult(
+                    status="ok",
+                    examples=examples,
+                    fallback_reason=None,
+                    dense_ms=2.0,
+                    sparse_ms=4.0,
+                    fusion_ms=1.0,
+                )
+
+        base = Base()
+        embedder = Embedder()
+        reviewer = RetrievalReviewer(base, Engine(), embedder)
+
+        review = await reviewer.review(
+            "review text",
+            input_channel="direct_user",
+            query_text="query text",
+        )
+
+        self.assertEqual(embedder.text, "query text")
+        self.assertEqual(
+            base.packet,
+            (
+                "review text",
+                "direct_user",
+                tuple((example.label, example.text) for example in examples),
+            ),
+        )
+        self.assertEqual(review.retrieval.status, "ok")
+        self.assertEqual(review.retrieval.embedding_input_tokens, 3)
+        self.assertEqual(review.retrieval.selected_example_count, 4)
+        self.assertEqual(
+            review.retrieval.selected_packet_sha256,
+            hashlib.sha256(
+                json.dumps(
+                    tuple(example.example_id for example in examples),
+                    separators=(",", ":"),
+                ).encode()
+            ).hexdigest(),
+        )
+        await reviewer.aclose()
+        self.assertTrue(base.closed)
+        self.assertTrue(embedder.closed)
+
+    async def test_embedding_failure_keeps_embedding_and_total_latency_separate(self):
+        review_started = False
+        clock_calls = 0
+
+        class Reviewer(_Reviewer):
+            async def review(self, text, *, input_channel, query_text=None):
+                nonlocal review_started
+                review_started = True
+                return await super().review(
+                    text,
+                    input_channel=input_channel,
+                    query_text=query_text,
+                )
+
+        def clock():
+            nonlocal clock_calls
+            clock_calls += 1
+            if clock_calls == 1:
+                return 0.0
+            return 0.1 if review_started else 0.01
+
+        class Embedder:
+            async def embed(self, text):
+                del text
+                raise RuntimeError("synthetic failure")
+
+        class Engine:
+            available = True
+            manifest_sha256 = "b" * 64
+
+            def sparse(self, text, input_channel):
+                del text, input_channel
+                return None
+
+        base = Reviewer()
+        reviewer = RetrievalReviewer(base, Engine(), Embedder())
+
+        with mock.patch(
+            "morgott.models.cascade.time.perf_counter",
+            side_effect=clock,
+        ):
+            review = await reviewer.review(
+                "review text",
+                input_channel="direct_user",
+                query_text="query text",
+            )
+
+        self.assertEqual(review.retrieval.status, "embedding_failed")
+        self.assertEqual(review.retrieval.fallback_reason, "embedding_failed")
+        self.assertEqual(review.retrieval.embedding_ms, 10.0)
+        self.assertEqual(review.retrieval.total_ms, 10.0)
+
+    async def test_invalid_channel_is_rejected_before_embedding(self):
+        class Embedder:
+            calls = 0
+
+            async def embed(self, text):
+                del text
+                self.calls += 1
+
+        class Engine:
+            available = True
+            manifest_sha256 = "b" * 64
+
+        embedder = Embedder()
+        reviewer = RetrievalReviewer(_Reviewer(), Engine(), embedder)
+
+        with self.assertRaisesRegex(ValueError, "input channel"):
+            await reviewer.review(
+                "review text",
+                input_channel="invalid",
+                query_text="query text",
+            )
+
+        self.assertEqual(embedder.calls, 0)
+
+    async def test_empty_review_text_is_rejected_before_embedding(self):
+        class Embedder:
+            calls = 0
+
+            async def embed(self, text):
+                del text
+                self.calls += 1
+
+        class Engine:
+            available = True
+            manifest_sha256 = "b" * 64
+
+        embedder = Embedder()
+        reviewer = RetrievalReviewer(_Reviewer(), Engine(), embedder)
+
+        with self.assertRaisesRegex(ValueError, "review text"):
+            await reviewer.review(
+                "",
+                input_channel="direct_user",
+                query_text="query text",
+            )
+
+        self.assertEqual(embedder.calls, 0)
+
+    async def test_embedding_failure_reports_the_prompt_actually_sent(self):
+        class Embedder:
+            async def embed(self, text):
+                del text
+                raise RuntimeError("synthetic failure")
+
+        class Engine:
+            available = True
+            manifest_sha256 = "b" * 64
+
+            def sparse(self, text, input_channel):
+                del text, input_channel
+                return None
+
+        reviewer = RetrievalReviewer(_Reviewer(), Engine(), Embedder())
+        scanner = CascadeScanner(scorer=_Scorer([0.5]), reviewer=reviewer)
+
+        result = await scanner.assess_text(
+            "review text",
+            input_channel="direct_user",
+        )
+
+        self.assertEqual(result.prompt_sha256, PROMPT_SHA256)
+        self.assertEqual(result.retrieval_fallback_reason, "embedding_failed")
 
 
 class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
@@ -212,6 +461,31 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(result.reviewed_windows[0].index, FULL_CONTEXT_REVIEW_INDEX)
         self.assertEqual(reviewer.texts, ["distributed instruction"])
+
+    async def test_full_context_retrieval_queries_the_highest_scoring_window(self):
+        text = "first second"
+
+        class SegmentScorer(_Scorer):
+            def prepare(self, value):
+                return PreparedText(
+                    normalized_text=value,
+                    token_count=2,
+                    windows=(
+                        Window(0, 0, 5, (101, 1, 102), (1, 1, 1)),
+                        Window(1, 6, 12, (101, 2, 102), (1, 1, 1)),
+                    ),
+                )
+
+        reviewer = _Reviewer(probability=0.9)
+        scanner = CascadeScanner(
+            scorer=SegmentScorer([0.01, 0.5]),
+            reviewer=reviewer,
+        )
+
+        await scanner.assess_text(text, input_channel="untrusted_content")
+
+        self.assertEqual(reviewer.texts, [text])
+        self.assertEqual(reviewer.query_texts, ["second"])
 
     async def test_full_context_reviewer_uses_the_promoted_boundary(self):
         for probability, expected in (
@@ -639,10 +913,20 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["advisory_route"], "pass")
         self.assertTrue(reviewer.closed)
 
-    def test_production_constructor_requires_the_remote_reviewer(self):
+    def test_production_constructor_requires_registered_retrieval(self):
         scorer = _Scorer([0.1])
         reviewer = _ClosableReviewer()
+        engine = mock.Mock(available=True, manifest_sha256="b" * 64)
+        embedder = mock.AsyncMock()
         with (
+            mock.patch(
+                "morgott.models.cascade._verify_registered_policy",
+                return_value=(
+                    "a" * 64,
+                    Path("bundle/manifest.json"),
+                    "b" * 64,
+                ),
+            ),
             mock.patch(
                 "morgott.models.cascade.MmbertRuntime.from_artifacts",
                 return_value=scorer,
@@ -651,31 +935,75 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
                 "morgott.models.cascade.DeepSeekReviewer.from_env",
                 return_value=reviewer,
             ) as load_reviewer,
+            mock.patch(
+                "morgott.models.cascade.RetrievalEngine",
+                return_value=engine,
+            ) as load_engine,
+            mock.patch(
+                "morgott.models.cascade.OpenRouterEmbedder.from_env",
+                return_value=embedder,
+            ) as load_embedder,
         ):
             scanner = CascadeScanner.from_artifacts(
                 manifest_path=Path("model-artifacts.json"),
                 inference_precision="auto",
             )
 
-        self.assertIs(scanner._reviewer, reviewer)
-        self.assertEqual(
-            scanner.policy_sha256,
-            "1c173136f385e8d755e01b73ebcf592acd025d6d94169fb76f1f10abdedd957f",
-        )
+        self.assertIsInstance(scanner._reviewer, RetrievalReviewer)
+        self.assertEqual(scanner.policy_sha256, "a" * 64)
+        self.assertEqual(scanner.retrieval_manifest_sha256, "b" * 64)
+        self.assertTrue(scanner.retrieval_enabled)
         load_scorer.assert_called_once_with(
             Path("model-artifacts.json"),
             inference_precision="auto",
         )
         load_reviewer.assert_called_once()
+        load_engine.assert_called_once_with(Path("bundle"), "b" * 64)
+        load_embedder.assert_called_once()
+
+    def test_retrieval_parity_must_match_the_registered_bundle(self):
+        policy = json.loads(
+            Path(
+                "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion-retrieval.json"
+            ).read_text(encoding="utf-8")
+        )
+        evidence = json.loads(
+            Path(policy["evidence"]["path"]).read_text(encoding="utf-8")
+        )
+        retrieval_manifest = _retrieval_manifest_for(evidence)
+        evidence["source"]["sparse_identity_sha256"] = "0" * 64
+
+        with self.assertRaisesRegex(ValueError, "parity evidence is invalid"):
+            _verify_retrieval_parity(
+                evidence,
+                retrieval_manifest,
+                evidence["source"]["serving_manifest_sha256"],
+            )
 
     def test_production_constructor_rejects_registry_policy_drift(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             policy = json.loads(
                 Path(
-                    "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion.json"
+                    "artifacts/models/mmbert-lora-full-ctx1024-u17000-s42/serving/promotion-retrieval.json"
                 ).read_text(encoding="utf-8")
             )
+            evidence_source = Path(policy["evidence"]["path"])
+            evidence = json.loads(evidence_source.read_text(encoding="utf-8"))
+            evidence_path = root / "retrieval-parity.json"
+            retrieval_path = root / "retrieval-manifest.json"
+            retrieval_path.write_text(
+                json.dumps(_retrieval_manifest_for(evidence)),
+                encoding="utf-8",
+            )
+            evidence["source"]["serving_manifest_sha256"] = hashlib.sha256(
+                retrieval_path.read_bytes()
+            ).hexdigest()
+            evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
+            policy["evidence"] = {
+                "path": evidence_path.name,
+                "sha256": hashlib.sha256(evidence_path.read_bytes()).hexdigest(),
+            }
             policy["runtime_contract"]["profile"] = "wrong-profile"
             policy_path = root / "promotion.json"
             policy_path.write_text(json.dumps(policy), encoding="utf-8")
@@ -693,7 +1021,16 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
                                         "sha256": hashlib.sha256(
                                             policy_path.read_bytes()
                                         ).hexdigest(),
-                                    }
+                                    },
+                                    "retrieval": {
+                                        "format": "morgott-lineage-hybrid-v1",
+                                        "manifest": {
+                                            "path": "retrieval-manifest.json",
+                                            "sha256": hashlib.sha256(
+                                                retrieval_path.read_bytes()
+                                            ).hexdigest(),
+                                        },
+                                    },
                                 }
                             }
                         },

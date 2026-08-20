@@ -9,12 +9,13 @@ import math
 import tempfile
 import time
 from collections.abc import AsyncIterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal, Protocol
 
 from .deepseek_nooa import (
     MODEL,
+    PACKET_PROMPT_SHA256,
     PROMPT_SHA256,
     PROVIDER,
     REMOTE_CONCURRENCY,
@@ -40,20 +41,88 @@ from .mmbert.serving import (
     PreparedText,
     Window,
 )
+from .retrieval import (
+    DENSE_RRF_WEIGHT,
+    EMBEDDING_DIMENSION,
+    EMBEDDING_MODEL,
+    EMBEDDING_PROVIDER,
+    EMBEDDING_REQUEST_SHA256,
+    RRF_K,
+    SPARSE_CANDIDATES,
+    SPARSE_RRF_WEIGHT,
+    OpenRouterEmbedder,
+    RetrievalEngine,
+    RetrievalResult,
+    RetrievalTrace,
+)
 
 MAX_REMOTE_WINDOWS = 128
 FULL_CONTEXT_REVIEW_INDEX = -1
 ALLOWED_CHANNELS = frozenset({"direct_user", "untrusted_content"})
-POLICY_FORMAT = "morgott-advisory-cascade-profile-v1"
+POLICY_FORMAT = "morgott-advisory-cascade-profile-v2"
 
 
-def _verify_registered_policy(manifest_path: Path) -> str:
+def _verify_retrieval_parity(
+    evidence: dict,
+    retrieval_manifest: dict,
+    retrieval_manifest_sha256: str,
+) -> None:
+    queries = evidence.get("queries")
+    source = evidence.get("source")
+    manifest_source = retrieval_manifest.get("source")
+    if (
+        evidence.get("schema_version") != 1
+        or evidence.get("status") != "passed"
+        or evidence.get("provider_calls") is not False
+        or evidence.get("contains_raw_text_or_vectors") is not False
+        or type(queries) is not int
+        or queries <= 0
+        or evidence.get("different_packets") != 0
+        or evidence.get("exact_packet_matches") != queries
+        or evidence.get("sparse_branch_differences") != 0
+        or evidence.get("variant") != "faiss_hnsw_ef1024_top160"
+        or evidence.get("method")
+        != "hybrid_pplx-4b_unicode_partitioned8_sparse50_dense20_rrf2_replay"
+        or evidence.get("rrf")
+        != {
+            "dense_weight": DENSE_RRF_WEIGHT,
+            "k": RRF_K,
+            "sparse_weight": SPARSE_RRF_WEIGHT,
+        }
+        or not isinstance(source, dict)
+        or not isinstance(manifest_source, dict)
+        or source.get("serving_manifest_sha256") != retrieval_manifest_sha256
+        or source.get("hnsw_extension_sha256")
+        != manifest_source.get("extension_sha256")
+        or source.get("sparse_identity_sha256")
+        != manifest_source.get("sparse_identity_sha256")
+    ):
+        raise ValueError("registered retrieval parity evidence is invalid")
+
+
+def _verify_registered_policy(manifest_path: Path) -> tuple[str, Path, str]:
     manifest_path = manifest_path.resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     entry = manifest.get("models", {}).get(DEFAULT_MODEL_KEY)
     serving = entry.get("serving") if isinstance(entry, dict) else None
     if not isinstance(serving, dict):
         raise ValueError("registered cascade policy is missing")
+    retrieval_spec = serving.get("retrieval")
+    retrieval_manifest_spec = (
+        retrieval_spec.get("manifest") if isinstance(retrieval_spec, dict) else None
+    )
+    if (
+        not isinstance(retrieval_spec, dict)
+        or retrieval_spec.get("format") != "morgott-lineage-hybrid-v1"
+        or not isinstance(retrieval_manifest_spec, dict)
+    ):
+        raise ValueError("registered retrieval bundle is missing")
+    retrieval_manifest = verified_artifact_path(
+        manifest_path.parent,
+        retrieval_manifest_spec,
+        name="retrieval manifest",
+    )
+    retrieval_manifest_data = json.loads(retrieval_manifest.read_text(encoding="utf-8"))
     spec = serving.get("cascade_policy")
     policy_path = verified_artifact_path(
         manifest_path.parent,
@@ -61,6 +130,17 @@ def _verify_registered_policy(manifest_path: Path) -> str:
         name="cascade policy",
     )
     policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    evidence_path = verified_artifact_path(
+        manifest_path.parent,
+        policy.get("evidence"),
+        name="retrieval parity evidence",
+    )
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    _verify_retrieval_parity(
+        evidence,
+        retrieval_manifest_data,
+        retrieval_manifest_spec["sha256"],
+    )
     expected_contract = {
         "advisory_decision": "allow",
         "cascade": {
@@ -77,25 +157,46 @@ def _verify_registered_policy(manifest_path: Path) -> str:
             "fallbacks_allowed": False,
             "logprobs": True,
             "model": MODEL,
-            "prompt_sha256": PROMPT_SHA256,
+            "no_example_prompt_sha256": PROMPT_SHA256,
+            "prompt_sha256": PACKET_PROMPT_SHA256,
             "reasoning_enabled": False,
             "remote_concurrency": REMOTE_CONCURRENCY,
             "request_sha256": REQUEST_SHA256,
             "requested_provider": PROVIDER,
             "strict_json_schema": True,
         },
+        "retrieval": {
+            "embedding_dimension": EMBEDDING_DIMENSION,
+            "embedding_model": EMBEDDING_MODEL,
+            "embedding_provider": EMBEDDING_PROVIDER,
+            "embedding_request_sha256": EMBEDDING_REQUEST_SHA256,
+            "examples_per_request": 4,
+            "failure_behavior": {
+                "embedding_or_dense": "no_example_reviewer",
+                "sparse": "dense_packet",
+            },
+            "labels_per_class": 2,
+            "manifest_sha256": retrieval_manifest_spec["sha256"],
+            "rrf": {
+                "dense_weight": DENSE_RRF_WEIGHT,
+                "k": RRF_K,
+                "sparse_weight": SPARSE_RRF_WEIGHT,
+            },
+            "sparse_candidates_per_label": SPARSE_CANDIDATES,
+            "variant": "lineage_hybrid_v1",
+        },
         "threshold_sha256": THRESHOLD_SHA256,
         "thresholds": THRESHOLD_CONTRACT,
     }
     if (
-        policy.get("schema_version") != 1
+        policy.get("schema_version") != 2
         or policy.get("format") != POLICY_FORMAT
         or policy.get("status") != "maintained_advisory"
         or policy.get("advisory_only") is not True
         or policy.get("runtime_contract") != expected_contract
     ):
         raise ValueError("registered cascade policy differs from maintained code")
-    return spec["sha256"]
+    return spec["sha256"], retrieval_manifest, retrieval_manifest_spec["sha256"]
 
 
 def _validated_review(review: WindowReview) -> WindowReview:
@@ -108,6 +209,7 @@ def _validated_review(review: WindowReview) -> WindowReview:
         and not isinstance(latency_ms, bool)
         and math.isfinite(latency_ms)
         and latency_ms >= 0
+        and (review.retrieval is None or isinstance(review.retrieval, RetrievalTrace))
     )
     if review.status == "ok":
         valid = (
@@ -152,6 +254,9 @@ def _validated_review(review: WindowReview) -> WindowReview:
             else 0.0
         ),
         failure_code="invalid_review",
+        retrieval=(
+            review.retrieval if isinstance(review.retrieval, RetrievalTrace) else None
+        ),
     )
 
 
@@ -167,9 +272,171 @@ class _WindowReviewer(Protocol):
         text: str,
         *,
         input_channel: Literal["direct_user", "untrusted_content"],
+        query_text: str,
     ) -> WindowReview: ...
 
     async def aclose(self) -> None: ...
+
+
+class RetrievalReviewer:
+    """Add fail-soft retrieval to the maintained DeepSeek reviewer."""
+
+    def __init__(
+        self,
+        reviewer: DeepSeekReviewer,
+        engine: RetrievalEngine,
+        embedder: OpenRouterEmbedder,
+    ) -> None:
+        self._reviewer = reviewer
+        self._engine = engine
+        self._embedder = embedder
+
+    @property
+    def available(self) -> bool:
+        return self._engine.available
+
+    @property
+    def manifest_sha256(self) -> str:
+        return self._engine.manifest_sha256
+
+    async def review(
+        self,
+        text: str,
+        *,
+        input_channel: Literal["direct_user", "untrusted_content"],
+        query_text: str,
+    ) -> WindowReview:
+        if not isinstance(text, str) or not text:
+            raise ValueError("review text must be a non-empty string")
+        if not isinstance(query_text, str) or not query_text:
+            raise ValueError("retrieval query text must be a non-empty string")
+        if input_channel not in {"direct_user", "untrusted_content"}:
+            raise ValueError("retrieval input channel is invalid")
+        if not self._engine.available:
+            review = await self._reviewer.review(
+                text,
+                input_channel=input_channel,
+            )
+            return replace(
+                review, retrieval=_empty_retrieval_trace("bundle_unavailable")
+            )
+
+        started = time.perf_counter()
+        sparse_task = asyncio.create_task(
+            asyncio.to_thread(self._engine.sparse, query_text, input_channel)
+        )
+        try:
+            embedding = await self._embedder.embed(query_text)
+        except asyncio.CancelledError:
+            sparse_task.cancel()
+            raise
+        except Exception:
+            embedding_ms = (time.perf_counter() - started) * 1_000
+            await asyncio.gather(sparse_task, return_exceptions=True)
+            retrieval_ms = (time.perf_counter() - started) * 1_000
+            review = await self._reviewer.review(
+                text,
+                input_channel=input_channel,
+            )
+            return replace(
+                review,
+                retrieval=RetrievalTrace(
+                    status="embedding_failed",
+                    total_ms=retrieval_ms,
+                    embedding_ms=embedding_ms,
+                    dense_ms=0.0,
+                    sparse_ms=0.0,
+                    fusion_ms=0.0,
+                    embedding_input_tokens=None,
+                    embedding_cost_usd=None,
+                    selected_example_count=0,
+                    selected_packet_sha256=None,
+                    fallback_reason="embedding_failed",
+                ),
+            )
+        try:
+            sparse = await sparse_task
+            result = await asyncio.to_thread(
+                self._engine.retrieve,
+                query_text,
+                input_channel,
+                embedding.vector,
+                sparse,
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            result = _failed_retrieval_result("retrieval_failed")
+        trace = RetrievalTrace(
+            status=(
+                result.fallback_reason
+                if result.status == "no_examples" and result.fallback_reason
+                else result.status
+            ),
+            total_ms=(time.perf_counter() - started) * 1_000,
+            embedding_ms=embedding.elapsed_ms,
+            dense_ms=result.dense_ms,
+            sparse_ms=result.sparse_ms,
+            fusion_ms=result.fusion_ms,
+            embedding_input_tokens=embedding.input_tokens,
+            embedding_cost_usd=embedding.cost_usd,
+            selected_example_count=len(result.examples),
+            selected_packet_sha256=(
+                hashlib.sha256(
+                    json.dumps(
+                        tuple(example.example_id for example in result.examples),
+                        separators=(",", ":"),
+                    ).encode()
+                ).hexdigest()
+                if len(result.examples) == 4
+                else None
+            ),
+            fallback_reason=result.fallback_reason,
+        )
+        if len(result.examples) == 4:
+            review = await self._reviewer.review_with_examples(
+                text,
+                input_channel=input_channel,
+                examples=tuple(
+                    (example.label, example.text) for example in result.examples
+                ),
+            )
+        else:
+            review = await self._reviewer.review(
+                text,
+                input_channel=input_channel,
+            )
+        return replace(review, retrieval=trace)
+
+    async def aclose(self) -> None:
+        await asyncio.gather(self._reviewer.aclose(), self._embedder.aclose())
+
+
+def _empty_retrieval_trace(status: str) -> RetrievalTrace:
+    return RetrievalTrace(
+        status=status,
+        total_ms=0.0,
+        embedding_ms=0.0,
+        dense_ms=0.0,
+        sparse_ms=0.0,
+        fusion_ms=0.0,
+        embedding_input_tokens=None,
+        embedding_cost_usd=None,
+        selected_example_count=0,
+        selected_packet_sha256=None,
+        fallback_reason=status,
+    )
+
+
+def _failed_retrieval_result(reason: str) -> RetrievalResult:
+    return RetrievalResult(
+        status="no_examples",
+        examples=(),
+        fallback_reason=reason,
+        dense_ms=0.0,
+        sparse_ms=0.0,
+        fusion_ms=0.0,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,6 +450,7 @@ class ReviewedWindow:
     input_tokens: int | None
     output_tokens: int | None
     failure_code: str | None
+    retrieval: RetrievalTrace | None
 
 
 def _review_record(index: int, review: WindowReview) -> ReviewedWindow:
@@ -197,6 +465,7 @@ def _review_record(index: int, review: WindowReview) -> ReviewedWindow:
         input_tokens=review.input_tokens,
         output_tokens=review.output_tokens,
         failure_code=review.failure_code,
+        retrieval=review.retrieval,
     )
 
 
@@ -219,13 +488,26 @@ class CascadeAssessment:
     deepseek_calls: int
     deepseek_failures: int
     max_deepseek_probability: float | None
+    retrieval_status: str | None
+    retrieval_fallback_reason: str | None
+    retrieval_latency_ms: float
+    embedding_latency_ms: float
+    dense_retrieval_latency_ms: float
+    sparse_retrieval_latency_ms: float
+    fusion_latency_ms: float
+    embedding_input_tokens: int | None
+    embedding_cost_usd: float | None
+    selected_example_count: int
+    retrieval_packet_sha256: str | None
     model_key: str
     model_id: str
     model_revision: str
     runtime: str
     onnx_sha256: str | None
     tokenizer_sha256: str | None
-    prompt_sha256: str
+    prompt_sha256: str | None
+    no_example_prompt_sha256: str
+    embedding_request_sha256: str
     provider: str
     provider_request_sha256: str
     pipeline_profile: str
@@ -260,6 +542,20 @@ class CascadeScanner:
     def policy_sha256(self) -> str | None:
         return self._policy_sha256
 
+    @property
+    def retrieval_enabled(self) -> bool:
+        return bool(
+            isinstance(self._reviewer, RetrievalReviewer) and self._reviewer.available
+        )
+
+    @property
+    def retrieval_manifest_sha256(self) -> str | None:
+        return (
+            self._reviewer.manifest_sha256
+            if isinstance(self._reviewer, RetrievalReviewer)
+            else None
+        )
+
     @classmethod
     def from_artifacts(
         cls,
@@ -267,12 +563,24 @@ class CascadeScanner:
         manifest_path: Path,
         inference_precision: Literal["auto", "bf16", "fp32"] = "bf16",
     ) -> CascadeScanner:
-        policy_sha256 = _verify_registered_policy(manifest_path)
+        policy_sha256, retrieval_manifest, retrieval_manifest_sha256 = (
+            _verify_registered_policy(manifest_path)
+        )
         scorer = MmbertRuntime.from_artifacts(
             manifest_path,
             inference_precision=inference_precision,
         )
-        reviewer = DeepSeekReviewer.from_env()
+        engine = RetrievalEngine(
+            retrieval_manifest.parent,
+            retrieval_manifest_sha256,
+        )
+        if not engine.available:
+            raise ValueError("registered retrieval bundle failed verification")
+        reviewer = RetrievalReviewer(
+            DeepSeekReviewer.from_env(),
+            engine,
+            OpenRouterEmbedder.from_env(),
+        )
         return cls(
             scorer=scorer,
             reviewer=reviewer,
@@ -374,6 +682,26 @@ class CascadeScanner:
                 for review in reviews
                 if review.status == "ok" and review.probability is not None
             ]
+            retrievals = [
+                review.retrieval for review in reviews if review.retrieval is not None
+            ]
+            prompt_hashes = {
+                (
+                    PACKET_PROMPT_SHA256
+                    if review.retrieval is not None
+                    and review.retrieval.selected_example_count == 4
+                    else PROMPT_SHA256
+                )
+                for review in reviews
+            }
+            non_ok_retrieval = next(
+                (trace.status for trace in retrievals if trace.status != "ok"), None
+            )
+            fallback_reasons = {
+                trace.fallback_reason
+                for trace in retrievals
+                if trace.fallback_reason is not None
+            }
             return CascadeAssessment(
                 decision="allow",
                 advisory_only=True,
@@ -392,13 +720,60 @@ class CascadeScanner:
                 deepseek_calls=sum(review.attempts for review in reviews),
                 deepseek_failures=sum(review.status == "failed" for review in reviews),
                 max_deepseek_probability=max(probabilities, default=None),
+                retrieval_status=(non_ok_retrieval or ("ok" if retrievals else None)),
+                retrieval_fallback_reason=(
+                    next(iter(fallback_reasons))
+                    if len(fallback_reasons) == 1
+                    else "multiple"
+                    if fallback_reasons
+                    else None
+                ),
+                retrieval_latency_ms=sum(trace.total_ms for trace in retrievals),
+                embedding_latency_ms=sum(trace.embedding_ms for trace in retrievals),
+                dense_retrieval_latency_ms=sum(trace.dense_ms for trace in retrievals),
+                sparse_retrieval_latency_ms=sum(
+                    trace.sparse_ms for trace in retrievals
+                ),
+                fusion_latency_ms=sum(trace.fusion_ms for trace in retrievals),
+                embedding_input_tokens=(
+                    sum(
+                        trace.embedding_input_tokens
+                        for trace in retrievals
+                        if trace.embedding_input_tokens is not None
+                    )
+                    if any(
+                        trace.embedding_input_tokens is not None for trace in retrievals
+                    )
+                    else None
+                ),
+                embedding_cost_usd=(
+                    sum(
+                        trace.embedding_cost_usd
+                        for trace in retrievals
+                        if trace.embedding_cost_usd is not None
+                    )
+                    if any(trace.embedding_cost_usd is not None for trace in retrievals)
+                    else None
+                ),
+                selected_example_count=sum(
+                    trace.selected_example_count for trace in retrievals
+                ),
+                retrieval_packet_sha256=(
+                    retrievals[0].selected_packet_sha256
+                    if len(retrievals) == 1
+                    else None
+                ),
                 model_key=getattr(identity, "model_key", DEFAULT_MODEL_KEY),
                 model_id=MODEL_ID,
                 model_revision=MODEL_REVISION,
                 runtime=getattr(identity, "runtime", "injected"),
                 onnx_sha256=getattr(identity, "onnx_sha256", None),
                 tokenizer_sha256=getattr(identity, "tokenizer_sha256", None),
-                prompt_sha256=PROMPT_SHA256,
+                prompt_sha256=(
+                    next(iter(prompt_hashes)) if len(prompt_hashes) == 1 else None
+                ),
+                no_example_prompt_sha256=PROMPT_SHA256,
+                embedding_request_sha256=EMBEDDING_REQUEST_SHA256,
                 provider=PROVIDER,
                 provider_request_sha256=REQUEST_SHA256,
                 pipeline_profile=PIPELINE_PROFILE,
@@ -439,11 +814,16 @@ class CascadeScanner:
         provider_started = time.perf_counter()
         reviews = []
         if full_context_review:
+            query_index = max(range(len(scores)), key=scores.__getitem__)
+            query_window = prepared.windows[query_index]
             full_review = _review_record(
                 FULL_CONTEXT_REVIEW_INDEX,
                 await self._review_window(
                     prepared.normalized_text,
                     input_channel=input_channel,
+                    query_text=prepared.normalized_text[
+                        query_window.char_start : query_window.char_end
+                    ],
                 ),
             )
             reviews.append(full_review)
@@ -490,6 +870,13 @@ class CascadeScanner:
                             ]
                         ),
                         input_channel=input_channel,
+                        query_text=(
+                            text
+                            if len(prepared.windows) == 1
+                            else prepared.normalized_text[
+                                window.char_start : window.char_end
+                            ]
+                        ),
                     )
                     for window, _ in batch
                 )
@@ -544,6 +931,7 @@ class CascadeScanner:
         text: str,
         *,
         input_channel: Literal["direct_user", "untrusted_content"],
+        query_text: str,
     ) -> WindowReview:
         if self._reviewer is None:
             raise AssertionError("remote reviewer is not configured")
@@ -551,6 +939,7 @@ class CascadeScanner:
             return await self._reviewer.review(
                 text,
                 input_channel=input_channel,
+                query_text=query_text,
             )
 
     def _prepare_and_score(

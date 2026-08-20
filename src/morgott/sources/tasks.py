@@ -76,6 +76,19 @@ _SENSITIVE_TEXT_PATTERNS = {
     "iban": re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"),
 }
 
+_PROVIDER_EGRESS_LICENSES = frozenset(
+    {
+        "Apache-2.0",
+        "CC-BY-4.0",
+        "CC-BY-NC-4.0",
+        "CC-BY-NC-SA-4.0",
+        "CC-BY-SA-4.0",
+        "CC-BY-4.0 prompts; CC-BY-NC-4.0 model outputs",
+        "MIT",
+        "ODC-BY",
+    }
+)
+
 
 def _sensitive_text_reasons(text: str) -> list[str]:
     normalized = unicodedata.normalize("NFKC", text)
@@ -84,6 +97,10 @@ def _sensitive_text_reasons(text: str) -> list[str]:
         for name, pattern in _SENSITIVE_TEXT_PATTERNS.items()
         if pattern.search(normalized)
     )
+
+
+def _public_declared_license(value: object) -> bool:
+    return isinstance(value, str) and value.strip() in _PROVIDER_EGRESS_LICENSES
 
 
 def _mind2web_sample(source_row: dict) -> dict:

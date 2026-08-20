@@ -2,8 +2,8 @@
 
 Date: 2026-07-29; updated 2026-08-02
 
-Status update, 2026-08-17: this report preserves the earlier cascade selection as historical evidence.
-The maintained advisory default is now the registry-bound `balanced-20260816` profile documented in [the complete pipeline benchmark](pipeline-benchmark-20260816.md).
+Status update, 2026-08-19: this report preserves the earlier cascade selection as historical evidence.
+The maintained advisory default is now the registry-bound `balanced-retrieval-20260819` profile documented in [the retrieval findings](retrieval-assisted-reviewer-findings-20260819.md).
 
 ## Decision
 

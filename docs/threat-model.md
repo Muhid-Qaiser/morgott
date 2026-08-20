@@ -7,7 +7,7 @@ authority from text. In the current simulation, every side-effecting proposal
 passes through a fail-closed reference monitor with caller-supplied capabilities
 and exact argument constraints.
 
-The registered `balanced-20260816` cascade, legacy injection-control classifier, word routing baseline, and corpus routing labels are predictive only.
+The registered `balanced-retrieval-20260819` cascade, legacy injection-control classifier, word routing baseline, and corpus routing labels are predictive only.
 The routing baseline uses the untouched 0.5 cutoff and has neither production
 calibration nor a prospectively labelled final test.
 No learned score or advisory route may block a user or approve a tool action.
@@ -30,14 +30,17 @@ Untrusted:
   memory, summaries, classifier scores, generated labels, and remote model responses.
 
 The POC uses simulated commits and has no wallet, email connector, or live capability runtime.
-The maintained advisory cascade requires `OPENROUTER_API_KEY` at startup, but it makes an OpenRouter model API call only when an input reaches the review route.
-Startup verifies the registry-bound profile, threshold hash, reviewer request identities, context contract, and advisory-only decision before loading the scorer.
+The maintained advisory cascade requires `OPENROUTER_API_KEY` at startup, but it makes OpenRouter model API calls only when an input reaches the review route.
+Startup verifies the registry-bound profile, threshold hash, embedding and reviewer request identities, retrieval evidence and manifest, context contract, and advisory-only decision before loading the scorer.
+The review query is sent to the provider-pinned Perplexity embedding endpoint.
+Four retrieved example texts are then included in the provider-pinned Cloudflare DeepSeek request.
+The private bank is restricted to rows that passed the hash-bound maximum-byte gates, and every row is rechecked at startup.
 For multi-window untrusted content without a local high, the complete normalized artifact leaves the process for one full-context review.
 A clear full-context result may then send middle-zone windows for the existing fallback review, while direct-user and single-window routing stay unchanged.
 The API key remains inside the provider client.
 Remote responses are untrusted, strictly parsed, and converted to a conservative incomplete assessment when invalid.
-The request pins Cloudflare and disables fallback, but the maintained NOOA response parser does not independently attest the returned provider build.
-Callers that cannot permit eligible artifact text to leave the process must not start the maintained cascade.
+The embedding request pins the current Perplexity endpoint and the reviewer request pins Cloudflare, with fallbacks disabled for both, but the clients do not independently attest the returned provider builds.
+Callers that cannot permit the eligible live query and retrieved public examples to leave the process must not start the maintained cascade.
 The completed PredictStrategy evaluation used the same provider boundary and recorded only hashes, parsed values, timings, usage, and cost.
 The POC does not yet bind capabilities to a task or user identity, issue expirations, or propagate provenance through a live agent runtime.
 

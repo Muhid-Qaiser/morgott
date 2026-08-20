@@ -47,7 +47,13 @@ class _FakeHnswIndex:
         self.dimension = dimension
         self.m = m
         self.metric = metric
-        self.hnsw = types.SimpleNamespace(efConstruction=0, efSearch=0)
+        self.d = dimension
+        self.metric_type = metric
+        self.hnsw = types.SimpleNamespace(
+            efConstruction=0,
+            efSearch=0,
+            nb_neighbors=lambda _: m,
+        )
         self.vectors = np.empty((0, dimension), dtype=np.float32)
 
     @property
@@ -200,11 +206,14 @@ def _lineage_output(path: Path) -> tuple[Path, list[dict]]:
         "schema_version": 1,
         "advisory_only": True,
         "production_changes": False,
+        "inputs": {"data_manifest_sha256": "a" * 64},
         "bank": {
             **summary,
             "mode": "full_lineage",
             "path": bank_path.name,
             "sha256": run.file_sha256(bank_path),
+            "max_example_bytes": 1024,
+            "routing_view_sha256": "b" * 64,
         },
     }
     (path / "manifest.json").write_text(
@@ -213,14 +222,10 @@ def _lineage_output(path: Path) -> tuple[Path, list[dict]]:
     return path, rows
 
 
-def _persistent_hnsw_source(path: Path) -> Path:
+def _lineage_serving_source(path: Path) -> Path:
     path.mkdir(parents=True)
     source, _ = _lineage_output(path)
     manifest = json.loads((source / "manifest.json").read_text(encoding="utf-8"))
-    manifest["bank"]["mode"] = "full"
-    (source / "manifest.json").write_text(
-        json.dumps(manifest, sort_keys=True), encoding="utf-8"
-    )
     dense_path = source / "dense-pplx-4b-256.sqlite3"
     dense = sqlite3.connect(dense_path)
     bank = sqlite3.connect(source / "bank.sqlite3")
@@ -266,7 +271,7 @@ def _persistent_hnsw_source(path: Path) -> Path:
                 "exact_rescore_dtype": "float32",
             }
         }
-        for ef_search, overretrieve in run.HNSW_EXTENSION_SETTINGS
+        for ef_search, overretrieve in ((1_024, 160),)
     }
     (source / "validation-hnsw-extension-pplx-4b.json").write_text(
         json.dumps(
@@ -274,6 +279,7 @@ def _persistent_hnsw_source(path: Path) -> Path:
                 "schema_version": 1,
                 "split": "validation",
                 "config": "pplx-4b",
+                "bank_mode": "full_lineage",
                 "bank_sha256": manifest["bank"]["sha256"],
                 "bank_rows": manifest["bank"]["rows"],
                 "query_matrix": {
@@ -292,6 +298,73 @@ def _persistent_hnsw_source(path: Path) -> Path:
         encoding="utf-8",
     )
     return source
+
+
+class DenseVectorReuseTests(unittest.TestCase):
+    def test_reuses_exact_subset_by_example_identity_without_provider_calls(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = _lineage_serving_source(root / "source")
+            source_manifest = json.loads(
+                (source / "manifest.json").read_text(encoding="utf-8")
+            )
+            source_bank = sqlite3.connect(source / "bank.sqlite3")
+            try:
+                rows = [
+                    {
+                        "id": example_id,
+                        "text": text,
+                        "label": label,
+                        "source": row_source,
+                        "input_channel": channel,
+                        "group_id": group_id,
+                        "security_tags": subtype.split(","),
+                    }
+                    for example_id, text, label, row_source, channel, group_id, subtype in source_bank.execute(
+                        "SELECT example_id, text, label, source, input_channel, group_id, subtype "
+                        "FROM examples ORDER BY example_id LIMIT -1 OFFSET 1"
+                    )
+                ]
+            finally:
+                source_bank.close()
+            target = root / "target"
+            target.mkdir()
+            bank_path, summary = run._write_bank(
+                target,
+                rows,
+                {row["source"]: "MIT" for row in rows},
+            )
+            manifest = {
+                **source_manifest,
+                "bank": {
+                    **summary,
+                    "mode": "full_lineage",
+                    "path": bank_path.name,
+                    "sha256": run.file_sha256(bank_path),
+                },
+            }
+            (target / "manifest.json").write_text(
+                json.dumps(manifest, sort_keys=True), encoding="utf-8"
+            )
+
+            identity = run.reuse_bank_vectors(
+                target,
+                source_output=source,
+                config_name="pplx-4b",
+            )
+
+            self.assertFalse(identity["provider_calls"])
+            self.assertEqual(identity["rows"], len(rows))
+            dense = sqlite3.connect(target / identity["path"])
+            try:
+                self.assertEqual(
+                    dense.execute("SELECT COUNT(*) FROM vectors").fetchone(),
+                    (len(rows),),
+                )
+            finally:
+                dense.close()
 
 
 class RetrievalBenchmarkTests(unittest.TestCase):
@@ -593,7 +666,7 @@ class RetrievalBenchmarkTests(unittest.TestCase):
 
     def test_dense_loader_rejects_a_stale_embedding_contract(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            output = _persistent_hnsw_source(Path(temporary) / "source")
+            output = _lineage_serving_source(Path(temporary) / "source")
             manifest = json.loads(
                 (output / "manifest.json").read_text(encoding="utf-8")
             )
@@ -976,56 +1049,166 @@ class RetrievalBenchmarkTests(unittest.TestCase):
         self.assertEqual(evidence[0]["candidate_scores"]["1"][0], 1.0)
         self.assertNotIn("text", json.dumps(evidence))
 
-    def test_persistent_hnsw_round_trips_indexes_and_canary_packets(self) -> None:
+    def test_lineage_serving_bundle_is_portable_and_omits_dense_vectors(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            source = _persistent_hnsw_source(root / "source")
-            output = root / "persistent"
+            source = _lineage_serving_source(root / "source")
+            run.build_partitioned_sparse_index(source)
+            output = root / "lineage-hybrid-v1"
 
-            manifest_path = run.build_persistent_hnsw(
+            manifest_path = run.build_lineage_serving_bundle(
                 output,
                 source_output=source,
+                sparse_source=source,
                 faiss_module=_FakeFaiss,
             )
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-            self.assertTrue(manifest["roundtrip"]["ranking_and_packet_parity"])
-            self.assertEqual(len(manifest["partitions"]), 4)
-            self.assertEqual(manifest["canary"]["queries"], 8)
+            self.assertEqual(manifest_path.name, "manifest.json")
+            self.assertEqual(manifest["source"]["data_manifest_sha256"], "a" * 64)
+            self.assertEqual(manifest["source"]["routing_view_sha256"], "b" * 64)
+            self.assertEqual(
+                Counter(entry["role"] for entry in manifest["files"]),
+                Counter({"bank": 1, "sparse": 1, "index": 4, "row_map": 4}),
+            )
+            for entry in manifest["files"]:
+                payload = output / entry["path"]
+                self.assertTrue(payload.is_file())
+                self.assertFalse(payload.is_symlink())
             self.assertFalse((output / "dense-pplx-4b-256.sqlite3").exists())
-            for partition in manifest["partitions"].values():
-                self.assertTrue((output / partition["index_path"]).is_file())
-                rowids = np.load(output / partition["rowids_path"], allow_pickle=False)
-                self.assertEqual(rowids.dtype, np.dtype("uint32"))
+            self.assertTrue(
+                run.RetrievalEngine(
+                    output,
+                    run.file_sha256(manifest_path),
+                    faiss_module=_FakeFaiss,
+                ).available
+            )
 
-    def test_persistent_hnsw_benchmark_loads_bundle_and_reports_c1_c4(self) -> None:
+    def test_lineage_hybrid_parity_is_bound_sanitized_and_write_once(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            source = _persistent_hnsw_source(root / "source")
-            output = root / "persistent"
-            run.build_persistent_hnsw(
-                output,
-                source_output=source,
-                faiss_module=_FakeFaiss,
+            source = root / "source"
+            sparse_source = root / "sparse"
+            source.mkdir()
+            sparse_source.mkdir()
+            (source / "manifest.json").write_text("{}", encoding="utf-8")
+            unit = {"unit_id": "unit-1", "input_channel": "direct_user"}
+            variants = {run.LINEAGE_HNSW_VARIANT: [{"unit_id": unit["unit_id"]}]}
+            extension_path = source / "extension.json"
+            run._atomic_json(
+                extension_path,
+                {
+                    "retrieval_evidence": {
+                        "sha256": run._sha256_text(
+                            json.dumps(variants, sort_keys=True, separators=(",", ":"))
+                        ),
+                        "contains_raw_text_or_query_vectors": False,
+                        "variants": variants,
+                    }
+                },
             )
+            sparse_identity = {"sha256": "d" * 64}
+            sparse_identity_path = sparse_source / "sparse.json"
+            run._atomic_json(sparse_identity_path, sparse_identity)
+            selected_ids = ["a"]
+            sparse_rankings = {"0": [], "1": []}
+            retrieval_path = sparse_source / "validation-retrieval.jsonl"
+            run._atomic_jsonl(
+                retrieval_path,
+                [
+                    {
+                        "unit_id": unit["unit_id"],
+                        "method": run.PARTITIONED_HYBRID_METHOD,
+                        "status": "ok",
+                        "selected_ids": selected_ids,
+                        "branch_candidate_ids": {"sparse": sparse_rankings},
+                    }
+                ],
+            )
+            serving_manifest = root / "serving-manifest.json"
+            run._atomic_json(
+                serving_manifest,
+                {
+                    "schema_version": 1,
+                    "variant": run.LINEAGE_SERVING_VARIANT,
+                    "bank": {"sha256": "b" * 64},
+                    "sparse": {"sha256": sparse_identity["sha256"]},
+                    "source": {
+                        "manifest_sha256": run.file_sha256(source / "manifest.json"),
+                        "extension_sha256": run.file_sha256(extension_path),
+                        "sparse_identity_sha256": run.file_sha256(sparse_identity_path),
+                    },
+                },
+            )
+            evidence_path = root / "parity.json"
 
-            result_path = run.benchmark_persistent_hnsw(
-                output,
-                faiss_module=_FakeFaiss,
-                repeats=2,
-            )
-            result = json.loads(result_path.read_text(encoding="utf-8"))
+            with (
+                mock.patch.object(
+                    run,
+                    "_lineage_serving_source_contract",
+                    return_value=(
+                        {"bank": {"sha256": "b" * 64, "path": "bank.sqlite3"}},
+                        {},
+                        extension_path,
+                        sparse_identity,
+                        sparse_identity_path,
+                    ),
+                ),
+                mock.patch.object(
+                    run, "_load_local_evidence", return_value=([], [unit])
+                ),
+                mock.patch.object(
+                    run,
+                    "_reload_unit_texts",
+                    return_value={unit["unit_id"]: ("review", "private query")},
+                ),
+                mock.patch.object(
+                    run,
+                    "_open_partitioned_sparse_index",
+                    return_value=(mock.Mock(), {}),
+                ),
+                mock.patch.object(run.sqlite3, "connect", return_value=mock.Mock()),
+                mock.patch.object(
+                    run,
+                    "_partitioned_replay_records",
+                    return_value=(
+                        {},
+                        {
+                            "selected_ids": selected_ids,
+                            "branch_candidate_ids": {"sparse": sparse_rankings},
+                        },
+                    ),
+                ),
+            ):
+                evidence = run.write_lineage_hybrid_parity(
+                    source,
+                    sparse_source=sparse_source,
+                    serving_manifest=serving_manifest,
+                    evidence_output=evidence_path,
+                )
+                with self.assertRaises(FileExistsError):
+                    run.write_lineage_hybrid_parity(
+                        source,
+                        sparse_source=sparse_source,
+                        serving_manifest=serving_manifest,
+                        evidence_output=evidence_path,
+                    )
 
-            self.assertEqual(result["status"], "passed")
-            self.assertEqual(result["parity"]["ranking_exact_matches"], 8)
-            self.assertEqual(result["parity"]["packet_exact_matches"], 8)
-            self.assertEqual(set(result["warm"]), {"concurrency_1", "concurrency_4"})
-            self.assertFalse(result["execution"]["source_matrices_loaded"])
-            self.assertFalse(result["execution"]["provider_calls"])
-            self.assertGreaterEqual(
-                result["rss_bytes"]["after_serialized_index_load"],
-                result["rss_bytes"]["before_bundle_verification"],
+            self.assertEqual(evidence["status"], "passed")
+            self.assertFalse(evidence["provider_calls"])
+            self.assertEqual(evidence["exact_packet_matches"], 1)
+            self.assertEqual(evidence["sparse_branch_differences"], 0)
+            self.assertEqual(
+                evidence["source"]["serving_manifest_sha256"],
+                run.file_sha256(serving_manifest),
             )
+            self.assertNotIn("private query", evidence_path.read_text(encoding="utf-8"))
+
+    def test_lineage_hnsw_extension_has_one_fixed_recipe(self) -> None:
+        self.assertEqual(run._hnsw_extension_settings("full_lineage"), ((1_024, 160),))
+        self.assertEqual(
+            run._hnsw_extension_settings("full"), run.HNSW_EXTENSION_SETTINGS
+        )
 
     def test_hnsw_extension_worker_cannot_target_a_historical_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

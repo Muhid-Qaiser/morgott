@@ -13,7 +13,7 @@ from morgott.models.downstream import (
 
 class DownstreamRouteTests(unittest.TestCase):
     def test_promoted_balanced_profile(self):
-        self.assertEqual(PIPELINE_PROFILE, "balanced-20260816")
+        self.assertEqual(PIPELINE_PROFILE, "balanced-retrieval-20260819")
         self.assertEqual(LLM_FLAG_PROBABILITY, 0.5)
         self.assertEqual(MMBERT_HIGH, 0.9999)
         self.assertEqual(
