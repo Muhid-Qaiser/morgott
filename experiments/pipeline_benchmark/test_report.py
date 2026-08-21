@@ -3,11 +3,28 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from experiments.pipeline_benchmark import report
 
+_PANEL_MANIFEST = (
+    Path(__file__).resolve().parents[2]
+    / "artifacts"
+    / "loginject_long_span_panel"
+    / "manifest.json"
+)
+
 
 class ReportTest(unittest.TestCase):
+    # Anchored at the artifact, not the constant, so a typo'd constant fails
+    # here instead of silently dropping the loginject context from reports.
+    @unittest.skipUnless(
+        _PANEL_MANIFEST.is_file(),
+        "requires the retained loginject panel artifact",
+    )
+    def test_loginject_panel_manifest_constant_is_wired(self):
+        self.assertEqual(report.LOGINJECT_PANEL_MANIFEST, _PANEL_MANIFEST)
+        self.assertIsInstance(report._read_json(_PANEL_MANIFEST), dict)
     def test_failed_source_slice_gate_removes_hard_provider_winner(self):
         summary = {
             "winners": {
@@ -271,7 +288,28 @@ class ReportTest(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            rendered = report.render_report(report.build_tables(root))
+            # The panel manifest is read from a repo-level retained artifact,
+            # so point it at a fixture to keep this test hermetic.
+            panel_manifest = root / "loginject_panel_manifest.json"
+            panel_manifest.write_text(
+                json.dumps(
+                    {
+                        "population": {"by_vector": {"complete_entry": 1}},
+                        "selection": {
+                            "fit_reference_rows": {
+                                "canonical_train": 1,
+                                "matched_pairs": 1,
+                                "promptshield_train": 1,
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with mock.patch.object(
+                report, "LOGINJECT_PANEL_MANIFEST", panel_manifest
+            ):
+                rendered = report.render_report(report.build_tables(root))
 
             self.assertIn("source-held-out out-of-distribution", rendered)
             self.assertIn("cannot tune, select, or revise", rendered)

@@ -145,7 +145,10 @@ class LocalBenchmarkTests(unittest.TestCase):
                 local.load_frozen_texts(panel, root=root)
 
     @unittest.skipUnless(
-        importlib.util.find_spec("transformers") and TOKENIZER_FILE.is_file(),
+        importlib.util.find_spec("transformers")
+        and TOKENIZER_FILE.is_file()
+        # An un-smudged LFS checkout leaves a pointer file here.
+        and TOKENIZER_FILE.read_bytes()[:1] == b"{",
         "registered tokenizer is unavailable",
     )
     def test_batched_token_counts_match_per_text_encode(self):

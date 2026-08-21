@@ -115,13 +115,24 @@ class CascadeMutationAsrTests(unittest.TestCase):
         self.assertIsNone(run.exact_asr([], 4))
 
     def test_local_route_preserves_untrusted_full_context_review(self) -> None:
-        self.assertEqual(run.local_document_route("direct_user", (0.1, 0.19)), "pass")
+        # Score fixtures track the registered thresholds so promotions do not
+        # silently change which cascade branch each assertion exercises.
+        direct_low = run.MMBERT_LOW_BY_CHANNEL["direct_user"]
+        untrusted_low = run.MMBERT_LOW_BY_CHANNEL["untrusted_content"]
         self.assertEqual(
-            run.local_document_route("untrusted_content", (0.05, 0.09)),
+            run.local_document_route(
+                "direct_user", (direct_low / 4, direct_low / 2)
+            ),
+            "pass",
+        )
+        self.assertEqual(
+            run.local_document_route(
+                "untrusted_content", (untrusted_low / 4, untrusted_low / 2)
+            ),
             "review",
         )
         self.assertEqual(
-            run.local_document_route("untrusted_content", (0.09,)),
+            run.local_document_route("untrusted_content", (untrusted_low / 2,)),
             "pass",
         )
         self.assertEqual(run.local_document_route("direct_user", (1.0,)), "restrict")

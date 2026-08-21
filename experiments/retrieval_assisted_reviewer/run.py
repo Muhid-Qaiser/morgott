@@ -799,7 +799,9 @@ def _build_partitioned_sparse_index_profile(
     partitions = {}
     build_started = time.perf_counter()
     try:
-        connection = sqlite3.connect(temporary)
+        # Open with URI processing enabled so the read-only immutable ATTACH
+        # below works on sqlite builds compiled without SQLITE_USE_URI.
+        connection = sqlite3.connect(temporary.resolve().as_uri(), uri=True)
         try:
             connection.execute("PRAGMA journal_mode=OFF")
             connection.execute("PRAGMA synchronous=OFF")

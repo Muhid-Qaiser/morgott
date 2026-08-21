@@ -6,6 +6,11 @@ from experiments.pipeline_benchmark import mutations
 
 
 class MutationReplayTests(unittest.TestCase):
+    @unittest.skipUnless(
+        (mutations.retained.EVALUATION / "evaluation.json").is_file()
+        and (mutations.retained.ROOT / "data" / "manifest.json").is_file(),
+        "requires the retained frozen mutation artifacts and the canonical data root",
+    )
     def test_frozen_population_reconstructs_without_persisted_text(self) -> None:
         panel, texts, population = mutations.build_population()
 
