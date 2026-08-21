@@ -3,15 +3,16 @@ import hashlib
 import io
 import json
 import math
+import os
 import tempfile
 import threading
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import asdict
 from pathlib import Path
 from unittest import mock
 
-from morgott.cli import main
+from morgott.cli import _require_path, main
 from morgott.models.cascade import (
     FULL_CONTEXT_REVIEW_INDEX,
     CascadeScanner,
@@ -824,29 +825,45 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(reviewer.calls, REMOTE_CONCURRENCY)
                 self.assertEqual(len(result.reviewed_windows), REMOTE_CONCURRENCY)
 
-    async def test_chunk_cancellation_closes_the_temporary_file(self):
+    async def test_chunk_cancellation_propagates_before_any_scoring(self):
         async def chunks():
             yield "partial"
             raise asyncio.CancelledError
 
-        temporary = io.StringIO()
+        scorer = _CapturingScorer([0.1])
         scanner = CascadeScanner(
-            scorer=_Scorer([0.1]),
+            scorer=scorer,
             reviewer=None,
         )
-        with (
-            mock.patch(
-                "morgott.models.cascade.tempfile.TemporaryFile",
-                return_value=temporary,
-            ),
-            self.assertRaises(asyncio.CancelledError),
-        ):
+        with self.assertRaises(asyncio.CancelledError):
             await scanner.assess_chunks(
                 chunks(),
                 input_channel="untrusted_content",
             )
 
-        self.assertTrue(temporary.closed)
+        self.assertFalse(hasattr(scorer, "text"))
+
+    async def test_chunked_digest_matches_a_direct_hash_of_the_joined_text(self):
+        pieces = ("first\r", "\nsecond ", "あ third")
+
+        async def chunks():
+            for piece in pieces:
+                yield piece
+
+        scorer = _CapturingScorer([0.1])
+        scanner = CascadeScanner(scorer=scorer, reviewer=None)
+
+        result = await scanner.assess_chunks(
+            chunks(),
+            input_channel="untrusted_content",
+        )
+
+        joined = "".join(pieces)
+        self.assertEqual(scorer.text, joined)
+        self.assertEqual(
+            result.artifact_sha256,
+            hashlib.sha256(joined.encode()).hexdigest(),
+        )
 
     async def test_cancelled_local_inference_remains_serialized_until_it_stops(self):
         scorer = _BlockingScorer()
@@ -912,6 +929,221 @@ class CascadeScannerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["decision"], "allow")
         self.assertEqual(result["advisory_route"], "pass")
         self.assertTrue(reviewer.closed)
+
+    def test_cli_jsonl_batch_builds_one_scanner_and_emits_a_line_per_input(self):
+        reviewer = _ClosableReviewer()
+        scanner = CascadeScanner(
+            scorer=_Scorer([0.1]),
+            reviewer=reviewer,
+        )
+        records = (
+            {"text": "first text", "input_channel": "direct_user"},
+            {"text": "second text", "input_channel": "untrusted_content"},
+            {"text": "third text", "input_channel": "direct_user"},
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "batch.jsonl"
+            path.write_text(
+                "".join(json.dumps(record) + "\n" for record in records),
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+            with (
+                mock.patch.object(
+                    CascadeScanner,
+                    "from_artifacts",
+                    return_value=scanner,
+                ) as factory,
+                redirect_stdout(output),
+            ):
+                main(["cascade", "--jsonl", str(path)])
+
+        self.assertEqual(factory.call_count, 1)
+        results = [json.loads(line) for line in output.getvalue().splitlines()]
+        self.assertEqual(len(results), 3)
+        self.assertEqual(
+            [result["artifact_sha256"] for result in results],
+            [
+                hashlib.sha256(b"first text").hexdigest(),
+                hashlib.sha256(b"second text").hexdigest(),
+                hashlib.sha256(b"third text").hexdigest(),
+            ],
+        )
+        self.assertEqual(
+            [result["input_channel"] for result in results],
+            ["direct_user", "untrusted_content", "direct_user"],
+        )
+        self.assertTrue(all(result["decision"] == "allow" for result in results))
+        self.assertTrue(reviewer.closed)
+
+    def test_cli_missing_input_path_fails_before_the_scanner_is_built(self):
+        for arguments in (
+            ["cascade", "/nonexistent/input.txt", "--input-channel", "direct_user"],
+            ["cascade", "--jsonl", "/nonexistent/batch.jsonl"],
+        ):
+            with self.subTest(arguments=arguments):
+                with (
+                    mock.patch.object(
+                        CascadeScanner,
+                        "from_artifacts",
+                        side_effect=AssertionError("scanner must not be built"),
+                    ) as factory,
+                    self.assertRaises(SystemExit) as caught,
+                ):
+                    main(arguments)
+                self.assertIn("input not found", str(caught.exception))
+                self.assertNotEqual(caught.exception.code, 0)
+                self.assertEqual(factory.call_count, 0)
+
+    def test_cli_unreadable_input_path_fails_before_the_scanner_is_built(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "batch.jsonl"
+            path.write_text("", encoding="utf-8")
+            path.chmod(0)
+            if os.access(path, os.R_OK):
+                self.skipTest("privileged user can read mode-000 files")
+            with (
+                mock.patch.object(
+                    CascadeScanner,
+                    "from_artifacts",
+                    side_effect=AssertionError("scanner must not be built"),
+                ) as factory,
+                self.assertRaises(SystemExit) as caught,
+            ):
+                main(["cascade", "--jsonl", str(path)])
+            self.assertIn("not readable", str(caught.exception))
+            self.assertEqual(factory.call_count, 0)
+
+    def test_cli_jsonl_batch_lets_scanner_internal_failures_propagate(self):
+        scanner = CascadeScanner(scorer=_Scorer([0.1]), reviewer=None)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "batch.jsonl"
+            path.write_text(
+                json.dumps({"text": "good", "input_channel": "direct_user"}) + "\n",
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(
+                    CascadeScanner,
+                    "from_artifacts",
+                    return_value=scanner,
+                ),
+                mock.patch.object(
+                    scanner,
+                    "assess_text",
+                    side_effect=ValueError(
+                        "mmBERT returned the wrong number of scores"
+                    ),
+                ),
+                self.assertRaises(ValueError) as caught,
+            ):
+                main(["cascade", "--jsonl", str(path)])
+        # A runtime defect must not be relabeled as an input-data problem.
+        self.assertNotIn("bad JSONL record", str(caught.exception))
+
+    def test_cli_jsonl_batch_reports_the_line_of_a_semantically_bad_record(self):
+        bad_records = (
+            {"text": "typo channel", "input_channel": "user"},
+            {"text": "", "input_channel": "direct_user"},
+            {"text": 5, "input_channel": "direct_user"},
+        )
+        for bad in bad_records:
+            with self.subTest(bad=bad):
+                scanner = CascadeScanner(scorer=_Scorer([0.1]), reviewer=None)
+                lines = [
+                    json.dumps({"text": "good", "input_channel": "direct_user"}),
+                    "",
+                    json.dumps(bad),
+                ]
+                with tempfile.TemporaryDirectory() as temporary:
+                    path = Path(temporary) / "batch.jsonl"
+                    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                    output = io.StringIO()
+                    with (
+                        mock.patch.object(
+                            CascadeScanner,
+                            "from_artifacts",
+                            return_value=scanner,
+                        ),
+                        redirect_stdout(output),
+                        self.assertRaises(SystemExit) as caught,
+                    ):
+                        main(["cascade", "--jsonl", str(path)])
+                # The blank line is skipped but still counted, so the bad
+                # record is reported at its physical line number.
+                self.assertIn("bad JSONL record on line 3", str(caught.exception))
+                self.assertEqual(len(output.getvalue().splitlines()), 1)
+
+    def test_cli_cascade_usage_errors_keep_argparse_exit_code_2(self):
+        for arguments in (
+            ["cascade"],
+            ["cascade", "input.txt"],
+            ["cascade", "in.txt", "--input-channel", "direct_user", "--jsonl", "-"],
+        ):
+            with self.subTest(arguments=arguments):
+                with (
+                    mock.patch.object(
+                        CascadeScanner,
+                        "from_artifacts",
+                        side_effect=AssertionError("scanner must not be built"),
+                    ),
+                    redirect_stderr(io.StringIO()),
+                    self.assertRaises(SystemExit) as caught,
+                ):
+                    main(arguments)
+                self.assertEqual(caught.exception.code, 2)
+
+    def test_cli_jsonl_batch_exits_cleanly_when_the_consumer_closes_the_pipe(self):
+        reviewer = _ClosableReviewer()
+        scanner = CascadeScanner(scorer=_Scorer([0.1]), reviewer=reviewer)
+        records = [
+            {"text": f"text {index}", "input_channel": "direct_user"}
+            for index in range(3)
+        ]
+        sink = os.open(os.devnull, os.O_WRONLY)
+
+        class _ClosedPipe(io.StringIO):
+            def write(self, value):
+                if self.getvalue().count("\n") >= 1:
+                    raise BrokenPipeError
+                return super().write(value)
+
+            def fileno(self):
+                return sink
+
+        pipe = _ClosedPipe()
+        try:
+            with tempfile.TemporaryDirectory() as temporary:
+                path = Path(temporary) / "batch.jsonl"
+                path.write_text(
+                    "".join(json.dumps(record) + "\n" for record in records),
+                    encoding="utf-8",
+                )
+                with (
+                    mock.patch.object(
+                        CascadeScanner,
+                        "from_artifacts",
+                        return_value=scanner,
+                    ),
+                    redirect_stdout(pipe),
+                    self.assertRaises(SystemExit) as caught,
+                ):
+                    main(["cascade", "--jsonl", str(path)])
+        finally:
+            os.close(sink)
+
+        self.assertEqual(caught.exception.code, 1)
+        self.assertEqual(len(pipe.getvalue().splitlines()), 1)
+        self.assertTrue(reviewer.closed)
+
+    def test_require_path_accepts_stdin_and_fifos_and_rejects_directories(self):
+        _require_path("-")
+        with tempfile.TemporaryDirectory() as temporary:
+            fifo = str(Path(temporary) / "stream")
+            os.mkfifo(fifo)
+            _require_path(fifo)
+            with self.assertRaises(SystemExit):
+                _require_path(temporary)
 
     def test_production_constructor_requires_registered_retrieval(self):
         scorer = _Scorer([0.1])

@@ -6,7 +6,6 @@ import asyncio
 import hashlib
 import json
 import math
-import tempfile
 import time
 from collections.abc import AsyncIterable
 from dataclasses import dataclass, replace
@@ -615,18 +614,19 @@ class CascadeScanner:
     ) -> CascadeAssessment:
         self._validate_channel(input_channel)
         digest = hashlib.sha256()
-        with tempfile.TemporaryFile(
-            mode="w+",
-            encoding="utf-8",
-            newline="",
-        ) as handle:
-            async for chunk in chunks:
-                if not isinstance(chunk, str):
-                    raise ValueError("input chunks must be strings")
-                handle.write(chunk)
-                digest.update(chunk.encode())
-            handle.seek(0)
-            text = handle.read()
+        # ponytail: the join transiently holds parts plus the joined text
+        # (2x the input); spool to disk or cap accumulated size if multi-GB
+        # streams show up.
+        parts = []
+        async for chunk in chunks:
+            if not isinstance(chunk, str):
+                raise ValueError("input chunks must be strings")
+            parts.append(chunk)
+            digest.update(chunk.encode())
+        text = "".join(parts)
+        # Drop the chunk copies so scoring and any remote review hold one
+        # copy of the input, not two.
+        del parts
         if not text:
             raise ValueError("chunked input must contain text")
         return await self._assess(

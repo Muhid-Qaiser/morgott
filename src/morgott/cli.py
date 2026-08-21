@@ -3,12 +3,13 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from dataclasses import asdict
 from pathlib import Path
 
 from .corpus import build_corpus, rebuild_routing
-from .models.cascade import CascadeScanner
+from .models.cascade import ALLOWED_CHANNELS, CascadeScanner
 from .models.detector import run_benchmark, scan
 from .models.routing_baseline import (
     DEFAULT_EPOCHS,
@@ -75,18 +76,31 @@ def _parser() -> argparse.ArgumentParser:
         "cascade",
         help="run the maintained advisory mmBERT and DeepSeek cascade",
     )
-    cascade.add_argument("input", help="UTF-8 text file, or - for stdin")
+    cascade.add_argument(
+        "input",
+        nargs="?",
+        help="UTF-8 text file, or - for stdin",
+    )
     cascade.add_argument(
         "--input-channel",
         choices=("direct_user", "untrusted_content"),
-        required=True,
-        help="trusted runtime provenance for this input",
+        help="trusted runtime provenance for this input (required without --jsonl)",
+    )
+    cascade.add_argument(
+        "--jsonl",
+        help=(
+            "batch mode: JSONL file of {text, input_channel} records, or - for"
+            " stdin; emits one result JSON per line and builds the scanner once"
+        ),
     )
     cascade.add_argument(
         "--manifest",
         type=Path,
         default=Path("model-artifacts.json"),
     )
+    # usage_error keeps argparse semantics (usage text, exit code 2) for the
+    # post-parse required/mutual-exclusion checks in main.
+    cascade.set_defaults(usage_error=cascade.error)
     return parser
 
 
@@ -101,7 +115,23 @@ async def _input_chunks(value: str):
             handle.close()
 
 
+def _require_path(value: str) -> None:
+    # exists and not isdir, never is_file: FIFOs and /dev/stdin must keep
+    # working, and isdir stays False for both.
+    if value == "-":
+        return
+    if not os.path.exists(value):
+        raise SystemExit(f"morgott cascade: input not found: {value}")
+    if os.path.isdir(value):
+        raise SystemExit(f"morgott cascade: input is a directory: {value}")
+    # os.access never opens the file, so FIFOs and /dev/stdin keep working
+    # and the eventual open still backstops any access() misjudgment.
+    if not os.access(value, os.R_OK):
+        raise SystemExit(f"morgott cascade: input is not readable: {value}")
+
+
 async def _run_cascade(args) -> dict:
+    _require_path(args.input)
     scanner = CascadeScanner.from_artifacts(
         manifest_path=args.manifest,
     )
@@ -111,6 +141,54 @@ async def _run_cascade(args) -> dict:
             input_channel=args.input_channel,
         )
         return asdict(assessment)
+    finally:
+        await scanner.aclose()
+
+
+async def _run_cascade_jsonl(args) -> None:
+    # ponytail: records are scored serially to keep input order, pipeline
+    # across records if remote review latency ever dominates batch runs.
+    _require_path(args.jsonl)
+    scanner = CascadeScanner.from_artifacts(
+        manifest_path=args.manifest,
+    )
+    try:
+        owned = args.jsonl != "-"
+        handle = Path(args.jsonl).open(encoding="utf-8") if owned else sys.stdin
+        try:
+            # ponytail: the first bad record aborts the whole batch (fail
+            # closed) after earlier results were already emitted; add a
+            # skip-with-error-record mode if large mixed batches show up.
+            for number, line in enumerate(handle, start=1):
+                if not line.strip():
+                    continue
+                try:
+                    record = json.loads(line)
+                    text = record["text"]
+                    input_channel = record["input_channel"]
+                    if not isinstance(text, str) or not text:
+                        raise ValueError("text must be a non-empty string")
+                    if input_channel not in ALLOWED_CHANNELS:
+                        raise ValueError(
+                            "input_channel must be direct_user or untrusted_content"
+                        )
+                    # Lone surrogates from json escapes fail here, inside the
+                    # line-numbered handler, not inside the scanner.
+                    text.encode()
+                except (KeyError, TypeError, ValueError) as error:
+                    raise SystemExit(
+                        f"morgott cascade: bad JSONL record on line {number}: {error}"
+                    ) from error
+                # Scanner-internal failures propagate as tracebacks, matching
+                # the single-input path, instead of blaming the record.
+                assessment = await scanner.assess_text(
+                    text,
+                    input_channel=input_channel,
+                )
+                print(json.dumps(asdict(assessment), sort_keys=True), flush=True)
+        finally:
+            if owned:
+                handle.close()
     finally:
         await scanner.aclose()
 
@@ -160,6 +238,22 @@ def main(argv: list[str] | None = None) -> None:
             "report": str(args.reports_dir / "policy_ablation.md"),
         }
     elif args.command == "cascade":
+        if args.jsonl is not None:
+            if args.input is not None or args.input_channel is not None:
+                args.usage_error(
+                    "--jsonl replaces the input argument and --input-channel"
+                )
+            try:
+                asyncio.run(_run_cascade_jsonl(args))
+            except BrokenPipeError:
+                # The consumer closed the pipe (e.g. | head). Point stdout at
+                # devnull so interpreter shutdown does not raise again, then
+                # exit nonzero per the python docs SIGPIPE pattern.
+                os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+                raise SystemExit(1) from None
+            return
+        if args.input is None or args.input_channel is None:
+            args.usage_error("input and --input-channel are required without --jsonl")
         summary = asyncio.run(_run_cascade(args))
     elif args.command == "scan":
         summary = scan(args.text, args.model, args.channel)

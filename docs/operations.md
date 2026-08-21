@@ -26,7 +26,7 @@ DeepSeek receives the trusted input channel and restricts at `p_subversion >= 0.
 The request pins Cloudflare, disables fallback, requires strict structured output and logprobs, and disables reasoning.
 The maintained parser validates the response schema and decision-token logprobs, but it does not independently attest the returned provider build.
 The profile, thresholds, request identities, and exact consumed-development results are bound by `model-artifacts.json` to the serving promotion record.
-Production initialization suppresses LiteLLM's unsolicited error banners so `morgott cascade` keeps stdout as one JSON document even when a retry is needed.
+Production initialization suppresses LiteLLM's unsolicited error banners so single-input `morgott cascade` keeps stdout as one JSON document, and batch mode keeps it as clean JSONL, even when a retry is needed.
 Every result remains advisory: `decision` is always `allow`, and `advisory_route` never grants authority.
 
 Install the cascade on Python 3.12 or 3.13:
@@ -85,6 +85,15 @@ Run an assessment after setting `OPENROUTER_API_KEY`:
 uv run --extra cascade morgott cascade input.txt \
   --input-channel direct_user
 ```
+
+Batch mode builds the scanner once and amortizes its startup cost over many inputs:
+
+```bash
+uv run --extra cascade morgott cascade --jsonl batch.jsonl
+```
+
+Each JSONL record is `{"text": ..., "input_channel": ...}`, `-` reads records from stdin, and stdout gets one result JSON per line.
+The first malformed record aborts the batch with its line number and a nonzero exit.
 
 For multi-window untrusted content, eligible text includes the complete normalized artifact before any middle-zone fallback.
 Files and stdin are read in bounded chunks, normalized only after the complete artifact arrives, and scanned without a configured maximum input length.
