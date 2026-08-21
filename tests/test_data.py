@@ -240,6 +240,15 @@ class DataTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 read_verified_jsonl(source, digest)
 
+    def test_text_hash_repeated_calls_return_the_same_digest(self):
+        text = "  ＩＧＮＯＲＥ\n previous  "
+        expected = hashlib.sha256(normalize_text(text).encode()).hexdigest()
+        self.assertEqual(text_hash(text), expected)
+        self.assertEqual(text_hash(text), expected)
+        self.assertEqual(
+            text_hash("".join(("  ＩＧＮＯＲＥ\n", " previous  "))), expected
+        )
+
     def test_normalization_and_deduplication(self):
         self.assertEqual(
             normalize_text("  ＩＧＮＯＲＥ\n previous  "), "ignore previous"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import functools
 import hashlib
 import http.client
 import io
@@ -270,6 +271,9 @@ def normalize_text(text: str) -> str:
     return " ".join(unicodedata.normalize("NFKC", text).casefold().split())
 
 
+# ponytail: 16-entry cache, loaders recompute the hash 2-3x on the same
+# string back to back; grow maxsize only if a profiled reuse pattern needs it.
+@functools.lru_cache(maxsize=16)
 def text_hash(text: str) -> str:
     return hashlib.sha256(normalize_text(text).encode()).hexdigest()
 

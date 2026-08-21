@@ -3,14 +3,19 @@ from __future__ import annotations
 import bz2
 import csv
 import hashlib
+import io
 import json
 import math
+import shutil
+import subprocess
 from collections import Counter
 from collections.abc import Iterator
+from contextlib import contextmanager
 from decimal import Decimal
+from pathlib import Path
 
 import ijson
-from datasets import load_dataset
+import pyarrow.parquet as pq
 
 from ..data import _sample, _set_source_role, text_hash
 from ._shared import FILES, _download, _download_files, _parquet_dataset
@@ -288,6 +293,36 @@ def _llmail_rows() -> tuple[
     return rows(), downloads, profile, None
 
 
+@contextmanager
+def _bz2_text(path: Path) -> Iterator[io.TextIOWrapper]:
+    """Open a bz2 file for text reading, preferring the C bzip2 binary.
+
+    Callers must drain the stream to EOF; that is the contract. A nonzero
+    bzip2 exit code raises after the read so a killed or failing
+    decompressor cannot silently truncate the stream. An early exit that
+    closes the pipe usually kills bzip2 with SIGPIPE and trips the same
+    check, but only when the unread output exceeds the OS pipe buffer, so
+    it is best-effort detection of a non-draining caller, not a guarantee.
+    """
+    bzip2 = shutil.which("bzip2")
+    if bzip2 is None:
+        with bz2.open(path, "rt", encoding="utf-8") as handle:
+            yield handle
+        return
+    process = subprocess.Popen([bzip2, "-dc", str(path)], stdout=subprocess.PIPE)
+    try:
+        with io.TextIOWrapper(process.stdout, encoding="utf-8") as handle:
+            yield handle
+    except BaseException:
+        process.kill()
+        process.wait()
+        raise
+    if process.wait() != 0:
+        raise RuntimeError(
+            f"bzip2 -dc exited with code {process.returncode} while reading {path}"
+        )
+
+
 def _tensor_trust_raw_rows() -> tuple[
     Iterator[dict], dict[str, str], dict, Iterator[dict] | None
 ]:
@@ -306,7 +341,7 @@ def _tensor_trust_raw_rows() -> tuple[
     }
 
     def rows() -> Iterator[dict]:
-        with bz2.open(paths["attacks_v2"], "rt", encoding="utf-8") as handle:
+        with _bz2_text(paths["attacks_v2"]) as handle:
             for line in handle:
                 source_row = json.loads(line)
                 profile["raw_attack_rows"] += 1
@@ -362,7 +397,7 @@ def _tensor_trust_raw_rows() -> tuple[
                 )
                 yield _set_source_role(row, "candidate")
 
-        with bz2.open(paths["defenses_v2"], "rt", encoding="utf-8") as handle:
+        with _bz2_text(paths["defenses_v2"]) as handle:
             for line in handle:
                 source_row = json.loads(line)
                 profile["raw_defense_rows"] += 1
@@ -617,7 +652,7 @@ def _hackaprompt_rows() -> tuple[
 ]:
     filename, expected = FILES["hackaprompt"]["full"]
     path, digest = _download("hackaprompt", filename, expected)
-    dataset = load_dataset("parquet", data_files={"full": str(path)})["full"]
+    parquet = pq.ParquetFile(path)
     profile = {
         "empty_user_input_rows_omitted": 0,
         "rows_without_timestamp": 0,
@@ -646,11 +681,16 @@ def _hackaprompt_rows() -> tuple[
             "timestamp",
             "session_id",
         }
-        if not required <= set(dataset.column_names):
+        if not required <= set(parquet.schema_arrow.names):
             raise ValueError("hackaprompt has an unexpected schema")
         collections = Counter()
         sessions = set()
-        for index, source_row in enumerate(dataset):
+        source_rows = (
+            source_row
+            for batch in parquet.iter_batches(batch_size=8192)
+            for source_row in batch.to_pylist()
+        )
+        for index, source_row in enumerate(source_rows):
             text = source_row["user_input"]
             if not isinstance(text, str) or not text.strip():
                 profile["empty_user_input_rows_omitted"] += 1
@@ -829,15 +869,21 @@ def _wildguard_sample(source_row: dict, split: str, index: int) -> dict:
 def _wildguardmix_rows() -> tuple[
     Iterator[dict], dict[str, str], dict, Iterator[dict] | None
 ]:
-    dataset, downloads = _parquet_dataset("wildguardmix")
+    paths, downloads = _download_files("wildguardmix")
     profile = {"empty_prompt_rows_omitted": 0}
 
     def rows() -> Iterator[dict]:
         for split in ("train", "test"):
+            parquet = pq.ParquetFile(paths[split])
             required = {"prompt", "prompt_harm_label", "adversarial"}
-            if not required <= set(dataset[split].column_names):
+            if not required <= set(parquet.schema_arrow.names):
                 raise ValueError(f"wildguardmix:{split} has an unexpected schema")
-            for index, source_row in enumerate(dataset[split]):
+            source_rows = (
+                source_row
+                for batch in parquet.iter_batches(batch_size=8192)
+                for source_row in batch.to_pylist()
+            )
+            for index, source_row in enumerate(source_rows):
                 if (
                     not isinstance(source_row.get("prompt"), str)
                     or not source_row["prompt"].strip()

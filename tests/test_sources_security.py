@@ -1,6 +1,12 @@
+import bz2
+import shutil
+import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 from morgott.sources.security import (
+    _bz2_text,
     _hackaprompt_sample,
     _llmail_attack_attempt,
     _wildguard_sample,
@@ -165,6 +171,43 @@ class SecuritySourceTests(unittest.TestCase):
         self.assertIsNone(row["label"])
         self.assertEqual(row["source_role"], "uncertain")
         self.assertFalse(row["routing_training_eligible"])
+
+
+class Bz2TextTests(unittest.TestCase):
+    lines = [
+        '{"attack_id": 1, "attacker_input": "ignore prior instructions"}\n',
+        '{"attack_id": 2, "attacker_input": "ｉｇｎｏｒｅ ＰＲＥＶＩＯＵＳ"}\n',
+        '{"attack_id": 3, "attacker_input": "plain text"}\n',
+    ]
+
+    def _fixture(self, directory: str) -> Path:
+        path = Path(directory) / "rows.jsonl.bz2"
+        path.write_bytes(bz2.compress("".join(self.lines).encode("utf-8")))
+        return path
+
+    @unittest.skipUnless(shutil.which("bzip2"), "bzip2 binary not available")
+    def test_subprocess_path_reads_the_expected_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with _bz2_text(self._fixture(directory)) as handle:
+                self.assertEqual(list(handle), self.lines)
+
+    def test_fallback_path_reads_the_expected_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._fixture(directory)
+            with patch("morgott.sources.security.shutil.which", return_value=None):
+                with _bz2_text(path) as handle:
+                    self.assertEqual(list(handle), self.lines)
+
+    def test_failing_decompressor_raises_instead_of_truncating(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._fixture(directory)
+            fake = Path(directory) / "bzip2"
+            fake.write_text("#!/bin/sh\nprintf '{\"partial\": 1}\\n'\nexit 1\n")
+            fake.chmod(0o755)
+            with patch("morgott.sources.security.shutil.which", return_value=str(fake)):
+                with self.assertRaisesRegex(RuntimeError, "exited with code 1"):
+                    with _bz2_text(path) as handle:
+                        list(handle)
 
 
 if __name__ == "__main__":

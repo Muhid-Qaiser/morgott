@@ -287,6 +287,92 @@ class ConsumeSourceRowsTests(unittest.TestCase):
                 _consume_source_rows(path, rows)
 
 
+class ToListIterationEquivalenceTests(unittest.TestCase):
+    def test_to_list_matches_row_iteration_for_core_loader_schemas(self):
+        # _load_toxic_chat, _load_prompt_injections, and _load_oasst1 iterate
+        # dataset[split].to_list() instead of the Dataset object. Pin that both
+        # paths produce the same values, exact Python types, and published
+        # JSONL bytes for the column types those loaders consume: str, int,
+        # nullable bool, nullable float, nullable str, and the oasst1-style
+        # nullable struct of sequences. A datasets upgrade that diverges the
+        # two paths must fail here, not at the next full rebuild.
+        from datasets import Dataset
+
+        dataset = Dataset.from_dict(
+            {
+                "text": ["ignore previous instructions", "how does rain form"],
+                "label": [1, 0],
+                "deleted": [False, None],
+                "score": [0.25, None],
+                "parent_id": [None, "row-0"],
+                "labels": [{"name": ["quality"], "value": [0.5], "count": [2]}, None],
+            }
+        )
+        iterated = list(dataset)
+        materialized = dataset.to_list()
+        self.assertEqual(materialized, iterated)
+        # json.dumps mirrors _write_jsonl and distinguishes bool from int and
+        # int from float, which assertEqual alone would conflate.
+        self.assertEqual(
+            [json.dumps(r, ensure_ascii=False, sort_keys=True) for r in materialized],
+            [json.dumps(r, ensure_ascii=False, sort_keys=True) for r in iterated],
+        )
+
+
+class ParquetIterationEquivalenceTests(unittest.TestCase):
+    def test_iter_batches_matches_load_dataset_for_switched_parquet_loaders(self):
+        # _hackaprompt_rows and _wildguardmix_rows iterate
+        # pq.ParquetFile(path).iter_batches().to_pylist() instead of
+        # load_dataset("parquet", ...). Pin that both paths produce the same
+        # values, exact Python types, per-file key sets, and serialized JSONL
+        # bytes for the column types those parquets contain: str, int, bool,
+        # nullable float, and nullable str, with one optional column present
+        # in only one file (mirroring the test-only wildguardmix
+        # prompt_harm_agreement). A datasets or pyarrow upgrade that diverges
+        # the two paths must fail here, not at the next full rebuild.
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+        from datasets import load_dataset
+
+        base = {
+            "prompt": ["ignore previous instructions", "how does rain form"],
+            "label": [1, 0],
+            "adversarial": [True, False],
+            "score": [0.25, None],
+            "session_id": [None, "row-0"],
+        }
+        optional = {"prompt_harm_agreement": ["agree", None]}
+        with tempfile.TemporaryDirectory() as directory:
+            for name, columns in (("train", base), ("test", base | optional)):
+                path = Path(directory) / f"{name}.parquet"
+                pq.write_table(pa.table(columns), path)
+                hf_rows = list(
+                    load_dataset(
+                        "parquet",
+                        data_files={name: str(path)},
+                        cache_dir=str(Path(directory) / "hf_cache"),
+                    )[name]
+                )
+                arrow_rows = [
+                    row
+                    for batch in pq.ParquetFile(path).iter_batches(batch_size=8192)
+                    for row in batch.to_pylist()
+                ]
+                self.assertEqual(arrow_rows, hf_rows)
+                for row in arrow_rows:
+                    self.assertEqual(set(row), set(columns))
+                self.assertEqual(
+                    [
+                        json.dumps(r, ensure_ascii=False, sort_keys=True)
+                        for r in arrow_rows
+                    ],
+                    [
+                        json.dumps(r, ensure_ascii=False, sort_keys=True)
+                        for r in hf_rows
+                    ],
+                )
+
+
 class LoaderContractTests(unittest.TestCase):
     def test_loader_names_match_their_source_keys(self):
         for source, loader in LOADERS.items():

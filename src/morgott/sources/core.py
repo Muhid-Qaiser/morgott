@@ -31,7 +31,7 @@ def _load_toxic_chat() -> dict[str, list[dict]]:
     output: dict[str, list[dict]] = {}
     for split in ("train", "test"):
         output[split] = []
-        for row in dataset[split]:
+        for row in dataset[split].to_list():
             if (
                 type(row["jailbreaking"]) is not int
                 or row["jailbreaking"] not in (0, 1)
@@ -68,7 +68,7 @@ def _load_prompt_injections() -> dict[str, list[dict]]:
     output: dict[str, list[dict]] = {}
     for split in ("train", "test"):
         output[split] = []
-        for row in dataset[split]:
+        for row in dataset[split].to_list():
             digest = text_hash(row["text"])
             output[split].append(
                 _sample(
@@ -251,7 +251,10 @@ def _load_oasst1() -> tuple[dict[str, list[dict]], dict]:
     for split in ("train", "validation"):
         selected = 0
         counts = Counter()
-        for row in dataset[split]:
+        # ponytail: to_list() materializes the split (~0.5GB transient RSS
+        # for train), revert to row iteration if a repinned dump outgrows
+        # the box.
+        for row in dataset[split].to_list():
             if type(row["deleted"]) is not bool or (
                 row["review_result"] is not None
                 and type(row["review_result"]) is not bool
