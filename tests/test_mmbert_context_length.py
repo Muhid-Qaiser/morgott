@@ -61,15 +61,6 @@ class TrainingContextContractTests(unittest.TestCase):
             )
 
     def test_single_head_validation_caps_select_the_intended_path(self):
-        with patch.object(
-            mmbert_train, "score_logits", return_value=np.asarray([1.0])
-        ) as historical:
-            observed = mmbert_train._validation_logits(
-                object(), object(), object(), ["x"], batch_size=1
-            )
-        historical.assert_called_once()
-        np.testing.assert_array_equal(observed, [1.0])
-
         class Value:
             def float(self):
                 return self
@@ -79,6 +70,22 @@ class TrainingContextContractTests(unittest.TestCase):
 
             def numpy(self):
                 return np.asarray([2.0])
+
+        with patch.object(
+            mmbert_train, "_cached_batch_logits", return_value=Value()
+        ) as default_cap:
+            observed = mmbert_train._validation_logits(
+                SimpleNamespace(eval=lambda: None),
+                object(),
+                SimpleNamespace(eval=lambda: None),
+                ["x"],
+                batch_size=1,
+            )
+        # The default cap and no cache must reach _cached_batch_logits too,
+        # whose cache=None fallback is the pinned batch_logits.
+        self.assertEqual(default_cap.call_args.kwargs["max_tokens"], 512)
+        self.assertIsNone(default_cap.call_args.kwargs["cache"])
+        np.testing.assert_array_equal(observed, [2.0])
 
         grad_enabled = []
 

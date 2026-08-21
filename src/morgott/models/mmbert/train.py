@@ -14,11 +14,12 @@ import re
 import shutil
 import tempfile
 import time
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from contextlib import nullcontext
 from functools import lru_cache
 from importlib.metadata import version
-from itertools import chain
+from itertools import chain, islice
 from pathlib import Path
 
 import numpy as np
@@ -39,7 +40,6 @@ from .core import (
     file_sha256,
     load_base_model,
     new_head,
-    score_logits,
     source_provenance,
 )
 from .core import (
@@ -49,6 +49,7 @@ from .data import (
     EXTERNAL_DATA_SCHEMA_VERSION,
     OverlapGuard,
     TrainingData,
+    _overlap_values,
     _strict_hash,
     additional_matched_pairs,
     batches,
@@ -675,6 +676,12 @@ class _EncodingCache:
         largest CPU cost in a run. It is a pure function, so it fans out across
         processes safely; `imap` with a chunk size preserves order, and the
         tokenizer is a Rust extension that already threads internally.
+
+        Known ceiling: `Pool.imap` hangs forever if a worker dies abruptly
+        before Python 3.13, unlike the batched executor idiom
+        `_pooled_overlap_pairs` uses, which raises `BrokenProcessPool`.
+        Switching this pool over is deferred with its test update as a
+        follow-up.
         """
         pending = list(
             dict.fromkeys(text for text in texts if text not in self._encoded)
@@ -1433,7 +1440,11 @@ def _references(views: dict, external: dict):
 # The only functions in this module that prepare the corpus. Everything else
 # here -- the training loop, the save path, the CLI, the Trackio wiring -- can
 # change without altering a single prepared row.
-_PREP_SOURCE_FUNCTIONS = ("_prepare_training_data", "_references")
+_PREP_SOURCE_FUNCTIONS = (
+    "_pooled_overlap_pairs",
+    "_prepare_training_data",
+    "_references",
+)
 
 
 def _prep_source_digest() -> str:
@@ -1529,13 +1540,26 @@ def _verify_prep_cache_physical_inputs(
     data_dir: Path,
     external_dir: Path,
 ) -> None:
-    """Hash every physical manifest input before unpickling a cache hit."""
+    """Hash every physical manifest input before unpickling a cache hit.
 
+    The seven files are independent and `file_sha256` releases the GIL inside
+    hashlib, so a small thread pool overlaps the reads (measured 1.85x on the
+    current 9.85 GB). Every check still runs, and the outcomes are examined
+    strictly in input order, so the raised errors and messages are the ones
+    the serial loop produced.
+    """
+
+    inputs = _prep_cache_physical_inputs(data_dir, external_dir)
+    outcomes = []
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        for future in [executor.submit(file_sha256, path) for _, path, _ in inputs]:
+            try:
+                outcomes.append((future.result(), None))
+            except OSError as error:
+                outcomes.append((None, error))
     mismatches = []
-    for name, path, expected in _prep_cache_physical_inputs(data_dir, external_dir):
-        try:
-            observed = file_sha256(path)
-        except OSError as error:
+    for (name, path, expected), (observed, error) in zip(inputs, outcomes, strict=True):
+        if error is not None:
             raise ValueError(
                 f"prepared corpus cache input is unavailable: {name}: {path}"
             ) from error
@@ -1611,6 +1635,64 @@ def prepare_training_data(
     return data
 
 
+_OVERLAP_POOL_BATCH = 512
+
+
+def _pooled_overlap_pairs(
+    rows: Iterable[dict],
+    *,
+    workers: int | None = None,
+    batch_size: int = _OVERLAP_POOL_BATCH,
+) -> Iterator[tuple[dict, tuple[str, str, int | None]]]:
+    """Pair each row with its `_overlap_values` triple, hashed in parallel.
+
+    The triples are pure functions of the row text, so batches fan out across
+    spawn workers much as `_EncodingCache.warm` and the routing build already
+    do; executor `map` returns results in input order, so the sequential
+    guard, owner, and dedup consumers observe the unchanged row order with
+    identical values, and it raises `BrokenProcessPool` instead of hanging the
+    build if a worker dies (`Pool.map` blocks forever on that before Python
+    3.13, and this machine has an OOM history). A stream shorter than one
+    batch never pays the pool spawn, which keeps preflights and small test
+    corpora serial. Worker count stays modest by default because prep shares
+    the machine with training and builds; `MORGOTT_OVERLAP_WORKERS` (a
+    positive integer, clamped to the usable CPU quota) overrides it on larger
+    hosts.
+    """
+    if workers is None:
+        raw = os.environ.get("MORGOTT_OVERLAP_WORKERS")
+        if raw is None:
+            workers = min(4, _usable_cpus())
+        else:
+            try:
+                workers = int(raw)
+            except ValueError:
+                workers = 0
+            if workers < 1:
+                raise ValueError(
+                    f"MORGOTT_OVERLAP_WORKERS must be a positive integer, got {raw!r}"
+                )
+            workers = min(workers, _usable_cpus())
+    iterator = iter(rows)
+    first = list(islice(iterator, batch_size))
+    if workers <= 1 or len(first) < batch_size:
+        for row in chain(first, iterator):
+            yield row, _overlap_values(row)
+        return
+    from multiprocessing import get_context
+
+    # Spawn, not fork: the caller may already own CUDA or tracker threads.
+    # ponytail: per-batch map barrier idles workers while the next batch is
+    # read from disk, overlap with submit if the barrier ever dominates.
+    with ProcessPoolExecutor(workers, mp_context=get_context("spawn")) as pool:
+        for batch in chain([first], batches(iterator, batch_size)):
+            yield from zip(
+                batch,
+                pool.map(_overlap_values, batch, chunksize=16),
+                strict=True,
+            )
+
+
 def _prepare_training_data(
     data_dir: Path,
     external_dir: Path,
@@ -1632,8 +1714,9 @@ def _prepare_training_data(
     guard = OverlapGuard(())
     kept, small_removed = filter_small_training_sets(
         candidates,
-        _references(views, external),
+        _pooled_overlap_pairs(_references(views, external)),
         reference_guard=guard,
+        precomputed=True,
     )
     guard.add(chain(kept["promptshield"], kept["promptshield_validation"]))
     train_path, train_spec = views["train"]
@@ -1645,9 +1728,10 @@ def _prepare_training_data(
         pair_rows,
         pair_train_removed,
     ) = profile_canonical(
-        canonical_rows(train_path, train_spec, split="train"),
+        _pooled_overlap_pairs(canonical_rows(train_path, train_spec, split="train")),
         guard,
         {"pairs": kept["pairs"]},
+        precomputed=True,
     )
     kept_pair_ids = {row["id"] for row in pair_rows["pairs"]}
     pairs = [
@@ -1656,18 +1740,22 @@ def _prepare_training_data(
         if pair[0]["id"] in kept_pair_ids and pair[1]["id"] in kept_pair_ids
     ]
     dev_path, dev_spec = views["dev_test"]
-    validation_guard = OverlapGuard(
-        chain(
-            canonical_rows(
-                dev_path,
-                dev_spec,
-                split="dev_test",
-                eligible_only=False,
-            ),
-            kept["promptshield_validation"],
-            external["promptshield_test"],
-            external["sep"],
-        )
+    validation_guard = OverlapGuard(())
+    validation_guard.add(
+        _pooled_overlap_pairs(
+            chain(
+                canonical_rows(
+                    dev_path,
+                    dev_spec,
+                    split="dev_test",
+                    eligible_only=False,
+                ),
+                kept["promptshield_validation"],
+                external["promptshield_test"],
+                external["sep"],
+            )
+        ),
+        precomputed=True,
     )
     validation_path, validation_spec = views["validation"]
     validation_candidates = list(
@@ -1680,7 +1768,12 @@ def _prepare_training_data(
         validation_owners,
         _,
         _,
-    ) = profile_canonical(validation_candidates, validation_guard, {})
+    ) = profile_canonical(
+        _pooled_overlap_pairs(validation_candidates),
+        validation_guard,
+        {},
+        precomputed=True,
+    )
     validation_rows = [
         row
         for row in validation_candidates
@@ -2069,18 +2162,21 @@ def _validation_logits(
     *,
     batch_size: int,
     max_tokens: int = MAX_TOKENS,
+    cache: _EncodingCache | None = None,
 ) -> np.ndarray:
-    """Cap-aware validation logits with an exact historical 512 path."""
+    """Cap-aware validation logits through the cached scoring path.
+
+    Both caps run through `_cached_batch_logits`: with the trainer's warmed
+    encoding cache it reuses the memoised tokens instead of re-normalising the
+    same ~30k texts on every pass, and without one it falls back to the pinned
+    `batch_logits`, so the hash-locked module stays the single forward-pass
+    definition. Padding stays exact (`pad_to_multiple_of=None`):
+    `tests.test_mmbert_cuda_equivalence` asserts the cached path is bitwise
+    identical to `batch_logits` only without a padding multiple, so the
+    recorded BCE curve and checkpoint selection cannot move.
+    """
     import torch
 
-    if max_tokens == MAX_TOKENS:
-        return score_logits(
-            encoder,
-            tokenizer,
-            head,
-            texts,
-            batch_size=batch_size,
-        )
     encoder.eval()
     head.eval()
     outputs = []
@@ -2092,7 +2188,7 @@ def _validation_logits(
                 head,
                 batch,
                 train_encoder=False,
-                cache=None,
+                cache=cache,
                 max_tokens=max_tokens,
             )
             outputs.append(values.float().cpu().numpy())
@@ -2232,6 +2328,7 @@ def _validation_bce_by_source(
     *,
     batch_size: int,
     max_tokens: int = MAX_TOKENS,
+    cache: _EncodingCache | None = None,
     checkpoint_diagnostics: bool = False,
 ) -> dict:
     """Score once and return pooled, legacy source, and directional BCE."""
@@ -2243,6 +2340,7 @@ def _validation_bce_by_source(
         [row["text"] for row in rows],
         batch_size=batch_size,
         max_tokens=max_tokens,
+        cache=cache,
     )
     return _primary_validation_summary(
         rows,
@@ -2276,6 +2374,7 @@ def _validation_row(
     updates: int,
     training_loss: float,
     canonical_seen: int,
+    encoding_cache: _EncodingCache | None = None,
 ) -> dict:
     """One point on the validation curve, at an epoch or mid-epoch boundary."""
     was_training = encoder.training
@@ -2290,6 +2389,7 @@ def _validation_row(
             data.checkpoint,
             batch_size=args.microbatch_size,
             max_tokens=max_tokens,
+            cache=encoding_cache,
             checkpoint_diagnostics=True,
         )
         promptshield_summary = _validation_bce_by_source(
@@ -2299,6 +2399,7 @@ def _validation_row(
             data.promptshield_validation,
             batch_size=args.microbatch_size,
             max_tokens=max_tokens,
+            cache=encoding_cache,
         )
     finally:
         encoder.train(was_training)
@@ -3140,6 +3241,7 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
                     updates=updates,
                     training_loss=epoch_loss_sum / epoch_loss_count,
                     canonical_seen=canonical_seen,
+                    encoding_cache=encoding_cache,
                 )
                 interim["interim"] = True
                 curve.append(interim)
@@ -3236,6 +3338,7 @@ def train(args: argparse.Namespace, data: TrainingData) -> Path:
             updates=updates,
             training_loss=epoch_loss_sum / epoch_loss_count,
             canonical_seen=canonical_seen,
+            encoding_cache=encoding_cache,
         )
         curve.append(row)
         tracker.log_validation(row, step=updates)

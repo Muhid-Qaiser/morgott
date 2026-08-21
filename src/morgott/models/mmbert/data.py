@@ -253,6 +253,11 @@ def additional_matched_pairs(path: Path) -> list[tuple[dict, dict]]:
     )
 
 
+# Rows, or rows pre-paired with their `_overlap_values` triples when a caller
+# passes `precomputed=True`.
+_RowsOrPairs = Iterable[dict] | Iterable[tuple[dict, tuple[str, str, int | None]]]
+
+
 class OverlapGuard:
     def __init__(self, references: Iterable[dict]) -> None:
         self.normalized = set()
@@ -260,7 +265,12 @@ class OverlapGuard:
         self.near = NearIndex()
         self.add(references)
 
-    def add(self, references: Iterable[dict]) -> None:
+    def add(self, references: _RowsOrPairs, *, precomputed: bool = False) -> None:
+        """With `precomputed`, references yields (row, `_overlap_values`) pairs."""
+        if precomputed:
+            for row, values in references:
+                self._add(row, values)
+            return
         for row in references:
             self._add(row)
 
@@ -364,13 +374,19 @@ class _SmallSetFilter:
 
 def filter_small_training_sets(
     candidates: dict[str, list[dict]],
-    references: Iterable[dict],
+    references: _RowsOrPairs,
     *,
     reference_guard: OverlapGuard | None = None,
+    precomputed: bool = False,
 ) -> tuple[dict[str, list[dict]], dict[str, dict[str, int]]]:
+    """With `precomputed`, references yields (row, `_overlap_values`) pairs."""
     candidate_filter = _SmallSetFilter(candidates)
-    for reference in references:
-        values = _overlap_values(reference)
+    pairs = (
+        references
+        if precomputed
+        else ((reference, _overlap_values(reference)) for reference in references)
+    )
+    for reference, values in pairs:
         candidate_filter.block(reference, values)
         if reference_guard is not None and "_candidate_dataset" not in reference:
             reference_guard._add(reference, values)
@@ -378,9 +394,11 @@ def filter_small_training_sets(
 
 
 def profile_canonical(
-    rows: Iterable[dict],
+    rows: _RowsOrPairs,
     guard: OverlapGuard,
     candidates: dict[str, list[dict]],
+    *,
+    precomputed: bool = False,
 ) -> tuple[
     Counter,
     Counter,
@@ -389,13 +407,14 @@ def profile_canonical(
     dict[str, list[dict]],
     dict[str, dict[str, int]],
 ]:
+    """With `precomputed`, rows yields (row, `_overlap_values`) pairs."""
     counts = Counter()
     group_counts = Counter()
     removed = Counter()
     owners = {}
     candidate_filter = _SmallSetFilter(candidates)
-    for row in rows:
-        values = _overlap_values(row)
+    pairs = rows if precomputed else ((row, _overlap_values(row)) for row in rows)
+    for row, values in pairs:
         reason = guard.reason(row, values)
         if reason:
             removed[reason] += 1
