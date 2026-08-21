@@ -1,7 +1,11 @@
 import json
+import os
+import signal
 import tempfile
+import time
 import unittest
 import zlib
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from unittest.mock import patch
 
@@ -9,10 +13,69 @@ from corpus_test_support import _read_rows, _row, _source_output
 
 from morgott.corpus import (
     _consume_source,
+    _extend_corpus,
     rebuild_routing,
 )
 from morgott.data import SOURCES, _sample, _set_source_role
 from morgott.routing import materialize_routing_views
+
+
+# Fake loaders for the parallel _extend_corpus equivalence test. They are
+# module level so spawn workers can unpickle them by name.
+def _fake_alpha_rows():
+    rows = [
+        _row(f"alpha-{index}", f"alpha attack {index}", f"alpha-{index}")
+        for index in range(3)
+    ]
+    return rows, {"alpha.json": "a" * 64}, {"rows": len(rows)}, None
+
+
+def _fake_beta_rows():
+    profile = {"rows": 0}
+
+    def generate():
+        for index in range(4):
+            profile["rows"] += 1
+            yield _row(f"beta-{index}", f"beta attack {index}", f"beta-{index}")
+
+    return generate(), {}, profile, None
+
+
+def _fake_gamma_rows():
+    # gamma is first in LOADERS but finishes last, so a completion-ordered
+    # implementation would reliably yield it last and fail the order check.
+    time.sleep(0.3)
+    rows = [_row("gamma-0", "gamma attack", "gamma-0")]
+    quarantine = [
+        {
+            "id": "gamma-q-0",
+            "text": "quarantined gamma text",
+            "source_role": "uncertain",
+            "routing_training_eligible": False,
+            "data_role": "quarantine",
+            "quarantine_reason": "sensitive_content",
+        }
+    ]
+    return rows, {"gamma.csv": "c" * 64}, {"rows": len(rows)}, quarantine
+
+
+def _broken_rows():
+    raise ValueError("broken loader")
+
+
+class _NeedsTwoArgsError(Exception):
+    """Pickles but cannot be rebuilt from args, like urllib's HTTPError."""
+
+    def __init__(self, code, msg):
+        super().__init__(f"{code} {msg}")
+
+
+def _unreconstructable_rows():
+    raise _NeedsTwoArgsError(404, "not found")
+
+
+def _killed_rows():
+    os.kill(os.getpid(), signal.SIGKILL)
 
 
 class CorpusTests(unittest.TestCase):
@@ -325,6 +388,109 @@ class CorpusTests(unittest.TestCase):
         )
         self.assertEqual(stats["official_dev_test_rows"], 40)
         self.assertEqual(views["dev_test"]["largest_split_group"]["rows"], 1)
+
+
+class ExtendCorpusParallelTests(unittest.TestCase):
+    def _build(self, workers: int) -> tuple[dict, dict[str, bytes]]:
+        loaders = {
+            "gamma": _fake_gamma_rows,
+            "alpha": _fake_alpha_rows,
+            "beta": _fake_beta_rows,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            core_manifest_path = root / "core-manifest.json"
+            core_manifest_path.write_text(
+                json.dumps(
+                    {
+                        "sources": {},
+                        "source_outputs": {},
+                        "source_profiles": {},
+                        "download_sha256": {},
+                        "quarantines": {},
+                    }
+                )
+            )
+            with (
+                patch("morgott.corpus.LOADERS", loaders),
+                patch(
+                    "morgott.corpus.SOURCES",
+                    {name: {"kind": "test"} for name in loaders},
+                ),
+                patch(
+                    "morgott.corpus.materialize_routing_views",
+                    lambda *args, **kwargs: ({}, {}, {}),
+                ),
+            ):
+                manifest = _extend_corpus(
+                    root, core_manifest_path=core_manifest_path, workers=workers
+                )
+            files = {
+                relative: (root / relative).read_bytes()
+                for relative in (
+                    "sources/alpha.jsonl",
+                    "sources/beta.jsonl",
+                    "sources/gamma.jsonl",
+                    "quarantine/gamma_sensitive.jsonl",
+                    "manifest.json",
+                )
+            }
+        return manifest, files
+
+    def test_parallel_build_matches_serial_bytes(self):
+        _, serial_files = self._build(workers=1)
+        manifest, parallel_files = self._build(workers=4)
+
+        self.assertEqual(serial_files, parallel_files)
+        # Anchor the moved path handling to the pre-parallel manifest shape:
+        # shard paths are data-root relative, not absolute worker paths.
+        self.assertEqual(
+            manifest["source_outputs"]["alpha"]["path"], "sources/alpha.jsonl"
+        )
+        self.assertEqual(
+            manifest["quarantines"]["gamma_sensitive"]["path"],
+            "quarantine/gamma_sensitive.jsonl",
+        )
+        # Assembly follows LOADERS iteration order, not completion order.
+        self.assertEqual(list(manifest["source_outputs"]), ["gamma", "alpha", "beta"])
+        # The beta profile counts rows while its generator is consumed, so
+        # the manifest can only report 4 when the loader call and the shard
+        # consumption ran in the same worker process.
+        self.assertEqual(manifest["source_profiles"]["beta"], {"rows": 4})
+        self.assertEqual(manifest["quarantines"]["gamma_sensitive"]["rows"], 1)
+        self.assertEqual(manifest["download_sha256"]["gamma/gamma.csv"], "c" * 64)
+
+    def _assert_aborts(self, loaders: dict, expected: tuple, pattern: str) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            core_manifest_path = root / "core-manifest.json"
+            core_manifest_path.write_text(json.dumps({"source_outputs": {}}))
+            with (
+                patch("morgott.corpus.LOADERS", loaders),
+                self.assertRaisesRegex(expected, pattern),
+            ):
+                _extend_corpus(root, core_manifest_path=core_manifest_path, workers=2)
+            self.assertFalse((root / "manifest.json").exists())
+
+    def test_loader_failure_aborts_the_build(self):
+        # _load_source rewraps loader errors so the original message survives
+        # the process boundary.
+        self._assert_aborts(
+            {"broken": _broken_rows}, RuntimeError, r"ValueError\('broken loader'\)"
+        )
+
+    def test_unreconstructable_loader_error_aborts_the_build(self):
+        # Exceptions like urllib's HTTPError pickle but fail to rebuild in
+        # the parent; unwrapped they would wedge the build instead of
+        # aborting it.
+        self._assert_aborts(
+            {"gated": _unreconstructable_rows}, RuntimeError, "_NeedsTwoArgsError"
+        )
+
+    def test_killed_worker_aborts_the_build(self):
+        # A worker killed abruptly (for example by the OOM killer) must fail
+        # the build instead of hanging it, which multiprocessing.Pool did.
+        self._assert_aborts({"killed": _killed_rows}, BrokenProcessPool, "")
 
 
 if __name__ == "__main__":

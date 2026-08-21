@@ -649,8 +649,10 @@ def _atomic_text_writer(path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = None
     try:
+        # The dotted prefix marks strays left by a killed process so
+        # scripts/azsync.sh can exclude them from pushes.
         with tempfile.NamedTemporaryFile(
-            "w", encoding="utf-8", dir=path.parent, delete=False
+            "w", encoding="utf-8", dir=path.parent, prefix=".tmp-", delete=False
         ) as handle:
             temporary = Path(handle.name)
             yield handle

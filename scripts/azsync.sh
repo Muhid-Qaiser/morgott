@@ -39,14 +39,15 @@ case "$cmd" in
       # ponytail: 50%-count heuristic so a partial local copy can't mirror-delete Azure; tighten if it ever misfires
       if ! $force; then
         rc=$("$AZCOPY" list "$(remote "$p")" 2>/dev/null | grep -c 'Content Length' || true)
-        lc=$(find "$p" -type f 2>/dev/null | wc -l)
+        lc=$(find "$p" -type f ! -name '.tmp-*' 2>/dev/null | wc -l)
         if (( rc > 0 && lc * 2 < rc )); then
           echo "!! $p: local has $lc files, Azure has $rc — partial local copy? 'push --force' to mirror anyway" >&2
           exit 1
         fi
       fi
       echo "== push $p"
-      "$AZCOPY" sync "$p" "$(remote "$p")" --delete-destination=true --output-level essential
+      # .tmp-* strays are atomic-writer leftovers from a killed build; never mirror them.
+      "$AZCOPY" sync "$p" "$(remote "$p")" --delete-destination=true --exclude-pattern ".tmp-*" --output-level essential
     done
     $matched || { echo "unknown prefix: $arg (one of: ${PREFIXES[*]})" >&2; exit 1; }
     "$AZCOPY" copy data/manifest.json "$(remote data/manifest.json)" --output-level essential

@@ -1,6 +1,8 @@
+import fnmatch
 import hashlib
 import http.client
 import io
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +10,7 @@ from unittest.mock import call, patch
 
 from morgott import corpus
 from morgott.data import (
+    _atomic_text_writer,
     _fetch,
     _sample,
     _set_core_routing_role,
@@ -100,6 +103,22 @@ class DataTests(unittest.TestCase):
 
             self.assertFalse(canonical.exists())
             self.assertEqual(list(root.glob(".core-build-*")), [])
+
+    def test_atomic_writer_strays_match_the_azsync_push_exclusion(self):
+        # A build killed abruptly (OOM, SIGKILL) leaves the writer's temp
+        # file behind; azsync.sh push must never mirror such strays into the
+        # Azure source of truth. Couple the two sides so renaming the prefix
+        # or editing the azcopy pattern fails here instead of in production.
+        script = Path(__file__).resolve().parents[1] / "scripts" / "azsync.sh"
+        found = re.search(
+            r'--exclude-pattern "([^"]+)"', script.read_text(encoding="utf-8")
+        )
+        self.assertIsNotNone(found, "azsync.sh push lost its stray exclusion")
+        with tempfile.TemporaryDirectory() as directory:
+            with _atomic_text_writer(Path(directory) / "out.jsonl") as handle:
+                handle.write("row\n")
+                (stray,) = Path(directory).iterdir()
+        self.assertTrue(fnmatch.fnmatch(stray.name, found.group(1)))
 
     def test_source_roles_derive_routing_eligibility(self):
         for role, expected in {
