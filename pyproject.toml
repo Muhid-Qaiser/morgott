@@ -34,7 +34,7 @@ cascade = [
 ]
 azure = [
     "fastapi>=0.115,<1",
-    "uvicorn>=0.35,<1",
+    "uvicorn<1,>=0.52.1",
 ]
 encoder-export = [
     "onnx>=1.17,<2",
