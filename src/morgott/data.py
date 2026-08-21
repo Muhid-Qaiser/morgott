@@ -6,6 +6,7 @@ import hashlib
 import http.client
 import io
 import json
+import os
 import tempfile
 import time
 import unicodedata
@@ -471,6 +472,65 @@ def _set_source_role(row: dict, role: str) -> dict:
     return row
 
 
+def _fetch_cache_dir() -> Path:
+    # ponytail: no eviction; superseded pins and tmp* files orphaned by killed
+    # builds accumulate, and the directory is always safe to rm -rf. Add GC
+    # only if the growth measurably matters.
+    base = os.environ.get("XDG_CACHE_HOME")
+    return (Path(base) if base else Path.home() / ".cache") / "morgott" / "fetch"
+
+
+def _cache_read(
+    expected_sha256: str, expected_bytes: int | None, max_bytes: int
+) -> bytes | None:
+    """Return cached bytes for a pinned digest, re-verifying on every read.
+
+    Strictly best-effort: any cache infrastructure failure (unresolvable home,
+    unreadable directory, undeletable corrupt entry) degrades to a miss so the
+    network path, with its own verification, decides the build outcome.
+    """
+
+    try:
+        path = _fetch_cache_dir() / expected_sha256
+        with path.open("rb") as handle:
+            data = handle.read(max_bytes + 1)
+    except (OSError, RuntimeError):
+        return None
+    if len(data) > max_bytes:
+        # Same ceiling as the download path; keep the entry, a caller with a
+        # larger cap may still use it, and the refetch fails closed anyway.
+        return None
+    if hashlib.sha256(data).hexdigest() == expected_sha256 and (
+        expected_bytes is None or len(data) == expected_bytes
+    ):
+        return data
+    try:
+        path.unlink(missing_ok=True)
+    except OSError:
+        pass
+    return None
+
+
+def _cache_write(expected_sha256: str, data: bytes) -> None:
+    """Best-effort cache write; it must never fail an already-verified fetch."""
+
+    tmp = None
+    try:
+        directory = _fetch_cache_dir()
+        directory.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(dir=directory, delete=False) as handle:
+            tmp = Path(handle.name)
+            handle.write(data)
+        # Atomic rename so concurrent builds never observe a partial file.
+        tmp.replace(directory / expected_sha256)
+    except (OSError, RuntimeError):
+        if tmp is not None:
+            try:
+                tmp.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
 def _fetch(
     url: str,
     *,
@@ -478,6 +538,10 @@ def _fetch(
     expected_bytes: int | None = None,
     expected_sha256: str | None = None,
 ) -> tuple[bytes, str]:
+    if expected_sha256 is not None:
+        cached = _cache_read(expected_sha256, expected_bytes, max_bytes)
+        if cached is not None:
+            return cached, expected_sha256
     request = urllib.request.Request(url, headers={"User-Agent": "morgott/0.1"})
     for attempt in range(3):
         try:
@@ -509,6 +573,8 @@ def _fetch(
                 raise ValueError(f"download does not match pinned metadata: {url}")
             time.sleep(2**attempt)
             continue
+        if expected_sha256 is not None:
+            _cache_write(expected_sha256, data)
         return data, digest
     raise AssertionError("unreachable")
 
@@ -522,11 +588,14 @@ def _csv_rows(data: bytes, required: set[str]) -> list[dict[str, str]]:
     return list(reader)
 
 
-def _github_raw(source: str, path: str) -> tuple[bytes, str]:
+def _github_raw(
+    source: str, path: str, *, expected_sha256: str | None = None
+) -> tuple[bytes, str]:
     revision = SOURCES[source]["revision"]
     return _fetch(
         f"https://raw.githubusercontent.com/{SOURCES[source]['url'].split('github.com/')[1]}/"
-        f"{revision}/{path}"
+        f"{revision}/{path}",
+        expected_sha256=expected_sha256,
     )
 
 

@@ -2,6 +2,7 @@ import fnmatch
 import hashlib
 import http.client
 import io
+import os
 import re
 import tempfile
 import unittest
@@ -60,7 +61,9 @@ class DataTests(unittest.TestCase):
         stable = io.BytesIO(b"stable")
         stable.headers = {}
         with (
+            tempfile.TemporaryDirectory() as directory,
             patch("time.sleep") as sleep,
+            patch("morgott.data._fetch_cache_dir", return_value=Path(directory)),
             patch(
                 "morgott.data.urllib.request.urlopen",
                 side_effect=[
@@ -80,6 +83,148 @@ class DataTests(unittest.TestCase):
         self.assertEqual(digest, hashlib.sha256(data).hexdigest())
         self.assertEqual(urlopen.call_count, 3)
         self.assertEqual(sleep.call_args_list, [call(1), call(2)])
+
+    def test_fetch_cache_serves_verified_bytes_without_network(self):
+        payload = b"immutable pinned bytes"
+        digest = hashlib.sha256(payload).hexdigest()
+        response = io.BytesIO(payload)
+        response.headers = {"Content-Length": str(len(payload))}
+        with tempfile.TemporaryDirectory() as directory:
+            cache_dir = Path(directory)
+            with (
+                patch("morgott.data._fetch_cache_dir", return_value=cache_dir),
+                patch(
+                    "morgott.data.urllib.request.urlopen", side_effect=[response]
+                ) as urlopen,
+            ):
+                first = _fetch("https://example.test/data", expected_sha256=digest)
+            self.assertEqual(first, (payload, digest))
+            self.assertEqual(urlopen.call_count, 1)
+            self.assertEqual((cache_dir / digest).read_bytes(), payload)
+
+            with (
+                patch("morgott.data._fetch_cache_dir", return_value=cache_dir),
+                patch(
+                    "morgott.data.urllib.request.urlopen",
+                    side_effect=AssertionError("cache hit must not touch the network"),
+                ),
+            ):
+                second = _fetch(
+                    "https://example.test/data",
+                    expected_bytes=len(payload),
+                    expected_sha256=digest,
+                )
+            self.assertEqual(second, first)
+
+    def test_fetch_corrupted_cache_entry_fails_closed_and_refetches(self):
+        payload = b"clean upstream bytes"
+        digest = hashlib.sha256(payload).hexdigest()
+        response = io.BytesIO(payload)
+        response.headers = {}
+        with tempfile.TemporaryDirectory() as directory:
+            cache_dir = Path(directory)
+            (cache_dir / digest).write_bytes(b"poisoned cache entry")
+            with (
+                patch("morgott.data._fetch_cache_dir", return_value=cache_dir),
+                patch(
+                    "morgott.data.urllib.request.urlopen", side_effect=[response]
+                ) as urlopen,
+            ):
+                data, observed = _fetch(
+                    "https://example.test/data", expected_sha256=digest
+                )
+            self.assertEqual(data, payload)
+            self.assertEqual(observed, digest)
+            self.assertEqual(urlopen.call_count, 1)
+            self.assertEqual((cache_dir / digest).read_bytes(), payload)
+
+    @unittest.skipIf(os.geteuid() == 0, "chmod does not bind root")
+    def test_fetch_cache_failures_never_fail_a_verified_fetch(self):
+        payload = b"verified upstream bytes"
+        digest = hashlib.sha256(payload).hexdigest()
+        response = io.BytesIO(payload)
+        response.headers = {}
+        with tempfile.TemporaryDirectory() as directory:
+            readonly = Path(directory) / "readonly"
+            readonly.mkdir()
+            (readonly / digest).write_bytes(b"poisoned cache entry")
+            readonly.chmod(0o500)
+            try:
+                with (
+                    patch("morgott.data._fetch_cache_dir", return_value=readonly),
+                    patch(
+                        "morgott.data.urllib.request.urlopen", side_effect=[response]
+                    ) as urlopen,
+                ):
+                    data, observed = _fetch(
+                        "https://example.test/data", expected_sha256=digest
+                    )
+            finally:
+                readonly.chmod(0o700)
+            self.assertEqual((data, observed), (payload, digest))
+            self.assertEqual(urlopen.call_count, 1)
+            # The poisoned entry must survive: proof that unlink and the cache
+            # write both failed and the fetch really degraded to the network.
+            self.assertEqual((readonly / digest).read_bytes(), b"poisoned cache entry")
+
+    def test_fetch_unresolvable_cache_dir_falls_back_to_network(self):
+        payload = b"bytes without a home"
+        digest = hashlib.sha256(payload).hexdigest()
+        response = io.BytesIO(payload)
+        response.headers = {}
+        with (
+            patch(
+                "morgott.data._fetch_cache_dir",
+                side_effect=RuntimeError("could not resolve home directory"),
+            ),
+            patch(
+                "morgott.data.urllib.request.urlopen", side_effect=[response]
+            ) as urlopen,
+        ):
+            data, observed = _fetch("https://example.test/data", expected_sha256=digest)
+        self.assertEqual((data, observed), (payload, digest))
+        self.assertEqual(urlopen.call_count, 1)
+
+    def test_fetch_oversized_cache_entry_does_not_bypass_max_bytes(self):
+        payload = b"0123456789" * 4
+        digest = hashlib.sha256(payload).hexdigest()
+        response = io.BytesIO(payload)
+        response.headers = {}
+        with tempfile.TemporaryDirectory() as directory:
+            cache_dir = Path(directory)
+            (cache_dir / digest).write_bytes(payload)
+            with (
+                patch("morgott.data._fetch_cache_dir", return_value=cache_dir),
+                patch("morgott.data.urllib.request.urlopen", side_effect=[response]),
+                self.assertRaisesRegex(ValueError, "download exceeded"),
+            ):
+                _fetch(
+                    "https://example.test/data",
+                    max_bytes=len(payload) - 1,
+                    expected_sha256=digest,
+                )
+            # The entry stays valid for callers with a larger cap.
+            self.assertEqual((cache_dir / digest).read_bytes(), payload)
+
+    def test_fetch_wrong_digest_download_fails_after_retries_uncached(self):
+        responses = []
+        for _ in range(3):
+            response = io.BytesIO(b"unexpected upstream bytes")
+            response.headers = {}
+            responses.append(response)
+        with tempfile.TemporaryDirectory() as directory:
+            cache_dir = Path(directory)
+            with (
+                patch("time.sleep"),
+                patch("morgott.data._fetch_cache_dir", return_value=cache_dir),
+                patch(
+                    "morgott.data.urllib.request.urlopen", side_effect=responses
+                ) as urlopen,
+                self.assertRaisesRegex(ValueError, "pinned metadata"),
+            ):
+                _fetch("https://example.test/data", expected_sha256="0" * 64)
+            self.assertEqual(urlopen.call_count, 3)
+            self.assertEqual(list(cache_dir.iterdir()), [])
 
     def test_data_cli_leaves_no_manifest_on_failure(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -15,6 +15,7 @@ import pyarrow.parquet as pq
 from ..data import (
     SOURCES,
     _csv_rows,
+    _github_raw,
     _sample,
     _set_source_role,
     text_hash,
@@ -26,7 +27,6 @@ from ._shared import (
     FILES,
     _download,
     _download_files,
-    _github_pinned,
     _parquet_dataset,
     _sensitive_quarantine,
     _verified_archive,
@@ -507,7 +507,9 @@ def _banking77_rows() -> tuple[
     contents = {}
     downloads = {}
     for filename, expected_digest in expected.items():
-        data, digest = _github_pinned("banking77", filename, expected_digest)
+        data, digest = _github_raw(
+            "banking77", filename, expected_sha256=expected_digest
+        )
         contents[filename] = data
         downloads[filename] = digest
     datasets = {

@@ -13,8 +13,7 @@ from pathlib import Path
 
 import ijson
 
-from ..data import SOURCES, _sample, _set_source_role
-from ._shared import _github_pinned
+from ..data import SOURCES, _github_raw, _sample, _set_source_role
 
 
 def _harper_checkout() -> tuple[tempfile.TemporaryDirectory, Path, str]:
@@ -307,7 +306,7 @@ def _tatqa_rows() -> tuple[Iterator[dict], dict[str, str], dict, Iterator[dict] 
     contents = {}
     downloads = {}
     for filename, expected_digest in expected.items():
-        data, digest = _github_pinned("tatqa", filename, expected_digest)
+        data, digest = _github_raw("tatqa", filename, expected_sha256=expected_digest)
         split = filename.removeprefix("dataset_raw/tatqa_dataset_").removesuffix(
             ".json"
         )
@@ -445,7 +444,7 @@ def _financebench_rows() -> tuple[
 ]:
     filename = "data/financebench_open_source.jsonl"
     expected = "a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877"
-    data, digest = _github_pinned("financebench", filename, expected)
+    data, digest = _github_raw("financebench", filename, expected_sha256=expected)
     source_rows = [json.loads(line) for line in data.splitlines() if line.strip()]
     if len(source_rows) != 150:
         raise ValueError("financebench public sample no longer has 150 examples")

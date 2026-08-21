@@ -70,7 +70,7 @@ class FinanceSourceTests(unittest.TestCase):
             )
         data = b"".join(json.dumps(row).encode() + b"\n" for row in source_rows)
         with patch(
-            "morgott.sources._shared._github_raw",
+            "morgott.sources.finance._github_raw",
             return_value=(
                 data,
                 "a5a2aa673e573e55675fc3c0f9aa38c1cf59d2abc91edb077534f71f10a71877",

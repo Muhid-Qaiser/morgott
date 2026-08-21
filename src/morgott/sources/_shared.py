@@ -8,7 +8,7 @@ from datasets import load_dataset
 from huggingface_hub import hf_hub_download
 from huggingface_hub.errors import GatedRepoError
 
-from ..data import SOURCES, _fetch, _github_raw, _set_source_role, file_sha256
+from ..data import SOURCES, _fetch, _set_source_role, file_sha256
 
 _SENSITIVE_TEXT_PATTERNS = {
     "email_address": re.compile(
@@ -78,15 +78,6 @@ def _sensitive_quarantine(row: dict) -> dict | None:
     row["data_role"] = "quarantine"
     row["quarantine_reason"] = "potential_secret_or_pii"
     return row
-
-
-def _github_pinned(
-    source: str, filename: str, expected_sha256: str
-) -> tuple[bytes, str]:
-    data, digest = _github_raw(source, filename)
-    if digest != expected_sha256:
-        raise ValueError(f"{source}:{filename} does not match its pinned digest")
-    return data, digest
 
 
 FILES = {

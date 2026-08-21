@@ -24,6 +24,89 @@ from ..data import (
     text_hash,
 )
 
+# Pinned digests, keyed "source/path", for raw fetches that historically
+# carried no pre-fetch pin. Values mirror the download_sha256 entries in
+# data/manifest.json (they stay out of SOURCES, which is serialized into the
+# manifest verbatim). _fetch verifies them on every read, download or cache.
+_PINNED_SHA256 = {
+    "xstest/xstest_prompts.csv": (
+        "11783fb294ed017473ee53c207d71f2161c7672c8d0b037501e78387f801cb5a"
+    ),
+    "harmbench/data/behavior_datasets/harmbench_behaviors_text_all.csv": (
+        "8d81accedd38eaaf8b760618622bb888417d1fd0c86eba65c427a16f1cbb4afc"
+    ),
+    "do_not_answer/datasets/Instruction/do_not_answer_en.csv": (
+        "06acfa39a06a1b33d1f264ce41b4f7a95812010c594fb733ae4717ee0a4544fc"
+    ),
+    "do_not_answer/datasets/data_zh.csv": (
+        "cec83aa3c0f141f1c65b88ab99b953e6acd7d1badec630a0a76f70044a07fec3"
+    ),
+    "bipia/benchmark/text_attack_train.json": (
+        "63f95d3e67eac4178cdabdbdaf192cd05f2b6ed0702b578f1d30d556e5155670"
+    ),
+    "bipia/benchmark/text_attack_test.json": (
+        "75750e7b4e8b34e8f9d88d89b357aeaaf02bd07f9e493ccd37eda74a0cd7c7f8"
+    ),
+    "bipia/benchmark/code_attack_train.json": (
+        "fe515080b6da2b5c0b67ca7ba2a3b3c2ce57c48f45733c475ebc813cba118484"
+    ),
+    "bipia/benchmark/code_attack_test.json": (
+        "892545c5aaec0645b1ded65dc7816b3d70e9ef4eadcba2301a7a3db93676b6e0"
+    ),
+    "bipia/benchmark/email/train.jsonl": (
+        "82207193cb8ce06713eeb7c33ca0716446613512e2ad9303b302ba14d425ddd4"
+    ),
+    "bipia/benchmark/email/test.jsonl": (
+        "217b403faaa1d0cb12c24892bea39f4a0b9e2819919ac7e2b902006e28278cdb"
+    ),
+    "bipia/benchmark/table/train.jsonl": (
+        "ae1c3ff25733fb3ff1a35bda3009716f4d25a17ae6833c73521be0411d576494"
+    ),
+    "bipia/benchmark/table/test.jsonl": (
+        "3d5eaab192b80bada762e3cd7655583a14e5888ba8b845a01f0434e4ccc4291e"
+    ),
+    "bipia/benchmark/code/train.jsonl": (
+        "5e6879b621a5cefe265a5b41b7ed0be632536f658f6097baf85a28b9abcb3115"
+    ),
+    "bipia/benchmark/code/test.jsonl": (
+        "ed40b84f541352fb45753032a80750922de8d5e0b70997924df3d04cf942e058"
+    ),
+    "multi_turn/Harmful Dataset.csv": (
+        "9b84edb9ebbf695b4884a897284022c4f75e382a577359bd031c6ec902a45f17"
+    ),
+    "multi_turn/Semi-Benign Dataset.csv": (
+        "9acd4d02efaf7cdf79ac52841541e07bf405e7d9257884af7b55793fe0c839da"
+    ),
+    "multi_turn/Completely-Benign Dataset.csv": (
+        "4efb90f0b4c8d54ad66353acd89bf4008413c80b9bf45ddc812b1f36847c7398"
+    ),
+    "multi_turn/Complete Harmful Dataset.csv": (
+        "c0c037832b43c3ccc7386a70e50a1c51b4e5fb30128fd9beb252369492807304"
+    ),
+    "notinject/datasets/NotInject_one.json": (
+        "69b535596d95102424e9c5946944feb4f2d596687eb8213f2ecad75478e5ffdd"
+    ),
+    "notinject/datasets/NotInject_two.json": (
+        "6043d94e75b48d8e7682d25dc79eaf45359e1e561ce520e3b8fd5625a91060c6"
+    ),
+    "notinject/datasets/NotInject_three.json": (
+        "ef01eff0d761d2e34571b3fdbcec08c30cd93efe8d0e1a2eb5c2baeb1873b070"
+    ),
+    "jailbreaks_over_time/data/jailbreaksovertime.json": (
+        "110fb269a3af1bd9891d583b576563ddde658a980efee5718be50dd8fc5ad001"
+    ),
+    "tensor_trust/benchmarks/extraction-robustness/v1/extraction_robustness_dataset.jsonl": (
+        "4090f9f57b6df69cc32d7669ac991e3fd53e6e2bb616a5e6f45dac79c183ee4c"
+    ),
+    "tensor_trust/benchmarks/hijacking-robustness/v1/hijacking_robustness_dataset.jsonl": (
+        "2ad3c2343bbf43cb1924f3ec5d6f830864ce3c879e9832b01d93a991e7e2e680"
+    ),
+}
+
+
+def _pinned_github_raw(source: str, path: str) -> tuple[bytes, str]:
+    return _github_raw(source, path, expected_sha256=_PINNED_SHA256[f"{source}/{path}"])
+
 
 def _load_toxic_chat() -> dict[str, list[dict]]:
     info = SOURCES["toxic_chat"]
@@ -85,12 +168,7 @@ def _load_prompt_injections() -> dict[str, list[dict]]:
 
 
 def _load_xstest() -> tuple[list[dict], str]:
-    revision = SOURCES["xstest"]["revision"]
-    url = (
-        "https://raw.githubusercontent.com/paul-rottger/xstest/"
-        f"{revision}/xstest_prompts.csv"
-    )
-    data, digest = _fetch(url)
+    data, digest = _pinned_github_raw("xstest", "xstest_prompts.csv")
     rows = _csv_rows(data, {"id", "prompt", "type", "label"})
     return [
         _sample(
@@ -132,7 +210,9 @@ def _load_multi_turn() -> tuple[dict[str, list[dict]], dict[str, str], dict]:
             "tom-gibbs/multi-turn_jailbreak_attack_datasets/resolve/"
             f"{revision}/{filename.replace(' ', '%20')}"
         )
-        data, downloads[filename] = _fetch(url)
+        data, downloads[filename] = _fetch(
+            url, expected_sha256=_PINNED_SHA256[f"multi_turn/{filename}"]
+        )
         rows = _csv_rows(
             data,
             {
@@ -180,7 +260,10 @@ def _load_multi_turn() -> tuple[dict[str, list[dict]], dict[str, str], dict]:
         "tom-gibbs/multi-turn_jailbreak_attack_datasets/resolve/"
         f"{revision}/Complete%20Harmful%20Dataset.csv"
     )
-    complete_data, downloads[complete_filename] = _fetch(complete_url)
+    complete_data, downloads[complete_filename] = _fetch(
+        complete_url,
+        expected_sha256=_PINNED_SHA256[f"multi_turn/{complete_filename}"],
+    )
     complete_rows = _csv_rows(
         complete_data,
         {
@@ -344,7 +427,7 @@ def _oasst_position_stress(rows: list[dict], limit: int = 500) -> list[dict]:
 
 
 def _load_harmbench() -> tuple[list[dict], str]:
-    data, digest = _github_raw(
+    data, digest = _pinned_github_raw(
         "harmbench", "data/behavior_datasets/harmbench_behaviors_text_all.csv"
     )
     rows = _csv_rows(
@@ -379,7 +462,7 @@ def _load_harmbench() -> tuple[list[dict], str]:
 
 
 def _load_do_not_answer() -> tuple[dict[str, list[dict]], dict[str, str]]:
-    data, english_digest = _github_raw(
+    data, english_digest = _pinned_github_raw(
         "do_not_answer", "datasets/Instruction/do_not_answer_en.csv"
     )
     rows = _csv_rows(data, {"id", "risk_area", "types_of_harm", "question"})
@@ -400,7 +483,7 @@ def _load_do_not_answer() -> tuple[dict[str, list[dict]], dict[str, str]]:
         for row in rows
     ]
 
-    data, chinese_digest = _github_raw("do_not_answer", "datasets/data_zh.csv")
+    data, chinese_digest = _pinned_github_raw("do_not_answer", "datasets/data_zh.csv")
     rows = _csv_rows(
         data,
         {
@@ -564,7 +647,7 @@ def _load_bipia() -> tuple[dict[str, dict[str, list[dict]]], dict[str, str]]:
     downloads = {}
     contents = {}
     for path in paths:
-        contents[path], downloads[path] = _github_raw("bipia", path)
+        contents[path], downloads[path] = _pinned_github_raw("bipia", path)
 
     return {
         split: _bipia_split(contents, split) for split in ("train", "test")
@@ -576,7 +659,7 @@ def _load_notinject() -> tuple[list[dict], dict[str, str]]:
     downloads = {}
     for word_count in ("one", "two", "three"):
         path = f"datasets/NotInject_{word_count}.json"
-        data, downloads[path] = _github_raw("notinject", path)
+        data, downloads[path] = _pinned_github_raw("notinject", path)
         for index, row in enumerate(json.loads(data)):
             output.append(
                 _sample(
@@ -596,7 +679,9 @@ def _load_notinject() -> tuple[list[dict], dict[str, str]]:
 
 
 def _load_jailbreaks_over_time() -> tuple[list[dict], str]:
-    data, digest = _github_raw("jailbreaks_over_time", "data/jailbreaksovertime.json")
+    data, digest = _pinned_github_raw(
+        "jailbreaks_over_time", "data/jailbreaksovertime.json"
+    )
     rows = json.loads(data)
     return [
         _sample(
@@ -624,7 +709,7 @@ def _load_tensor_trust() -> tuple[dict[str, list[dict]], dict[str, str]]:
         path = (
             f"benchmarks/{benchmark}-robustness/v1/{benchmark}_robustness_dataset.jsonl"
         )
-        data, downloads[path] = _github_raw("tensor_trust", path)
+        data, downloads[path] = _pinned_github_raw("tensor_trust", path)
         for row in _jsonl_bytes(data):
             lineage_id = f"{benchmark}:{row['sample_id']}"
             attack_type = (
