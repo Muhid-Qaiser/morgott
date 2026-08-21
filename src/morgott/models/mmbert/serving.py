@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -50,6 +52,7 @@ class RuntimeIdentity:
     cpu_capabilities: tuple[str, ...]
     max_tokens: int
     window_overlap: int
+    loaded_from_cache: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -258,17 +261,39 @@ class MmbertRuntime:
             inference_precision,
             cpu_capabilities,
         )
+        properties: dict[str, Any] = {
+            "INFERENCE_PRECISION_HINT": (
+                ov.Type.bf16 if selected_precision == "bf16" else ov.Type.f32
+            ),
+            "PERFORMANCE_HINT": "LATENCY",
+        }
+        # The compiled-blob cache key derives from the caller's pinned-digest
+        # verification of model.onnx, so a cached blob can never be reused for
+        # a different model, OpenVINO version, precision, or CPU feature set
+        # (guarding shared cache homes across machines). The blob itself is
+        # imported without digest verification and is trusted local runtime
+        # state (docs/threat-model.md); MORGOTT_NO_COMPILE_CACHE=1 keeps the
+        # verified-bytes-only compile. A relative XDG_CACHE_HOME is ignored
+        # per the XDG base directory specification.
+        # ponytail: about 1.2GB of blob per cache key with no eviction; add a
+        # cleanup policy if disk pressure ever matters.
+        if not os.environ.get("MORGOTT_NO_COMPILE_CACHE"):
+            cpu_key = hashlib.sha256("|".join(cpu_capabilities).encode()).hexdigest()
+            cache_key = (
+                f"{onnx_sha256}-{ov.__version__}-{selected_precision}-{cpu_key[:8]}"
+            )
+            try:
+                base = Path(os.environ.get("XDG_CACHE_HOME") or "")
+                if not base.is_absolute():
+                    base = Path.home() / ".cache"
+                cache_dir = base / "morgott" / "openvino" / cache_key.replace("/", "-")
+                cache_dir.mkdir(parents=True, exist_ok=True)
+            except (OSError, RuntimeError):
+                pass
+            else:
+                properties["CACHE_DIR"] = str(cache_dir)
         compile_started = time.perf_counter()
-        compiled_model = core.compile_model(
-            onnx_path,
-            "CPU",
-            {
-                "INFERENCE_PRECISION_HINT": (
-                    ov.Type.bf16 if selected_precision == "bf16" else ov.Type.f32
-                ),
-                "PERFORMANCE_HINT": "LATENCY",
-            },
-        )
+        compiled_model = core.compile_model(onnx_path, "CPU", properties)
         compile_seconds = time.perf_counter() - compile_started
         if {value.get_any_name() for value in compiled_model.inputs} != {
             "input_ids",
@@ -294,6 +319,9 @@ class MmbertRuntime:
                 cpu_capabilities=cpu_capabilities,
                 max_tokens=max_tokens,
                 window_overlap=window_overlap,
+                loaded_from_cache=bool(
+                    compiled_model.get_property("LOADED_FROM_CACHE")
+                ),
             ),
             max_tokens=max_tokens,
             window_overlap=window_overlap,

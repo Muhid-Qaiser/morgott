@@ -4,6 +4,7 @@ import importlib.util
 import json
 import math
 import tempfile
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -85,6 +86,7 @@ class _BenchmarkRuntime:
             "runtime": "openvino-test-cpu-bf16",
             "onnx_sha256": "c" * 64,
             "compile_seconds": 1.25,
+            "loaded_from_cache": False,
             "openvino": "test",
             "requested_inference_precision": "bf16",
             "inference_precision": "bf16",
@@ -529,6 +531,152 @@ class MmbertServingTests(unittest.TestCase):
 
         self.assertAlmostEqual(scores[0], 0.880797, places=6)
         self.assertEqual(scores[1], 0.5)
+
+    def _fake_serving_modules(self, compile_calls, loaded_from_cache=False):
+        class _CompiledPort:
+            def __init__(self, name):
+                self.name = name
+
+            def get_any_name(self):
+                return self.name
+
+        class _CompiledModel:
+            inputs = (_CompiledPort("input_ids"), _CompiledPort("attention_mask"))
+            outputs = ("logit",)
+
+            def get_property(self, name):
+                return {
+                    "INFERENCE_PRECISION_HINT": "bf16",
+                    "INFERENCE_NUM_THREADS": 2,
+                    "LOADED_FROM_CACHE": loaded_from_cache,
+                }[name]
+
+        class _Core:
+            def get_property(self, device, name):
+                return ("BF16",)
+
+            def compile_model(self, path, device, properties):
+                compile_calls.append((path, device, properties))
+                return _CompiledModel()
+
+        fake_openvino = types.SimpleNamespace(
+            __version__="2026.3.0-releases/2026/3",
+            Core=_Core,
+            Type=types.SimpleNamespace(bf16="bf16", f32="f32"),
+        )
+        fake_tokenizers = types.SimpleNamespace(
+            Tokenizer=types.SimpleNamespace(
+                from_file=lambda path: _Tokenizer(
+                    _Encoding([101, 1, 102], [(0, 0), (0, 1), (0, 0)])
+                )
+            )
+        )
+        return {"openvino": fake_openvino, "tokenizers": fake_tokenizers}
+
+    def _from_verified_files_with_fakes(
+        self, temporary, compile_calls, environ, loaded_from_cache=False
+    ):
+        with (
+            mock.patch.dict(
+                "sys.modules",
+                self._fake_serving_modules(compile_calls, loaded_from_cache),
+            ),
+            mock.patch.dict("os.environ", environ),
+        ):
+            return MmbertRuntime._from_verified_files(
+                Path(temporary) / "model.onnx",
+                Path(temporary) / "tokenizer.json",
+                onnx_sha256="a" * 64,
+                tokenizer_sha256="b" * 64,
+                model_key="mmbert-lora-full-ctx1024-u17000-s42",
+                max_tokens=1024,
+                window_overlap=128,
+            )
+
+    def test_compile_uses_a_digest_keyed_openvino_cache_dir(self):
+        compile_calls = []
+        with tempfile.TemporaryDirectory() as temporary:
+            runtime = self._from_verified_files_with_fakes(
+                temporary,
+                compile_calls,
+                {"XDG_CACHE_HOME": temporary, "MORGOTT_NO_COMPILE_CACHE": ""},
+            )
+
+            # b55902d6 is sha256("BF16")[:8], the fake CPU capability tuple.
+            expected = str(
+                Path(temporary)
+                / "morgott"
+                / "openvino"
+                / f"{'a' * 64}-2026.3.0-releases-2026-3-bf16-b55902d6"
+            )
+            self.assertEqual(len(compile_calls), 1)
+            _, device, properties = compile_calls[0]
+            self.assertEqual(device, "CPU")
+            self.assertEqual(properties["CACHE_DIR"], expected)
+            self.assertEqual(properties["PERFORMANCE_HINT"], "LATENCY")
+            self.assertEqual(properties["INFERENCE_PRECISION_HINT"], "bf16")
+            self.assertTrue(Path(expected).is_dir())
+            self.assertEqual(runtime.identity.onnx_sha256, "a" * 64)
+            self.assertIs(runtime.identity.loaded_from_cache, False)
+
+    def test_identity_records_a_cache_import_reported_by_openvino(self):
+        compile_calls = []
+        with tempfile.TemporaryDirectory() as temporary:
+            runtime = self._from_verified_files_with_fakes(
+                temporary,
+                compile_calls,
+                {"XDG_CACHE_HOME": temporary, "MORGOTT_NO_COMPILE_CACHE": ""},
+                loaded_from_cache=True,
+            )
+
+            self.assertIs(runtime.identity.loaded_from_cache, True)
+
+    def test_compile_cache_degrades_or_disables_without_failing_the_load(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            blocking_file = Path(temporary) / "not-a-directory"
+            blocking_file.write_text("")
+
+            # An unusable cache location degrades to an uncached compile.
+            compile_calls = []
+            self._from_verified_files_with_fakes(
+                temporary,
+                compile_calls,
+                {
+                    "XDG_CACHE_HOME": str(blocking_file),
+                    "MORGOTT_NO_COMPILE_CACHE": "",
+                },
+            )
+            self.assertNotIn("CACHE_DIR", compile_calls[0][2])
+
+            # The opt-out keeps the verified-bytes-only compile path.
+            compile_calls = []
+            self._from_verified_files_with_fakes(
+                temporary,
+                compile_calls,
+                {
+                    "XDG_CACHE_HOME": temporary,
+                    "MORGOTT_NO_COMPILE_CACHE": "1",
+                },
+            )
+            self.assertNotIn("CACHE_DIR", compile_calls[0][2])
+
+            # A relative XDG_CACHE_HOME is ignored per the XDG spec, falling
+            # back to HOME/.cache instead of a cwd-relative directory.
+            compile_calls = []
+            self._from_verified_files_with_fakes(
+                temporary,
+                compile_calls,
+                {
+                    "XDG_CACHE_HOME": "relative-cache",
+                    "HOME": temporary,
+                    "MORGOTT_NO_COMPILE_CACHE": "",
+                },
+            )
+            self.assertTrue(
+                compile_calls[0][2]["CACHE_DIR"].startswith(
+                    str(Path(temporary) / ".cache" / "morgott" / "openvino")
+                )
+            )
 
     @unittest.skipUnless(
         importlib.util.find_spec("tokenizers"),

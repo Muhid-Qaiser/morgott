@@ -142,6 +142,7 @@ def create_app(
             "precision": identity.inference_precision,
             "reported_inference_precision": identity.reported_inference_precision,
             "compile_seconds": identity.compile_seconds,
+            "loaded_from_cache": identity.loaded_from_cache,
             "cpu_capabilities": list(identity.cpu_capabilities),
         }
 

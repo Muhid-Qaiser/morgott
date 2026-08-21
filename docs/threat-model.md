@@ -22,7 +22,10 @@ Trusted:
 
 - static policy and reference-monitor code;
 - runtime-supplied capability, provenance, and sensitive-data metadata;
-- the code that refuses to execute denied actions.
+- the code that refuses to execute denied actions;
+- the per-user OpenVINO compiled-blob cache, keyed by the verified
+  `model.onnx` digest but imported without digest verification
+  (`MORGOTT_NO_COMPILE_CACHE=1` restores the verified-bytes-only compile).
 
 Untrusted:
 

@@ -43,6 +43,7 @@ class _Scanner:
         inference_precision="fp32",
         reported_inference_precision="f32",
         compile_seconds=1.25,
+        loaded_from_cache=False,
         cpu_capabilities=("BF16", "FP32"),
     )
 
