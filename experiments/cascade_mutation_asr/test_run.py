@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
+
+import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(Path(__file__).parent), str(ROOT / "src")]
@@ -11,7 +16,98 @@ sys.path[:0] = [str(Path(__file__).parent), str(ROOT / "src")]
 import run  # noqa: E402
 
 
+def _base_row(base_id: str, text: str) -> str:
+    return json.dumps(
+        {
+            "id": base_id,
+            "injection_label": 1,
+            "input_channel": "direct_user",
+            "source": "sample",
+            "text": text,
+        },
+        sort_keys=True,
+    )
+
+
+def _source_root(directory: str, lines: list[str], sha256: str | None = None) -> Path:
+    """Write a synthetic sample shard plus a manifest pinning its digest."""
+
+    root = Path(directory)
+    sources = root / "data" / "sources"
+    sources.mkdir(parents=True)
+    payload = "".join(line + "\n" for line in lines).encode()
+    (sources / "sample.jsonl").write_bytes(payload)
+    manifest = {
+        "schema_version": 5,
+        "source_outputs": {
+            "sample": {
+                "path": "sources/sample.jsonl",
+                "sha256": sha256 or hashlib.sha256(payload).hexdigest(),
+            }
+        },
+    }
+    (root / "data" / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    return root
+
+
 class CascadeMutationAsrTests(unittest.TestCase):
+    def _source_rows(
+        self, lines: list[str], ids: list[str], sha256: str | None = None
+    ) -> list[dict]:
+        with tempfile.TemporaryDirectory() as directory:
+            with (
+                mock.patch.object(run, "ROOT", _source_root(directory, lines, sha256)),
+                mock.patch.object(run, "SOURCE_PREFIXES", ("sample",)),
+            ):
+                return run._source_rows(np.asarray(ids))
+
+    def test_source_rows_skips_decoys_and_keeps_slot_order(self) -> None:
+        lines = [
+            _base_row("sample:one:decoy", "decoy"),
+            _base_row("sample:one", "first"),
+            _base_row("sample:two", "second"),
+        ]
+
+        rows = self._source_rows(lines, ["sample:two", "sample:one"])
+
+        self.assertEqual(
+            [(row["base_id"], row["text"], row["slot"]) for row in rows],
+            [("sample:two", "second", 0), ("sample:one", "first", 1)],
+        )
+
+    def test_source_rows_parses_ids_that_json_escapes(self) -> None:
+        base_id = 'sample:quo"te\\one'
+
+        rows = self._source_rows([_base_row(base_id, "kept")], [base_id])
+
+        self.assertEqual(rows[0]["text"], "kept")
+
+    def test_source_rows_fails_closed_on_a_missing_id(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError, "canonical source verification failed: sample"
+        ):
+            self._source_rows(
+                [_base_row("sample:one", "first")], ["sample:one", "sample:two"]
+            )
+
+    def test_source_rows_fails_closed_on_a_pinned_digest_mismatch(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError, "canonical source verification failed: sample"
+        ):
+            self._source_rows(
+                [_base_row("sample:one", "first")], ["sample:one"], sha256="0" * 64
+            )
+
+    def test_source_rows_rejects_a_duplicate_before_completion(self) -> None:
+        lines = [
+            _base_row("sample:one", "first"),
+            _base_row("sample:one", "first"),
+            _base_row("sample:two", "second"),
+        ]
+
+        with self.assertRaisesRegex(ValueError, "duplicate frozen base identity"):
+            self._source_rows(lines, ["sample:one", "sample:two"])
+
     def test_exact_asr_uses_sampling_without_replacement(self) -> None:
         self.assertAlmostEqual(run.exact_asr([1], 1), 1 / 25)
         self.assertAlmostEqual(run.exact_asr([1], 2), 2 / 25)

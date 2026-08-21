@@ -2,13 +2,17 @@ import hashlib
 import json
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 
+from morgott.models import routing_baseline
 from morgott.models.routing_baseline import (
     MAX_BATCH_CHARACTERS,
+    SEED,
     _cap_rows,
     _evaluate,
+    _fit,
     _is_weak_label,
     _metrics,
     _row_batches,
@@ -88,6 +92,38 @@ class RoutingBaselineTests(unittest.TestCase):
             [len(batch) for batch in _row_batches(rows)],
             [1, 2],
         )
+
+    def test_fit_coefficients_match_per_batch_transforms(self):
+        from sklearn.base import clone
+
+        rng = np.random.default_rng(7)
+        words = ["alpha", "beta", "ignore", "previous", "instructions", "please"]
+        rows = [
+            {
+                "text": " ".join(rng.choice(words, size=int(rng.integers(3, 12)))),
+                "label": index % 2,
+            }
+            for index in range(48)
+        ]
+
+        # A small batch size forces several partial_fit calls per epoch, so a
+        # reordering or boundary slip in _fit would change the coefficients.
+        with mock.patch.object(routing_baseline, "BATCH_SIZE", 8):
+            vectorizer, fitted = _fit(rows, epochs=2)
+            reference = clone(fitted)
+            for epoch in range(2):
+                order = np.random.default_rng(SEED + epoch).permutation(len(rows))
+                shuffled = (rows[int(index)] for index in order)
+                for batch in _row_batches(shuffled):
+                    reference.partial_fit(
+                        vectorizer.transform([row["text"] for row in batch]),
+                        np.asarray([row["label"] for row in batch], dtype=np.int8),
+                        classes=np.asarray([0, 1]),
+                    )
+
+        self.assertEqual(fitted.t_, reference.t_)
+        self.assertTrue(np.array_equal(fitted.coef_, reference.coef_))
+        self.assertTrue(np.array_equal(fitted.intercept_, reference.intercept_))
 
     def test_metrics_use_the_untouched_cutoff(self):
         metrics = _metrics(

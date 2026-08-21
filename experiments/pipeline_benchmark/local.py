@@ -76,7 +76,12 @@ def load_frozen_source_rows(
     *,
     root: Path = ROOT,
 ) -> dict[str, dict[str, Any]]:
-    """Reload and verify complete source rows for an in-memory benchmark run."""
+    """Reload and verify complete source rows for an in-memory benchmark run.
+
+    Every canonical shard is hashed end to end and checked against its
+    manifest-pinned digest, so lines the prefilter never parses still
+    cannot hide corruption.
+    """
 
     canonical: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
     external: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
@@ -84,17 +89,48 @@ def load_frozen_source_rows(
         target = canonical if row["dataset"] == "canonical" else external
         target[row["source"]][row["row_id"]] = row
 
+    manifest_path = root / "data" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("schema_version") != 5:
+        raise ValueError("unsupported canonical data manifest")
     rows: dict[str, dict[str, Any]] = {}
+    marker = b'"id": "'
     for source, needed in canonical.items():
+        spec = manifest.get("source_outputs", {}).get(source)
+        if not isinstance(spec, dict) or spec.get("path") != f"sources/{source}.jsonl":
+            raise ValueError(f"canonical source contract changed: {source}")
         path = root / "data" / "sources" / f"{source}.jsonl"
         if not path.is_file():
             raise ValueError(f"canonical source is unavailable: {source}")
-        with path.open(encoding="utf-8") as handle:
+        needed_bytes = {row_id.encode() for row_id in needed}
+        digest = hashlib.sha256()
+        remaining = len(needed)
+        with path.open("rb") as handle:
             for line in handle:
+                digest.update(line)
+                if not remaining:
+                    continue
+                # Cheap prefilter: keys are sorted, so the first marker hit
+                # is the top-level id; anything unclear (backslash in the
+                # span, missing marker or quote) falls through to json.loads.
+                # A wrong skip fails closed on the count and whole-file
+                # digest checks below.
+                # ponytail: first-marker heuristic; json.loads is the fallback.
+                start = line.find(marker)
+                if start != -1:
+                    start += len(marker)
+                    end = line.find(b'"', start)
+                    if end != -1:
+                        candidate = line[start:end]
+                        if b"\\" not in candidate and candidate not in needed_bytes:
+                            continue
                 source_row = json.loads(line)
                 frozen = needed.get(source_row.get("id"))
                 if frozen is not None:
                     _accept_source_row(rows, frozen, source_row)
+                    remaining -= 1
+        if digest.hexdigest() != spec.get("sha256"):
+            raise ValueError(f"canonical source verification failed: {source}")
 
     external_data, _ = external_rows(root / "artifacts" / "mmbert" / "data")
     source_names = {"promptshield": "promptshield_test", "sep": "sep"}
@@ -132,6 +168,12 @@ def _accept_source_row(
     if panel_id in rows:
         raise ValueError(f"duplicate frozen row: {panel_id}")
     rows[panel_id] = source_row
+
+
+def _token_counts(tokenizer, texts: list[str]) -> list[int]:
+    """Batched token counts, identical to per-text encode lengths."""
+
+    return [len(ids) for ids in tokenizer(texts, add_special_tokens=False)["input_ids"]]
 
 
 def score_cuda(
@@ -192,14 +234,13 @@ def score_cuda(
                 batch_size=selected_batch_size,
             )
             window_scores = _sigmoid(logits)
+            token_counts = _token_counts(tokenizer, normalized)
             for block_index, row in enumerate(block):
                 indices = np.flatnonzero(mapping == block_index)
                 if not len(indices):
                     raise ValueError("tokenizer produced no window for an artifact")
                 scores = [float(window_scores[index]) for index in indices]
-                token_count = len(
-                    tokenizer.encode(normalized[block_index], add_special_tokens=False)
-                )
+                token_count = token_counts[block_index]
                 total_tokens += token_count
                 total_windows += len(indices)
                 records.append(
@@ -347,12 +388,11 @@ def score_prompt_guard(
                 }
                 probabilities = torch.softmax(model(**inputs).logits.float(), dim=-1)
                 window_scores.extend(probabilities[:, 1].cpu().numpy())
+            token_counts = _token_counts(tokenizer, block_texts)
             for block_index, row in enumerate(block):
                 indices = np.flatnonzero(mapping == block_index)
                 scores = [float(window_scores[index]) for index in indices]
-                token_count = len(
-                    tokenizer.encode(block_texts[block_index], add_special_tokens=False)
-                )
+                token_count = token_counts[block_index]
                 total_tokens += token_count
                 total_windows += len(indices)
                 records.append(

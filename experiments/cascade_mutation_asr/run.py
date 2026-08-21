@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import functools
 import gzip
 import hashlib
 import importlib.util
@@ -272,12 +273,33 @@ def _source_rows(ids: np.ndarray) -> list[dict]:
         path = ROOT / "data" / spec["path"]
         digest = hashlib.sha256()
         found = set()
+        needed = by_prefix[prefix]
+        needed_bytes = {base_id.encode() for base_id in needed}
+        marker = b'"id": "'
         with path.open("rb") as handle:
             for line in handle:
                 digest.update(line)
+                if len(found) == len(needed):
+                    continue
+                # Cheap prefilter: keys are sorted, so the first marker hit
+                # is the top-level id; anything unclear (backslash in the
+                # span, missing marker or quote) falls through to json.loads.
+                # A wrong skip fails closed on the found-set and whole-file
+                # digest checks below. Duplicates after every needed id is
+                # found go unparsed; the build's unique-id check and the
+                # pinned digest already exclude them.
+                # ponytail: first-marker heuristic; json.loads is the fallback.
+                start = line.find(marker)
+                if start != -1:
+                    start += len(marker)
+                    end = line.find(b'"', start)
+                    if end != -1:
+                        candidate = line[start:end]
+                        if b"\\" not in candidate and candidate not in needed_bytes:
+                            continue
                 row = json.loads(line)
                 base_id = row.get("id")
-                if base_id not in by_prefix[prefix]:
+                if base_id not in needed:
                     continue
                 if base_id in selected:
                     raise ValueError("duplicate frozen base identity")
@@ -303,6 +325,7 @@ def _source_rows(ids: np.ndarray) -> list[dict]:
     return [selected[base_id] | {"slot": slot} for slot, base_id in enumerate(ids)]
 
 
+@functools.cache  # cached: treat the returned rows and arrays as frozen
 def _verified_rows() -> tuple[list[dict], np.ndarray, np.ndarray]:
     ids, no_op, text_hashes = _verify_inputs()
     rows = _source_rows(ids)

@@ -137,15 +137,23 @@ def _fit(rows: list[dict], epochs: int):
         average=True,
         random_state=SEED,
     )
+    # The hashing vectorizer is stateless, so transform once and slice rows
+    # per epoch: slices are bit-identical to per-batch transforms and the
+    # batch boundaries are unchanged, so fitted coefficients match exactly.
+    # ponytail: the whole capped train matrix stays resident for the fit
+    # (hundreds of MB at ~195k rows, growing with max_per_source_label);
+    # revert to per-batch transforms if the cap rises or memory tightens.
+    matrix = vectorizer.transform([row["text"] for row in rows])
+    labels = np.asarray([row["label"] for row in rows], dtype=np.int8)
+    classes = np.asarray([0, 1])
     for epoch in range(epochs):
         order = np.random.default_rng(SEED + epoch).permutation(len(rows))
         shuffled = (rows[int(index)] for index in order)
+        position = 0
         for batch in _row_batches(shuffled):
-            classifier.partial_fit(
-                vectorizer.transform([row["text"] for row in batch]),
-                np.asarray([row["label"] for row in batch], dtype=np.int8),
-                classes=np.asarray([0, 1]),
-            )
+            indices = order[position : position + len(batch)]
+            position += len(batch)
+            classifier.partial_fit(matrix[indices], labels[indices], classes=classes)
     return vectorizer, classifier
 
 
