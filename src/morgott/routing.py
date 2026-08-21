@@ -6,8 +6,10 @@ import os
 import sqlite3
 import tempfile
 import zlib
-from collections import Counter, defaultdict
-from itertools import batched, groupby
+from collections import Counter, defaultdict, deque
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+from itertools import batched, chain, groupby
 from multiprocessing import get_context
 from pathlib import Path
 
@@ -25,10 +27,52 @@ PARTITION_NAMES = {
 TARGET_RATIOS = {TRAIN: 0.7, VALIDATION: 0.1, DEV_TEST: 0.2}
 OVERLAP_BATCH_SIZE = 512
 OVERLAP_WORKERS = min(6, os.cpu_count() or 1)
+INGEST_BATCH_LINES = 2_000
+INGEST_WORKERS = min(6, os.cpu_count() or 1)
 
 
 def _overlap_values(text: str) -> tuple[str, int | None]:
     return leakage_text_hash(text), fingerprint(text)
+
+
+def _pipelined_map(executor, function, batches, chunksize):
+    """Yield ordered map results while keeping one extra batch in flight.
+
+    Submission and consumption both run on the calling thread, so batch
+    generators backed by SQLite cursors or open shard handles stay
+    single-threaded and in-flight memory is bounded at two batches. Results
+    come back strictly in submission order and worker exceptions re-raise
+    here, preserving the fail-closed abort of a blocking in-process map.
+    The executor is a ProcessPoolExecutor rather than multiprocessing.Pool
+    because a worker killed mid-batch (an OOM kill, say) raises
+    BrokenProcessPool here instead of blocking forever on a result that
+    will never arrive.
+    """
+    pending = deque()
+    for batch in batches:
+        pending.append(executor.map(function, batch, chunksize=chunksize))
+        if len(pending) > 1:
+            yield list(pending.popleft())
+    while pending:
+        yield list(pending.popleft())
+
+
+def _paired_overlap_batches(executor, row_batches):
+    """Yield (rows, overlap values) with the workers computing one batch ahead.
+
+    The workers fingerprint batch N+1 while the parent consumes batch N, so
+    the NearIndex bookkeeping and every write stay strictly sequential and
+    byte-identical to the blocking serial path.
+    """
+    pending_rows = deque()
+
+    def texts():
+        for rows in row_batches:
+            pending_rows.append(rows)
+            yield [row["text"] for row in rows]
+
+    for values in _pipelined_map(executor, _overlap_values, texts(), chunksize=16):
+        yield pending_rows.popleft(), values
 
 
 class _JsonlWriter:
@@ -156,6 +200,86 @@ def _open_index(path: Path) -> sqlite3.Connection:
     return connection
 
 
+def _validate_source_line(
+    item: tuple[int, bytes],
+    *,
+    source: str,
+    revision: str,
+    source_license: str,
+) -> tuple[int, str | None, Exception | None, tuple | None]:
+    """Run the per-row ingest checks and compression for one raw shard line.
+
+    Returns (line_number, row_id, error, fields) so the work can run in a
+    worker process. Errors are returned instead of raised, letting the parent
+    replay today's exact failure order: schema errors first (row_id is None),
+    then its own order-sensitive duplicate-id check, then the remaining
+    per-row errors. fields is None for auxiliary rows; the group name stays a
+    string because group-id interning is first-seen-order-sensitive and must
+    happen in the parent.
+    """
+    line_number, line = item
+    row_id = None
+    try:
+        if not line.strip():
+            raise ValueError(f"{source}:{line_number} has a blank row")
+        row = json.loads(line)
+        candidate_id = row.get("id")
+        text = row.get("text")
+        if (
+            row.get("schema_version") != 5
+            or row.get("source") != source
+            or row.get("source_revision") != revision
+            or row.get("license") != source_license
+            or not isinstance(candidate_id, str)
+            or not candidate_id
+            or not isinstance(text, str)
+            or not text.strip()
+            or not isinstance(row.get("origins"), list)
+            or not row["origins"]
+        ):
+            raise ValueError(f"{source}:{line_number} has an invalid schema")
+        row_id = candidate_id
+        role = row.get("source_role")
+        eligible = row.get("routing_training_eligible")
+        expected = role in {"candidate", "dev_test"}
+        if role not in {"candidate", "dev_test", "auxiliary", "uncertain"}:
+            raise ValueError(f"{source}:{line_number} has invalid source role")
+        if type(eligible) is not bool or eligible != expected:
+            raise ValueError(
+                f"{source}:{line_number} has inconsistent routing eligibility"
+            )
+        normalized_hash = row.get("normalized_text_sha256")
+        if normalized_hash != text_hash(text):
+            raise ValueError(f"{source}:{line_number} has invalid text hash")
+        routing_label = row.get("routing_label")
+        if type(routing_label) is not int or routing_label not in (0, 1):
+            raise ValueError(f"{source}:{line_number} has invalid routing label")
+        if role == "auxiliary":
+            return line_number, row_id, None, None
+        group_name = None
+        if eligible:
+            group_name = row.get("split_group_id")
+            if not isinstance(group_name, str) or not group_name:
+                raise ValueError(f"{source}:{line_number} has no split lineage")
+        fields = (
+            role,
+            int(eligible),
+            normalized_hash,
+            group_name,
+            routing_label,
+            zlib.compress(line.rstrip(b"\r\n"), level=1),
+        )
+    except Exception as error:
+        return line_number, row_id, error, None
+    return line_number, row_id, None, fields
+
+
+def _numbered_lines(handle, digest):
+    for line_number, line in enumerate(handle, 1):
+        digest.update(line)
+        yield line_number, line
+
+
 def _ingest_sources(
     connection: sqlite3.Connection,
     data_dir: Path,
@@ -174,91 +298,91 @@ def _ingest_sources(
             )
             row_batch.clear()
 
-    for source, output in sorted(source_outputs.items()):
-        path = manifest_output_path(data_dir, output)
-        digest = hashlib.sha256()
-        source_ids = set()
-        rows_seen = 0
-        with path.open("rb") as handle:
-            for line_number, line in enumerate(handle, 1):
-                digest.update(line)
-                if not line.strip():
-                    raise ValueError(f"{source}:{line_number} has a blank row")
-                row = json.loads(line)
-                rows_seen += 1
-                row_id = row.get("id")
-                text = row.get("text")
-                if (
-                    row.get("schema_version") != 5
-                    or row.get("source") != source
-                    or row.get("source_revision") != SOURCES[source]["revision"]
-                    or row.get("license") != SOURCES[source]["license"]
-                    or not isinstance(row_id, str)
-                    or not row_id
-                    or not isinstance(text, str)
-                    or not text.strip()
-                    or not isinstance(row.get("origins"), list)
-                    or not row["origins"]
-                ):
-                    raise ValueError(f"{source}:{line_number} has an invalid schema")
-                if row_id in source_ids:
-                    raise ValueError(f"{source}:{line_number} has a duplicate id")
-                source_ids.add(row_id)
-                role = row.get("source_role")
-                eligible = row.get("routing_training_eligible")
-                expected = role in {"candidate", "dev_test"}
-                if role not in {"candidate", "dev_test", "auxiliary", "uncertain"}:
-                    raise ValueError(f"{source}:{line_number} has invalid source role")
-                if type(eligible) is not bool or eligible != expected:
-                    raise ValueError(
-                        f"{source}:{line_number} has inconsistent routing eligibility"
+    total_rows = sum(output.get("rows") or 0 for output in source_outputs.values())
+    # ponytail: the parent stays the single reader, sha256 hasher, duplicate
+    # checker, and SQLite inserter with one batch in flight; shard-level reads
+    # or wider pipelining is the next ceiling once the workers outpace it.
+    executor = (
+        ProcessPoolExecutor(INGEST_WORKERS, mp_context=get_context("spawn"))
+        if INGEST_WORKERS > 1 and total_rows >= INGEST_BATCH_LINES * INGEST_WORKERS
+        else None
+    )
+    try:
+        for source, output in sorted(source_outputs.items()):
+            path = manifest_output_path(data_dir, output)
+            digest = hashlib.sha256()
+            source_ids = set()
+            rows_seen = 0
+            validate = partial(
+                _validate_source_line,
+                source=source,
+                revision=SOURCES[source]["revision"],
+                source_license=SOURCES[source]["license"],
+            )
+            with path.open("rb") as handle:
+                lines = _numbered_lines(handle, digest)
+                if executor is None:
+                    results = map(validate, lines)
+                else:
+                    results = chain.from_iterable(
+                        _pipelined_map(
+                            executor,
+                            validate,
+                            batched(lines, INGEST_BATCH_LINES),
+                            chunksize=max(
+                                1, INGEST_BATCH_LINES // (INGEST_WORKERS * 4)
+                            ),
+                        )
                     )
-                normalized_hash = row.get("normalized_text_sha256")
-                if normalized_hash != text_hash(text):
-                    raise ValueError(f"{source}:{line_number} has invalid text hash")
-                routing_label = row.get("routing_label")
-                if type(routing_label) is not int or routing_label not in (0, 1):
-                    raise ValueError(
-                        f"{source}:{line_number} has invalid routing label"
+                for line_number, row_id, error, fields in results:
+                    rows_seen = line_number
+                    if row_id is not None:
+                        if row_id in source_ids:
+                            raise ValueError(
+                                f"{source}:{line_number} has a duplicate id"
+                            )
+                        source_ids.add(row_id)
+                    if error is not None:
+                        raise error
+                    if fields is None:
+                        continue
+                    role, eligible, normalized_hash, group_name, label, payload = fields
+                    group_id = None
+                    if group_name is not None:
+                        group_id = group_ids.get(group_name)
+                        if group_id is None:
+                            group_id = len(group_names)
+                            group_ids[group_name] = group_id
+                            group_names.append(group_name)
+                    row_batch.append(
+                        (
+                            role,
+                            eligible,
+                            normalized_hash,
+                            group_id,
+                            source,
+                            label,
+                            payload,
+                        )
                     )
-                if role == "auxiliary":
-                    continue
-                group_id = None
-                if eligible:
-                    group_name = row.get("split_group_id")
-                    if not isinstance(group_name, str) or not group_name:
-                        raise ValueError(f"{source}:{line_number} has no split lineage")
-                    group_id = group_ids.get(group_name)
-                    if group_id is None:
-                        group_id = len(group_names)
-                        group_ids[group_name] = group_id
-                        group_names.append(group_name)
-                row_batch.append(
-                    (
-                        role,
-                        int(eligible),
-                        normalized_hash,
-                        group_id,
-                        source,
-                        routing_label,
-                        zlib.compress(line.rstrip(b"\r\n"), level=1),
-                    )
+                    if len(row_batch) >= 2_000:
+                        flush()
+            flush()
+            actual_sha256 = digest.hexdigest()
+            if actual_sha256 != output["sha256"]:
+                raise RuntimeError(
+                    f"{source} source shard changed: expected {output['sha256']}, "
+                    f"got {actual_sha256}"
                 )
-                if len(row_batch) >= 2_000:
-                    flush()
-        flush()
-        actual_sha256 = digest.hexdigest()
-        if actual_sha256 != output["sha256"]:
-            raise RuntimeError(
-                f"{source} source shard changed: expected {output['sha256']}, "
-                f"got {actual_sha256}"
-            )
-        if rows_seen != output.get("rows"):
-            raise RuntimeError(
-                f"{source} source shard row count changed: "
-                f"expected {output.get('rows')}, got {rows_seen}"
-            )
-        connection.commit()
+            if rows_seen != output.get("rows"):
+                raise RuntimeError(
+                    f"{source} source shard row count changed: "
+                    f"expected {output.get('rows')}, got {rows_seen}"
+                )
+            connection.commit()
+    finally:
+        if executor is not None:
+            executor.shutdown(cancel_futures=True)
     connection.executescript(
         """
         CREATE INDEX rows_hash ON rows(normalized_hash, seq);
@@ -566,26 +690,30 @@ def _write_supervised_views(
     dev_strict = set()
     train_strict = set()
     row_count = connection.execute("SELECT COUNT(*) FROM merged").fetchone()[0]
-    pool = (
-        get_context("spawn").Pool(OVERLAP_WORKERS)
+    executor = (
+        ProcessPoolExecutor(OVERLAP_WORKERS, mp_context=get_context("spawn"))
         if row_count >= OVERLAP_BATCH_SIZE * OVERLAP_WORKERS and OVERLAP_WORKERS > 1
         else None
     )
     try:
         for partition in (DEV_TEST, TRAIN, VALIDATION):
             name = PARTITION_NAMES[partition]
-            for rows in batched(
+            row_batches = batched(
                 _partition_rows(connection, partition), OVERLAP_BATCH_SIZE
-            ):
-                values = (
-                    pool.map(
-                        _overlap_values,
-                        (row["text"] for row in rows),
-                        chunksize=16,
-                    )
-                    if pool is not None
-                    else map(_overlap_values, (row["text"] for row in rows))
+            )
+            # ponytail: the parent still pays zlib.decompress/json.loads per
+            # row in _partition_rows and json.dumps in the writer; shipping
+            # compressed payloads to the workers is the next ceiling and needs
+            # label and normalized_text_sha256 plumbed through for NearIndex
+            # and the writer counters.
+            if executor is None:
+                paired = (
+                    (rows, map(_overlap_values, (row["text"] for row in rows)))
+                    for rows in row_batches
                 )
+            else:
+                paired = _paired_overlap_batches(executor, row_batches)
+            for rows, values in paired:
                 for row, (strict_hash, near_value) in zip(rows, values, strict=True):
                     matches = []
                     reason = None
@@ -628,9 +756,8 @@ def _write_supervised_views(
                                 row, dataset="routing_train", value=near_value
                             )
     finally:
-        if pool is not None:
-            pool.close()
-            pool.join()
+        if executor is not None:
+            executor.shutdown(cancel_futures=True)
     return dict(sorted(stats.items()))
 
 
