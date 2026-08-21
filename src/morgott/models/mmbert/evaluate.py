@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
 import math
@@ -11,6 +12,7 @@ import re
 import shutil
 import tempfile
 import time
+import tomllib
 from collections import defaultdict
 from pathlib import Path
 
@@ -737,6 +739,41 @@ def _sigmoid(values: np.ndarray) -> np.ndarray:
     return scores
 
 
+def _padded_token_groups(
+    tokenizer,
+    texts: list[str],
+    *,
+    batch_size: int,
+    max_tokens: int,
+):
+    """Tokenize a whole scoring block once, then pad per minibatch.
+
+    One block-wide tokenizer call keeps the Rust tokenizer pool saturated
+    instead of capping its parallelism at ``batch_size`` rows per call. Each
+    minibatch is then padded to its own longest row with ``tokenizer.pad``,
+    which reproduces ``tokenizer(..., padding=True)`` over the same rows
+    exactly, so input_ids, attention_mask, and therefore scores are
+    bit-identical to per-minibatch tokenization.
+
+    Argument validation lives in ``_score_single_texts``, the sole caller.
+    """
+    encoded = tokenizer(
+        [strict_normalize(text) for text in texts],
+        add_special_tokens=True,
+        max_length=max_tokens,
+        padding=False,
+        truncation=True,
+    )
+    for start in range(0, len(texts), batch_size):
+        yield tokenizer.pad(
+            {
+                key: values[start : start + batch_size]
+                for key, values in encoded.items()
+            },
+            return_tensors="pt",
+        )
+
+
 def _score_single_texts(
     encoder,
     tokenizer,
@@ -755,15 +792,13 @@ def _score_single_texts(
     head.eval()
     logits = []
     with torch.no_grad():
-        for start in range(0, len(texts), batch_size):
-            encoded = tokenizer(
-                [strict_normalize(text) for text in texts[start : start + batch_size]],
-                add_special_tokens=True,
-                max_length=max_tokens,
-                padding=True,
-                return_tensors="pt",
-                truncation=True,
-            ).to("cuda")
+        for group in _padded_token_groups(
+            tokenizer,
+            texts,
+            batch_size=batch_size,
+            max_tokens=max_tokens,
+        ):
+            encoded = group.to("cuda")
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 hidden = encoder(**encoded).last_hidden_state
                 features = pool(hidden, encoded["attention_mask"])
@@ -791,6 +826,9 @@ def _score(
         raise ValueError(f"max tokens must be one of {SUPPORTED_MAX_TOKENS}")
 
     def score_batch(texts: list[str]) -> np.ndarray:
+        # ponytail: the 512-cap path still tokenizes per minibatch inside
+        # core.batch_logits (shared with training); block-tokenize there if
+        # 512-cap eval wall time ever matters.
         scores = (
             score_texts(
                 encoder,
@@ -930,6 +968,177 @@ def _scoring_sha256(max_tokens: int = MAX_TOKENS) -> str:
         digest.update(file_sha256(path).encode("ascii"))
         digest.update(b"\n")
     return digest.hexdigest()
+
+
+# Everything the resumable score journal certifies: the score-producing call
+# chain, per file. Report assembly, metrics, thresholds, identity documents,
+# and the CLI can all change without altering a single score, and must not
+# brick a journal holding hours of GPU work.
+# ponytail: manually maintained symbol list (renames fail closed below, new
+# unlisted helpers do not), split scoring into its own module if it grows.
+_JOURNAL_SCORING_SOURCES = (
+    (
+        "core.py",
+        (
+            "batch_logits",
+            "file_sha256",
+            "new_head",
+            "pool",
+            "score_logits",
+            "score_texts",
+        ),
+    ),
+    ("data.py", ("batches",)),
+    (
+        "evaluate.py",
+        (
+            "_assert_restored_state",
+            "_load_pytorch_base_model",
+            "_load_run",
+            "_load_snapshot",
+            "_padded_token_groups",
+            "_restore_snapshot_state",
+            "_score",
+            "_score_single_texts",
+            "_sigmoid",
+            "_validate_state",
+            "_verified_base_model_identity",
+        ),
+    ),
+)
+# Locked versions of the packages that participate in producing a score.
+_JOURNAL_SCORING_PINS = (
+    "numpy",
+    "peft",
+    "safetensors",
+    "tokenizers",
+    "torch",
+    "transformers",
+)
+
+
+def _journal_scoring_pins() -> dict[str, str]:
+    lock = tomllib.loads(
+        (Path(__file__).resolve().parents[4] / "uv.lock").read_text(encoding="utf-8")
+    )
+    # uv.lock may carry several entries for one package under forked marker
+    # resolution, so bind every entry rather than letting the last one win.
+    # Index directly: a malformed lock entry raises instead of silently
+    # dropping a version from the key.
+    versions: dict[str, list[str]] = {}
+    for package in lock["package"]:
+        versions.setdefault(package["name"], []).append(package["version"])
+    missing = [name for name in _JOURNAL_SCORING_PINS if name not in versions]
+    if missing:
+        raise ValueError(
+            f"score-journal identity cannot locate uv.lock pins: {missing}"
+        )
+    # torch's native numeric stack ships as separate lock entries whose
+    # versions can move bf16 kernel reduction order without touching the
+    # named pins, so bind them when present (CPU-only locks have none).
+    names = [
+        *_JOURNAL_SCORING_PINS,
+        *sorted(
+            name for name in versions if name == "triton" or name.startswith("nvidia-")
+        ),
+    ]
+    return {name: ",".join(sorted(versions[name])) for name in names}
+
+
+def _journal_scoring_sha256(max_tokens: int = MAX_TOKENS) -> str:
+    """Key resumable score journals on only what produces scores.
+
+    ``_scoring_sha256`` hashes whole files plus all of uv.lock. That stays the
+    published evaluation identity, but as a journal key it bricked completed
+    scores on any unrelated edit or dependency bump, the same over-broad
+    keying the prep cache fixed after losing a 502 MB cache four times on
+    2026-08-07 (see ``_prep_source_digest`` in train.py). Journals instead
+    bind the score-producing sources from ``_JOURNAL_SCORING_SOURCES``, the
+    pinned scoring constants, the normalization and score-journal modules,
+    and the scoring-stack dependency pins from uv.lock, including torch's
+    native numeric stack when present. Sources are read from the files with ``ast``
+    rather than ``inspect`` on live objects, so tests that patch scoring
+    functions still see a stable key, and the digest fails closed when any
+    named symbol or pin is missing. The model weights and the ordered score
+    panel are bound separately in ``ScoreJournalSpec``.
+    """
+    if type(max_tokens) is not int or max_tokens not in SUPPORTED_MAX_TOKENS:
+        raise ValueError(f"max tokens must be one of {SUPPORTED_MAX_TOKENS}")
+    constants = {
+        "ATTENTION_IMPLEMENTATION": ATTENTION_IMPLEMENTATION,
+        "MAX_TOKENS": MAX_TOKENS,
+        "MODEL_ID": MODEL_ID,
+        "MODEL_REVISION": MODEL_REVISION,
+        "SUPPORTED_MAX_TOKENS": list(SUPPORTED_MAX_TOKENS),
+    }
+    digest = hashlib.sha256()
+    digest.update(b"journal-scoring-v1\n")
+    digest.update(f"evaluation_max_tokens={max_tokens}\n".encode("ascii"))
+    digest.update(
+        json.dumps(constants, sort_keys=True, separators=(",", ":")).encode("ascii")
+    )
+    digest.update(b"\n")
+    for file_name, names in _JOURNAL_SCORING_SOURCES:
+        source = Path(__file__).with_name(file_name).read_text(encoding="utf-8")
+        # get_source_segment starts at the def line, so hash the decorators
+        # explicitly: a decorator edit changes scoring and must move the key.
+        segments = {
+            node.name: "\n".join(
+                ast.get_source_segment(source, part)
+                for part in (*node.decorator_list, node)
+            )
+            for node in ast.parse(source).body
+            if isinstance(node, ast.FunctionDef) and node.name in names
+        }
+        missing = [name for name in names if name not in segments]
+        if missing:
+            raise ValueError(
+                f"score-journal identity cannot locate {missing} in {file_name}"
+            )
+        for name in names:
+            digest.update(f"{file_name}:{name}\n".encode("ascii"))
+            digest.update(segments[name].encode("utf-8"))
+            digest.update(b"\n")
+    digest.update(
+        file_sha256(Path(__file__).resolve().parents[2] / "normalization.py").encode(
+            "ascii"
+        )
+    )
+    digest.update(b"\n")
+    # ScoreJournal's read/write code decides the bytes a resumed panel is
+    # made of; hash the whole file since its classes sit outside the
+    # top-level-function AST walk above.
+    digest.update(
+        file_sha256(Path(__file__).with_name("score_journal.py")).encode("ascii")
+    )
+    digest.update(b"\n")
+    for name, version in _journal_scoring_pins().items():
+        digest.update(f"{name}=={version}\n".encode("utf-8"))
+    return digest.hexdigest()
+
+
+def _journal_spec(
+    *,
+    model_sha256: str,
+    panel_sha256: str,
+    rows: int,
+    batch_size: int,
+    evaluation_max_tokens: int,
+) -> ScoreJournalSpec:
+    """Build the resumable-journal identity for one scored population.
+
+    Computes the narrow journal key here rather than taking it as an
+    argument, so journal-less runs never pay for or fail on it and the
+    wiring stays testable.
+    """
+    return ScoreJournalSpec(
+        model_sha256=model_sha256,
+        panel_sha256=panel_sha256,
+        scoring_sha256=_journal_scoring_sha256(evaluation_max_tokens),
+        rows=rows,
+        batch_size=batch_size,
+        columns=("score",),
+    )
 
 
 def _evaluation_input_sha256(
@@ -1322,13 +1531,12 @@ def evaluate(
         journal = (
             ScoreJournal(
                 score_journal / name,
-                ScoreJournalSpec(
+                _journal_spec(
                     model_sha256=model_sha256,
                     panel_sha256=score_panel_sha256[name],
-                    scoring_sha256=scoring_sha256,
                     rows=len(records),
                     batch_size=batch_size,
-                    columns=("score",),
+                    evaluation_max_tokens=evaluation_max_tokens,
                 ),
             )
             if score_journal is not None

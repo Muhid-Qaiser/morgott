@@ -421,5 +421,302 @@ class EvaluationInputIdentityTests(unittest.TestCase):
                     path.write_bytes(b"original")
 
 
+class JournalScoringIdentityTests(unittest.TestCase):
+    """The journal key must move with scoring sources and with nothing else.
+
+    ``_scoring_sha256`` stays the published whole-file evaluation identity;
+    the journal key narrows to the score-producing call chain so a report or
+    CLI fix between a crash and a resume cannot brick hours of GPU scoring.
+    """
+
+    def _tree(self) -> tuple[Path, Path]:
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        module = root / "src" / "morgott" / "models" / "mmbert"
+        module.mkdir(parents=True)
+        real = Path(mmbert_evaluate.__file__).resolve()
+        for name in ("evaluate.py", "core.py", "data.py", "score_journal.py"):
+            (module / name).write_text(
+                real.with_name(name).read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+        (root / "src" / "morgott" / "normalization.py").write_text(
+            (real.parents[2] / "normalization.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        pins = dict.fromkeys(mmbert_evaluate._JOURNAL_SCORING_PINS, "9.9.9")
+        self._write_lock(root, {**pins, "ruff": "1.0.0"})
+        return root, module
+
+    @staticmethod
+    def _write_lock(root: Path, versions: dict) -> None:
+        entries = "\n".join(
+            f'[[package]]\nname = "{name}"\nversion = "{version}"\n'
+            for name, pinned in sorted(versions.items())
+            for version in ([pinned] if isinstance(pinned, str) else pinned)
+        )
+        (root / "uv.lock").write_text(f"version = 1\n\n{entries}", encoding="utf-8")
+
+    @staticmethod
+    def _edit(path: Path, old: str, new: str) -> None:
+        source = path.read_text(encoding="utf-8")
+        assert source.count(old) == 1, old
+        path.write_text(source.replace(old, new), encoding="utf-8")
+
+    def _digests(self, module: Path) -> tuple[str, str]:
+        with patch.object(mmbert_evaluate, "__file__", str(module / "evaluate.py")):
+            return (
+                mmbert_evaluate._journal_scoring_sha256(),
+                mmbert_evaluate._scoring_sha256(),
+            )
+
+    def test_real_tree_digest_is_computable_and_binds_the_context_cap(self):
+        # Fails closed right here if the symbol list goes stale in this repo.
+        narrow = mmbert_evaluate._journal_scoring_sha256(512)
+        self.assertRegex(narrow, r"\A[0-9a-f]{64}\Z")
+        self.assertNotEqual(narrow, mmbert_evaluate._journal_scoring_sha256(1024))
+
+    def test_listed_symbols_cover_the_scoring_call_chain(self):
+        listed = {
+            f"{file_name}:{name}"
+            for file_name, names in mmbert_evaluate._JOURNAL_SCORING_SOURCES
+            for name in names
+        }
+        self.assertLessEqual(
+            {
+                "core.py:batch_logits",
+                "core.py:file_sha256",
+                "core.py:pool",
+                "core.py:score_logits",
+                "core.py:score_texts",
+                "data.py:batches",
+                "evaluate.py:_assert_restored_state",
+                "evaluate.py:_load_snapshot",
+                "evaluate.py:_padded_token_groups",
+                "evaluate.py:_restore_snapshot_state",
+                "evaluate.py:_score",
+                "evaluate.py:_score_single_texts",
+                "evaluate.py:_sigmoid",
+                "evaluate.py:_validate_state",
+                "evaluate.py:_verified_base_model_identity",
+            },
+            listed,
+        )
+
+    def test_unrelated_edit_keeps_the_journal_key_but_moves_the_full_hash(self):
+        _, module = self._tree()
+        journal_before, full_before = self._digests(module)
+        self._edit(
+            module / "evaluate.py",
+            "without promoting it into authorization",
+            "with an unrelated docstring edit",
+        )
+        journal_after, full_after = self._digests(module)
+        self.assertEqual(journal_before, journal_after)
+        self.assertNotEqual(full_before, full_after)
+
+    def test_editing_a_listed_function_body_moves_the_journal_key(self):
+        for file_name, old, new in (
+            ("evaluate.py", "positive = values >= 0", "positive = values > 0.0"),
+            ("core.py", "values = batch_logits(", "values = 2 * batch_logits("),
+        ):
+            with self.subTest(file_name=file_name):
+                _, module = self._tree()
+                before, _ = self._digests(module)
+                self._edit(module / file_name, old, new)
+                after, _ = self._digests(module)
+                self.assertNotEqual(before, after)
+
+    def test_editing_the_journal_module_moves_the_journal_key(self):
+        # journal.scores() is the returned panel, so score_journal.py's
+        # read/write semantics bind the key whole-file.
+        _, module = self._tree()
+        before, _ = self._digests(module)
+        self._edit(
+            module / "score_journal.py",
+            "not np.isfinite(values).all()",
+            "not np.isfinite(values).any()",
+        )
+        after, _ = self._digests(module)
+        self.assertNotEqual(before, after)
+
+    def test_journal_spec_binds_the_narrow_scoring_key(self):
+        # The one-line wiring the whole change hangs on: reverting the spec
+        # to the whole-file identity must fail here.
+        spec = mmbert_evaluate._journal_spec(
+            model_sha256="0" * 64,
+            panel_sha256="1" * 64,
+            rows=3,
+            batch_size=2,
+            evaluation_max_tokens=512,
+        )
+        self.assertEqual(
+            spec.scoring_sha256, mmbert_evaluate._journal_scoring_sha256(512)
+        )
+        self.assertNotEqual(spec.scoring_sha256, mmbert_evaluate._scoring_sha256(512))
+        self.assertEqual(spec.columns, ("score",))
+
+    def test_decorating_a_listed_function_moves_the_journal_key(self):
+        _, module = self._tree()
+        before, _ = self._digests(module)
+        self._edit(
+            module / "evaluate.py",
+            "def _sigmoid(",
+            "@some_decorator\ndef _sigmoid(",
+        )
+        after, _ = self._digests(module)
+        self.assertNotEqual(before, after)
+
+    def test_a_missing_listed_symbol_fails_closed(self):
+        _, module = self._tree()
+        self._edit(module / "evaluate.py", "def _sigmoid(", "def _renamed_sigmoid(")
+        with patch.object(mmbert_evaluate, "__file__", str(module / "evaluate.py")):
+            with self.assertRaisesRegex(ValueError, "_sigmoid"):
+                mmbert_evaluate._journal_scoring_sha256()
+
+    def test_only_scoring_stack_pins_move_the_journal_key(self):
+        root, module = self._tree()
+        before, _ = self._digests(module)
+        pins = dict.fromkeys(mmbert_evaluate._JOURNAL_SCORING_PINS, "9.9.9")
+
+        self._write_lock(root, {**pins, "ruff": "2.0.0"})
+        unrelated, _ = self._digests(module)
+        self.assertEqual(before, unrelated)
+
+        self._write_lock(root, {**pins, "torch": "8.8.8", "ruff": "1.0.0"})
+        bumped, _ = self._digests(module)
+        self.assertNotEqual(before, bumped)
+
+        del pins["torch"]
+        self._write_lock(root, {**pins, "ruff": "1.0.0"})
+        with patch.object(mmbert_evaluate, "__file__", str(module / "evaluate.py")):
+            with self.assertRaisesRegex(ValueError, "uv.lock"):
+                mmbert_evaluate._journal_scoring_sha256()
+
+    def test_native_numeric_stack_pins_bind_when_present(self):
+        # triton and nvidia-* lock entries move bf16 kernel behavior without
+        # touching the named pins; absent entries (CPU-only locks) are fine.
+        root, module = self._tree()
+        pins = dict.fromkeys(mmbert_evaluate._JOURNAL_SCORING_PINS, "9.9.9")
+        absent, _ = self._digests(module)
+
+        native = {"nvidia-cublas": "1.0.0", "triton": "3.0.0", "ruff": "1.0.0"}
+        self._write_lock(root, {**pins, **native})
+        present, _ = self._digests(module)
+        self.assertNotEqual(absent, present)
+
+        self._write_lock(root, {**pins, **native, "triton": "3.0.1"})
+        bumped, _ = self._digests(module)
+        self.assertNotEqual(present, bumped)
+
+    def test_every_duplicate_pin_entry_binds_the_journal_key(self):
+        # Forked marker resolution can leave several uv.lock entries for one
+        # pinned package; bumping any of them must move the key.
+        root, module = self._tree()
+        pins = dict.fromkeys(mmbert_evaluate._JOURNAL_SCORING_PINS, "9.9.9")
+
+        self._write_lock(root, {**pins, "torch": ["1.0.0", "9.9.9"]})
+        forked, _ = self._digests(module)
+
+        self._write_lock(root, {**pins, "torch": ["2.0.0", "9.9.9"]})
+        bumped, _ = self._digests(module)
+        self.assertNotEqual(forked, bumped)
+
+
+class BlockTokenizationEquivalenceTests(unittest.TestCase):
+    """Block tokenization must be bit-identical to per-minibatch calls."""
+
+    @classmethod
+    def setUpClass(cls):
+        from transformers import AutoTokenizer
+
+        from morgott.models.mmbert.core import MODEL_ID, MODEL_REVISION
+
+        try:
+            cls.tokenizer = AutoTokenizer.from_pretrained(
+                MODEL_ID, revision=MODEL_REVISION, local_files_only=True
+            )
+        except OSError:
+            # Cache miss: fetch the pinned revision so CI still exercises the
+            # real tokenizer; skip only when the Hub is unreachable (offline).
+            try:
+                cls.tokenizer = AutoTokenizer.from_pretrained(
+                    MODEL_ID, revision=MODEL_REVISION
+                )
+            except OSError as error:
+                if os.environ.get("CI"):
+                    # A silent skip would let CI go green without ever
+                    # verifying the bit-identity claim; fail loudly there.
+                    raise
+                raise unittest.SkipTest(
+                    f"pinned tokenizer unavailable offline: {error}"
+                ) from error
+
+    def test_padded_token_groups_match_per_minibatch_padded_tokenization(self):
+        import random
+
+        import torch
+
+        from morgott.normalization import strict_normalize
+
+        rng = random.Random(20260820)
+        words = [
+            "ignore",
+            "previous",
+            "instructions",
+            "reveal",
+            "the",
+            "system",
+            "prompt",
+            "Σοφός",
+            "текст",
+            "短い",
+            "finance",
+            "x" * 40,
+        ]
+        texts = []
+        for index in range(203):
+            if index % 29 == 0:
+                texts.append("")
+            elif index % 13 == 0:
+                texts.append("long " * rng.randint(400, 700))
+            else:
+                texts.append(
+                    " ".join(rng.choice(words) for _ in range(rng.randint(1, 120)))
+                )
+
+        for batch_size, max_tokens in ((8, 512), (24, 1024), (5, 1024)):
+            with self.subTest(batch_size=batch_size, max_tokens=max_tokens):
+                groups = list(
+                    mmbert_evaluate._padded_token_groups(
+                        self.tokenizer,
+                        texts,
+                        batch_size=batch_size,
+                        max_tokens=max_tokens,
+                    )
+                )
+                starts = range(0, len(texts), batch_size)
+                self.assertEqual(len(groups), len(starts))
+                for group, start in zip(groups, starts, strict=True):
+                    expected = self.tokenizer(
+                        [
+                            strict_normalize(text)
+                            for text in texts[start : start + batch_size]
+                        ],
+                        add_special_tokens=True,
+                        max_length=max_tokens,
+                        padding=True,
+                        return_tensors="pt",
+                        truncation=True,
+                    )
+                    self.assertEqual(sorted(group), sorted(expected))
+                    for key in expected:
+                        self.assertTrue(
+                            torch.equal(group[key], expected[key]),
+                            msg=f"{key} differs at row {start}",
+                        )
+
+
 if __name__ == "__main__":
     unittest.main()
