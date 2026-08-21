@@ -13,7 +13,10 @@ This is an inference-side and audit-side transform only.
 
 from __future__ import annotations
 
+import operator
+import re
 import unicodedata
+from functools import lru_cache
 
 # Codepoints that carry no visible glyph and exist mainly to break string
 # matching: zero-width space/non-joiner/joiner, BOM, soft hyphen, word joiner,
@@ -108,35 +111,56 @@ HOMOGLYPH_FOLD = {
 }
 
 
+# str.translate tables built once at import so each pass runs in C instead of
+# a per-character Python loop (strict_normalize backs leakage_text_hash, the
+# most expensive per-row function in the data build).
+_INVISIBLE_TABLE = dict.fromkeys(INVISIBLE)
+_HOMOGLYPH_TABLE = str.maketrans(HOMOGLYPH_FOLD)
+# One merged pass for strict_normalize. Equivalent to strip-then-fold for any
+# table contents: invisible entries overwrite fold entries, matching the
+# sequential order where stripping runs first, and fold outputs are never
+# re-processed in either form.
+_STRICT_TABLE = {**_HOMOGLYPH_TABLE, **_INVISIBLE_TABLE}
+# ponytail: full-codepoint scan at import (~40 ms once); cache to disk if
+# import time ever matters.
+_COMBINING_TABLE = dict.fromkeys(
+    codepoint for codepoint in range(0x110000) if unicodedata.combining(chr(codepoint))
+)
+
+
+@lru_cache(maxsize=None)
+def _repeat_pattern(keep: int) -> re.Pattern[str]:
+    # keep is already clamped to >= 1, and the length short circuit in
+    # collapse_repeats keeps it below re's bounded-repeat ceiling (2**32 - 1).
+    # DOTALL keeps newline runs matching.
+    return re.compile("(.)\\1{%d,}" % keep, re.DOTALL)
+
+
 def strip_invisible(text: str) -> str:
-    return "".join(char for char in text if ord(char) not in INVISIBLE)
+    return text.translate(_INVISIBLE_TABLE)
 
 
 def fold_homoglyphs(text: str) -> str:
-    return "".join(HOMOGLYPH_FOLD.get(char, char) for char in text)
+    return text.translate(_HOMOGLYPH_TABLE)
 
 
 def strip_combining(text: str) -> str:
     """Drop combining marks left over after decomposition (zalgo, diacritics)."""
-    decomposed = unicodedata.normalize("NFD", text)
-    return "".join(char for char in decomposed if not unicodedata.combining(char))
+    return unicodedata.normalize("NFD", text).translate(_COMBINING_TABLE)
 
 
 def collapse_repeats(text: str, limit: int = 3) -> str:
     """Cap runs of the same character, e.g. character-spacing padding."""
-    out = []
-    run_char = None
-    run_length = 0
-    for char in text:
-        if char == run_char:
-            run_length += 1
-            if run_length > limit:
-                continue
-        else:
-            run_char = char
-            run_length = 1
-        out.append(char)
-    return "".join(out)
+    # limit <= 0 behaves like limit == 1 in the historical loop: every run
+    # collapses to a single character. operator.index rejects non-int limits
+    # at the boundary instead of deep inside the replacement.
+    keep = max(operator.index(limit), 1)
+    if keep >= len(text):
+        # No run can exceed the cap, so return unchanged. This also keeps
+        # oversized limits away from the regex bounded-repeat ceiling.
+        return text
+    # Backreference template instead of a lambda: no Python call per match.
+    return _repeat_pattern(keep).sub("\\1" * keep, text)
 
 
 def strict_normalize(text: str) -> str:
@@ -146,8 +170,7 @@ def strict_normalize(text: str) -> str:
     split by a zero-width character is still recognised.
     """
     text = unicodedata.normalize("NFKC", text)
-    text = strip_invisible(text)
-    text = fold_homoglyphs(text)
+    text = text.translate(_STRICT_TABLE)
     text = strip_combining(text)
     text = collapse_repeats(text)
     return " ".join(text.casefold().split())

@@ -1513,3 +1513,16 @@ The first single-probe AB/BA canary passed the latency gate, while a later run o
 The contradictory results make latency inconclusive and keep Azure promotion blocked pending a larger predeclared multi-probe paired protocol.
 The complete measurements and qualifications are in [retrieval-assisted-reviewer-findings-20260819.md](retrieval-assisted-reviewer-findings-20260819.md).
 Machine-readable evidence is in [azure-preview-retrieval-canary-20260819T174113Z.json](azure-preview-retrieval-canary-20260819T174113Z.json).
+
+## Runtime-source pin for the registered artifact broken by the normalization rewrite (2026-08-20)
+
+The strict_normalize translate-table rewrite (PR #43) changed the bytes of
+`src/morgott/normalization.py` while keeping behavior byte-identical.
+The registered `mmbert-lora-full-ctx1024-u17000-s42` evidence (`result.json`
+and `evaluation.json`) pins the pre-rewrite digest of that file, so
+`load_bundle` and therefore `export_onnx` re-export of the registered model
+fail closed from that commit onward.
+Serving and cascade do not verify source bytes and are unaffected.
+Any forced re-export (for example an ONNX Runtime or OpenVINO bump) first
+requires regenerating the evidence through the reproducibility-review path
+and updating `model-artifacts.json`.
